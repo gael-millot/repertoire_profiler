@@ -1,0 +1,7 @@
+work/
+singularity/
+results/
+.nextflow/
+.nextflow*
+dataset/
+example_of_results/
