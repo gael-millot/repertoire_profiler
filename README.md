@@ -223,6 +223,11 @@ Gitlab developers
 ## WHAT'S NEW IN
 
 
+### v2.0
+
+Conversion into DSL2 ok
+
+
 ### v1.0
 
 First DSL1 version that works

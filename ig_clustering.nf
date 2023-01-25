@@ -1,4 +1,4 @@
-nextflow.enable.dsl=1
+nextflow.enable.dsl=2
 /*
 #########################################################################
 ##                                                                     ##
@@ -13,79 +13,20 @@ nextflow.enable.dsl=1
 */
 
 
-//////// Arguments of nextflow run
-
-params.modules = ""
-
-//////// end Arguments of nextflow run
-
-
-//////// Variables
-
-config_file = file("${projectDir}/ig_clustering.config")
-log_file = file("${launchDir}/.nextflow.log")
-modules = params.modules // remove the dot -> can be used in bash scripts
-
-fs = file(sample_path)
-
-//////// end Variables
-
-
-//////// Channels
-
-
-//////// end Channels
-
-
-//////// Checks
-
-// tbi = file("${sample_path}.tbi") does not need .tbi 
-
-def file_exists1 = fs.exists()
-if( ! file_exists1){
-    error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID sample_path PARAMETER IN ig_clustering.config FILE (DOES NOT EXIST): ${sample_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
-}else{
-    fs_ch = Channel.fromPath("${sample_path}/*.*", checkIfExists: false)
-}
-if( ! igblast_database_path in String ){
-    error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_database_path PARAMETER IN ig_clustering.config FILE:\n${igblast_database_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-}
-if( ! clone_distance in String ){
-    error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_distance PARAMETER IN ig_clustering.config FILE:\n${clone_distance}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-}
-
-// below : those variable are already used in the config file. Thus, to late to check them. And not possible to check inside the config file
-// system_exec
-// out_ini
-print("\n\nRESULT DIRECTORY: ${out_path}")
-print("\n\nWARNING: PARAMETERS ALREADY INTERPRETED IN THE .config FILE:")
-print("    system_exec: ${system_exec}")
-print("    out_path: ${out_path_ini}")
-print("    queue: ${queue}")
-print("    qos: ${qos}")
-print("    add_options: ${add_options}")
-print("\n\n")
-
-
-//////// end Checks
-
-
-//////// Variable modification
-
-
-//////// end Variable modification
-
 
 //////// Processes
 
 
-process WorkflowVersion { // create a file with the workflow version in out_path
+process workflowVersion { // create a file with the workflow version in out_path
     label 'bash' // see the withLabel: bash in the nextflow config file 
     publishDir "${out_path}/reports", mode: 'copy', overwrite: false
     cache 'false'
 
+    input:
+    val modules
+
     output:
-    file "Run_info.txt"
+    path "Run_info.txt"
 
     script:
     """
@@ -143,15 +84,15 @@ process igblast {
     cache 'true'
 
     input:
-    file fs from fs_ch // parallelization expected (for each fasta file)
+    path fs_ch // parallelization expected (for each fasta file)
     val igblast_database_path
     val igblast_files
     val igblast_organism
     val igblast_loci
 
     output:
-    file "*.tsv" optional true into tsv_ch1
-    file "*.log" optional true into log_ch
+    path "*.tsv", emit: tsv_ch1, optional: true
+    path "*.log", emit: log_ch, optional: true
 
     script:
     """
@@ -159,20 +100,20 @@ process igblast {
     # variables
     REPO_PATH="/usr/local/share/${igblast_database_path}" # path where the imgt_human_IGHV.fasta, imgt_human_IGHD.fasta and imgt_human_IGHJ.fasta files are in the docker container
     VDJ_FILES=\$(awk -v var1="${igblast_files}" -v var2="\${REPO_PATH}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}')
-    FILENAME=\$(basename -- "${fs}") # recover a file name without path
+    FILENAME=\$(basename -- "${fs_ch}") # recover a file name without path
     FILE=\${FILENAME%.*} # file name without extension
     FILE_EXTENSION="\${FILENAME##*.}" #  ## means "delete the longest regex starting at the beginning of the tested string". If nothing, delete nothing. Thus ##*. means delete the longest string finishing by a dot. Use # instead of ## for "delete the shortest regex starting at the beginning of the tested string"
     # end variables
     # checks
     if [[ ! "\${FILE_EXTENSION}" =~ fasta|fa|fna|txt|seq ]] ; then
-        echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID FILE EXTENSION IN THE sample_path PARAMETER OF THE ig_clustering.config FILE:\\n${fs}\\n\${FILENAME}\\nMUST BE fasta|fs|txt|seq\\n\\n========\\n\\n"
+        echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID FILE EXTENSION IN THE sample_path PARAMETER OF THE ig_clustering.config FILE:\\n${fs_ch}\\n\${FILENAME}\\nMUST BE fasta|fs_ch|txt|seq\\n\\n========\\n\\n"
         exit 1
     fi
-    sed 's/\\r\$//' ${fs} > tempo_file.fasta #remove carriage returns
-    awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' tempo_file.fasta > \${FILE}.fa # remove \\n in the middle of the sequence # \${FILENAME}.fa is a trick to do not use ${fs} and modify the initial file due to the link in the nextflow work folder
+    sed 's/\\r\$//' ${fs_ch} > tempo_file.fasta #remove carriage returns
+    awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' tempo_file.fasta > \${FILE}.fa # remove \\n in the middle of the sequence # \${FILENAME}.fa is a trick to do not use ${fs_ch} and modify the initial file due to the link in the nextflow work folder
     TEMPO=\$(wc -l \${FILE}.fa | cut -f1 -d' ')
     if read -n 1 char <"\${FILE}.fa"; [[ \$char != ">" || \$TEMPO != 2 ]]; then
-        echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID FASTA FILE IN THE sample_path OF THE ig_clustering.config FILE:\\n${fs}\\nMUST BE A FASTA FILE (\'>\' AS FIRST CHARATER) MADE OF A SINGLE SEQUENCE\\n\\n========\\n\\n"
+        echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID FASTA FILE IN THE sample_path OF THE ig_clustering.config FILE:\\n${fs_ch}\\nMUST BE A FASTA FILE (\'>\' AS FIRST CHARATER) MADE OF A SINGLE SEQUENCE\\n\\n========\\n\\n"
         exit 1
     fi
     # Alignment <-> annotate sequence using VDJ info
@@ -187,38 +128,26 @@ process igblast {
     // write ${} between "" to make a single argument when the variable is made of several values separated by a space. Otherwise, several arguments will be considered
 }
 
-tsv_ch1.collectFile(name: "merge.tsv", skip: 1, keepHeader: true).into{tsv_ch2 ; tsv_ch3 ; tsv_ch4 ; tsv_ch5} // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
-//tsv_ch5.toList().size().view()
-if(tsv_ch2.toList().size() == 0){
-    error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION: MakeDb.py igblast FAIL FOR ALL THE FILES DURING THE igblast PROCESS\nEMPTY FILE GENERATED\n\n\n\n========\n\n"
-}else{
-    //print("COUCOU_1")
-    tsv_ch3.subscribe{it -> it.copyTo("${out_path}")}
-}
-//print("COUCOU_3")
-log_ch.collectFile(name: "igblast_report.log").subscribe{it -> it.copyTo("${out_path}/reports")} // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
 
-
-
-process ParseDb_filtering {
+process parseDb_filtering {
     label 'immcantation' // see the withLabel: bash in the nextflow config file 
     publishDir path: "${out_path}", mode: 'copy', pattern: "{*_productive-F.tsv}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{ParseDb_filtering.log}", overwrite: false
     cache 'true'
 
     input:
-    file tsv from tsv_ch4
+    path tsv_ch2
 
     output:
-    file "*_parse-select.tsv" into select_ch
-    file "*_productive-F.tsv" optional true
-    file "*.log"
+    path "*_parse-select.tsv", emit: select_ch
+    path "*_productive-F.tsv", optional: true
+    path "*.log"
 
     script:
     """
     #!/bin/bash -ue
-    ParseDb.py select -d ${tsv} -f productive -u T |& tee -a ParseDb_filtering.log
-    ParseDb.py split -d ${tsv} -f productive |& tee -a ParseDb_filtering.log
+    ParseDb.py select -d ${tsv_ch2} -f productive -u T |& tee -a ParseDb_filtering.log
+    ParseDb.py split -d ${tsv_ch2} -f productive |& tee -a ParseDb_filtering.log
     """
 }
 
@@ -229,17 +158,17 @@ process clone_assignment {
     cache 'true'
 
     input:
-    file tsv from select_ch
+    path select_ch
     val clone_distance
 
     output:
-    file "*_clone-pass.tsv" into clone_ch
-    file "*.log"
+    path "*_clone-pass.tsv", emit: clone_ch
+    path "*.log"
 
     script:
     """
     #!/bin/bash -ue
-    DefineClones.py -d ${tsv} --act set --model ham --norm len --dist ${clone_distance} |& tee -a clone_assignment.log
+    DefineClones.py -d ${select_ch} --act set --model ham --norm len --dist ${clone_distance} |& tee -a clone_assignment.log
     """
 }
 
@@ -249,13 +178,13 @@ process closest_germline {
     cache 'true'
 
     input:
-    file tsv from clone_ch
+    path clone_ch
     val igblast_database_path
     val igblast_files
 
     output:
-    file "*.tsv" into closest_ch
-    file "*.log"
+    path "*.tsv", emit: closest_ch
+    path "*.log"
 
     script:
     """
@@ -264,7 +193,7 @@ process closest_germline {
     REPO_PATH="/usr/local/share/${igblast_database_path}" # path where the imgt_human_IGHV.fasta, imgt_human_IGHD.fasta and imgt_human_IGHJ.fasta files are in the docker container
     VDJ_FILES=\$(awk -v var1="${igblast_files}" -v var2="\${REPO_PATH}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}')
     # end variables
-    CreateGermlines.py -d ${tsv} -g dmask --cloned -r \${VDJ_FILES} |& tee -a closest_germline.log
+    CreateGermlines.py -d ${clone_ch} -g dmask --cloned -r \${VDJ_FILES} |& tee -a closest_germline.log
     """
 }
 
@@ -275,16 +204,16 @@ process igphyml {
     cache 'true'
 
     input:
-    file tsv from closest_ch
+    path closest_ch
 
     output:
-    file "phy_igphyml-pass.tab" into tree_ch
-    file "igphyml.log"
+    path "phy_igphyml-pass.tab", emit: tree_ch
+    path "igphyml.log"
 
     script:
     """
     #!/bin/bash -ue
-    BuildTrees.py -d ${tsv} --outname phy --log igphyml.log --collapse --sample -1 --igphyml --clean all --nproc 10
+    BuildTrees.py -d ${closest_ch} --outname phy --log igphyml.log --collapse --sample -1 --igphyml --clean all --nproc 10
     """
 }
 
@@ -294,18 +223,18 @@ process tree_vizu {
     cache 'true'
 
     input:
-    file tab from tree_ch
+    path tree_ch
 
     output:
-    file "tree.pdf"
-    file "HLP10_tree_parameters.tsv"
+    path "tree.pdf"
+    path "HLP10_tree_parameters.tsv"
 
     script:
     """
     #!/usr/bin/env Rscript
     library(alakazam)
     library(igraph)
-    db <- alakazam::readIgphyml("./${tab}")
+    db <- alakazam::readIgphyml("./${tree_ch}")
     # Plot largest lineage tree
     pdf(file = "./tree.pdf")
     plot(db\$trees[[1]], layout=layout_as_tree)
@@ -316,21 +245,19 @@ process tree_vizu {
 }
 
 
-
-
-process Backup {
+process backup {
     label 'bash' // see the withLabel: bash in the nextflow config file 
     publishDir "${out_path}/reports", mode: 'copy', overwrite: false // since I am in mode copy, all the output files will be copied into the publishDir. See \\wsl$\Ubuntu-20.04\home\gael\work\aa\a0e9a739acae026fb205bc3fc21f9b
     cache 'false'
 
     input:
-    file config_file
-    file log_file
+    path config_file
+    path log_file
 
     output:
-    file "${config_file}" // warning message if we use file config_file
-    file "${log_file}" // warning message if we use file log_file
-    file "Log_info.txt"
+    path "${config_file}" // warning message if we use file config_file
+    path "${log_file}" // warning message if we use file log_file
+    path "Log_info.txt"
 
     script:
     """
@@ -338,5 +265,131 @@ process Backup {
     """
 }
 
+
+
+
+
+
+
+
+workflow {
+
+            //////// Arguments of nextflow run
+
+            params.modules = ""
+
+            //////// end Arguments of nextflow run
+
+            //////// Variables
+
+            config_file = file("${projectDir}/ig_clustering.config")
+            log_file = file("${launchDir}/.nextflow.log")
+            modules = params.modules // remove the dot -> can be used in bash scripts
+
+            //////// end Variables
+
+
+            //////// Channels
+
+
+            //////// end Channels
+
+
+            //////// Checks
+
+            // tbi = file("${sample_path}.tbi") does not need .tbi 
+
+            def file_exists1 = file(sample_path).exists()
+            if( ! file_exists1){
+                error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID sample_path PARAMETER IN ig_clustering.config FILE (DOES NOT EXIST): ${sample_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
+            }else{
+                fs_ch = Channel.fromPath("${sample_path}/*.*", checkIfExists: false)
+            }
+            if( ! igblast_database_path in String ){
+                error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_database_path PARAMETER IN ig_clustering.config FILE:\n${igblast_database_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+            }
+            if( ! clone_distance in String ){
+                error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_distance PARAMETER IN ig_clustering.config FILE:\n${clone_distance}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+            }
+
+            // below : those variable are already used in the config file. Thus, to late to check them. And not possible to check inside the config file
+            // system_exec
+            // out_ini
+            print("\n\nRESULT DIRECTORY: ${out_path}")
+            print("\n\nWARNING: PARAMETERS ALREADY INTERPRETED IN THE .config FILE:")
+            print("    system_exec: ${system_exec}")
+            print("    out_path: ${out_path_ini}")
+            print("    queue: ${queue}")
+            print("    qos: ${qos}")
+            print("    add_options: ${add_options}")
+            print("\n\n")
+
+            //////// end Checks
+
+
+            //////// Variable modification
+
+
+            //////// end Variable modification
+
+            workflowVersion(
+                modules
+            )
+
+            tests(
+                igblast_database_path, 
+                igblast_files
+            )
+
+            igblast(
+                fs_ch, 
+                igblast_database_path, 
+                igblast_files, 
+                igblast_organism, 
+                igblast_loci
+            )
+
+            tsv_ch2 = igblast.out.tsv_ch1.collectFile(name: "merge.tsv", skip: 1, keepHeader: true) // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
+            // or igblast.out[0].collectFile() if output of igblast process is not named using emit.
+            if(tsv_ch2.toList().size() == 0){
+                error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION: MakeDb.py igblast FAIL FOR ALL THE FILES DURING THE igblast PROCESS\nEMPTY FILE GENERATED\n\n\n\n========\n\n"
+            }else{
+                //print("COUCOU_1")
+                tsv_ch2.subscribe{it -> it.copyTo("${out_path}")}
+            }
+            //print("COUCOU_3")
+            igblast.out.log_ch.collectFile(name: "igblast_report.log").subscribe{it -> it.copyTo("${out_path}/reports")} // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
+
+
+            parseDb_filtering(
+                tsv_ch2
+            )
+
+            clone_assignment(
+                parseDb_filtering.out.select_ch,
+                clone_distance
+            )
+
+            closest_germline(
+                clone_assignment.out.clone_ch, 
+                igblast_database_path, 
+                igblast_files
+            )
+
+            igphyml(
+                closest_germline.out.closest_ch
+            )
+
+            tree_vizu(
+                igphyml.out.tree_ch
+            )
+
+            backup(
+                config_file, 
+                log_file
+            )
+}
+
+//  https://gitter.im/nextflow-io/nextflow/archives/2020/10/01
 
 //////// end Processes
