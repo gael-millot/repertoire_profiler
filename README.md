@@ -23,26 +23,23 @@
 
 <br /><br />
 ## AIM
-
+Clustering of single cell paired VH and VL sequences
 
 
 <br /><br />
 ## CONTENT
 
-**ig_clustering.nf** File that can be executed using a CLI (command line interface)
-
-**ig_clustering.config** Parameter settings for the ig_clustering.nf file
-
-**dataset** Folder containing some datasets (batch of fasta files) than can be used as examples
-
-**example_of_results**: folder containing examples of result obtained with the dataset.
+**ig_clustering.nf**: File that can be executed using a CLI (command line interface)
 <br /><br />
-&nbsp;&nbsp;&nbsp;&nbsp;See the OUTPUT section for the description of the folder and files.
-
+**ig_clustering.config**: Parameter settings for the ig_clustering.nf file
+<br /><br />
+**xlsx2fasta.R**: Accessory file that creates all the fasta files from a .xlsx file. To use it, 1) open the file, 2) complete the "Parameters that need to be set by the user" section, 3) save the modifications and 4) run the file in R
+<br /><br />
+**dataset**: Folder containing some datasets (batch of fasta files) than can be used as examples
+<br /><br />
+**example_of_results**: Folder containing examples of result obtained with the dataset. See the OUTPUT section for the description of the folder and files.
 <br /><br />
 ## HOW TO RUN
-
-See Protocol 136 (ask me).
 
 
 ### If error message
@@ -57,7 +54,24 @@ rm -rf /pasteur/sonic/homes/gmillot/.nextflow/assets/gmillot*
 ```
 
 
-### From local using the committed version on gitlab
+### From local using the committed version on a public gitlab repository
+
+1) run the following command:
+
+```bash
+nextflow run -hub pasteur gmillot/ig_clustering -r v1.0.0
+```
+
+
+2) If an error message appears, like:
+```
+WARN: Cannot read project manifest -- Cause: Remote resource not found: https://gitlab.pasteur.fr/api/v4/projects/gmillot%2Fig_clustering
+```
+	Make the distant repo public.
+	In settings/General/Visibility, project features, permissions, check that every item is "on" with "Everyone With Access" and then save the changes.
+
+
+### From local using the committed version on a private gitlab repository
 
 1) Create the scm file:
 
@@ -73,7 +87,7 @@ providers {
 And save it as 'scm' in the .nextflow folder. For instance in:
 \\wsl$\Ubuntu-20.04\home\gael\.nextflow
 
-Warning: ssh key must be set for gitlab, to be able to use this procedure (see protocol 44).
+Warning: ssh key must be set for gitlab, to be able to use this procedure.
 
 
 2) Mount a server if required:
@@ -111,7 +125,7 @@ Make the distant repo public
 permission denied
 ```
 
-See chmod in protocol 44.
+Use chmod to change the user rights.
 
 
 ### From local using local file
@@ -170,18 +184,18 @@ rm -rf /pasteur/sonic/homes/gmillot/.nextflow/assets/gmillot*
 ## OUTPUT
 
 
-**reports**: folder containing all the reports of the different processes including the *ig_clustering.config* file used.
+**reports**: Folder containing all the reports of the different processes including the *ig_clustering.config* file used.
 <br /><br />
-**tree.pdf**: phylogenic tree provided by BuildTrees.py and alakazam::readIgphyml.
+**tree.pdf**: Phylogenic tree provided by BuildTrees.py and alakazam::readIgphyml.
 <br /><br />
-**HLP10_tree_parameters.tsv**: parameters of the phylogenic tree.
-<br />
-**phy_igphyml-pass.tab**: file used to draw the phylogenic tree, provided by BuildTrees.py.
-<br />
-**merge.tsv**: annotation of the Heavy and light chain sequences by igblast, provided by AssignGenes.py igblast and MakeDb.py igblast.
-<br />
+**HLP10_tree_parameters.tsv**: Parameters of the phylogenic tree.
+<br /><br />
+**phy_igphyml-pass.tab**: File used to draw the phylogenic tree, provided by BuildTrees.py.
+<br /><br />
+**merge.tsv**: Annotation of the Heavy and light chain sequences by igblast, provided by AssignGenes.py igblast and MakeDb.py igblast.
+<br /><br />
 **merge_productive-F.tsv**: Failed annotations by igblast.
-<br />
+
 
 
 <br /><br />
@@ -221,6 +235,11 @@ Gitlab developers
 
 <br /><br />
 ## WHAT'S NEW IN
+
+
+### v2.1
+
+xlsx2fasta.R file added | Nicer tree representation added
 
 
 ### v2.0

@@ -1,0 +1,26 @@
+add the different config present in the dev folder, associated with the different error kind:
+
+1) stop without warning message
+ig_clustering_empty__just_stop.config
+See //  https://gitter.im/nextflow-io/nextflow/archives/2020/10/01 ?
+
+
+2) run from gitlab
+The repo is public
+When I use nextflow run https://gitlab.pasteur.fr/gmillot/ig_clustering/
+-> Can't find git repository config file -- Repository may be corrupted: /home/gael/.nextflow/assets/gmillot/ig_clustering
+When I use nextflow run https://gitlab.pasteur.fr/gmillot/ig_clustering/-/tree/v1.0 or nextflow run 'https://gitlab.pasteur.fr/gmillot/ig_clustering/-/tree/v1.0'
+-> Pulling gmillot/ig_clustering/-/tree/v1.0 ...
+WARN: Cannot read project manifest -- Cause: Remote resource not found: https://gitlab.pasteur.fr/api/v4/projects/gmillot%2Fig_clustering%2F-%2Ftree%2Fv1.0
+Remote resource not found: https://gitlab.pasteur.fr/api/v4/projects/gmillot%2Fig_clustering%2F-%2Ftree%2Fv1.0
+
+3) run ok
+human : ig_clustering_v1_ok.config
+mouse : ig_clustering_v2.2_ok.config
+
+
+
+
+
+
+
