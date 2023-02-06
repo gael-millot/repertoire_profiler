@@ -349,6 +349,64 @@ process mutation_load {
     """
 }
 
+process get_tree {
+    label 'immcantation' // see the withLabel: bash in the nextflow config file 
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.pdf}", overwrite: false
+    cache 'true'
+
+    input:
+    path mutation_load_ch  // no more parallelization
+    val nb_seq_per_clone
+
+    output:
+    path "*.RData", emit: get_tree_ch, optional: true
+    path "*.pdf", optional: true
+    path "get_tree.log", emit: get_tree_log_ch
+    //path "HLP10_tree_parameters.tsv"
+
+    script:
+    """
+    #!/bin/bash -ue
+    if [[ ! -s ${mutation_load_ch} ]]; then
+        echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nEMPTY ${mutation_load_ch} FILE AS INPUT OF THE mutation_load PROCESS\\nCHECK THE mutation_load.log IN THE report FOLDER\\n\\n========\\n\\n"
+        exit 1
+    fi
+    FILENAME=\$(basename -- ${mutation_load_ch}) # recover a file name without path
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a get_tree.log
+    LINE_NB=\$((\$(cat ${mutation_load_ch} | wc -l) - 1))
+    if [[ "\$LINE_NB" -gt "${nb_seq_per_clone}" ]] ; then # the -gt operator can compare strings and means "greater than"
+        Rscript -e '
+
+            args <- commandArgs(trailingOnly = TRUE)  # recover arguments written after the call of the Rscript
+            tempo.arg.names <- c("file_name") # objects names exactly in the same order as in the bash code and recovered in args
+            if(length(args) != length(tempo.arg.names)){
+              tempo.cat <- paste0("======== ERROR: THE NUMBER OF ELEMENTS IN args (", length(args),") IS DIFFERENT FROM THE NUMBER OF ELEMENTS IN tempo.arg.names (", length(tempo.arg.names),")\\nargs:", paste0(args, collapse = ","), "\\ntempo.arg.names:", paste0(tempo.arg.names, collapse = ","))
+              stop(tempo.cat)
+            }
+            for(i2 in 1:length(tempo.arg.names)){
+              assign(tempo.arg.names[i2], args[i2])
+            }
+
+            db <- read.table("${mutation_load_ch}", sep = "\\t", header = TRUE)
+            clones <- dowser::formatClones(
+                data = db, 
+                seq = "sequence_alignment", 
+                clone = "clone_id", 
+                traits = "sequence_id", 
+                mask_char = ".", 
+                max_mask = 18
+            )
+            trees <- dowser::getTrees(clones, build="igphyml", exec="~/igphyml/src/igphyml", nproc = 10)
+            save(trees, file=paste0(file_name, "_trees.Rdata"))
+            plots <- dowser::plotTrees(trees) 
+            treesToPDF(plots, file=paste0(file_name, "_trees.pdf"))
+        ' "\${FILENAME}" |& tee -a get_tree.log
+    else
+        echo -e "\\n\\nWARNING:\\nLESS THAN ${nb_seq_per_clone} SEQUENCES FOR THE \$FILENAME CLONE: NO TREE COMPUTED" |& tee -a get_tree.log 
+    fi
+    """
+}
+
 
 process igphyml {
     label 'immcantation'     // see the withLabel: bash in the nextflow config file 
@@ -622,27 +680,39 @@ workflow {
         closest_germline.out.closest_ch
     )
 
+
+
     mutation_load_ch2 = mutation_load.out.mutation_load_ch.collectFile(name: "all_processed_seq.tsv", skip: 1, keepHeader: true) // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
     mutation_load_ch2.subscribe{it -> it.copyTo("${out_path}")}
     mutation_load.out.mutation_load_log_ch.collectFile(name: "mutation_load.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
 
-    igphyml(
-        mutation_load.out.mutation_load_ch, 
+    //igphyml(
+        //mutation_load.out.mutation_load_ch, 
+        //nb_seq_per_clone
+    //)
+
+    get_tree(
+        mutation_load.out.mutation_load_ch,
         nb_seq_per_clone
     )
 
-    igphyml_ch2 = igphyml.out.igphyml_ch.collectFile(name: "pre_tree_info.tsv", skip: 2, keepHeader: true) // skip the 2 first lines
-    igphyml.out.igphyml_log_ch.collectFile(name: "igphyml.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
-
-    igphyml_print(
-        igphyml_ch2
-    )
+    get_tree.out.get_tree_log_ch.collectFile(name: "get_tree.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
 
 
 
-    tree_vizu(
-        igphyml_print.out.igphyml_print_ch
-    )
+
+    //igphyml_ch2 = igphyml.out.igphyml_ch.collectFile(name: "pre_tree_info.tsv", skip: 2, keepHeader: true) // skip the 2 first lines
+    //igphyml.out.igphyml_log_ch.collectFile(name: "igphyml.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
+
+    //igphyml_print(
+        //igphyml_ch2
+    //)
+
+
+
+    //tree_vizu(
+        //igphyml_print.out.igphyml_print_ch
+    //)
 
     backup(
         config_file, 
