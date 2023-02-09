@@ -300,6 +300,7 @@ process mutation_load {
         # If germline sequences reconstruction has been performed after clonal assignment,
         # a single germline_alignment_d_mask" consensus sequence should be present for each clone.
 
+
         args <- commandArgs(trailingOnly = TRUE)  # recover arguments written after the call of the Rscript
         tempo.arg.names <- c("file_name") # objects names exactly in the same order as in the bash code and recovered in args
         if(length(args) != length(tempo.arg.names)){
@@ -351,16 +352,17 @@ process mutation_load {
 
 process get_tree {
     label 'immcantation' // see the withLabel: bash in the nextflow config file 
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.pdf}", overwrite: false
+    publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{*.RData}", overwrite: false
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{get_tree.log}", overwrite: false
     cache 'true'
 
     input:
-    path mutation_load_ch  // no more parallelization
+    path mutation_load_ch
     val nb_seq_per_clone
 
     output:
     path "*.RData", emit: get_tree_ch, optional: true
-    path "*.pdf", optional: true
+    path "*.tsv", emit: no_tree_ch, optional: true
     path "get_tree.log", emit: get_tree_log_ch
     //path "HLP10_tree_parameters.tsv"
 
@@ -371,121 +373,69 @@ process get_tree {
         echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nEMPTY ${mutation_load_ch} FILE AS INPUT OF THE mutation_load PROCESS\\nCHECK THE mutation_load.log IN THE report FOLDER\\n\\n========\\n\\n"
         exit 1
     fi
+    echo "" > less_than_${nb_seq_per_clone}_seq_no_tree.tsv
     FILENAME=\$(basename -- ${mutation_load_ch}) # recover a file name without path
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a get_tree.log
+    echo -e "\\n\$FILENAME" |& tee -a get_tree.log
     LINE_NB=\$((\$(cat ${mutation_load_ch} | wc -l) - 1))
     if [[ "\$LINE_NB" -gt "${nb_seq_per_clone}" ]] ; then # the -gt operator can compare strings and means "greater than"
         Rscript -e '
-
-            args <- commandArgs(trailingOnly = TRUE)  # recover arguments written after the call of the Rscript
-            tempo.arg.names <- c("file_name") # objects names exactly in the same order as in the bash code and recovered in args
-            if(length(args) != length(tempo.arg.names)){
-              tempo.cat <- paste0("======== ERROR: THE NUMBER OF ELEMENTS IN args (", length(args),") IS DIFFERENT FROM THE NUMBER OF ELEMENTS IN tempo.arg.names (", length(tempo.arg.names),")\\nargs:", paste0(args, collapse = ","), "\\ntempo.arg.names:", paste0(tempo.arg.names, collapse = ","))
-              stop(tempo.cat)
-            }
-            for(i2 in 1:length(tempo.arg.names)){
-              assign(tempo.arg.names[i2], args[i2])
-            }
-
-            db <- read.table("${mutation_load_ch}", sep = "\\t", header = TRUE)
+            db <- alakazam::readChangeoDb("${mutation_load_ch}")
             clones <- dowser::formatClones(
                 data = db, 
                 seq = "sequence_alignment", 
                 clone = "clone_id", 
-                traits = "sequence_id", 
-                mask_char = ".", 
-                max_mask = 18
+                minseq=1, heavy=NULL, dup_singles=TRUE
             )
-            trees <- dowser::getTrees(clones, build="igphyml", exec="~/igphyml/src/igphyml", nproc = 10)
-            save(trees, file=paste0(file_name, "_trees.Rdata"))
-            plots <- dowser::plotTrees(trees) 
-            treesToPDF(plots, file=paste0(file_name, "_trees.pdf"))
-        ' "\${FILENAME}" |& tee -a get_tree.log
+            trees <- dowser::getTrees(clones, build="igphyml", exec="/usr/local/share/igphyml/src/igphyml", nproc = 10)
+            # assign(paste0("c", trees\$clone_id, "_trees"), trees)
+            save(trees, file = paste0("./", trees\$clone_id, "_trees.RData"))
+        ' |& tee -a get_tree.log
     else
-        echo -e "\\n\\nWARNING:\\nLESS THAN ${nb_seq_per_clone} SEQUENCES FOR THE \$FILENAME CLONE: NO TREE COMPUTED" |& tee -a get_tree.log 
+        echo -e ": LESS THAN ${nb_seq_per_clone} SEQUENCES FOR THE \$FILENAME CLONE: NO TREE COMPUTED" |& tee -a get_tree.log 
+        echo -e "\\n${nb_seq_per_clone}" >> less_than_${nb_seq_per_clone}_seq_no_tree.tsv 
     fi
     """
 }
 
 
-process igphyml {
-    label 'immcantation'     // see the withLabel: bash in the nextflow config file 
-    cache 'true'
-
-    input:
-    path mutation_load_ch // parallelization expected
-    val nb_seq_per_clone
-
-    output:
-    path "phy_igphyml-pass.tab", emit: igphyml_ch, optional: true
-    path "igphyml.log", emit: igphyml_log_ch, optional: true
-
-    script:
-    """
-    #!/bin/bash -ue
-    FILENAME=\$(basename -- ${mutation_load_ch}) # recover a file name without path
-    cp -Lr ${mutation_load_ch} "./TEMPO.tsv" # to have the hard file, not the symlink, because modifications will be performed inside
-    chmod 777 TEMPO.tsv
-    rm \$FILENAME # remove the initial file to avoid to send it into the channel
-    cp -rp TEMPO.tsv "\$FILENAME" # -p for preserve permissions
-    rm TEMPO.tsv
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a igphyml.log
-    LINE_NB=\$(cat \${FILENAME} | wc -l)
-    if [[ "\$LINE_NB" -gt "${nb_seq_per_clone}" ]] ; then # the -gt operator can compare strings and means "greater than"
-        BuildTrees.py -d \${FILENAME} --outname phy --log tempo_igphyml.log --collapse --sample -1 --igphyml --clean all --nproc 10 |& tee -a igphyml.log
-    else
-        echo -e "\\n\\nWARNING:\\nLESS THAN ${nb_seq_per_clone} SEQUENCES FOR THE \$FILENAME CLONE: NO TREE COMPUTED" |& tee -a igphyml.log 
-    fi
-    """
-}
-
-
-process igphyml_print { // remove line 2 before printing
-    label 'immcantation'     // see the withLabel: bash in the nextflow config file 
-    publishDir path: "${out_path}", mode: 'copy', pattern: "{tree_info.tsv}", overwrite: false
-    cache 'true'
-
-    input:
-    path igphyml_ch2  // no parallelization
-
-    output:
-    path "tree_info.tsv", emit: igphyml_print_ch
-
-    script:
-    """
-    #!/bin/bash -ue
-    awk '{if (NR == 2){next}else{print \$0}}' ${igphyml_ch2} > tree_info.tsv
-    """
-}
 
 
 process tree_vizu {
     label 'r_ext' // see the withLabel: bash in the nextflow config file 
     publishDir path: "${out_path}", mode: 'copy', pattern: "{*.pdf}", overwrite: false
+    publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{*.RData}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{tree_vizu.log}", overwrite: false
     cache 'true'
 
     input:
-    path igphyml_print_ch  // no more parallelization
+    path get_tree_ch2  // no more parallelization
 
     output:
-    path "*.pdf"
+    path "*.RData", optional: true
+    path "*.pdf", optional: true
     path "tree_vizu.log"
     //path "HLP10_tree_parameters.tsv"
 
     script:
     """
     #!/bin/bash -ue
-    if [[ ! -s ${igphyml_print_ch} ]]; then
-        echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nEMPTY ${igphyml_print_ch} FILE AS INPUT OF THE tree_vizu PROCESS\\nCHECK THE tree_vizu.log IN THE report FOLDER\\n\\n========\\n\\n"
-        exit 1
-    fi
     Rscript -e '
-        suppressMessages(library(dowser))
-        # suppressMessages(library(ggtree))
-        trees <- read.table("${igphyml_print_ch}", sep = "\\t", header = TRUE)
-        plots <- dowser::plotTrees(trees, tips="numeric_time_point", tipsize="collapse_count") 
-        # dowser::treesToPDF(plots, file=paste0(donors[i], "_trees.pdf"), nrow=2, ncol=2)
+        tempo.list <- list.files(path = ".", pattern = "RData")
+        if(length(tempo.list) == 0){
+            cat("\\n\\nNO TREE DATA COMPUTED -> NO GRAPH PLOTTED")
+        }else{
+            tempo <- NULL
+            for(i3 in 1:length(tempo.list)){
+                rm(trees)
+                load(tempo.list[i3])
+                tempo <- dplyr::bind_rows(tempo, trees)
+            }
+            rm(trees)
+            trees <- tempo
+            save(trees, file = paste0("./all_trees.RData"))
+            plots <- dowser::plotTrees(trees, title = TRUE, tipsize="collapse_count") + ggtree::geom_tiplab()
+            dowser::treesToPDF(plots, file = "trees.pdf", nrow=2, ncol=2)
+        }
     ' |& tee -a tree_vizu.log
     """
 }
@@ -681,38 +631,24 @@ workflow {
     )
 
 
-
     mutation_load_ch2 = mutation_load.out.mutation_load_ch.collectFile(name: "all_processed_seq.tsv", skip: 1, keepHeader: true) // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
     mutation_load_ch2.subscribe{it -> it.copyTo("${out_path}")}
     mutation_load.out.mutation_load_log_ch.collectFile(name: "mutation_load.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
 
-    //igphyml(
-        //mutation_load.out.mutation_load_ch, 
-        //nb_seq_per_clone
-    //)
 
     get_tree(
         mutation_load.out.mutation_load_ch,
         nb_seq_per_clone
     )
 
+    no_tree_ch2 = get_tree.out.no_tree_ch.collectFile(name: "less_than_${nb_seq_per_clone}_seq_no_tree.tsv") // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
+    no_tree_ch2.subscribe{it -> it.copyTo("${out_path}")}
+    get_tree_ch2 = get_tree.out.get_tree_ch.collect()
     get_tree.out.get_tree_log_ch.collectFile(name: "get_tree.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
 
-
-
-
-    //igphyml_ch2 = igphyml.out.igphyml_ch.collectFile(name: "pre_tree_info.tsv", skip: 2, keepHeader: true) // skip the 2 first lines
-    //igphyml.out.igphyml_log_ch.collectFile(name: "igphyml.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
-
-    //igphyml_print(
-        //igphyml_ch2
-    //)
-
-
-
-    //tree_vizu(
-        //igphyml_print.out.igphyml_print_ch
-    //)
+    tree_vizu(
+        get_tree_ch2
+    )
 
     backup(
         config_file, 
