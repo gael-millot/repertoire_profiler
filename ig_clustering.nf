@@ -361,9 +361,10 @@ process get_tree {
 
     output:
     path "*.RData", emit: rdata_tree_ch, optional: true
-    path "dismissed_seq.tsv", emit: no_tree_ch, optional: true
-    path "dismissed_file_names.tsv", emit: no_file_ch, optional: true
-    path "*_for_tree.tsv", emit: tree_ch, optional: true
+    path "dismissed_seq_for_tree.tsv", emit: no_tree_ch, optional: true
+    path "seq_for_tree.tsv", emit: tree_ch, optional: true
+    path "dismissed_clone_id_for_tree.tsv", emit: no_cloneID_ch, optional: true
+    path "clone_id_for_tree.tsv", emit: cloneID_ch, optional: true
     path "get_tree.log", emit: get_tree_log_ch
     //path "HLP10_tree_parameters.tsv"
 
@@ -378,7 +379,7 @@ process get_tree {
     echo -e "\${FILENAME}:" |& tee -a get_tree.log
     LINE_NB=\$((\$(cat ${mutation_load_ch} | wc -l) - 1))
     if [[ "\$LINE_NB" -gt "${nb_seq_per_clone}" ]] ; then # the -gt operator can compare strings and means "greater than"
-        cat ${mutation_load_ch} > seq_over_\$((${nb_seq_per_clone} - 1))_for_tree.tsv
+        cat ${mutation_load_ch} > seq_for_tree.tsv
         Rscript -e '
             db <- alakazam::readChangeoDb("${mutation_load_ch}")
             clones <- dowser::formatClones(
@@ -390,11 +391,13 @@ process get_tree {
             trees <- dowser::getTrees(clones, build="igphyml", exec="/usr/local/share/igphyml/src/igphyml", nproc = 10)
             # assign(paste0("c", trees\$clone_id, "_trees"), trees)
             save(list = c("trees", "db", "clones"), file = paste0("./", trees\$clone_id, "_trees.RData"))
+            write.table(trees\$clone_id, file = paste0("./clone_id_for_tree.tsv"), row.names = FALSE, col.names = FALSE)
         ' |& tee -a get_tree.log
     else
         echo -e "LESS THAN ${nb_seq_per_clone} SEQUENCES FOR THE CLONAL GROUP: NO TREE COMPUTED" |& tee -a get_tree.log 
-        echo -e "\${FILENAME}" > dismissed_file_names.tsv
-        cat ${mutation_load_ch} > dismissed_seq.tsv
+        IFS='_' read -r -a TEMPO <<< "\${FILENAME}" # string split into array
+        echo \${TEMPO[0]} > dismissed_clone_id_for_tree.tsv
+        cat ${mutation_load_ch} > dismissed_seq_for_tree.tsv
     fi
     """
 }
@@ -402,7 +405,7 @@ process get_tree {
 
 process tree_vizu {
     label 'r_ext' // see the withLabel: bash in the nextflow config file 
-    publishDir path: "${out_path}", mode: 'copy', pattern: "{*.pdf}", overwrite: false
+    publishDir path: "${out_path}", mode: 'copy', pattern: "{trees.pdf}", overwrite: false
     publishDir path: "${out_path}/png", mode: 'copy', pattern: "{*.png}", overwrite: false
     publishDir path: "${out_path}/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
     publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{*.RData}", overwrite: false
@@ -419,10 +422,12 @@ process tree_vizu {
     val tree_label_hjust
     val tree_label_rigth
     val tree_label_outside
+    val tree_right_margin
+    val tree_legend
 
     output:
     path "*.RData", optional: true
-    path "*.pdf", optional: true
+    path "trees.pdf", optional: true
     path "*.png", optional: true
     path "*.svg", optional: true
     path "tree_vizu.log"
@@ -439,19 +444,19 @@ process tree_vizu {
             tempo <- NULL
             # concatenation of all tibble trees into a same tibble
             for(i3 in 1:length(tempo.list)){
-                rm(trees)
+                suppressWarnings(rm(trees))
                 load(tempo.list[i3])
                 tempo <- dplyr::bind_rows(tempo, trees)
             }
-            rm(trees)
+            suppressWarnings(rm(trees))
             trees <- tempo
             # end concatenation of all tibble trees into a same tibble
-            plots <- dowser::plotTrees(
+            plots <- suppressMessages(dowser::plotTrees(
                 # option in https://dowser.readthedocs.io/en/latest/topics/plotTrees/
                 trees, 
                 layout = "${tree_kind}", 
                 title = TRUE
-            )
+            ))
             save(trees, file = paste0("./all_trees.RData"))
             for(i3 in 1:length(plots)){
 
@@ -474,7 +479,7 @@ process tree_vizu {
                 tempo.gg.count <- 0
                 assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), plots[[i3]])
                 assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
-                    ggplot2::aes(fill = tempo.names), 
+                    ggplot2::aes(fill = tempo.names),
                     pch = ${tree_leaf_shape}, 
                     size = ${tree_leaf_size}
                 ))
@@ -492,12 +497,15 @@ process tree_vizu {
                 assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::coord_cartesian( # to extend the text display outside of the plot region
                     clip = ifelse("${tree_label_outside}" == "TRUE", "off", "on")
                     ))
+                assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::theme(plot.margin = ggplot2::margin(t = 0.25, l = 0.25, b = 0.25, r = ${tree_right_margin}, unit = "in")))
+                assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(fill = ${tree_legend}))
                 plots[[i3]] <- eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + ")))
                 ggplot2::ggsave(filename = paste0(trees\$clone_id[i3], ".png"), plot = plots[[i3]], device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-                # ggplot2::ggsave(filename = paste0(trees\$clone_id[i3], ".svg"), plot = plots[[i3]], device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-                ggplot2::ggsave(filename = paste0(trees\$clone_id[i3], ".svg"), plot = plots[[i3]], device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+                ggplot2::ggsave(filename = paste0(trees\$clone_id[i3], ".svg"), plot = plots[[i3]], device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+                ggplot2::ggsave(filename = paste0(trees\$clone_id[i3], ".pdf"), plot = plots[[i3]], device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
             }
             # dowser::treesToPDF(plots, file = "trees.pdf", nrow=2, ncol=2)
+            qpdf::pdf_combine(input = list.files(path = ".", pattern = ".pdf\$"), output = "./trees.pdf")
         }
     ' |& tee -a tree_vizu.log
     """
@@ -706,16 +714,20 @@ workflow {
         nb_seq_per_clone
     )
 
-    no_tree_ch2 = get_tree.out.no_tree_ch.collectFile(name: "inf_${nb_seq_per_clone}_prod_seq_no_tree.tsv") // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
+    rdata_tree_ch2 = get_tree.out.rdata_tree_ch.collect()
+
+    no_tree_ch2 = get_tree.out.no_tree_ch.collectFile(name: "dismissed_seq_for_tree.tsv", skip: 1, keepHeader: true) // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
     no_tree_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
-    no_file_ch2 = get_tree.out.no_file_ch.collectFile(name: "inf_${nb_seq_per_clone}_file_name_no_tree.tsv") // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
-    no_file_ch2.subscribe{it -> it.copyTo("${out_path}")}
-
-    tree_ch2 = get_tree.out.tree_ch.collectFile(name: "prod_seq_for_trees.tsv", skip: 1, keepHeader: true) // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
+    tree_ch2 = get_tree.out.tree_ch.collectFile(name: "seq_for_trees.tsv", skip: 1, keepHeader: true) // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
     tree_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
-    rdata_tree_ch2 = get_tree.out.rdata_tree_ch.collect()
+    no_cloneID_ch2 = get_tree.out.no_cloneID_ch.collectFile(name: "dismissed_clone_id_for_tree.tsv") // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
+    no_cloneID_ch2.subscribe{it -> it.copyTo("${out_path}")}
+
+    cloneID_ch2 = get_tree.out.cloneID_ch.collectFile(name: "clone_id_for_tree.tsv") // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
+    cloneID_ch2.subscribe{it -> it.copyTo("${out_path}")}
+
     get_tree.out.get_tree_log_ch.collectFile(name: "get_tree.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
 
     tree_vizu(
@@ -727,7 +739,9 @@ workflow {
         tree_label_size,
         tree_label_hjust,
         tree_label_rigth,
-        tree_label_outside
+        tree_label_outside,
+        tree_right_margin,
+        tree_legend
     )
 
     backup(
