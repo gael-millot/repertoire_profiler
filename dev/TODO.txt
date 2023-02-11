@@ -1,3 +1,14 @@
+
+add:
+isotype
+data output for interactive vizu
+
+
+
+
+
+ERRORS :
+
 add the different config present in the dev folder, associated with the different error kind:
 
 1) stop without warning message
