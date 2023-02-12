@@ -209,17 +209,17 @@ Also contains the all_trees.RData file that combine the trees R objects of the d
 <br /><br />
 **tree.pdf**: Phylogenic trees of the sequences that belong to a clonal group (one page per clonal group).
 <br /><br />
-**all_productive_before_tree_seq.tsv**: complete analysis of the sequences before phylogenic analysis (without the unproductive, i.e., unannotated, sequences).
+**all_productive_before_tree_seq.tsv**: Complete analysis of the sequences before phylogenic analysis (without the unproductive, i.e., unannotated, sequences).
 <br /><br />
-**merge_productive-F.tsv**: sequences that failed annotations by igblast (not returned if all the sequences are annotated).
+**merge_productive-F.tsv**: Sequences that failed annotations by igblast (not returned if all the sequences are annotated).
 <br /><br />
-**clone_id_for_tree.tsv**: clonal group IDs used in the tree analysis (clonal group with at least n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file)
+**clone_id_for_tree.tsv**: Clonal group IDs used in the tree analysis (clonal group with at least n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file)
 <br /><br />
-**dismissed_clone_id_for_tree.tsv**: clonal group IDs not used in the tree analysis (clonal group with less than n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file)
+**dismissed_clone_id_for_tree.tsv**: Clonal group IDs not used in the tree analysis (clonal group with less than n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file)
 <br /><br />
-**seq_for_trees.tsv**: sequences of the *all_productive_before_tree_seq.tsv* file used in the tree analysis
+**seq_for_trees.tsv**: Sequences of the *all_productive_before_tree_seq.tsv* file used in the tree analysis
 <br /><br />
-**dismissed_seq_for_tree.tsv**: sequences of the *all_productive_before_tree_seq.tsv* file not used in the tree analysis
+**dismissed_seq_for_tree.tsv**: Sequences of the *all_productive_before_tree_seq.tsv* file not used in the tree analysis
 
 
 <br /><br />
@@ -256,7 +256,7 @@ Not yet published
 
 The developers & maintainers of the mentioned softwares and packages, including:
 
-- [the R immcantation solution](https://immcantation.readthedocs.io/en/stable/)
+- [The R immcantation solution](https://immcantation.readthedocs.io/en/stable/)
 - [R](https://www.r-project.org/)
 - [ggplot2](https://ggplot2.tidyverse.org/)
 - [ggtree](https://yulab-smu.top/treedata-book/)
