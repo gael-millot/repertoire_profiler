@@ -24,9 +24,10 @@
 
 <br /><br />
 ## AIM
-1) Annotation of mRNA sequencing of the Immunoglobuline Heavy or Light variable region (fasta file sequences).
-2) Clustering of the annotated sequences into clonal groups (same germline origin).
-3) Tree visualization of the clonal groups.
+
+-Annotation of mRNA sequencing of the Immunoglobuline Heavy or Light variable region (fasta file sequences).
+- Clustering of the annotated sequences into clonal groups (same germline origin).
+- Tree visualization of the clonal groups.
 
 
 <br /><br />
@@ -47,9 +48,11 @@
 ## INPUT
 
 A folder made of fasta files, each containing a single sequence.
+
 Use the xlsx2fasta.R script if sequences are in a .xlsx file (see the sequences.xlsx file in the dataset folder as an example).
+
 Use this code to split a multi sequence fasta file into fasta files made of a single sequence:
-```
+```bash
 FASTA_FILE="./test.fasta" # add path and name of the fasta file here
 awk -v slice_size=1 -v prefix="cut" '$1 ~ /^>/{nbSeq++; currSlice=int((nbSeq-1)/slice_size)+1; myOutFile=prefix"_"currSlice".fasta"}{print $0 > myOutFile}' ${FASTA_FILE}
 ```
@@ -57,18 +60,17 @@ awk -v slice_size=1 -v prefix="cut" '$1 ~ /^>/{nbSeq++; currSlice=int((nbSeq-1)/
 <br /><br />
 ## HOW TO RUN
 
-<br /><br />
-### Requisite
+### 1. Prerequisite
 
 Installation of [nextflow DSL2](https://github.com/nextflow-io/nextflow)  and [Singularity/apptainer](https://github.com/apptainer/apptainer) 
 
-<br /><br />
-### Local running (personal computer)
+<br />
+### 2. Local running (personal computer)
 
-<br /><br />
-#### ig_clustering.nf file in the personal computer
+<br />
+#### 2.1. ig_clustering.nf file in the personal computer
 
-1) Mount a server if required:
+- Mount a server if required:
 
 ```bash
 DRIVE="C"
@@ -77,12 +79,12 @@ sudo mount -t drvfs $DRIVE: /mnt/share
 ```
 
 Warning: if no mounting, it is possible that nextflow does nothing, or displays a message like
-```
+```bash
 Launching `ig_clustering.nf` [loving_morse] - revision: d5aabe528b
 /mnt/share/Users
 ```
 
-2) Run the following command from where the ig_clustering.nf and ig_clustering.config files are (example: \\wsl$\Ubuntu-20.04\home\gael):
+- Run the following command from where the ig_clustering.nf and ig_clustering.config files are (example: \\wsl$\Ubuntu-20.04\home\gael):
 
 ```bash
 nextflow run ig_clustering.nf -c ig_clustering.config
@@ -90,8 +92,8 @@ nextflow run ig_clustering.nf -c ig_clustering.config
 
 with -c to specify the name of the config file used.
 
-<br /><br />
-#### ig_clustering.nf file in the public gitlab repository
+<br />
+#### 2.3. ig_clustering.nf file in the public gitlab repository
 
 Run the following command from where you want the results:
 
@@ -99,12 +101,10 @@ Run the following command from where you want the results:
 nextflow run -hub pasteur gmillot/ig_clustering -r v1.0.0
 ```
 
+<br />
+### 3. Distant running (example with the Pasteur cluster)
 
-<br /><br />
-### Distant running (example with the Pasteur cluster)
-
-<br /><br />
-#### Pre-execution
+#### 3.1. Pre-execution
 
 Copy-paste this after having modified the EXEC_PATH variable:
 
@@ -123,11 +123,10 @@ MODULES="${CONF_BEFORE}/${JAVA_CONF}/${JAVA_CONF_AFTER},${CONF_BEFORE}/${SINGU_C
 cd ${EXEC_PATH}
 chmod 755 ${EXEC_PATH}/bin/*.* # not required if no bin folder
 module load ${JAVA_CONF} ${SINGU_CONF} ${GIT_CONF}
-
 ```
 
-<br /><br />
-#### ig_clustering.nf file in a cluster folder
+<br />
+#### 3.2. ig_clustering.nf file in a cluster folder
 
 Modify the second line of the code below, and run from where the ig_clustering.nf and ig_clustering.config files are (which has been set thanks to the EXEC_PATH variable above):
 
@@ -140,8 +139,8 @@ HOME=$HOME_INI
 trap SIGINT
 ```
 
-<br /><br />
-#### ig_clustering.nf file in the public gitlab repository
+<br />
+#### 3.3. ig_clustering.nf file in the public gitlab repository
 
 Modify the first and third lines of the code below, and run (results will be where the EXEC_PATH variable has been set above):
 
@@ -156,28 +155,28 @@ trap SIGINT
 ```
 
 
-<br /><br />
-### Error messages and solutions
+<br />
+### 4. Error messages and solutions
 
 1)
-```
+```bash
 Unknown error accessing project `gmillot/ig_clustering` -- Repository may be corrupted: /pasteur/sonic/homes/gmillot/.nextflow/assets/gmillot/ig_clustering
 ```
 
 Purge using:
-```
+```bash
 rm -rf /pasteur/sonic/homes/gmillot/.nextflow/assets/gmillot*
 ```
 
 2)
-```
+```bash
 WARN: Cannot read project manifest -- Cause: Remote resource not found: https://gitlab.pasteur.fr/api/v4/projects/gmillot%2Fig_clustering
 ```
 Contact Gael Millot (distant repository is not public).
 
 3)
 
-```
+```bash
 permission denied
 ```
 
@@ -205,6 +204,8 @@ Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.
 - clones: db in the airClone format
 - trees: output of the dowser::getTrees() function using the clones object as input (igphylm tree)
 Also contains the all_trees.RData file that combine the trees R objects of the different files in a single trees object.
+
+
 <br /><br />
 **tree.pdf**: Phylogenic trees of the sequences that belong to a clonal group (one page per clonal group).
 <br /><br />
