@@ -25,7 +25,7 @@
 <br /><br />
 ## AIM
 
--Annotation of mRNA sequencing of the Immunoglobuline Heavy or Light variable region (fasta file sequences).
+- Annotation of mRNA sequencing of the Immunoglobuline Heavy or Light variable region (fasta file sequences).
 - Clustering of the annotated sequences into clonal groups (same germline origin).
 - Tree visualization of the clonal groups.
 
@@ -64,10 +64,10 @@ awk -v slice_size=1 -v prefix="cut" '$1 ~ /^>/{nbSeq++; currSlice=int((nbSeq-1)/
 
 Installation of [nextflow DSL2](https://github.com/nextflow-io/nextflow)  and [Singularity/apptainer](https://github.com/apptainer/apptainer) 
 
-<br />
+
 ### 2. Local running (personal computer)
 
-<br />
+
 #### 2.1. ig_clustering.nf file in the personal computer
 
 - Mount a server if required:
@@ -92,7 +92,7 @@ nextflow run ig_clustering.nf -c ig_clustering.config
 
 with -c to specify the name of the config file used.
 
-<br />
+
 #### 2.3. ig_clustering.nf file in the public gitlab repository
 
 Run the following command from where you want the results:
@@ -101,7 +101,7 @@ Run the following command from where you want the results:
 nextflow run -hub pasteur gmillot/ig_clustering -r v1.0.0
 ```
 
-<br />
+
 ### 3. Distant running (example with the Pasteur cluster)
 
 #### 3.1. Pre-execution
@@ -125,7 +125,7 @@ chmod 755 ${EXEC_PATH}/bin/*.* # not required if no bin folder
 module load ${JAVA_CONF} ${SINGU_CONF} ${GIT_CONF}
 ```
 
-<br />
+
 #### 3.2. ig_clustering.nf file in a cluster folder
 
 Modify the second line of the code below, and run from where the ig_clustering.nf and ig_clustering.config files are (which has been set thanks to the EXEC_PATH variable above):
@@ -139,7 +139,7 @@ HOME=$HOME_INI
 trap SIGINT
 ```
 
-<br />
+
 #### 3.3. ig_clustering.nf file in the public gitlab repository
 
 Modify the first and third lines of the code below, and run (results will be where the EXEC_PATH variable has been set above):
@@ -155,7 +155,7 @@ trap SIGINT
 ```
 
 
-<br />
+
 ### 4. Error messages and solutions
 
 1)
