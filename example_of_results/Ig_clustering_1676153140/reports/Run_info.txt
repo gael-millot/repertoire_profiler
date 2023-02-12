@@ -1,0 +1,20 @@
+Project (empty means no .git folder where the main.nf file is present): 
+Git info (empty means no .git folder where the main.nf file is present): 
+Cmd line: nextflow run -c ig_clustering.config ig_clustering.nf -resume
+execution mode: local
+Manifest's pipeline version: null
+result path: /mnt/c/Users/Gael/Documents/Git_projects/ig_clustering/results/Ig_clustering_1676153140
+nextflow version: 22.10.3
+
+
+IMPLICIT VARIABLES:
+
+launchDir (directory where the workflow is run): /mnt/c/Users/Gael/Documents/Git_projects/ig_clustering
+projectDir (directory where the main.nf script is located): /mnt/c/Users/Gael/Documents/Git_projects/ig_clustering
+workDir (directory where tasks temporary files are created): /mnt/c/Users/Gael/Documents/Git_projects/ig_clustering/work
+
+
+USER VARIABLES:
+
+out_path: /mnt/c/Users/Gael/Documents/Git_projects/ig_clustering/results/Ig_clustering_1676153140
+sample_path: /mnt/c/Users/Gael/Documents/Git_projects/ig_clustering/dataset/xlsx_to_fasta_1669018461/All

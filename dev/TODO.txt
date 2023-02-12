@@ -3,7 +3,7 @@ add:
 isotype
 data output for interactive vizu
 logo of the clones
-
+add Z://ROCURONIUM PROJECT//01 Primary data//04.Repertoire analysis//SORT2//SORT2 Seq-refiltered//ROC-Sort2(421)-20reads_specificity.xlsx in the dataset folder and name it sequences.xlsx
 
 
 

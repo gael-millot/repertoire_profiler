@@ -1,0 +1,33 @@
+   START> AssignGenes
+ COMMAND> igblast
+ VERSION> 1.17.1
+    FILE> CL4204730_VL_all.fa
+ORGANISM> mouse
+    LOCI> ig
+   NPROC> 16
+
+PROGRESS> 19:12:00 |Running IgBLAST          | 0.0 minPROGRESS> 19:12:00 |Done                     | 0.0 min
+
+  PASS> 1
+OUTPUT> CL4204730_VL_all_igblast.fmt7
+   END> AssignGenes
+
+         START> MakeDB
+       COMMAND> igblast
+  ALIGNER_FILE> CL4204730_VL_all_igblast.fmt7
+      SEQ_FILE> CL4204730_VL_all.fa
+       ASIS_ID> False
+    ASIS_CALLS> False
+       PARTIAL> False
+      EXTENDED> True
+INFER_JUNCTION> False
+
+PROGRESS> 19:12:00 |Loading files       | 0.0 minPROGRESS> 19:12:01 |Done                | 0.0 min
+
+PROGRESS> 19:12:01 |                    |   0% (0) 0.0 minPROGRESS> 19:12:10 |####################| 100% (1) 0.2 min
+
+OUTPUT> CL4204730_VL_all_igblast_db-pass.tsv
+  PASS> 1
+  FAIL> 0
+   END> MakeDb
+

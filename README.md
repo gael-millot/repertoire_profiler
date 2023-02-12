@@ -4,7 +4,7 @@
 | usage | dependencies |
 | --- | --- |
 | [![Nextflow](https://img.shields.io/badge/code-Nextflow-blue?style=plastic)](https://www.nextflow.io/) | [![Dependencies: Nextflow Version](https://img.shields.io/badge/Nextflow-v22.10.3-blue?style=plastic)](https://github.com/nextflow-io/nextflow) |
-| [![License: GPL-3.0](https://img.shields.io/badge/licence-GPL%20(%3E%3D3)-green?style=plastic)](https://www.gnu.org/licenses) | |
+| [![License: GPL-3.0](https://img.shields.io/badge/licence-GPL%20(%3E%3D3)-green?style=plastic)](https://www.gnu.org/licenses) | [![Dependencies: Singularity Version](https://img.shields.io/badge/Singularity-v3.8.0-blue?style=plastic)](https://github.com/apptainer/apptainer) |
 
 <br /><br />
 ## TABLE OF CONTENTS
@@ -12,6 +12,7 @@
 
    - [AIM](#aim)
    - [CONTENT](#content)
+   - [INPUT](#input)
    - [HOW TO RUN](#how-to-run)
    - [OUTPUT](#output)
    - [VERSIONS](#versions)
@@ -23,74 +24,51 @@
 
 <br /><br />
 ## AIM
-Clustering of single cell paired VH and VL sequences
+1) Annotation of mRNA sequencing of the Immunoglobuline Heavy or Light variable region (fasta file sequences).
+2) Clustering of the annotated sequences into clonal groups (same germline origin).
+3) Tree visualization of the clonal groups.
 
 
 <br /><br />
 ## CONTENT
 
-**ig_clustering.nf**: File that can be executed using a CLI (command line interface)
+**ig_clustering.nf**: File that can be executed using a linux terminal, a MacOS terminal or Windows 10 WSL2.
 <br /><br />
-**ig_clustering.config**: Parameter settings for the ig_clustering.nf file
+**ig_clustering.config**: Parameter settings for the ig_clustering.nf file. Users have to open this file, set the desired settings and save these modifications before execution.
 <br /><br />
-**xlsx2fasta.R**: Accessory file that creates all the fasta files from a .xlsx file. To use it, 1) open the file, 2) complete the "Parameters that need to be set by the user" section, 3) save the modifications and 4) run the file in R
+**xlsx2fasta.R**: Accessory file that creates all the fasta files from a .xlsx file. To use it, 1) open the file, 2) complete the "Parameters that need to be set by the user" section, 3) save the modifications and 4) run the file in R.
 <br /><br />
-**dataset**: Folder containing some datasets (batch of fasta files) than can be used as examples
+**dataset**: Folder containing some datasets (batch of fasta files) than can be used as examples.
 <br /><br />
 **example_of_results**: Folder containing examples of result obtained with the dataset. See the OUTPUT section for the description of the folder and files.
+
+
+<br /><br />
+## INPUT
+
+A folder made of fasta files, each containing a single sequence.
+Use the xlsx2fasta.R script if sequences are in a .xlsx file (see the sequences.xlsx file in the dataset folder as an example).
+Use this code to split a multi sequence fasta file into fasta files made of a single sequence:
+```
+FASTA_FILE="./test.fasta" # add path and name of the fasta file here
+awk -v slice_size=1 -v prefix="cut" '$1 ~ /^>/{nbSeq++; currSlice=int((nbSeq-1)/slice_size)+1; myOutFile=prefix"_"currSlice".fasta"}{print $0 > myOutFile}' ${FASTA_FILE}
+```
+
 <br /><br />
 ## HOW TO RUN
 
+<br /><br />
+### Requisite
 
-### If error message
+Installation of [nextflow DSL2](https://github.com/nextflow-io/nextflow)  and [Singularity/apptainer](https://github.com/apptainer/apptainer) 
 
-If an error message appears, like:
-```
-Unknown error accessing project `gmillot/ig_clustering` -- Repository may be corrupted: /pasteur/sonic/homes/gmillot/.nextflow/assets/gmillot/ig_clustering
-```
-Purge using:
-```
-rm -rf /pasteur/sonic/homes/gmillot/.nextflow/assets/gmillot*
-```
+<br /><br />
+### Local running (personal computer)
 
+<br /><br />
+#### ig_clustering.nf file in the personal computer
 
-### From local using the committed version on a public gitlab repository
-
-1) run the following command:
-
-```bash
-nextflow run -hub pasteur gmillot/ig_clustering -r v1.0.0
-```
-
-
-2) If an error message appears, like:
-```
-WARN: Cannot read project manifest -- Cause: Remote resource not found: https://gitlab.pasteur.fr/api/v4/projects/gmillot%2Fig_clustering
-```
-	Make the distant repo public.
-	In settings/General/Visibility, project features, permissions, check that every item is "on" with "Everyone With Access" and then save the changes.
-
-
-### From local using the committed version on a private gitlab repository
-
-1) Create the scm file:
-
-```bash
-providers {
-    pasteur {
-        server = 'https://gitlab.pasteur.fr'
-        platform = 'gitlab'
-    }
-}
-```
-
-And save it as 'scm' in the .nextflow folder. For instance in:
-\\wsl$\Ubuntu-20.04\home\gael\.nextflow
-
-Warning: ssh key must be set for gitlab, to be able to use this procedure.
-
-
-2) Mount a server if required:
+1) Mount a server if required:
 
 ```bash
 DRIVE="C"
@@ -104,33 +82,7 @@ Launching `ig_clustering.nf` [loving_morse] - revision: d5aabe528b
 /mnt/share/Users
 ```
 
-
-3) Then run the following command from here \\wsl$\Ubuntu-20.04\home\gael:
-
-```bash
-nextflow run -hub pasteur gmillot/ig_clustering -r v1.0.0
-```
-
-
-4) If an error message appears, like:
-```
-WARN: Cannot read project manifest -- Cause: Remote resource not found: https://gitlab.pasteur.fr/api/v4/projects/gmillot%2Fig_clustering
-```
-Make the distant repo public
-
-
-5) If an error message appears, like:
-
-```
-permission denied
-```
-
-Use chmod to change the user rights.
-
-
-### From local using local file
-
-Like above but then run the following command from here \\wsl$\Ubuntu-20.04\home\gael:
+2) Run the following command from where the ig_clustering.nf and ig_clustering.config files are (example: \\wsl$\Ubuntu-20.04\home\gael):
 
 ```bash
 nextflow run ig_clustering.nf -c ig_clustering.config
@@ -138,10 +90,23 @@ nextflow run ig_clustering.nf -c ig_clustering.config
 
 with -c to specify the name of the config file used.
 
+<br /><br />
+#### ig_clustering.nf file in the public gitlab repository
 
-### From a cluster using a committed version on gitlab
+Run the following command from where you want the results:
 
-Start with:
+```bash
+nextflow run -hub pasteur gmillot/ig_clustering -r v1.0.0
+```
+
+
+<br /><br />
+### Distant running (example with the Pasteur cluster)
+
+<br /><br />
+#### Pre-execution
+
+Copy-paste this after having modified the EXEC_PATH variable:
 
 ```bash
 EXEC_PATH="/pasteur/zeus/projets/p01/BioIT/gmillot/ig_clustering" # where the bin folder of the ig_clustering.nf script is located
@@ -151,51 +116,109 @@ export JAVA_CONF=java/13.0.2
 export JAVA_CONF_AFTER=bin/java # on maestro
 export SINGU_CONF=apptainer/1.1.5
 export SINGU_CONF_AFTER=bin/singularity # on maestro
-export GIT_CONF=git/2.25.0
+export GIT_CONF=git/2.39.1
 export GIT_CONF_AFTER=bin/git # on maestro
 
 MODULES="${CONF_BEFORE}/${JAVA_CONF}/${JAVA_CONF_AFTER},${CONF_BEFORE}/${SINGU_CONF}/${SINGU_CONF_AFTER},${CONF_BEFORE}/${GIT_CONF}/${GIT_CONF_AFTER}"
 cd ${EXEC_PATH}
-chmod 755 ${EXEC_PATH}/bin/*.*
+chmod 755 ${EXEC_PATH}/bin/*.* # not required if no bin folder
 module load ${JAVA_CONF} ${SINGU_CONF} ${GIT_CONF}
 
 ```
 
-Then run:
+<br /><br />
+#### ig_clustering.nf file in a cluster folder
+
+Modify the second line of the code below, and run from where the ig_clustering.nf and ig_clustering.config files are (which has been set thanks to the EXEC_PATH variable above):
 
 ```bash
-# distant ig_clustering.nf file
-HOME="${ZEUSHOME}/ig_clustering/" ; trap '' SIGINT ; nextflow run --modules ${MODULES} -hub pasteur gmillot/ig_clustering -r v1.0 -c $HOME/ig_clustering.config ; HOME="/pasteur/appa/homes/gmillot/"  ; trap SIGINT
-
-# local ig_clustering.nf file ($HOME changed to allow the creation of .nextflow into /$ZEUSHOME/ig_clustering/. See NFX_HOME in the nextflow soft script)
-HOME="${ZEUSHOME}/ig_clustering/" ; trap '' SIGINT ; nextflow run --modules ${MODULES} ig_clustering.nf -c ig_clustering.config ; HOME="/pasteur/appa/homes/gmillot/" ; trap SIGINT
+HOME_INI=$HOME
+HOME="${ZEUSHOME}/ig_clustering/" # $HOME changed to allow the creation of .nextflow into /$ZEUSHOME/ig_clustering/, for instance. See NFX_HOME in the nextflow software script
+trap '' SIGINT
+nextflow run --modules ${MODULES} ig_clustering.nf -c ig_clustering.config
+HOME=$HOME_INI
+trap SIGINT
 ```
 
-If an error message appears, like:
+<br /><br />
+#### ig_clustering.nf file in the public gitlab repository
+
+Modify the first and third lines of the code below, and run (results will be where the EXEC_PATH variable has been set above):
+
+```bash
+VERSION="v1.0"
+HOME_INI=$HOME
+HOME="${ZEUSHOME}/ig_clustering/" # $HOME changed to allow the creation of .nextflow into /$ZEUSHOME/ig_clustering/, for instance. See NFX_HOME in the nextflow software script
+trap '' SIGINT
+nextflow run --modules ${MODULES} -hub pasteur gmillot/ig_clustering -r $VERSION -c $HOME/ig_clustering.config
+HOME=$HOME_INI
+trap SIGINT
+```
+
+
+<br /><br />
+### Error messages and solutions
+
+1)
 ```
 Unknown error accessing project `gmillot/ig_clustering` -- Repository may be corrupted: /pasteur/sonic/homes/gmillot/.nextflow/assets/gmillot/ig_clustering
 ```
+
 Purge using:
 ```
 rm -rf /pasteur/sonic/homes/gmillot/.nextflow/assets/gmillot*
 ```
 
+2)
+```
+WARN: Cannot read project manifest -- Cause: Remote resource not found: https://gitlab.pasteur.fr/api/v4/projects/gmillot%2Fig_clustering
+```
+Contact Gael Millot (distant repository is not public).
+
+3)
+
+```
+permission denied
+```
+
+Use chmod to change the user rights.
+
+
+
 <br /><br />
 ## OUTPUT
 
 
-**reports**: Folder containing all the reports of the different processes including the *ig_clustering.config* file used.
+Results are present in a *Ig_clustering_xxxxx* folder, inside the nextflow *result* folder.
 <br /><br />
-**tree.pdf**: Phylogenic tree provided by BuildTrees.py and alakazam::readIgphyml.
-<br /><br />
-**HLP10_tree_parameters.tsv**: Parameters of the phylogenic tree.
-<br /><br />
-**phy_igphyml-pass.tab**: File used to draw the phylogenic tree, provided by BuildTrees.py.
-<br /><br />
-**merge.tsv**: Annotation of the Heavy and light chain sequences by igblast, provided by AssignGenes.py igblast and MakeDb.py igblast.
-<br /><br />
-**merge_productive-F.tsv**: Failed annotations by igblast.
+Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.docx (contact Gael Millot).
 
+<br /><br />
+**reports**: Folder containing all the reports of the different processes, including the *ig_clustering.config* file used.
+<br /><br />
+**png**: Folder containing the tree.pdf graphs in png format.
+<br /><br />
+**svg**: Folder containing the tree.pdf graphs in svg vectorial format.
+<br /><br />
+**RData**: Folder containing, for each clonal group, objects that can be used in R to further analyze of plot the data:
+- db: tibble data frame resulting from the import by the alakazam::readChangeoDb() function
+- clones: db in the airClone format
+- trees: output of the dowser::getTrees() function using the clones object as input (igphylm tree)
+Also contains the all_trees.RData file that combine the trees R objects of the different files in a single trees object.
+<br /><br />
+**tree.pdf**: Phylogenic trees of the sequences that belong to a clonal group (one page per clonal group).
+<br /><br />
+**all_productive_before_tree_seq.tsv**: complete analysis of the sequences before phylogenic analysis (without the unproductive, i.e., unannotated, sequences).
+<br /><br />
+**merge_productive-F.tsv**: sequences that failed annotations by igblast (not returned if all the sequences are annotated).
+<br /><br />
+**clone_id_for_tree.tsv**: clonal group IDs used in the tree analysis (clonal group with at least n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file)
+<br /><br />
+**dismissed_clone_id_for_tree.tsv**: clonal group IDs not used in the tree analysis (clonal group with less than n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file)
+<br /><br />
+**seq_for_trees.tsv**: sequences of the *all_productive_before_tree_seq.tsv* file used in the tree analysis
+<br /><br />
+**dismissed_seq_for_tree.tsv**: sequences of the *all_productive_before_tree_seq.tsv* file not used in the tree analysis
 
 
 <br /><br />
@@ -224,18 +247,30 @@ Not yet published
 
 [Pascal Chappert](https://www.institut-necker-enfants-malades.fr/index.php?menu=team&rubric=teamtabs&idfac=mahevas#chart), INSERM U1151 Institut Necker Enfants Malades, Paris, France
 
-[Gael A. Millot](https://gitlab.pasteur.fr/gmillot), Hub, Institut Pasteur, Paris, France
+[Gael A. Millot](https://gitlab.pasteur.fr/gmillot), Bioinformatics and Biostatistics Hub, Institut Pasteur, Paris, France
 
 <br /><br />
 ## ACKNOWLEDGEMENTS
 
 
-The mentioned softwares and packages developers & maintainers
+The developers & maintainers of the mentioned softwares and packages, including:
 
-Gitlab developers
+- [the R immcantation solution](https://immcantation.readthedocs.io/en/stable/)
+- [R](https://www.r-project.org/)
+- [ggplot2](https://ggplot2.tidyverse.org/)
+- [ggtree](https://yulab-smu.top/treedata-book/)
+- [Nextflow](https://www.nextflow.io/)
+- [Singularity/Apptainer](https://apptainer.org/)
+- [Docker](https://www.docker.com/)
+- [Gitlab](https://about.gitlab.com/)
 
 <br /><br />
 ## WHAT'S NEW IN
+
+
+### v3.0
+
+first version that provides trees of clonal groups
 
 
 ### v2.1
