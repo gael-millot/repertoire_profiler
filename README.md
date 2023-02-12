@@ -268,23 +268,27 @@ The developers & maintainers of the mentioned softwares and packages, including:
 <br /><br />
 ## WHAT'S NEW IN
 
+#### v3.1
 
-### v3.0
+README file updated
+
+
+#### v3.0
 
 first version that provides trees of clonal groups
 
 
-### v2.1
+#### v2.1
 
 xlsx2fasta.R file added | Nicer tree representation added
 
 
-### v2.0
+#### v2.0
 
 Conversion into DSL2 ok
 
 
-### v1.0
+#### v1.0
 
 First DSL1 version that works
 
