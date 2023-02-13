@@ -33,15 +33,11 @@
 <br /><br />
 ## CONTENT
 
-**ig_clustering.nf**: File that can be executed using a linux terminal, a MacOS terminal or Windows 10 WSL2.
-<br /><br />
-**ig_clustering.config**: Parameter settings for the ig_clustering.nf file. Users have to open this file, set the desired settings and save these modifications before execution.
-<br /><br />
-**xlsx2fasta.R**: Accessory file that creates all the fasta files from a .xlsx file. To use it, 1) open the file, 2) complete the "Parameters that need to be set by the user" section, 3) save the modifications and 4) run the file in R.
-<br /><br />
-**dataset**: Folder containing some datasets (batch of fasta files) than can be used as examples.
-<br /><br />
-**example_of_results**: Folder containing examples of result obtained with the dataset. See the OUTPUT section for the description of the folder and files.
+| **ig_clustering.nf**: | File that can be executed using a linux terminal, a MacOS terminal or Windows 10 WSL2. |
+| **ig_clustering.config**: | Parameter settings for the ig_clustering.nf file. Users have to open this file, set the desired settings and save these modifications before execution. |
+| **xlsx2fasta.R**: | Accessory file that creates all the fasta files from a .xlsx file. To use it, 1) open the file, 2) complete the "Parameters that need to be set by the user" section, 3) save the modifications and 4) run the file in R. |
+| **dataset**: | Folder containing some datasets (batch of fasta files) than can be used as examples. |
+| **example_of_results**: | Folder containing examples of result obtained with the dataset. See the OUTPUT section for the description of the folder and files. |
 
 
 <br /><br />
@@ -193,33 +189,17 @@ Results are present in a *Ig_clustering_xxxxx* folder, inside the nextflow *resu
 Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.docx (contact Gael Millot).
 
 <br /><br />
-**reports**: Folder containing all the reports of the different processes, including the *ig_clustering.config* file used.
-<br /><br />
-**png**: Folder containing the tree.pdf graphs in png format.
-<br /><br />
-**svg**: Folder containing the tree.pdf graphs in svg vectorial format.
-<br /><br />
-**RData**: Folder containing, for each clonal group, objects that can be used in R to further analyze of plot the data:
-- db: tibble data frame resulting from the import by the alakazam::readChangeoDb() function
-- clones: db in the airClone format
-- trees: output of the dowser::getTrees() function using the clones object as input (igphylm tree)
-Also contains the all_trees.RData file that combine the trees R objects of the different files in a single trees object.
-
-
-<br /><br />
-**tree.pdf**: Phylogenic trees of the sequences that belong to a clonal group (one page per clonal group).
-<br /><br />
-**all_productive_before_tree_seq.tsv**: Complete analysis of the sequences before phylogenic analysis (without the unproductive, i.e., unannotated, sequences).
-<br /><br />
-**merge_productive-F.tsv**: Sequences that failed annotations by igblast (not returned if all the sequences are annotated).
-<br /><br />
-**clone_id_for_tree.tsv**: Clonal group IDs used in the tree analysis (clonal group with at least n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file)
-<br /><br />
-**dismissed_clone_id_for_tree.tsv**: Clonal group IDs not used in the tree analysis (clonal group with less than n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file)
-<br /><br />
-**seq_for_trees.tsv**: Sequences of the *all_productive_before_tree_seq.tsv* file used in the tree analysis
-<br /><br />
-**dismissed_seq_for_tree.tsv**: Sequences of the *all_productive_before_tree_seq.tsv* file not used in the tree analysis
+| **reports**: | Folder containing all the reports of the different processes, including the *ig_clustering.config* file used. |
+| **png**: | Folder containing the tree.pdf graphs in png format. |
+| **svg**: | Folder containing the tree.pdf graphs in svg vectorial format. |
+| **RData**: | Folder containing, for each clonal group, objects that can be used in R to further analyze of plot the data:<br /><ul><li>db: tibble data frame resulting from the import by the alakazam::readChangeoDb() function<br /></li><li>clones: db in the airClone format<br /></li><li>trees: output of the dowser::getTrees() function using the clones object as input (igphylm tree)</li><br /><br />Also contains the all_trees.RData file that combine the trees R objects of the different files in a single trees object. |
+| **tree.pdf**: | Phylogenic trees of the sequences that belong to a clonal group (one page per clonal group). |
+| **all_productive_before_tree_seq.tsv**: | Complete analysis of the sequences before phylogenic analysis (without the unproductive, i.e., unannotated, sequences). |
+| **merge_productive-F.tsv**: | Sequences that failed annotations by igblast (not returned if all the sequences are annotated). |
+| **clone_id_for_tree.tsv**: | Clonal group IDs used in the tree analysis (clonal group with at least n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file) |
+| **dismissed_clone_id_for_tree.tsv**: | Clonal group IDs not used in the tree analysis (clonal group with less than n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file) |
+| **seq_for_trees.tsv**: | Sequences of the *all_productive_before_tree_seq.tsv* file used in the tree analysis |
+| **dismissed_seq_for_tree.tsv**: | Sequences of the *all_productive_before_tree_seq.tsv* file not used in the tree analysis |
 
 
 <br /><br />
@@ -265,6 +245,7 @@ The developers & maintainers of the mentioned softwares and packages, including:
 - [Docker](https://www.docker.com/)
 - [Gitlab](https://about.gitlab.com/)
 
+Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/kenneth-hoehn/), Yale School of Medicine, New Haven, CT, USA
 <br /><br />
 ## WHAT'S NEW IN
 
