@@ -33,6 +33,7 @@
 <br /><br />
 ## CONTENT
 
+| Ig_clustering folder | Description |
 | --- | --- |
 | **ig_clustering.nf**: | File that can be executed using a linux terminal, a MacOS terminal or Windows 10 WSL2. |
 | **ig_clustering.config**: | Parameter settings for the ig_clustering.nf file. Users have to open this file, set the desired settings and save these modifications before execution. |
@@ -189,6 +190,8 @@ Results are present in a *Ig_clustering_xxxxx* folder, inside the nextflow *resu
 <br /><br />
 Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.docx (contact Gael Millot).
 <br /><br />
+
+| Ig_clustering_xxxxx folder | Description |
 | --- | --- |
 | **reports**: | Folder containing all the reports of the different processes, including the *ig_clustering.config* file used. |
 | **png**: | Folder containing the tree.pdf graphs in png format. |
