@@ -33,6 +33,7 @@
 <br /><br />
 ## CONTENT
 
+| --- | --- |
 | **ig_clustering.nf**: | File that can be executed using a linux terminal, a MacOS terminal or Windows 10 WSL2. |
 | **ig_clustering.config**: | Parameter settings for the ig_clustering.nf file. Users have to open this file, set the desired settings and save these modifications before execution. |
 | **xlsx2fasta.R**: | Accessory file that creates all the fasta files from a .xlsx file. To use it, 1) open the file, 2) complete the "Parameters that need to be set by the user" section, 3) save the modifications and 4) run the file in R. |
@@ -187,8 +188,8 @@ Use chmod to change the user rights.
 Results are present in a *Ig_clustering_xxxxx* folder, inside the nextflow *result* folder.
 <br /><br />
 Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.docx (contact Gael Millot).
-
 <br /><br />
+| --- | --- |
 | **reports**: | Folder containing all the reports of the different processes, including the *ig_clustering.config* file used. |
 | **png**: | Folder containing the tree.pdf graphs in png format. |
 | **svg**: | Folder containing the tree.pdf graphs in svg vectorial format. |
