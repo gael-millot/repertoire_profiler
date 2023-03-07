@@ -457,7 +457,7 @@ process tree_vizu {
                 layout = "${tree_kind}", 
                 title = TRUE
             ))
-            save(trees, file = paste0("./all_trees.RData"))
+            save(list = c("trees", "plots"), file = "./all_trees.RData")
             for(i3 in 1:length(plots)){
 
                 tempo.graph.info <- ggplot2::ggplot_build(plots[[i3]] +  ggtree::geom_tippoint() + ggtree::geom_tiplab())

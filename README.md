@@ -60,7 +60,10 @@ awk -v slice_size=1 -v prefix="cut" '$1 ~ /^>/{nbSeq++; currSlice=int((nbSeq-1)/
 
 ### 1. Prerequisite
 
-Installation of [nextflow DSL2](https://github.com/nextflow-io/nextflow)  and [Singularity/apptainer](https://github.com/apptainer/apptainer) 
+Installation of:<br />
+[nextflow DSL2](https://github.com/nextflow-io/nextflow)<br />
+[Singularity/apptainer](https://github.com/apptainer/apptainer)<br />
+[igblast database](https://ftp.ncbi.nih.gov/blast/executables/igblast/release/1.17.1/), installed in the mandatory folder: ~/share
 
 
 ### 2. Local running (personal computer)
@@ -252,6 +255,11 @@ The developers & maintainers of the mentioned softwares and packages, including:
 Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/kenneth-hoehn/), Yale School of Medicine, New Haven, CT, USA
 <br /><br />
 ## WHAT'S NEW IN
+
+#### v3.2
+
+README file updated for localization of the igblast database
+
 
 #### v3.1
 
