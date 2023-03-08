@@ -64,7 +64,6 @@ Installation of:<br />
 [nextflow DSL2](https://github.com/nextflow-io/nextflow)<br />
 [Graphviz](https://www.graphviz.org/download/), `sudo apt install graphviz` for Linux ubuntu<br />
 [Singularity/apptainer](https://github.com/apptainer/apptainer)<br />
-[igblast database](https://ftp.ncbi.nih.gov/blast/executables/igblast/release/1.17.1/), installed in the mandatory folder: ~/share
 
 
 ### 2. Local running (personal computer)
@@ -254,6 +253,7 @@ The developers & maintainers of the mentioned softwares and packages, including:
 - [Gitlab](https://about.gitlab.com/)
 
 Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/kenneth-hoehn/), Yale School of Medicine, New Haven, CT, USA
+
 <br /><br />
 ## WHAT'S NEW IN
 

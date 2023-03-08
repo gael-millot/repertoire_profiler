@@ -662,20 +662,11 @@ workflow {
         igblast_aa
     )
 
-    tsv_ch2 = igblast.out.tsv_ch1.collectFile(name: "all_igblast_seq.tsv", skip: 1, keepHeader: true, tempDir: "${out_path}/") // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
-    // or igblast.out[0].collectFile() if output of igblast process is not named using emit.
-    //the following test does not work because tested at the beginning of the nexflow run, not after the igblast process, as shown with the print("coucou")
-    //if(tsv_ch2.toList().size() == 0){
-        //print("coucou_1")
-        //error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION: MakeDb.py igblast FAIL FOR ALL THE FILES DURING THE igblast PROCESS\nEMPTY FILE GENERATED\n\n\n\n========\n\n"
-    //}else{
-        //print("coucou_2")
-        //
-    //}
-    //tsv_ch2.subscribe{it -> it.copyTo("${out_path}")}
+    tsv_ch2 = igblast.out.tsv_ch1.collectFile(name: "all_igblast_seq.tsv", skip: 1, keepHeader: true) // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
+    tsv_ch2.view()
     igblast.out.log_ch.collectFile(name: "igblast_report.log").subscribe{it -> it.copyTo("${out_path}/reports")} // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
 
-    //tsv_ch2.view()
+
 
     parseDb_filtering(
         tsv_ch2
