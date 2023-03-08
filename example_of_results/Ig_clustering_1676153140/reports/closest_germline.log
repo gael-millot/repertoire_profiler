@@ -1,3973 +1,0 @@
-
-
-################################
-
-43_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 43_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:18 |Sorting by clone    | 0.0 minPROGRESS> 19:20:18 |Done                | 0.0 min
-
-PROGRESS> 19:20:18 |                    |   0% (0) 0.0 minPROGRESS> 19:20:18 |####################| 100% (1) 0.0 min
-
- OUTPUT> 43_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-38_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 38_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:10 |Sorting by clone    | 0.0 minPROGRESS> 19:20:10 |Done                | 0.0 min
-
-PROGRESS> 19:20:10 |                    |   0% (0) 0.0 minPROGRESS> 19:20:10 |#############       |  67% (2) 0.0 minPROGRESS> 19:20:10 |####################| 100% (3) 0.0 min
-
- OUTPUT> 38_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 3
-   PASS> 2
-   FAIL> 1
-    END> CreateGermlines
-
-
-
-################################
-
-135_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 135_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:22 |Sorting by clone    | 0.0 minPROGRESS> 19:19:22 |Done                | 0.0 min
-
-PROGRESS> 19:19:22 |                    |   0% (0) 0.0 minPROGRESS> 19:19:22 |#############       |  67% (2) 0.0 minPROGRESS> 19:19:22 |####################| 100% (3) 0.0 min
-
- OUTPUT> 135_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 3
-   PASS> 2
-   FAIL> 1
-    END> CreateGermlines
-
-
-
-################################
-
-20_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 20_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:56 |Sorting by clone    | 0.0 minPROGRESS> 19:19:56 |Done                | 0.0 min
-
-PROGRESS> 19:19:56 |                    |   0% (0) 0.0 minPROGRESS> 19:19:56 |#############       |  67% (2) 0.0 minPROGRESS> 19:19:56 |####################| 100% (3) 0.0 min
-
- OUTPUT> 20_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 3
-   PASS> 2
-   FAIL> 1
-    END> CreateGermlines
-
-
-
-################################
-
-24_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 24_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:59 |Sorting by clone    | 0.0 minPROGRESS> 19:19:59 |Done                | 0.0 min
-
-PROGRESS> 19:19:59 |                    |   0% (0) 0.0 minPROGRESS> 19:19:59 |####################| 100% (1) 0.0 min
-
- OUTPUT> 24_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-73_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 73_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:53 |Sorting by clone    | 0.0 minPROGRESS> 19:20:53 |Done                | 0.0 min
-
-PROGRESS> 19:20:53 |                    |   0% (0) 0.0 minPROGRESS> 19:20:53 |#############       |  67% (2) 0.0 minPROGRESS> 19:20:53 |####################| 100% (3) 0.0 min
-
- OUTPUT> 73_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 3
-   PASS> 2
-   FAIL> 1
-    END> CreateGermlines
-
-
-
-################################
-
-92_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 92_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:21:11 |Sorting by clone    | 0.0 minPROGRESS> 19:21:11 |Done                | 0.0 min
-
-PROGRESS> 19:21:11 |                    |   0% (0) 0.0 minPROGRESS> 19:21:11 |#############       |  67% (2) 0.0 minPROGRESS> 19:21:11 |####################| 100% (3) 0.0 min
-
- OUTPUT> 92_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 3
-   PASS> 2
-   FAIL> 1
-    END> CreateGermlines
-
-
-
-################################
-
-101_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 101_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:00 |Sorting by clone    | 0.0 minPROGRESS> 19:19:00 |Done                | 0.0 min
-
-PROGRESS> 19:19:00 |                    |   0% (0) 0.0 minPROGRESS> 19:19:00 |###########         |  57% (4) 0.0 minPROGRESS> 19:19:00 |####################| 100% (7) 0.0 min
-
- OUTPUT> 101_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 7
-   PASS> 4
-   FAIL> 3
-    END> CreateGermlines
-
-
-
-################################
-
-25_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 25_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:49 |Sorting by clone    | 0.0 minPROGRESS> 19:19:49 |Done                | 0.0 min
-
-PROGRESS> 19:19:49 |                    |   0% (0) 0.0 minPROGRESS> 19:19:49 |############        |  60% (3) 0.0 minPROGRESS> 19:19:49 |####################| 100% (5) 0.0 min
-
- OUTPUT> 25_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 5
-   PASS> 3
-   FAIL> 2
-    END> CreateGermlines
-
-
-
-################################
-
-104_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 104_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:00 |Sorting by clone    | 0.0 minPROGRESS> 19:19:00 |Done                | 0.0 min
-
-PROGRESS> 19:19:00 |                    |   0% (0) 0.0 minPROGRESS> 19:19:00 |#############       |  67% (2) 0.0 minPROGRESS> 19:19:00 |####################| 100% (3) 0.0 min
-
- OUTPUT> 104_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 3
-   PASS> 2
-   FAIL> 1
-    END> CreateGermlines
-
-
-
-################################
-
-70_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 70_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:41 |Sorting by clone    | 0.0 minPROGRESS> 19:20:41 |Done                | 0.0 min
-
-PROGRESS> 19:20:41 |                    |   0% ( 0) 0.0 minPROGRESS> 19:20:41 |##########          |  54% ( 7) 0.0 minPROGRESS> 19:20:41 |####################| 100% (13) 0.0 min
-
- OUTPUT> 70_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 13
-   PASS> 7
-   FAIL> 6
-    END> CreateGermlines
-
-
-
-################################
-
-129_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 129_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:33 |Sorting by clone    | 0.0 minPROGRESS> 19:19:33 |Done                | 0.0 min
-
-PROGRESS> 19:19:33 |                    |   0% (0) 0.0 minPROGRESS> 19:19:33 |####################| 100% (1) 0.0 min
-
- OUTPUT> 129_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-85_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 85_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:58 |Sorting by clone    | 0.0 minPROGRESS> 19:20:58 |Done                | 0.0 min
-
-PROGRESS> 19:20:58 |                    |   0% (0) 0.0 minPROGRESS> 19:20:58 |####################| 100% (1) 0.0 min
-
- OUTPUT> 85_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-55_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 55_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:36 |Sorting by clone    | 0.0 minPROGRESS> 19:20:36 |Done                | 0.0 min
-
-PROGRESS> 19:20:36 |                    |   0% ( 0) 0.0 minPROGRESS> 19:20:36 |##########          |  53% ( 9) 0.0 minPROGRESS> 19:20:36 |####################| 100% (17) 0.0 min
-
- OUTPUT> 55_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 17
-   PASS> 9
-   FAIL> 8
-    END> CreateGermlines
-
-
-
-################################
-
-35_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 35_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:17 |Sorting by clone    | 0.0 minPROGRESS> 19:20:17 |Done                | 0.0 min
-
-PROGRESS> 19:20:17 |                    |   0% (0) 0.0 minPROGRESS> 19:20:17 |#############       |  67% (2) 0.0 minPROGRESS> 19:20:17 |####################| 100% (3) 0.0 min
-
- OUTPUT> 35_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 3
-   PASS> 2
-   FAIL> 1
-    END> CreateGermlines
-
-
-
-################################
-
-121_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 121_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:19 |Sorting by clone    | 0.0 minPROGRESS> 19:19:19 |Done                | 0.0 min
-
-PROGRESS> 19:19:19 |                    |   0% (0) 0.0 minPROGRESS> 19:19:19 |###########         |  56% (5) 0.0 minPROGRESS> 19:19:19 |####################| 100% (9) 0.0 min
-
- OUTPUT> 121_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 9
-   PASS> 5
-   FAIL> 4
-    END> CreateGermlines
-
-
-
-################################
-
-47_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 47_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:12 |Sorting by clone    | 0.0 minPROGRESS> 19:20:12 |Done                | 0.0 min
-
-PROGRESS> 19:20:12 |                    |   0% (0) 0.0 minPROGRESS> 19:20:12 |#############       |  67% (2) 0.0 minPROGRESS> 19:20:12 |####################| 100% (3) 0.0 min
-
- OUTPUT> 47_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 3
-   PASS> 2
-   FAIL> 1
-    END> CreateGermlines
-
-
-
-################################
-
-50_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 50_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:28 |Sorting by clone    | 0.0 minPROGRESS> 19:20:28 |Done                | 0.0 min
-
-PROGRESS> 19:20:28 |                    |   0% (0) 0.0 minPROGRESS> 19:20:28 |####################| 100% (1) 0.0 min
-
- OUTPUT> 50_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-105_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 105_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:02 |Sorting by clone    | 0.0 minPROGRESS> 19:19:02 |Done                | 0.0 min
-
-PROGRESS> 19:19:02 |                    |   0% (0) 0.0 minPROGRESS> 19:19:02 |####################| 100% (1) 0.0 min
-
- OUTPUT> 105_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-75_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 75_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:50 |Sorting by clone    | 0.0 minPROGRESS> 19:20:50 |Done                | 0.0 min
-
-PROGRESS> 19:20:50 |                    |   0% (0) 0.0 minPROGRESS> 19:20:50 |#############       |  67% (2) 0.0 minPROGRESS> 19:20:50 |####################| 100% (3) 0.0 min
-
- OUTPUT> 75_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 3
-   PASS> 2
-   FAIL> 1
-    END> CreateGermlines
-
-
-
-################################
-
-98_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 98_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:21:16 |Sorting by clone    | 0.0 minPROGRESS> 19:21:16 |Done                | 0.0 min
-
-PROGRESS> 19:21:16 |                    |   0% (0) 0.0 minPROGRESS> 19:21:16 |############        |  60% (3) 0.0 minPROGRESS> 19:21:16 |####################| 100% (5) 0.0 min
-
- OUTPUT> 98_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 5
-   PASS> 3
-   FAIL> 2
-    END> CreateGermlines
-
-
-
-################################
-
-131_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 131_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:41 |Sorting by clone    | 0.0 minPROGRESS> 19:19:41 |Done                | 0.0 min
-
-PROGRESS> 19:19:41 |                    |   0% (0) 0.0 minPROGRESS> 19:19:41 |####################| 100% (1) 0.0 min
-
- OUTPUT> 131_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-111_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 111_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:03 |Sorting by clone    | 0.0 minPROGRESS> 19:19:03 |Done                | 0.0 min
-
-PROGRESS> 19:19:03 |                    |   0% (0) 0.0 minPROGRESS> 19:19:03 |####################| 100% (1) 0.0 min
-
- OUTPUT> 111_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-90_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 90_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:21:06 |Sorting by clone    | 0.0 minPROGRESS> 19:21:06 |Done                | 0.0 min
-
-PROGRESS> 19:21:06 |                    |   0% (0) 0.0 minPROGRESS> 19:21:06 |#############       |  67% (2) 0.0 minPROGRESS> 19:21:06 |####################| 100% (3) 0.0 min
-
- OUTPUT> 90_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 3
-   PASS> 2
-   FAIL> 1
-    END> CreateGermlines
-
-
-
-################################
-
-62_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 62_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:41 |Sorting by clone    | 0.0 minPROGRESS> 19:20:41 |Done                | 0.0 min
-
-PROGRESS> 19:20:41 |                    |   0% ( 0) 0.0 minPROGRESS> 19:20:41 |##########          |  55% ( 6) 0.0 minPROGRESS> 19:20:41 |####################| 100% (11) 0.0 min
-
- OUTPUT> 62_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 11
-   PASS> 6
-   FAIL> 5
-    END> CreateGermlines
-
-
-
-################################
-
-61_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 61_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:40 |Sorting by clone    | 0.0 minPROGRESS> 19:20:40 |Done                | 0.0 min
-
-PROGRESS> 19:20:40 |                    |   0% (0) 0.0 minPROGRESS> 19:20:40 |############        |  60% (3) 0.0 minPROGRESS> 19:20:40 |####################| 100% (5) 0.0 min
-
- OUTPUT> 61_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 5
-   PASS> 3
-   FAIL> 2
-    END> CreateGermlines
-
-
-
-################################
-
-124_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 124_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:21 |Sorting by clone    | 0.0 minPROGRESS> 19:19:21 |Done                | 0.0 min
-
-PROGRESS> 19:19:21 |                    |   0% (0) 0.0 minPROGRESS> 19:19:21 |####################| 100% (1) 0.0 min
-
- OUTPUT> 124_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-86_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 86_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:59 |Sorting by clone    | 0.0 minPROGRESS> 19:20:59 |Done                | 0.0 min
-
-PROGRESS> 19:20:59 |                    |   0% (0) 0.0 minPROGRESS> 19:20:59 |###########         |  57% (4) 0.0 minPROGRESS> 19:20:59 |####################| 100% (7) 0.0 min
-
- OUTPUT> 86_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 7
-   PASS> 4
-   FAIL> 3
-    END> CreateGermlines
-
-
-
-################################
-
-18_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 18_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:41 |Sorting by clone    | 0.0 minPROGRESS> 19:19:41 |Done                | 0.0 min
-
-PROGRESS> 19:19:41 |                    |   0% (0) 0.0 minPROGRESS> 19:19:41 |###########         |  56% (5) 0.0 minPROGRESS> 19:19:41 |####################| 100% (9) 0.0 min
-
- OUTPUT> 18_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 9
-   PASS> 5
-   FAIL> 4
-    END> CreateGermlines
-
-
-
-################################
-
-122_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 122_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:19 |Sorting by clone    | 0.0 minPROGRESS> 19:19:19 |Done                | 0.0 min
-
-PROGRESS> 19:19:19 |                    |   0% (0) 0.0 minPROGRESS> 19:19:19 |####################| 100% (1) 0.0 min
-
- OUTPUT> 122_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-12_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 12_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:22 |Sorting by clone    | 0.0 minPROGRESS> 19:19:22 |Done                | 0.0 min
-
-PROGRESS> 19:19:22 |                    |   0% (0) 0.0 minPROGRESS> 19:19:22 |###########         |  57% (4) 0.0 minPROGRESS> 19:19:22 |####################| 100% (7) 0.0 min
-
- OUTPUT> 12_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 7
-   PASS> 4
-   FAIL> 3
-    END> CreateGermlines
-
-
-
-################################
-
-120_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 120_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:17 |Sorting by clone    | 0.0 minPROGRESS> 19:19:17 |Done                | 0.0 min
-
-PROGRESS> 19:19:17 |                    |   0% (0) 0.0 minPROGRESS> 19:19:17 |####################| 100% (1) 0.0 min
-
- OUTPUT> 120_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-67_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 67_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:37 |Sorting by clone    | 0.0 minPROGRESS> 19:20:37 |Done                | 0.0 min
-
-PROGRESS> 19:20:37 |                    |   0% (0) 0.0 minPROGRESS> 19:20:37 |####################| 100% (1) 0.0 min
-
- OUTPUT> 67_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-100_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 100_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:01 |Sorting by clone    | 0.0 minPROGRESS> 19:19:01 |Done                | 0.0 min
-
-PROGRESS> 19:19:01 |                    |   0% (0) 0.0 minPROGRESS> 19:19:01 |####################| 100% (1) 0.0 min
-
- OUTPUT> 100_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-116_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 116_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:21 |Sorting by clone    | 0.0 minPROGRESS> 19:19:21 |Done                | 0.0 min
-
-PROGRESS> 19:19:21 |                    |   0% (0) 0.0 minPROGRESS> 19:19:21 |####################| 100% (1) 0.0 min
-
- OUTPUT> 116_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-99_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 99_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:21:17 |Sorting by clone    | 0.0 minPROGRESS> 19:21:17 |Done                | 0.0 min
-
-PROGRESS> 19:21:17 |                    |   0% (0) 0.0 minPROGRESS> 19:21:17 |####################| 100% (1) 0.0 min
-
- OUTPUT> 99_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-109_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 109_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:02 |Sorting by clone    | 0.0 minPROGRESS> 19:19:02 |Done                | 0.0 min
-
-PROGRESS> 19:19:02 |                    |   0% (0) 0.0 minPROGRESS> 19:19:02 |####################| 100% (1) 0.0 min
-
- OUTPUT> 109_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-44_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 44_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:34 |Sorting by clone    | 0.0 minPROGRESS> 19:20:34 |Done                | 0.0 min
-
-PROGRESS> 19:20:34 |                    |   0% (0) 0.0 minPROGRESS> 19:20:34 |############        |  60% (3) 0.0 minPROGRESS> 19:20:34 |####################| 100% (5) 0.0 min
-
- OUTPUT> 44_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 5
-   PASS> 3
-   FAIL> 2
-    END> CreateGermlines
-
-
-
-################################
-
-14_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 14_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:00 |Sorting by clone    | 0.0 minPROGRESS> 19:20:00 |Done                | 0.0 min
-
-PROGRESS> 19:20:00 |                    |   0% (0) 0.0 minPROGRESS> 19:20:00 |####################| 100% (1) 0.0 min
-
- OUTPUT> 14_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-51_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 51_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:19 |Sorting by clone    | 0.0 minPROGRESS> 19:20:19 |Done                | 0.0 min
-
-PROGRESS> 19:20:19 |                    |   0% (0) 0.0 minPROGRESS> 19:20:19 |####################| 100% (1) 0.0 min
-
- OUTPUT> 51_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-58_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 58_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:25 |Sorting by clone    | 0.0 minPROGRESS> 19:20:25 |Done                | 0.0 min
-
-PROGRESS> 19:20:25 |                    |   0% (0) 0.0 minPROGRESS> 19:20:25 |####################| 100% (1) 0.0 min
-
- OUTPUT> 58_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-107_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 107_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:01 |Sorting by clone    | 0.0 minPROGRESS> 19:19:01 |Done                | 0.0 min
-
-PROGRESS> 19:19:01 |                    |   0% (0) 0.0 minPROGRESS> 19:19:01 |####################| 100% (1) 0.0 min
-
- OUTPUT> 107_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-81_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 81_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:54 |Sorting by clone    | 0.0 minPROGRESS> 19:20:54 |Done                | 0.0 min
-
-PROGRESS> 19:20:54 |                    |   0% (0) 0.0 minPROGRESS> 19:20:54 |############        |  60% (3) 0.0 minPROGRESS> 19:20:54 |####################| 100% (5) 0.0 min
-
- OUTPUT> 81_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 5
-   PASS> 3
-   FAIL> 2
-    END> CreateGermlines
-
-
-
-################################
-
-128_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 128_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:37 |Sorting by clone    | 0.0 minPROGRESS> 19:19:37 |Done                | 0.0 min
-
-PROGRESS> 19:19:37 |                    |   0% (  0) 0.0 minPROGRESS> 19:19:37 |####################| 100% (231) 0.0 min
-
- OUTPUT> 128_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 231
-   PASS> 116
-   FAIL> 115
-    END> CreateGermlines
-
-
-
-################################
-
-83_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 83_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:57 |Sorting by clone    | 0.0 minPROGRESS> 19:20:57 |Done                | 0.0 min
-
-PROGRESS> 19:20:57 |                    |   0% (0) 0.0 minPROGRESS> 19:20:57 |###########         |  56% (5) 0.0 minPROGRESS> 19:20:57 |####################| 100% (9) 0.0 min
-
- OUTPUT> 83_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 9
-   PASS> 5
-   FAIL> 4
-    END> CreateGermlines
-
-
-
-################################
-
-8_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 8_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:21:02 |Sorting by clone    | 0.0 minPROGRESS> 19:21:02 |Done                | 0.0 min
-
-PROGRESS> 19:21:02 |                    |   0% (0) 0.0 minPROGRESS> 19:21:02 |####################| 100% (1) 0.0 min
-
- OUTPUT> 8_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-74_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 74_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:47 |Sorting by clone    | 0.0 minPROGRESS> 19:20:47 |Done                | 0.0 min
-
-PROGRESS> 19:20:47 |                    |   0% (0) 0.0 minPROGRESS> 19:20:47 |####################| 100% (1) 0.0 min
-
- OUTPUT> 74_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-53_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 53_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:19 |Sorting by clone    | 0.0 minPROGRESS> 19:20:19 |Done                | 0.0 min
-
-PROGRESS> 19:20:19 |                    |   0% ( 0) 0.0 minPROGRESS> 19:20:19 |##########          |  54% ( 7) 0.0 minPROGRESS> 19:20:19 |####################| 100% (13) 0.0 min
-
- OUTPUT> 53_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 13
-   PASS> 7
-   FAIL> 6
-    END> CreateGermlines
-
-
-
-################################
-
-29_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 29_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:46 |Sorting by clone    | 0.0 minPROGRESS> 19:19:46 |Done                | 0.0 min
-
-PROGRESS> 19:19:46 |                    |   0% (0) 0.0 minPROGRESS> 19:19:46 |####################| 100% (1) 0.0 min
-
- OUTPUT> 29_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-45_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 45_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:18 |Sorting by clone    | 0.0 minPROGRESS> 19:20:18 |Done                | 0.0 min
-
-PROGRESS> 19:20:18 |                    |   0% ( 0) 0.0 minPROGRESS> 19:20:18 |####################| 100% (29) 0.0 min
-
- OUTPUT> 45_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 29
-   PASS> 15
-   FAIL> 14
-    END> CreateGermlines
-
-
-
-################################
-
-46_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 46_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:50 |Sorting by clone    | 0.0 minPROGRESS> 19:20:50 |Done                | 0.0 min
-
-PROGRESS> 19:20:50 |                    |   0% (0) 0.0 minPROGRESS> 19:20:50 |####################| 100% (1) 0.0 min
-
- OUTPUT> 46_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-65_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 65_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:35 |Sorting by clone    | 0.0 minPROGRESS> 19:20:35 |Done                | 0.0 min
-
-PROGRESS> 19:20:35 |                    |   0% (0) 0.0 minPROGRESS> 19:20:35 |####################| 100% (1) 0.0 min
-
- OUTPUT> 65_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-87_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 87_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:21:11 |Sorting by clone    | 0.0 minPROGRESS> 19:21:11 |Done                | 0.0 min
-
-PROGRESS> 19:21:11 |                    |   0% (0) 0.0 minPROGRESS> 19:21:11 |####################| 100% (1) 0.0 min
-
- OUTPUT> 87_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-42_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 42_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:34 |Sorting by clone    | 0.0 minPROGRESS> 19:20:34 |Done                | 0.0 min
-
-PROGRESS> 19:20:34 |                    |   0% (0) 0.0 minPROGRESS> 19:20:34 |############        |  60% (3) 0.0 minPROGRESS> 19:20:34 |####################| 100% (5) 0.0 min
-
- OUTPUT> 42_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 5
-   PASS> 3
-   FAIL> 2
-    END> CreateGermlines
-
-
-
-################################
-
-15_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 15_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:39 |Sorting by clone    | 0.0 minPROGRESS> 19:19:39 |Done                | 0.0 min
-
-PROGRESS> 19:19:39 |                    |   0% (0) 0.0 minPROGRESS> 19:19:39 |#############       |  67% (2) 0.0 minPROGRESS> 19:19:39 |####################| 100% (3) 0.0 min
-
- OUTPUT> 15_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 3
-   PASS> 2
-   FAIL> 1
-    END> CreateGermlines
-
-
-
-################################
-
-113_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 113_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:00 |Sorting by clone    | 0.0 minPROGRESS> 19:19:00 |Done                | 0.0 min
-
-PROGRESS> 19:19:00 |                    |   0% (0) 0.0 minPROGRESS> 19:19:00 |####################| 100% (1) 0.0 min
-
- OUTPUT> 113_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-96_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 96_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:21:12 |Sorting by clone    | 0.0 minPROGRESS> 19:21:12 |Done                | 0.0 min
-
-PROGRESS> 19:21:12 |                    |   0% ( 0) 0.0 minPROGRESS> 19:21:12 |####################| 100% (21) 0.0 min
-
- OUTPUT> 96_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 21
-   PASS> 11
-   FAIL> 10
-    END> CreateGermlines
-
-
-
-################################
-
-21_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 21_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:41 |Sorting by clone    | 0.0 minPROGRESS> 19:19:41 |Done                | 0.0 min
-
-PROGRESS> 19:19:41 |                    |   0% (0) 0.0 minPROGRESS> 19:19:41 |####################| 100% (1) 0.0 min
-
- OUTPUT> 21_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-9_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 9_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:21:20 |Sorting by clone    | 0.0 minPROGRESS> 19:21:20 |Done                | 0.0 min
-
-PROGRESS> 19:21:20 |                    |   0% (0) 0.0 minPROGRESS> 19:21:20 |####################| 100% (1) 0.0 min
-
- OUTPUT> 9_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-52_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 52_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:18 |Sorting by clone    | 0.0 minPROGRESS> 19:20:18 |Done                | 0.0 min
-
-PROGRESS> 19:20:18 |                    |   0% (0) 0.0 minPROGRESS> 19:20:18 |####################| 100% (1) 0.0 min
-
- OUTPUT> 52_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-5_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 5_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:28 |Sorting by clone    | 0.0 minPROGRESS> 19:20:28 |Done                | 0.0 min
-
-PROGRESS> 19:20:28 |                    |   0% (0) 0.0 minPROGRESS> 19:20:28 |####################| 100% (1) 0.0 min
-
- OUTPUT> 5_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-103_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 103_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:03 |Sorting by clone    | 0.0 minPROGRESS> 19:19:03 |Done                | 0.0 min
-
-PROGRESS> 19:19:03 |                    |   0% (0) 0.0 minPROGRESS> 19:19:03 |####################| 100% (1) 0.0 min
-
- OUTPUT> 103_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-41_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 41_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:02 |Sorting by clone    | 0.0 minPROGRESS> 19:20:02 |Done                | 0.0 min
-
-PROGRESS> 19:20:02 |                    |   0% ( 0) 0.0 minPROGRESS> 19:20:02 |##########          |  54% ( 7) 0.0 minPROGRESS> 19:20:02 |####################| 100% (13) 0.0 min
-
- OUTPUT> 41_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 13
-   PASS> 7
-   FAIL> 6
-    END> CreateGermlines
-
-
-
-################################
-
-89_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 89_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:21:18 |Sorting by clone    | 0.0 minPROGRESS> 19:21:18 |Done                | 0.0 min
-
-PROGRESS> 19:21:18 |                    |   0% (0) 0.0 minPROGRESS> 19:21:18 |####################| 100% (1) 0.0 min
-
- OUTPUT> 89_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-56_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 56_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:36 |Sorting by clone    | 0.0 minPROGRESS> 19:20:36 |Done                | 0.0 min
-
-PROGRESS> 19:20:36 |                    |   0% ( 0) 0.0 minPROGRESS> 19:20:36 |##########          |  55% ( 6) 0.0 minPROGRESS> 19:20:36 |####################| 100% (11) 0.0 min
-
- OUTPUT> 56_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 11
-   PASS> 6
-   FAIL> 5
-    END> CreateGermlines
-
-
-
-################################
-
-118_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 118_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:16 |Sorting by clone    | 0.0 minPROGRESS> 19:19:16 |Done                | 0.0 min
-
-PROGRESS> 19:19:16 |                    |   0% (0) 0.0 minPROGRESS> 19:19:16 |####################| 100% (1) 0.0 min
-
- OUTPUT> 118_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-76_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 76_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:21:06 |Sorting by clone    | 0.0 minPROGRESS> 19:21:06 |Done                | 0.0 min
-
-PROGRESS> 19:21:06 |                    |   0% (0) 0.0 minPROGRESS> 19:21:06 |####################| 100% (1) 0.0 min
-
- OUTPUT> 76_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-91_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 91_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:21:12 |Sorting by clone    | 0.0 minPROGRESS> 19:21:12 |Done                | 0.0 min
-
-PROGRESS> 19:21:12 |                    |   0% (0) 0.0 minPROGRESS> 19:21:12 |#############       |  67% (2) 0.0 minPROGRESS> 19:21:12 |####################| 100% (3) 0.0 min
-
- OUTPUT> 91_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 3
-   PASS> 2
-   FAIL> 1
-    END> CreateGermlines
-
-
-
-################################
-
-123_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 123_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:21 |Sorting by clone    | 0.0 minPROGRESS> 19:19:21 |Done                | 0.0 min
-
-PROGRESS> 19:19:21 |                    |   0% (0) 0.0 minPROGRESS> 19:19:21 |####################| 100% (1) 0.0 min
-
- OUTPUT> 123_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-63_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 63_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:43 |Sorting by clone    | 0.0 minPROGRESS> 19:20:43 |Done                | 0.0 min
-
-PROGRESS> 19:20:43 |                    |   0% (0) 0.0 minPROGRESS> 19:20:43 |#############       |  67% (2) 0.0 minPROGRESS> 19:20:43 |####################| 100% (3) 0.0 min
-
- OUTPUT> 63_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 3
-   PASS> 2
-   FAIL> 1
-    END> CreateGermlines
-
-
-
-################################
-
-36_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 36_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:59 |Sorting by clone    | 0.0 minPROGRESS> 19:19:59 |Done                | 0.0 min
-
-PROGRESS> 19:19:59 |                    |   0% (0) 0.0 minPROGRESS> 19:19:59 |####################| 100% (1) 0.0 min
-
- OUTPUT> 36_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-7_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 7_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:53 |Sorting by clone    | 0.0 minPROGRESS> 19:20:53 |Done                | 0.0 min
-
-PROGRESS> 19:20:53 |                    |   0% (0) 0.0 minPROGRESS> 19:20:53 |####################| 100% (1) 0.0 min
-
- OUTPUT> 7_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-114_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 114_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:03 |Sorting by clone    | 0.0 minPROGRESS> 19:19:03 |Done                | 0.0 min
-
-PROGRESS> 19:19:03 |                    |   0% (0) 0.0 minPROGRESS> 19:19:03 |####################| 100% (1) 0.0 min
-
- OUTPUT> 114_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-69_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 69_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:37 |Sorting by clone    | 0.0 minPROGRESS> 19:20:37 |Done                | 0.0 min
-
-PROGRESS> 19:20:37 |                    |   0% (0) 0.0 minPROGRESS> 19:20:37 |####################| 100% (1) 0.0 min
-
- OUTPUT> 69_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-32_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 32_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:04 |Sorting by clone    | 0.0 minPROGRESS> 19:20:04 |Done                | 0.0 min
-
-PROGRESS> 19:20:04 |                    |   0% (0) 0.0 minPROGRESS> 19:20:04 |####################| 100% (1) 0.0 min
-
- OUTPUT> 32_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-59_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 59_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:25 |Sorting by clone    | 0.0 minPROGRESS> 19:20:25 |Done                | 0.0 min
-
-PROGRESS> 19:20:25 |                    |   0% (0) 0.0 minPROGRESS> 19:20:25 |#############       |  67% (2) 0.0 minPROGRESS> 19:20:25 |####################| 100% (3) 0.0 min
-
- OUTPUT> 59_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 3
-   PASS> 2
-   FAIL> 1
-    END> CreateGermlines
-
-
-
-################################
-
-39_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 39_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:00 |Sorting by clone    | 0.0 minPROGRESS> 19:20:00 |Done                | 0.0 min
-
-PROGRESS> 19:20:00 |                    |   0% (0) 0.0 minPROGRESS> 19:20:00 |####################| 100% (1) 0.0 min
-
- OUTPUT> 39_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-23_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 23_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:52 |Sorting by clone    | 0.0 minPROGRESS> 19:19:52 |Done                | 0.0 min
-
-PROGRESS> 19:19:52 |                    |   0% (0) 0.0 minPROGRESS> 19:19:52 |###########         |  57% (4) 0.0 minPROGRESS> 19:19:52 |####################| 100% (7) 0.0 min
-
- OUTPUT> 23_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 7
-   PASS> 4
-   FAIL> 3
-    END> CreateGermlines
-
-
-
-################################
-
-95_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 95_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:21:14 |Sorting by clone    | 0.0 minPROGRESS> 19:21:14 |Done                | 0.0 min
-
-PROGRESS> 19:21:14 |                    |   0% (0) 0.0 minPROGRESS> 19:21:14 |####################| 100% (1) 0.0 min
-
- OUTPUT> 95_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-57_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 57_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:32 |Sorting by clone    | 0.0 minPROGRESS> 19:20:32 |Done                | 0.0 min
-
-PROGRESS> 19:20:32 |                    |   0% ( 0) 0.0 minPROGRESS> 19:20:32 |##########          |  53% (10) 0.0 minPROGRESS> 19:20:32 |####################| 100% (19) 0.0 min
-
- OUTPUT> 57_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 19
-   PASS> 10
-   FAIL> 9
-    END> CreateGermlines
-
-
-
-################################
-
-125_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 125_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:37 |Sorting by clone    | 0.0 minPROGRESS> 19:19:37 |Done                | 0.0 min
-
-PROGRESS> 19:19:37 |                    |   0% (0) 0.0 minPROGRESS> 19:19:37 |####################| 100% (1) 0.0 min
-
- OUTPUT> 125_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-106_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 106_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:02 |Sorting by clone    | 0.0 minPROGRESS> 19:19:02 |Done                | 0.0 min
-
-PROGRESS> 19:19:02 |                    |   0% (0) 0.0 minPROGRESS> 19:19:02 |############        |  60% (3) 0.0 minPROGRESS> 19:19:02 |####################| 100% (5) 0.0 min
-
- OUTPUT> 106_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 5
-   PASS> 3
-   FAIL> 2
-    END> CreateGermlines
-
-
-
-################################
-
-97_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 97_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:21:15 |Sorting by clone    | 0.0 minPROGRESS> 19:21:15 |Done                | 0.0 min
-
-PROGRESS> 19:21:15 |                    |   0% (0) 0.0 minPROGRESS> 19:21:15 |####################| 100% (1) 0.0 min
-
- OUTPUT> 97_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-60_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 60_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:23 |Sorting by clone    | 0.0 minPROGRESS> 19:20:23 |Done                | 0.0 min
-
-PROGRESS> 19:20:23 |                    |   0% (0) 0.0 minPROGRESS> 19:20:23 |####################| 100% (1) 0.0 min
-
- OUTPUT> 60_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-54_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 54_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:21 |Sorting by clone    | 0.0 minPROGRESS> 19:20:21 |Done                | 0.0 min
-
-PROGRESS> 19:20:21 |                    |   0% (0) 0.0 minPROGRESS> 19:20:21 |###########         |  57% (4) 0.0 minPROGRESS> 19:20:21 |####################| 100% (7) 0.0 min
-
- OUTPUT> 54_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 7
-   PASS> 4
-   FAIL> 3
-    END> CreateGermlines
-
-
-
-################################
-
-2_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 2_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:10 |Sorting by clone    | 0.0 minPROGRESS> 19:20:10 |Done                | 0.0 min
-
-PROGRESS> 19:20:10 |                    |   0% (0) 0.0 minPROGRESS> 19:20:10 |####################| 100% (1) 0.0 min
-
- OUTPUT> 2_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-34_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 34_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:07 |Sorting by clone    | 0.0 minPROGRESS> 19:20:07 |Done                | 0.0 min
-
-PROGRESS> 19:20:07 |                    |   0% (0) 0.0 minPROGRESS> 19:20:07 |####################| 100% (1) 0.0 min
-
- OUTPUT> 34_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-110_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 110_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:02 |Sorting by clone    | 0.0 minPROGRESS> 19:19:02 |Done                | 0.0 min
-
-PROGRESS> 19:19:02 |                    |   0% ( 0) 0.0 minPROGRESS> 19:19:02 |####################| 100% (25) 0.0 min
-
- OUTPUT> 110_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 25
-   PASS> 13
-   FAIL> 12
-    END> CreateGermlines
-
-
-
-################################
-
-119_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 119_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:21 |Sorting by clone    | 0.0 minPROGRESS> 19:19:21 |Done                | 0.0 min
-
-PROGRESS> 19:19:21 |                    |   0% (0) 0.0 minPROGRESS> 19:19:21 |#############       |  67% (2) 0.0 minPROGRESS> 19:19:21 |####################| 100% (3) 0.0 min
-
- OUTPUT> 119_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 3
-   PASS> 2
-   FAIL> 1
-    END> CreateGermlines
-
-
-
-################################
-
-6_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 6_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:21:11 |Sorting by clone    | 0.0 minPROGRESS> 19:21:11 |Done                | 0.0 min
-
-PROGRESS> 19:21:11 |                    |   0% (0) 0.0 minPROGRESS> 19:21:11 |####################| 100% (1) 0.0 min
-
- OUTPUT> 6_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-66_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 66_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:36 |Sorting by clone    | 0.0 minPROGRESS> 19:20:36 |Done                | 0.0 min
-
-PROGRESS> 19:20:36 |                    |   0% (0) 0.0 minPROGRESS> 19:20:36 |###########         |  57% (4) 0.0 minPROGRESS> 19:20:36 |####################| 100% (7) 0.0 min
-
- OUTPUT> 66_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 7
-   PASS> 4
-   FAIL> 3
-    END> CreateGermlines
-
-
-
-################################
-
-93_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 93_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:21:11 |Sorting by clone    | 0.0 minPROGRESS> 19:21:11 |Done                | 0.0 min
-
-PROGRESS> 19:21:11 |                    |   0% (0) 0.0 minPROGRESS> 19:21:11 |####################| 100% (1) 0.0 min
-
- OUTPUT> 93_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-94_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 94_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:21:16 |Sorting by clone    | 0.0 minPROGRESS> 19:21:16 |Done                | 0.0 min
-
-PROGRESS> 19:21:16 |                    |   0% (0) 0.0 minPROGRESS> 19:21:16 |####################| 100% (1) 0.0 min
-
- OUTPUT> 94_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-30_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 30_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:00 |Sorting by clone    | 0.0 minPROGRESS> 19:20:00 |Done                | 0.0 min
-
-PROGRESS> 19:20:00 |                    |   0% (0) 0.0 minPROGRESS> 19:20:00 |####################| 100% (1) 0.0 min
-
- OUTPUT> 30_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-49_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 49_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:17 |Sorting by clone    | 0.0 minPROGRESS> 19:20:17 |Done                | 0.0 min
-
-PROGRESS> 19:20:17 |                    |   0% (0) 0.0 minPROGRESS> 19:20:17 |###########         |  57% (4) 0.0 minPROGRESS> 19:20:17 |####################| 100% (7) 0.0 min
-
- OUTPUT> 49_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 7
-   PASS> 4
-   FAIL> 3
-    END> CreateGermlines
-
-
-
-################################
-
-136_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 136_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:40 |Sorting by clone    | 0.0 minPROGRESS> 19:19:40 |Done                | 0.0 min
-
-PROGRESS> 19:19:40 |                    |   0% (0) 0.0 minPROGRESS> 19:19:40 |####################| 100% (1) 0.0 min
-
- OUTPUT> 136_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-40_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 40_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:15 |Sorting by clone    | 0.0 minPROGRESS> 19:20:15 |Done                | 0.0 min
-
-PROGRESS> 19:20:15 |                    |   0% (0) 0.0 minPROGRESS> 19:20:15 |#############       |  67% (2) 0.0 minPROGRESS> 19:20:15 |####################| 100% (3) 0.0 min
-
- OUTPUT> 40_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 3
-   PASS> 2
-   FAIL> 1
-    END> CreateGermlines
-
-
-
-################################
-
-3_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 3_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:13 |Sorting by clone    | 0.0 minPROGRESS> 19:20:13 |Done                | 0.0 min
-
-PROGRESS> 19:20:13 |                    |   0% (0) 0.0 minPROGRESS> 19:20:13 |####################| 100% (1) 0.0 min
-
- OUTPUT> 3_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-80_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 80_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:53 |Sorting by clone    | 0.0 minPROGRESS> 19:20:53 |Done                | 0.0 min
-
-PROGRESS> 19:20:53 |                    |   0% (0) 0.0 minPROGRESS> 19:20:53 |####################| 100% (1) 0.0 min
-
- OUTPUT> 80_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-126_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 126_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:20 |Sorting by clone    | 0.0 minPROGRESS> 19:19:20 |Done                | 0.0 min
-
-PROGRESS> 19:19:20 |                    |   0% (0) 0.0 minPROGRESS> 19:19:20 |####################| 100% (1) 0.0 min
-
- OUTPUT> 126_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-48_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 48_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:16 |Sorting by clone    | 0.0 minPROGRESS> 19:20:16 |Done                | 0.0 min
-
-PROGRESS> 19:20:16 |                    |   0% (0) 0.0 minPROGRESS> 19:20:16 |####################| 100% (1) 0.0 min
-
- OUTPUT> 48_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-134_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 134_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:22 |Sorting by clone    | 0.0 minPROGRESS> 19:19:22 |Done                | 0.0 min
-
-PROGRESS> 19:19:22 |                    |   0% (0) 0.0 minPROGRESS> 19:19:22 |####################| 100% (1) 0.0 min
-
- OUTPUT> 134_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-127_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 127_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:21 |Sorting by clone    | 0.0 minPROGRESS> 19:19:21 |Done                | 0.0 min
-
-PROGRESS> 19:19:21 |                    |   0% (0) 0.0 minPROGRESS> 19:19:21 |####################| 100% (1) 0.0 min
-
- OUTPUT> 127_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-26_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 26_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:46 |Sorting by clone    | 0.0 minPROGRESS> 19:19:46 |Done                | 0.0 min
-
-PROGRESS> 19:19:46 |                    |   0% (0) 0.0 minPROGRESS> 19:19:46 |############        |  60% (3) 0.0 minPROGRESS> 19:19:46 |####################| 100% (5) 0.0 min
-
- OUTPUT> 26_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 5
-   PASS> 3
-   FAIL> 2
-    END> CreateGermlines
-
-
-
-################################
-
-77_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 77_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:53 |Sorting by clone    | 0.0 minPROGRESS> 19:20:53 |Done                | 0.0 min
-
-PROGRESS> 19:20:53 |                    |   0% (0) 0.0 minPROGRESS> 19:20:53 |###########         |  57% (4) 0.0 minPROGRESS> 19:20:53 |####################| 100% (7) 0.0 min
-
- OUTPUT> 77_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 7
-   PASS> 4
-   FAIL> 3
-    END> CreateGermlines
-
-
-
-################################
-
-79_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 79_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:54 |Sorting by clone    | 0.0 minPROGRESS> 19:20:54 |Done                | 0.0 min
-
-PROGRESS> 19:20:54 |                    |   0% (0) 0.0 minPROGRESS> 19:20:54 |###########         |  57% (4) 0.0 minPROGRESS> 19:20:54 |####################| 100% (7) 0.0 min
-
- OUTPUT> 79_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 7
-   PASS> 4
-   FAIL> 3
-    END> CreateGermlines
-
-
-
-################################
-
-64_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 64_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:36 |Sorting by clone    | 0.0 minPROGRESS> 19:20:36 |Done                | 0.0 min
-
-PROGRESS> 19:20:36 |                    |   0% (0) 0.0 minPROGRESS> 19:20:36 |####################| 100% (1) 0.0 min
-
- OUTPUT> 64_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-102_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 102_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:02 |Sorting by clone    | 0.0 minPROGRESS> 19:19:02 |Done                | 0.0 min
-
-PROGRESS> 19:19:02 |                    |   0% (0) 0.0 minPROGRESS> 19:19:02 |####################| 100% (1) 0.0 min
-
- OUTPUT> 102_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-115_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 115_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:03 |Sorting by clone    | 0.0 minPROGRESS> 19:19:03 |Done                | 0.0 min
-
-PROGRESS> 19:19:03 |                    |   0% (0) 0.0 minPROGRESS> 19:19:03 |####################| 100% (1) 0.0 min
-
- OUTPUT> 115_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-22_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 22_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:41 |Sorting by clone    | 0.0 minPROGRESS> 19:19:41 |Done                | 0.0 min
-
-PROGRESS> 19:19:41 |                    |   0% (0) 0.0 minPROGRESS> 19:19:41 |#############       |  67% (2) 0.0 minPROGRESS> 19:19:41 |####################| 100% (3) 0.0 min
-
- OUTPUT> 22_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 3
-   PASS> 2
-   FAIL> 1
-    END> CreateGermlines
-
-
-
-################################
-
-27_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 27_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:00 |Sorting by clone    | 0.0 minPROGRESS> 19:20:00 |Done                | 0.0 min
-
-PROGRESS> 19:20:00 |                    |   0% (0) 0.0 minPROGRESS> 19:20:00 |####################| 100% (1) 0.0 min
-
- OUTPUT> 27_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-11_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 11_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:22 |Sorting by clone    | 0.0 minPROGRESS> 19:19:22 |Done                | 0.0 min
-
-PROGRESS> 19:19:22 |                    |   0% (0) 0.0 minPROGRESS> 19:19:22 |####################| 100% (1) 0.0 min
-
- OUTPUT> 11_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-1_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 1_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:55 |Sorting by clone    | 0.0 minPROGRESS> 19:19:55 |Done                | 0.0 min
-
-PROGRESS> 19:19:55 |                    |   0% (0) 0.0 minPROGRESS> 19:19:55 |####################| 100% (1) 0.0 min
-
- OUTPUT> 1_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-88_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 88_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:21:00 |Sorting by clone    | 0.0 minPROGRESS> 19:21:00 |Done                | 0.0 min
-
-PROGRESS> 19:21:00 |                    |   0% (0) 0.0 minPROGRESS> 19:21:00 |#############       |  67% (2) 0.0 minPROGRESS> 19:21:00 |####################| 100% (3) 0.0 min
-
- OUTPUT> 88_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 3
-   PASS> 2
-   FAIL> 1
-    END> CreateGermlines
-
-
-
-################################
-
-37_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 37_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:02 |Sorting by clone    | 0.0 minPROGRESS> 19:20:02 |Done                | 0.0 min
-
-PROGRESS> 19:20:02 |                    |   0% (0) 0.0 minPROGRESS> 19:20:02 |####################| 100% (1) 0.0 min
-
- OUTPUT> 37_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-84_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 84_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:56 |Sorting by clone    | 0.0 minPROGRESS> 19:20:56 |Done                | 0.0 min
-
-PROGRESS> 19:20:56 |                    |   0% (0) 0.0 minPROGRESS> 19:20:56 |####################| 100% (1) 0.0 min
-
- OUTPUT> 84_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-28_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 28_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:59 |Sorting by clone    | 0.0 minPROGRESS> 19:19:59 |Done                | 0.0 min
-
-PROGRESS> 19:19:59 |                    |   0% (0) 0.0 minPROGRESS> 19:19:59 |#############       |  67% (2) 0.0 minPROGRESS> 19:19:59 |####################| 100% (3) 0.0 min
-
- OUTPUT> 28_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 3
-   PASS> 2
-   FAIL> 1
-    END> CreateGermlines
-
-
-
-################################
-
-4_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 4_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:18 |Sorting by clone    | 0.0 minPROGRESS> 19:20:18 |Done                | 0.0 min
-
-PROGRESS> 19:20:18 |                    |   0% (0) 0.0 minPROGRESS> 19:20:18 |####################| 100% (1) 0.0 min
-
- OUTPUT> 4_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-17_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 17_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:40 |Sorting by clone    | 0.0 minPROGRESS> 19:19:40 |Done                | 0.0 min
-
-PROGRESS> 19:19:40 |                    |   0% (0) 0.0 minPROGRESS> 19:19:40 |###########         |  56% (5) 0.0 minPROGRESS> 19:19:40 |####################| 100% (9) 0.0 min
-
- OUTPUT> 17_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 9
-   PASS> 5
-   FAIL> 4
-    END> CreateGermlines
-
-
-
-################################
-
-33_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 33_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:54 |Sorting by clone    | 0.0 minPROGRESS> 19:19:54 |Done                | 0.0 min
-
-PROGRESS> 19:19:54 |                    |   0% (0) 0.0 minPROGRESS> 19:19:54 |####################| 100% (1) 0.0 min
-
- OUTPUT> 33_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-117_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 117_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:31 |Sorting by clone    | 0.0 minPROGRESS> 19:19:31 |Done                | 0.0 min
-
-PROGRESS> 19:19:31 |                    |   0% (0) 0.0 minPROGRESS> 19:19:31 |####################| 100% (1) 0.0 min
-
- OUTPUT> 117_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-112_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 112_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:02 |Sorting by clone    | 0.0 minPROGRESS> 19:19:02 |Done                | 0.0 min
-
-PROGRESS> 19:19:02 |                    |   0% (0) 0.0 minPROGRESS> 19:19:02 |#############       |  67% (2) 0.0 minPROGRESS> 19:19:02 |####################| 100% (3) 0.0 min
-
- OUTPUT> 112_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 3
-   PASS> 2
-   FAIL> 1
-    END> CreateGermlines
-
-
-
-################################
-
-31_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 31_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:58 |Sorting by clone    | 0.0 minPROGRESS> 19:19:58 |Done                | 0.0 min
-
-PROGRESS> 19:19:58 |                    |   0% (0) 0.0 minPROGRESS> 19:19:58 |###########         |  56% (5) 0.0 minPROGRESS> 19:19:58 |####################| 100% (9) 0.0 min
-
- OUTPUT> 31_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 9
-   PASS> 5
-   FAIL> 4
-    END> CreateGermlines
-
-
-
-################################
-
-71_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 71_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:43 |Sorting by clone    | 0.0 minPROGRESS> 19:20:43 |Done                | 0.0 min
-
-PROGRESS> 19:20:43 |                    |   0% (0) 0.0 minPROGRESS> 19:20:43 |####################| 100% (1) 0.0 min
-
- OUTPUT> 71_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-72_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 72_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:58 |Sorting by clone    | 0.0 minPROGRESS> 19:20:58 |Done                | 0.0 min
-
-PROGRESS> 19:20:58 |                    |   0% (0) 0.0 minPROGRESS> 19:20:58 |#############       |  67% (2) 0.0 minPROGRESS> 19:20:58 |####################| 100% (3) 0.0 min
-
- OUTPUT> 72_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 3
-   PASS> 2
-   FAIL> 1
-    END> CreateGermlines
-
-
-
-################################
-
-19_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 19_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:56 |Sorting by clone    | 0.0 minPROGRESS> 19:19:56 |Done                | 0.0 min
-
-PROGRESS> 19:19:56 |                    |   0% (0) 0.0 minPROGRESS> 19:19:56 |#############       |  67% (2) 0.0 minPROGRESS> 19:19:56 |####################| 100% (3) 0.0 min
-
- OUTPUT> 19_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 3
-   PASS> 2
-   FAIL> 1
-    END> CreateGermlines
-
-
-
-################################
-
-10_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 10_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:02 |Sorting by clone    | 0.0 minPROGRESS> 19:19:02 |Done                | 0.0 min
-
-PROGRESS> 19:19:02 |                    |   0% (0) 0.0 minPROGRESS> 19:19:02 |####################| 100% (1) 0.0 min
-
- OUTPUT> 10_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-130_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 130_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:41 |Sorting by clone    | 0.0 minPROGRESS> 19:19:41 |Done                | 0.0 min
-
-PROGRESS> 19:19:41 |                    |   0% (0) 0.0 minPROGRESS> 19:19:41 |####################| 100% (1) 0.0 min
-
- OUTPUT> 130_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-68_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 68_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:38 |Sorting by clone    | 0.0 minPROGRESS> 19:20:38 |Done                | 0.0 min
-
-PROGRESS> 19:20:38 |                    |   0% (0) 0.0 minPROGRESS> 19:20:38 |#############       |  67% (2) 0.0 minPROGRESS> 19:20:38 |####################| 100% (3) 0.0 min
-
- OUTPUT> 68_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 3
-   PASS> 2
-   FAIL> 1
-    END> CreateGermlines
-
-
-
-################################
-
-133_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 133_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:30 |Sorting by clone    | 0.0 minPROGRESS> 19:19:30 |Done                | 0.0 min
-
-PROGRESS> 19:19:30 |                    |   0% (0) 0.0 minPROGRESS> 19:19:30 |####################| 100% (1) 0.0 min
-
- OUTPUT> 133_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-108_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 108_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:16 |Sorting by clone    | 0.0 minPROGRESS> 19:19:16 |Done                | 0.0 min
-
-PROGRESS> 19:19:16 |                    |   0% (0) 0.0 minPROGRESS> 19:19:16 |####################| 100% (1) 0.0 min
-
- OUTPUT> 108_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-82_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 82_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:21:11 |Sorting by clone    | 0.0 minPROGRESS> 19:21:11 |Done                | 0.0 min
-
-PROGRESS> 19:21:11 |                    |   0% (0) 0.0 minPROGRESS> 19:21:11 |####################| 100% (1) 0.0 min
-
- OUTPUT> 82_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-13_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 13_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:36 |Sorting by clone    | 0.0 minPROGRESS> 19:19:36 |Done                | 0.0 min
-
-PROGRESS> 19:19:36 |                    |   0% (0) 0.0 minPROGRESS> 19:19:36 |####################| 100% (1) 0.0 min
-
- OUTPUT> 13_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-132_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 132_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:22 |Sorting by clone    | 0.0 minPROGRESS> 19:19:22 |Done                | 0.0 min
-
-PROGRESS> 19:19:22 |                    |   0% (0) 0.0 minPROGRESS> 19:19:22 |####################| 100% (1) 0.0 min
-
- OUTPUT> 132_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-78_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 78_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:20:54 |Sorting by clone    | 0.0 minPROGRESS> 19:20:54 |Done                | 0.0 min
-
-PROGRESS> 19:20:54 |                    |   0% (0) 0.0 minPROGRESS> 19:20:54 |####################| 100% (1) 0.0 min
-
- OUTPUT> 78_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-
-
-
-################################
-
-16_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 16_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:39 |Sorting by clone    | 0.0 minPROGRESS> 19:19:39 |Done                | 0.0 min
-
-PROGRESS> 19:19:39 |                    |   0% (0) 0.0 minPROGRESS> 19:19:39 |############        |  60% (3) 0.0 minPROGRESS> 19:19:39 |####################| 100% (5) 0.0 min
-
- OUTPUT> 16_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 5
-   PASS> 3
-   FAIL> 2
-    END> CreateGermlines
-
-
-
-################################
-
-137_all_igblast_seq_parse-select_clone-pass.tsv
-
-################################
-
-
-      START> CreateGermlines
-       FILE> 137_all_igblast_seq_parse-select_clone-pass.tsv
- GERM_TYPES> dmask
-  SEQ_FIELD> sequence_alignment
-    V_FIELD> v_call
-    D_FIELD> d_call
-    J_FIELD> j_call
-     CLONED> True
-CLONE_FIELD> clone_id
-
-PROGRESS> 19:19:40 |Sorting by clone    | 0.0 minPROGRESS> 19:19:40 |Done                | 0.0 min
-
-PROGRESS> 19:19:40 |                    |   0% (0) 0.0 minPROGRESS> 19:19:40 |####################| 100% (1) 0.0 min
-
- OUTPUT> 137_all_igblast_seq_parse-select_clone-pass_germ-pass.tsv
-RECORDS> 1
-   PASS> 1
-   FAIL> 0
-    END> CreateGermlines
-

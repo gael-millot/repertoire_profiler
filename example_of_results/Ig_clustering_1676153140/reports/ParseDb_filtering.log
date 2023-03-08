@@ -1,29 +1,0 @@
-  START> ParseDb
-COMMAND> select
-   FILE> all_igblast_seq.tsv
- FIELDS> productive
- VALUES> T
-  REGEX> False
-
-PROGRESS> 19:18:34 |                    |   0% (  0) 0.0 minPROGRESS> 19:18:34 |#                   |   5% ( 22) 0.0 minPROGRESS> 19:18:34 |##                  |  10% ( 44) 0.0 minPROGRESS> 19:18:34 |###                 |  16% ( 66) 0.0 minPROGRESS> 19:18:34 |####                |  21% ( 88) 0.0 minPROGRESS> 19:18:34 |#####               |  26% (110) 0.0 minPROGRESS> 19:18:34 |######              |  31% (132) 0.0 minPROGRESS> 19:18:34 |#######             |  37% (154) 0.0 minPROGRESS> 19:18:34 |########            |  42% (176) 0.0 minPROGRESS> 19:18:34 |#########           |  47% (198) 0.0 minPROGRESS> 19:18:34 |##########          |  52% (220) 0.0 minPROGRESS> 19:18:34 |###########         |  57% (242) 0.0 minPROGRESS> 19:18:34 |############        |  63% (264) 0.0 minPROGRESS> 19:18:34 |#############       |  68% (286) 0.0 minPROGRESS> 19:18:34 |##############      |  73% (308) 0.0 minPROGRESS> 19:18:34 |###############     |  78% (330) 0.0 minPROGRESS> 19:18:34 |################    |  84% (352) 0.0 minPROGRESS> 19:18:34 |#################   |  89% (374) 0.0 minPROGRESS> 19:18:34 |##################  |  94% (396) 0.0 minPROGRESS> 19:18:34 |################### |  99% (418) 0.0 minPROGRESS> 19:18:34 |####################| 100% (421) 0.0 min
-
-   OUTPUT> all_igblast_seq_parse-select.tsv
-  RECORDS> 421
- SELECTED> 421
-DISCARDED> 0
-      END> ParseDb
-
-    START> ParseDb
-  COMMAND> split
-     FILE> all_igblast_seq.tsv
-    FIELD> productive
-NUM_SPLIT> None
-
-PROGRESS> 19:18:34 |                    |   0% (  0) 0.0 minPROGRESS> 19:18:34 |#                   |   5% ( 22) 0.0 minPROGRESS> 19:18:34 |##                  |  10% ( 44) 0.0 minPROGRESS> 19:18:34 |###                 |  16% ( 66) 0.0 minPROGRESS> 19:18:34 |####                |  21% ( 88) 0.0 minPROGRESS> 19:18:34 |#####               |  26% (110) 0.0 minPROGRESS> 19:18:34 |######              |  31% (132) 0.0 minPROGRESS> 19:18:34 |#######             |  37% (154) 0.0 minPROGRESS> 19:18:34 |########            |  42% (176) 0.0 minPROGRESS> 19:18:34 |#########           |  47% (198) 0.0 minPROGRESS> 19:18:34 |##########          |  52% (220) 0.0 minPROGRESS> 19:18:34 |###########         |  57% (242) 0.0 minPROGRESS> 19:18:34 |############        |  63% (264) 0.0 minPROGRESS> 19:18:34 |#############       |  68% (286) 0.0 minPROGRESS> 19:18:34 |##############      |  73% (308) 0.0 minPROGRESS> 19:18:34 |###############     |  78% (330) 0.0 minPROGRESS> 19:18:34 |################    |  84% (352) 0.0 minPROGRESS> 19:18:34 |#################   |  89% (374) 0.0 minPROGRESS> 19:18:34 |##################  |  94% (396) 0.0 minPROGRESS> 19:18:34 |################### |  99% (418) 0.0 minPROGRESS> 19:18:34 |####################| 100% (421) 0.0 min
-
-OUTPUT1> all_igblast_seq_productive-T.tsv
-RECORDS> 421
-  PARTS> 1
-  SIZE1> 421
-    END> ParseDb
-

@@ -378,7 +378,7 @@ process get_tree {
     FILENAME=\$(basename -- ${mutation_load_ch}) # recover a file name without path
     echo -e "\${FILENAME}:" |& tee -a get_tree.log
     LINE_NB=\$((\$(cat ${mutation_load_ch} | wc -l) - 1))
-    if [[ "\$LINE_NB" -gt "${nb_seq_per_clone}" ]] ; then # the -gt operator can compare strings and means "greater than"
+    if [[ "\$LINE_NB" -ge "${nb_seq_per_clone}" ]] ; then # the -gt operator can compare strings and means "greater than"
         cat ${mutation_load_ch} > seq_for_tree.tsv
         Rscript -e '
             db <- alakazam::readChangeoDb("${mutation_load_ch}")
@@ -511,6 +511,80 @@ process tree_vizu {
     """
 }
 
+
+
+process pie {
+    label 'r_ext' // see the withLabel: bash in the nextflow config file 
+    publishDir path: "${out_path}", mode: 'copy', pattern: "{piechart.tsv}", overwrite: false
+    publishDir path: "${out_path}", mode: 'copy', pattern: "{piechart.pdf}", overwrite: false
+    publishDir path: "${out_path}/png", mode: 'copy', pattern: "{*.png}", overwrite: false
+    publishDir path: "${out_path}/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{pie.log}", overwrite: false
+    cache 'true'
+
+    input:
+    path tree_ch2
+
+    output:
+    path "piechart.tsv"
+    path "piechart.pdf"
+    path "piechart.png"
+    path "piechart.svg"
+    path "pie.log"
+
+    script:
+    """
+    #!/bin/bash -ue
+    Rscript -e '
+        args <- commandArgs(trailingOnly = TRUE)  # recover arguments written after the call of the Rscript
+        tempo.arg.names <- c("file_name") # objects names exactly in the same order as in the bash code and recovered in args
+        if(length(args) != length(tempo.arg.names)){
+          tempo.cat <- paste0("======== ERROR: THE NUMBER OF ELEMENTS IN args (", length(args),") IS DIFFERENT FROM THE NUMBER OF ELEMENTS IN tempo.arg.names (", length(tempo.arg.names),")\nargs:", paste0(args, collapse = ","), "\ntempo.arg.names:", paste0(tempo.arg.names, collapse = ","))
+          stop(tempo.cat)
+        }
+        for(i2 in 1:length(tempo.arg.names)){
+          assign(tempo.arg.names[i2], args[i2])
+        }
+
+        hsize <- 2
+        obs <- read.table(file_name, sep = "\\t", header = TRUE)
+        obs2 <- data.frame(table(obs\$clone_id))
+        names(obs2)[1] <- "Clone_ID"
+        obs2 <- data.frame(obs2, Prop = obs2\$Freq / sum(obs2\$Freq))
+
+        obs3 <- data.frame(obs2, x = hsize)
+        tempo.gg.name <- "gg.indiv.plot."
+        tempo.gg.count <- 0
+        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::ggplot(
+            data = obs3,
+            mapping = ggplot2::aes(x = x, y = Freq, fill = Clone_ID), 
+            color = "white"
+        ))
+        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::geom_col(color = "white", size = 1.5))
+        # assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::geom_text(
+        #     ggplot2::aes(label = Freq), 
+        #     position = ggplot2::position_stack(vjust = 0.5)
+        # ))
+        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::annotate(
+            geom = "text", 
+            x = 0.2, 
+            y = 0, 
+            label = sum(obs3\$Freq), 
+            size = 15
+        ))
+        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::coord_polar(theta = "y", direction = -1))
+        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_fill_brewer(palette = "GnBu"))
+        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::xlim(c(0.2, hsize + 0.5)))
+        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::theme_void())
+        tempo.plot <- eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + ")))
+        ggplot2::ggsave(filename = "piechart.png", plot = tempo.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = "piechart.svg", plot = tempo.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = "piechart.pdf", plot = tempo.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+
+        write.table(obs2, file = paste0("./piechart.tsv"), row.names = FALSE, sep = "\\t")
+    ' "${tree_ch2}" |& tee -a pie.log
+    """
+}
 
 
 
@@ -662,8 +736,9 @@ workflow {
         igblast_aa
     )
 
-    tsv_ch2 = igblast.out.tsv_ch1.collectFile(name: "all_igblast_seq.tsv", skip: 1, keepHeader: true) // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
-    tsv_ch2.view()
+    igblast.out.tsv_ch1.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE igblast PROCESS\n\nCHECK THAT THE igblast_organism, igblast_loci AND igblast_files ARE CORRECTLY SET IN THE ig_clustering.config FILE\n\n========\n\n"}}
+    tsv_ch2 = igblast.out.tsv_ch1.collectFile(name: "all_igblast_seq.tsv", skip: 1, keepHeader: true) // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports. tempDir added to have a warning message in the case of empty collection, like "WARN: Failed to render execution report -- see the log file for details"
+    //tsv_ch2.view()
     igblast.out.log_ch.collectFile(name: "igblast_report.log").subscribe{it -> it.copyTo("${out_path}/reports")} // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
 
 
@@ -695,7 +770,7 @@ workflow {
         closest_germline.out.closest_ch
     )
 
-
+    mutation_load.out.mutation_load_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE mutation_load PROCESS\n\n========\n\n"}}
     mutation_load_ch2 = mutation_load.out.mutation_load_ch.collectFile(name: "all_productive_before_tree_seq.tsv", skip: 1, keepHeader: true) // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
     mutation_load_ch2.subscribe{it -> it.copyTo("${out_path}")}
     mutation_load.out.mutation_load_log_ch.collectFile(name: "mutation_load.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
@@ -706,17 +781,24 @@ workflow {
         nb_seq_per_clone
     )
 
-    rdata_tree_ch2 = get_tree.out.rdata_tree_ch.collect()
 
+    get_tree.out.rdata_tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: EMPTY OUTPUT FOLLOWING THE get_tree PROCESS -> NO TREE RETURNED\n\n")}}
+    rdata_tree_ch2 = get_tree.out.rdata_tree_ch.collect()
+    //rdata_tree_ch2.view()
+
+    get_tree.out.no_tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: ALL SEQUENCES IN TREES FOLLOWING THE get_tree PROCESS -> NO dismissed_seq_for_tree.tsv FILE RETURNED\n\n")}}
     no_tree_ch2 = get_tree.out.no_tree_ch.collectFile(name: "dismissed_seq_for_tree.tsv", skip: 1, keepHeader: true) // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
     no_tree_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
+    get_tree.out.tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: NO SEQUENCES IN TREES FOLLOWING THE get_tree PROCESS -> NO seq_for_trees.tsv FILE RETURNED\n\n")}}
     tree_ch2 = get_tree.out.tree_ch.collectFile(name: "seq_for_trees.tsv", skip: 1, keepHeader: true) // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
     tree_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
+    get_tree.out.no_cloneID_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: ALL SEQUENCES IN CLONAL GROUP FOLLOWING THE get_tree PROCESS -> NO dismissed_clone_id_for_tree.tsv FILE RETURNED\n\n")}}
     no_cloneID_ch2 = get_tree.out.no_cloneID_ch.collectFile(name: "dismissed_clone_id_for_tree.tsv") // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
     no_cloneID_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
+    get_tree.out.cloneID_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: NO CLONAL GROUP FOLLOWING THE get_tree PROCESS -> NO clone_id_for_tree.tsv FILE RETURNED\n\n")}}
     cloneID_ch2 = get_tree.out.cloneID_ch.collectFile(name: "clone_id_for_tree.tsv") // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
     cloneID_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
@@ -735,6 +817,12 @@ workflow {
         tree_right_margin,
         tree_legend
     )
+
+    pie(
+        tree_ch2
+    )
+
+
 
     backup(
         config_file, 

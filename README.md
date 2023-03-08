@@ -257,6 +257,12 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 <br /><br />
 ## WHAT'S NEW IN
 
+#### v3.3
+
+Empty channel solved<br />
+Donut chart added
+
+
 #### v3.2
 
 README file updated for localization of the igblast database
@@ -269,7 +275,7 @@ README file updated
 
 #### v3.0
 
-first version that provides trees of clonal groups
+First version that provides trees of clonal groups
 
 
 #### v2.1

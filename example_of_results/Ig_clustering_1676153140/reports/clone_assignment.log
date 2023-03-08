@@ -1,27 +1,0 @@
-       START> DefineClones
-        FILE> all_igblast_seq_parse-select.tsv
-   SEQ_FIELD> junction
-     V_FIELD> v_call
-     J_FIELD> j_call
- MAX_MISSING> 0
-GROUP_FIELDS> None
-      ACTION> set
-        MODE> gene
-    DISTANCE> 0.15
-     LINKAGE> single
-       MODEL> ham
-        NORM> len
-         SYM> avg
-       NPROC> 16
-
-PROGRESS> [Grouping sequences] 19:18:42 (0) 0.0 minPROGRESS> [Grouping sequences] 19:18:42 (421) 0.0 min
-
-PROGRESS> [Assigning clones] 19:18:42 |                    |   0% (  0) 0.0 minPROGRESS> [Assigning clones] 19:18:42 |#                   |   5% ( 22) 0.0 minPROGRESS> [Assigning clones] 19:18:42 |##                  |  10% ( 44) 0.0 minPROGRESS> [Assigning clones] 19:18:42 |#####               |  26% (110) 0.0 minPROGRESS> [Assigning clones] 19:18:42 |######              |  31% (132) 0.0 minPROGRESS> [Assigning clones] 19:18:42 |#########           |  47% (198) 0.0 minPROGRESS> [Assigning clones] 19:18:42 |##########          |  52% (220) 0.0 minPROGRESS> [Assigning clones] 19:18:42 |###########         |  57% (242) 0.0 minPROGRESS> [Assigning clones] 19:18:42 |####################| 100% (421) 0.0 min
-
- OUTPUT> all_igblast_seq_parse-select_clone-pass.tsv
- CLONES> 137
-RECORDS> 421
-   PASS> 421
-   FAIL> 0
-    END> DefineClones
-

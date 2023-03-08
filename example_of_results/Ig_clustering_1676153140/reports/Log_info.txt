@@ -1,2 +1,0 @@
-full .nextflow.log is in: /mnt/c/Users/Gael/Documents/Git_projects/ig_clustering
-The one in the result folder is not complete (miss the end)
