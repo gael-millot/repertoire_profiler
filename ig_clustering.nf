@@ -105,7 +105,7 @@ process igblast {
     FILENAME=\$(basename -- "${fs_ch}") # recover a file name without path
     FILE=\${FILENAME%.*} # file name without extension
     FILE_EXTENSION="\${FILENAME##*.}" #  ## means "delete the longest regex starting at the beginning of the tested string". If nothing, delete nothing. Thus ##*. means delete the longest string finishing by a dot. Use # instead of ## for "delete the shortest regex starting at the beginning of the tested string"
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a igblast.log
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a igblast_report.log
     # end variables
 
     # checks
@@ -662,7 +662,7 @@ workflow {
         igblast_aa
     )
 
-    tsv_ch2 = igblast.out.tsv_ch1.collectFile(name: "all_igblast_seq.tsv", skip: 1, keepHeader: true) // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
+    tsv_ch2 = igblast.out.tsv_ch1.collectFile(name: "all_igblast_seq.tsv", skip: 1, keepHeader: true, tempDir: "${out_path}/") // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
     // or igblast.out[0].collectFile() if output of igblast process is not named using emit.
     //the following test does not work because tested at the beginning of the nexflow run, not after the igblast process, as shown with the print("coucou")
     //if(tsv_ch2.toList().size() == 0){
@@ -675,6 +675,7 @@ workflow {
     //tsv_ch2.subscribe{it -> it.copyTo("${out_path}")}
     igblast.out.log_ch.collectFile(name: "igblast_report.log").subscribe{it -> it.copyTo("${out_path}/reports")} // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
 
+    //tsv_ch2.view()
 
     parseDb_filtering(
         tsv_ch2

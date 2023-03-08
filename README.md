@@ -62,6 +62,7 @@ awk -v slice_size=1 -v prefix="cut" '$1 ~ /^>/{nbSeq++; currSlice=int((nbSeq-1)/
 
 Installation of:<br />
 [nextflow DSL2](https://github.com/nextflow-io/nextflow)<br />
+[Graphviz](https://www.graphviz.org/download/), `sudo apt install graphviz` for Linux ubuntu<br />
 [Singularity/apptainer](https://github.com/apptainer/apptainer)<br />
 [igblast database](https://ftp.ncbi.nih.gov/blast/executables/igblast/release/1.17.1/), installed in the mandatory folder: ~/share
 
