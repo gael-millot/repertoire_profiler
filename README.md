@@ -119,11 +119,14 @@ export SINGU_CONF=apptainer/1.1.5
 export SINGU_CONF_AFTER=bin/singularity # on maestro
 export GIT_CONF=git/2.39.1
 export GIT_CONF_AFTER=bin/git # on maestro
+export GRAPHVIZ_CONF=graphviz/2.42.3
+export GRAPHVIZ_CONF_AFTER=bin/graphviz # on maestro
 
-MODULES="${CONF_BEFORE}/${JAVA_CONF}/${JAVA_CONF_AFTER},${CONF_BEFORE}/${SINGU_CONF}/${SINGU_CONF_AFTER},${CONF_BEFORE}/${GIT_CONF}/${GIT_CONF_AFTER}"
+
+MODULES="${CONF_BEFORE}/${JAVA_CONF}/${JAVA_CONF_AFTER},${CONF_BEFORE}/${SINGU_CONF}/${SINGU_CONF_AFTER},${CONF_BEFORE}/${GIT_CONF}/${GIT_CONF_AFTER}/${GRAPHVIZ_CONF}/${GRAPHVIZ_CONF_AFTER}"
 cd ${EXEC_PATH}
-chmod 755 ${EXEC_PATH}/bin/*.* # not required if no bin folder
-module load ${JAVA_CONF} ${SINGU_CONF} ${GIT_CONF}
+# chmod 755 ${EXEC_PATH}/bin/*.* # not required if no bin folder
+module load ${JAVA_CONF} ${SINGU_CONF} ${GIT_CONF} ${GRAPHVIZ_CONF}
 ```
 
 
@@ -182,7 +185,6 @@ permission denied
 ```
 
 Use chmod to change the user rights.
-
 
 
 <br /><br />
@@ -244,6 +246,7 @@ Not yet published
 The developers & maintainers of the mentioned softwares and packages, including:
 
 - [The R immcantation solution](https://immcantation.readthedocs.io/en/stable/)
+- [Bash](https://www.gnu.org/software/bash/)
 - [R](https://www.r-project.org/)
 - [ggplot2](https://ggplot2.tidyverse.org/)
 - [ggtree](https://yulab-smu.top/treedata-book/)
@@ -256,6 +259,12 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 
 <br /><br />
 ## WHAT'S NEW IN
+
+
+#### v3.4
+
+Two Donut charts added
+
 
 #### v3.3
 

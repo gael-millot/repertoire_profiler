@@ -35,7 +35,7 @@ process workflowParam { // create a file with the workflow parameters in out_pat
     echo "execution mode": ${system_exec} >> Run_info.txt
     modules=$modules # this is just to deal with variable interpretation during the creation of the .command.sh file by nextflow. See also \$modules below
     if [[ ! -z \$modules ]] ; then
-        echo "loaded modules (according to specification by the user thanks to the --modules argument of main.nf)": ${modules} >> Run_info.txt
+        echo "loaded modules (according to specification by the user thanks to the --modules argument of main.nf): ${modules}" >> Run_info.txt
     fi
     echo "Manifest's pipeline version: ${workflow.manifest.version}" >> Run_info.txt
     echo "result path: ${out_path}" >> Run_info.txt
@@ -515,29 +515,29 @@ process tree_vizu {
 
 process pie {
     label 'r_ext' // see the withLabel: bash in the nextflow config file 
-    publishDir path: "${out_path}", mode: 'copy', pattern: "{piechart.tsv}", overwrite: false
-    publishDir path: "${out_path}", mode: 'copy', pattern: "{piechart.pdf}", overwrite: false
+    publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
+    publishDir path: "${out_path}", mode: 'copy', pattern: "{*.pdf}", overwrite: false
     publishDir path: "${out_path}/png", mode: 'copy', pattern: "{*.png}", overwrite: false
     publishDir path: "${out_path}/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{pie.log}", overwrite: false
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
     cache 'true'
 
     input:
-    path tree_ch2
+    tuple val(kind), path(data) // 2 parallelization expected
 
     output:
-    path "piechart.tsv"
-    path "piechart.pdf"
-    path "piechart.png"
-    path "piechart.svg"
-    path "pie.log"
+    path "*.tsv"
+    path "*.pdf"
+    path "*.png"
+    path "*.svg"
+    path "*.log"
 
     script:
     """
     #!/bin/bash -ue
     Rscript -e '
         args <- commandArgs(trailingOnly = TRUE)  # recover arguments written after the call of the Rscript
-        tempo.arg.names <- c("file_name") # objects names exactly in the same order as in the bash code and recovered in args
+        tempo.arg.names <- c("file_name", "kind") # objects names exactly in the same order as in the bash code and recovered in args
         if(length(args) != length(tempo.arg.names)){
           tempo.cat <- paste0("======== ERROR: THE NUMBER OF ELEMENTS IN args (", length(args),") IS DIFFERENT FROM THE NUMBER OF ELEMENTS IN tempo.arg.names (", length(tempo.arg.names),")\nargs:", paste0(args, collapse = ","), "\ntempo.arg.names:", paste0(tempo.arg.names, collapse = ","))
           stop(tempo.cat)
@@ -577,12 +577,12 @@ process pie {
         assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::xlim(c(0.2, hsize + 0.5)))
         assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::theme_void())
         tempo.plot <- eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + ")))
-        ggplot2::ggsave(filename = "piechart.png", plot = tempo.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        ggplot2::ggsave(filename = "piechart.svg", plot = tempo.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        ggplot2::ggsave(filename = "piechart.pdf", plot = tempo.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = paste0(kind, "_piechart.png"), plot = tempo.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = paste0(kind, "_piechart.svg"), plot = tempo.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = paste0(kind, "_piechart.pdf"), plot = tempo.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
 
-        write.table(obs2, file = paste0("./piechart.tsv"), row.names = FALSE, sep = "\\t")
-    ' "${tree_ch2}" |& tee -a pie.log
+        write.table(obs2, file = paste0("./", kind, "_piechart.tsv"), row.names = FALSE, sep = "\\t")
+    ' "${data}" "${kind}" |& tee -a ${kind}_pie.log
     """
 }
 
@@ -774,7 +774,7 @@ workflow {
     mutation_load_ch2 = mutation_load.out.mutation_load_ch.collectFile(name: "all_productive_before_tree_seq.tsv", skip: 1, keepHeader: true) // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
     mutation_load_ch2.subscribe{it -> it.copyTo("${out_path}")}
     mutation_load.out.mutation_load_log_ch.collectFile(name: "mutation_load.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
-
+    tuple_mutation_load_ch2 = new Tuple("all", mutation_load_ch2)
 
     get_tree(
         mutation_load.out.mutation_load_ch,
@@ -818,8 +818,12 @@ workflow {
         tree_legend
     )
 
+    tempo1_ch = Channel.of("all", "tree") // 1 channel with 2 values (not list)
+    tempo2_ch = mutation_load_ch2.merge(tree_ch2).flatten() // 1 channel with 2 paths (flatten() -> not list)
+    tempo3_ch = tempo1_ch.merge(tempo2_ch) // 2 lists
+
     pie(
-        tree_ch2
+        tempo3_ch
     )
 
 
