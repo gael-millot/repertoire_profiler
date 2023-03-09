@@ -524,6 +524,8 @@ process pie {
 
     input:
     tuple val(kind), path(data) // 2 parallelization expected
+    val donut_hole_size
+    val donut_colors
 
     output:
     path "*.tsv"
@@ -537,7 +539,7 @@ process pie {
     #!/bin/bash -ue
     Rscript -e '
         args <- commandArgs(trailingOnly = TRUE)  # recover arguments written after the call of the Rscript
-        tempo.arg.names <- c("file_name", "kind") # objects names exactly in the same order as in the bash code and recovered in args
+        tempo.arg.names <- c("file_name", "kind", "donut.hole.size", "donut.colors") # objects names exactly in the same order as in the bash code and recovered in args
         if(length(args) != length(tempo.arg.names)){
           tempo.cat <- paste0("======== ERROR: THE NUMBER OF ELEMENTS IN args (", length(args),") IS DIFFERENT FROM THE NUMBER OF ELEMENTS IN tempo.arg.names (", length(tempo.arg.names),")\nargs:", paste0(args, collapse = ","), "\ntempo.arg.names:", paste0(tempo.arg.names, collapse = ","))
           stop(tempo.cat)
@@ -545,14 +547,14 @@ process pie {
         for(i2 in 1:length(tempo.arg.names)){
           assign(tempo.arg.names[i2], args[i2])
         }
+        donut.hole.size <- as.numeric(donut.hole.size)
 
-        hsize <- 2
         obs <- read.table(file_name, sep = "\\t", header = TRUE)
         obs2 <- data.frame(table(obs\$clone_id))
         names(obs2)[1] <- "Clone_ID"
         obs2 <- data.frame(obs2, Prop = obs2\$Freq / sum(obs2\$Freq))
 
-        obs3 <- data.frame(obs2, x = hsize)
+        obs3 <- data.frame(obs2, x = donut.hole.size)
         tempo.gg.name <- "gg.indiv.plot."
         tempo.gg.count <- 0
         assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::ggplot(
@@ -573,8 +575,10 @@ process pie {
             size = 15
         ))
         assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::coord_polar(theta = "y", direction = -1))
-        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_fill_brewer(palette = "GnBu"))
-        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::xlim(c(0.2, hsize + 0.5)))
+        if(donut.colors != "NULL"){
+            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_fill_brewer(palette = donut.colors))
+        }
+        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::xlim(c(0.2, donut.hole.size + 0.5)))
         assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::theme_void())
         tempo.plot <- eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + ")))
         ggplot2::ggsave(filename = paste0(kind, "_piechart.png"), plot = tempo.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
@@ -582,7 +586,7 @@ process pie {
         ggplot2::ggsave(filename = paste0(kind, "_piechart.pdf"), plot = tempo.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
 
         write.table(obs2, file = paste0("./", kind, "_piechart.tsv"), row.names = FALSE, sep = "\\t")
-    ' "${data}" "${kind}" |& tee -a ${kind}_pie.log
+    ' "${data}" "${kind}" ${donut_hole_size} "${donut_colors}" |& tee -a ${kind}_pie.log
     """
 }
 
@@ -683,13 +687,70 @@ workflow {
     if( ! nb_seq_per_clone in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID nb_seq_per_clone PARAMETER IN ig_clustering.config FILE:\n${nb_seq_per_clone}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! nb_seq_per_clone =~  /^[0-9]*$/){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_distance PARAMETER IN ig_clustering.config FILE:\n${clone_distance}\nMUST BE A POSITIVE INTEGER VALUE\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID nb_seq_per_clone PARAMETER IN ig_clustering.config FILE:\n${nb_seq_per_clone}\nMUST BE A POSITIVE INTEGER VALUE\n\n========\n\n"
     }
     if( ! clone_distance in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_distance PARAMETER IN ig_clustering.config FILE:\n${clone_distance}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! clone_distance =~  /^[01]{1}\.*[0-9]*$/){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_distance PARAMETER IN ig_clustering.config FILE:\n${clone_distance}\nMUST BE A POSITIVE PROPORTION VALUE\n\n========\n\n"
     }
+    if( ! tree_kind in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_kind PARAMETER IN ig_clustering.config FILE:\n${tree_kind}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }
+    if( ! tree_leaf_color in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_color PARAMETER IN ig_clustering.config FILE:\n${tree_leaf_color}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }
+    if( ! tree_leaf_shape in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_shape PARAMETER IN ig_clustering.config FILE:\n${tree_leaf_shape}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! tree_leaf_shape =~  /^[0-9]*$/){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_shape PARAMETER IN ig_clustering.config FILE:\n${tree_leaf_shape}\nMUST BE A POSITIVE INTEGER VALUE\n\n========\n\n"
+    }
+    if( ! tree_leaf_size in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_size PARAMETER IN ig_clustering.config FILE:\n${tree_leaf_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! tree_leaf_size =~  /^[0-9]*$/){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_size PARAMETER IN ig_clustering.config FILE:\n${tree_leaf_size}\nMUST BE A POSITIVE INTEGER VALUE\n\n========\n\n"
+    }
+    if( ! tree_label_size in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_size PARAMETER IN ig_clustering.config FILE:\n${tree_label_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! tree_label_size =~  /^[0-9]*$/){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_size PARAMETER IN ig_clustering.config FILE:\n${tree_label_size}\nMUST BE A POSITIVE INTEGER VALUE\n\n========\n\n"
+    }
+    if( ! tree_label_hjust in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_hjust PARAMETER IN ig_clustering.config FILE:\n${tree_label_hjust}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! tree_label_hjust =~  /^\-{0,1}[0-9]+\.*[0-9]*$/){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_hjust PARAMETER IN ig_clustering.config FILE:\n${tree_label_hjust}\nMUST BE A NUMERIC VALUE\n\n========\n\n"
+    }
+    if( ! tree_label_rigth in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_rigth PARAMETER IN ig_clustering.config FILE:\n${tree_label_rigth}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (tree_label_rigth == "TRUE" || tree_label_rigth == "FALSE")){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_rigth PARAMETER IN ig_clustering.config FILE:\n${tree_label_rigth}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
+    }
+    if( ! tree_label_outside in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_outside PARAMETER IN ig_clustering.config FILE:\n${tree_label_outside}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (tree_label_outside == "TRUE" || tree_label_outside == "FALSE")){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_outside PARAMETER IN ig_clustering.config FILE:\n${tree_label_outside}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
+    }
+    if( ! tree_right_margin in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_right_margin PARAMETER IN ig_clustering.config FILE:\n${tree_right_margin}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! tree_right_margin =~  /^[0-9]+\.*[0-9]*$/){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_right_margin PARAMETER IN ig_clustering.config FILE:\n${tree_right_margin}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
+    }
+    if( ! tree_legend in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_legend PARAMETER IN ig_clustering.config FILE:\n${tree_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (tree_legend == "TRUE" || tree_legend == "FALSE")){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_legend PARAMETER IN ig_clustering.config FILE:\n${tree_legend}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
+    }
+    if( ! donut_hole_size in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_size PARAMETER IN ig_clustering.config FILE:\n${donut_hole_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! donut_hole_size =~  /^[0-9]+\.*[0-9]*$/){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_size PARAMETER IN ig_clustering.config FILE:\n${donut_hole_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
+    }
+    if( ! donut_colors in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_colors PARAMETER IN ig_clustering.config FILE:\n${donut_colors}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }
+
+
+
 
     // below : those variable are already used in the config file. Thus, to late to check them. And not possible to check inside the config file
     // out_ini
@@ -819,13 +880,14 @@ workflow {
     )
 
     tempo1_ch = Channel.of("all", "tree") // 1 channel with 2 values (not list)
-    tempo2_ch = mutation_load_ch2.merge(tree_ch2).flatten() // 1 channel with 2 paths (flatten() -> not list)
+    tempo2_ch = mutation_load_ch2.mix(tree_ch2) // 1 channel with 2 paths (flatten() -> not list)
     tempo3_ch = tempo1_ch.merge(tempo2_ch) // 2 lists
 
     pie(
-        tempo3_ch
+        tempo3_ch, 
+        donut_hole_size, 
+        donut_colors
     )
-
 
 
     backup(
