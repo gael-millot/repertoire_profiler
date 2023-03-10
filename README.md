@@ -209,8 +209,7 @@ Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.
 | **seq_for_trees.tsv** | Sequences of the *all_productive_before_tree_seq.tsv* file used in the tree analysis. |
 | **dismissed_seq_for_tree.tsv** | Sequences of the *all_productive_before_tree_seq.tsv* file not used in the tree analysis. |
 | **tree.pdf** | Phylogenic trees of the sequences that belong to a clonal group (one page per clonal group). |
-| **all_piechart.pdf** | Frequency of sequences per clonal groups. |
-| **tree_piechart.pdf** | Frequency of sequences per clonal groups among sequences that led to trees. |
+| **pies.pdf** | Frequency of sequences per clonal groups, among sequences used for trees (tree) and among all the productive sequences (all). |
 
 
 <br /><br />
