@@ -358,6 +358,7 @@ process get_tree {
     input:
     path mutation_load_ch
     val nb_seq_per_clone
+    val tree_duplicate_seq
 
     output:
     path "*.RData", emit: rdata_tree_ch, optional: true
@@ -386,7 +387,10 @@ process get_tree {
                 data = db, 
                 seq = "sequence_alignment", 
                 clone = "clone_id", 
-                minseq=1, heavy=NULL, dup_singles=TRUE
+                minseq=1, 
+                heavy = NULL, 
+                dup_singles = TRUE,
+                trait = if(${tree_duplicate_seq}){names(db)[1]}else{NULL} # control the removal of identical sequences but different sequence name
             )
             trees <- dowser::getTrees(clones, build="igphyml", exec="/usr/local/share/igphyml/src/igphyml", nproc = 10)
             # assign(paste0("c", trees\$clone_id, "_trees"), trees)
@@ -415,6 +419,7 @@ process tree_vizu {
     input:
     path rdata_tree_ch2 // no more parallelization
     val tree_kind
+    val tree_duplicate_seq
     val tree_leaf_color
     val tree_leaf_shape
     val tree_leaf_size
@@ -424,7 +429,7 @@ process tree_vizu {
     val tree_label_outside
     val tree_right_margin
     val tree_legend
-    path meta_ch
+    path meta_file
     val tree_meta_path_names
     path cute_file
 
@@ -441,6 +446,7 @@ process tree_vizu {
     #!/bin/bash -ue
     tree_vizu.R \
 "${tree_kind}" \
+"${tree_duplicate_seq}" \
 "${tree_leaf_color}" \
 "${tree_leaf_shape}" \
 "${tree_leaf_size}" \
@@ -450,7 +456,7 @@ process tree_vizu {
 "${tree_label_outside}" \
 "${tree_right_margin}" \
 "${tree_legend}" \
-"${meta_ch}" \
+"${meta_file}" \
 "${tree_meta_path_names}" \
 "${cute_file}" \
 "tree_vizu.log"
@@ -651,6 +657,11 @@ workflow {
     if( ! tree_leaf_color in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_color PARAMETER IN ig_clustering.config FILE:\n${tree_leaf_color}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
+    if( ! tree_duplicate_seq in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_duplicate_seq PARAMETER IN ig_clustering.config FILE:\n${tree_duplicate_seq}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (tree_duplicate_seq == "TRUE" || tree_duplicate_seq == "FALSE")){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_duplicate_seq PARAMETER IN ig_clustering.config FILE:\n${tree_duplicate_seq}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
+    }
     if( ! tree_leaf_shape in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_shape PARAMETER IN ig_clustering.config FILE:\n${tree_leaf_shape}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! tree_leaf_shape =~  /^[0-9]*$/){
@@ -693,8 +704,10 @@ workflow {
     }
     if( ! tree_meta_path in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_path PARAMETER IN ig_clustering.config FILE:\n${tree_meta_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! file(tree_meta_path).exists()){
-            error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_path PARAMETER IN ig_clustering.config FILE (DOES NOT EXIST): ${tree_meta_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
+    }else if(tree_meta_path != "NULL"){
+        if( ! file(tree_meta_path).exists()){
+            error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_path PARAMETER IN ig_clustering.config FILE. IF DOES NOT EXIST): ${tree_meta_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
+        }
     }
     if( ! tree_meta_path_names in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_path_names PARAMETER IN ig_clustering.config FILE:\n${tree_meta_path_names}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
@@ -741,15 +754,15 @@ workflow {
 
     //////// Channels
 
-    fs_ch = Channel.fromPath("${sample_path}/*.*", checkIfExists: false)
-    meta_ch = Channel.fromPath("${tree_meta_path}", checkIfExists: false) // WArning : can be optional
+    fs_ch = Channel.fromPath("${sample_path}/*.*", checkIfExists: false) // in channel because many files
 
     //////// end Channels
 
 
     //////// files import
 
-    cute_file=file(cute_path)
+    meta_file = file(tree_meta_path) // in variable because a single file. If "NULL", will create a file named NULL.
+    cute_file=file(cute_path) // in variable because a single file
 
     //////// end files import
 
@@ -816,7 +829,8 @@ workflow {
 
     get_tree(
         mutation_load.out.mutation_load_ch,
-        nb_seq_per_clone
+        nb_seq_per_clone,
+        tree_duplicate_seq
     )
 
 
@@ -845,6 +859,7 @@ workflow {
     tree_vizu(
         rdata_tree_ch2,
         tree_kind,
+        tree_duplicate_seq,
         tree_leaf_color,
         tree_leaf_shape,
         tree_leaf_size,
@@ -854,7 +869,7 @@ workflow {
         tree_label_outside,
         tree_right_margin,
         tree_legend,
-        meta_ch,
+        meta_file,
         tree_meta_path_names,
         cute_file
     )

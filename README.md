@@ -262,6 +262,13 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 ## WHAT'S NEW IN
 
 
+#### v4.0
+
+tree_meta_path modified so that it can now be a 'NULL' path
+V and J alleles added in tree titles
+Duplicated sequences can be removed or not from trees
+
+
 #### v3.5
 
 Bug solved
