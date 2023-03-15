@@ -75,8 +75,8 @@ Installation of:<br />
 
 ```bash
 DRIVE="C"
-sudo mkdir /mnt/share
-sudo mount -t drvfs $DRIVE: /mnt/share
+sudo mkdir /mnt/c
+sudo mount -t drvfs $DRIVE: /mnt/c
 ```
 
 Warning: if no mounting, it is possible that nextflow does nothing, or displays a message like

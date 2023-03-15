@@ -460,7 +460,7 @@ process tree_vizu {
 
 
 
-process pie {
+process donut {
     label 'r_ext' // see the withLabel: bash in the nextflow config file 
     publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
     publishDir path: "${out_path}", mode: 'copy', pattern: "{*.pdf}", overwrite: false
@@ -476,7 +476,7 @@ process pie {
 
     output:
     path "*.tsv"
-    path "*.pdf", emit: pie_ch, optional: true
+    path "*.pdf", emit: donut_ch, optional: true
     path "*.png"
     path "*.svg"
     path "*.log"
@@ -540,11 +540,11 @@ process pie {
         pdf(NULL)
         tempo.plot <- gridExtra::arrangeGrob(tempo.plot, top = title.grob)
 
-        ggplot2::ggsave(filename = paste0(kind, "_piechart.png"), plot = tempo.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        ggplot2::ggsave(filename = paste0(kind, "_piechart.svg"), plot = tempo.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        ggplot2::ggsave(filename = paste0(kind, "_piechart.pdf"), plot = tempo.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        write.table(obs2, file = paste0("./", kind, "_piechart.tsv"), row.names = FALSE, sep = "\\t")
-    ' "${data}" "${kind}" ${donut_hole_size} "${donut_colors}" |& tee -a ${kind}_pie.log
+        ggplot2::ggsave(filename = paste0(kind, "_donutchart.png"), plot = tempo.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = paste0(kind, "_donutchart.svg"), plot = tempo.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = paste0(kind, "_donutchart.pdf"), plot = tempo.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        write.table(obs2, file = paste0("./", kind, "_donutchart.tsv"), row.names = FALSE, sep = "\\t")
+    ' "${data}" "${kind}" ${donut_hole_size} "${donut_colors}" |& tee -a ${kind}_donut.log
     """
 }
 
@@ -863,7 +863,7 @@ workflow {
     tempo2_ch = mutation_load_ch2.mix(tree_ch2) // 1 channel with 2 paths (flatten() -> not list)
     tempo3_ch = tempo1_ch.merge(tempo2_ch) // 2 lists
 
-    pie(
+    donut(
         tempo3_ch, 
         donut_hole_size, 
         donut_colors
