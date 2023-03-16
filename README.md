@@ -208,6 +208,7 @@ Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.
 | **dismissed_clone_id_for_tree.tsv** | Clonal group IDs not used in the tree analysis (clonal group with less than n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file). |
 | **seq_for_trees.tsv** | Sequences of the *all_productive_before_tree_seq.tsv* file used in the tree analysis. |
 | **dismissed_seq_for_tree.tsv** | Sequences of the *all_productive_before_tree_seq.tsv* file not used in the tree analysis. |
+| **seq_not_displayed.tsv** | Sequences file used in the tree analysis but not displayed in the graph, (1) because strictly identical to another sequence already in the tree and (2) because the tree_duplicate_seq parameter of the ig_clustering.config file has been set to "FALSE". |
 | **tree.pdf** | Phylogenic trees of the sequences that belong to a clonal group (one page per clonal group). |
 | **pies.pdf** | Frequency of sequences per clonal groups, among sequences used for trees (tree) and among all the productive sequences (all). |
 

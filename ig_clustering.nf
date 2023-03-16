@@ -438,6 +438,7 @@ process tree_vizu {
     path "*.pdf", optional: true
     path "*.png", optional: true
     path "*.svg", optional: true
+    path "*.tsv", emit: seq_not_displayed_ch, optional: true
     path "tree_vizu.log"
     //path "HLP10_tree_parameters.tsv"
 
@@ -788,10 +789,8 @@ workflow {
     )
 
     igblast.out.tsv_ch1.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE igblast PROCESS\n\nCHECK THAT THE igblast_organism, igblast_loci AND igblast_files ARE CORRECTLY SET IN THE ig_clustering.config FILE\n\n========\n\n"}}
-    tsv_ch2 = igblast.out.tsv_ch1.collectFile(name: "all_igblast_seq.tsv", skip: 1, keepHeader: true) // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports. tempDir added to have a warning message in the case of empty collection, like "WARN: Failed to render execution report -- see the log file for details"
-    //tsv_ch2.view()
-    igblast.out.log_ch.collectFile(name: "igblast_report.log").subscribe{it -> it.copyTo("${out_path}/reports")} // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
-
+    tsv_ch2 = igblast.out.tsv_ch1.collectFile(name: "all_igblast_seq.tsv", skip: 1, keepHeader: true)
+    igblast.out.log_ch.collectFile(name: "igblast_report.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
 
     parseDb_filtering(
@@ -822,8 +821,9 @@ workflow {
     )
 
     mutation_load.out.mutation_load_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE mutation_load PROCESS\n\n========\n\n"}}
-    mutation_load_ch2 = mutation_load.out.mutation_load_ch.collectFile(name: "all_productive_before_tree_seq.tsv", skip: 1, keepHeader: true) // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
+    mutation_load_ch2 = mutation_load.out.mutation_load_ch.collectFile(name: "all_productive_before_tree_seq.tsv", skip: 1, keepHeader: true)
     mutation_load_ch2.subscribe{it -> it.copyTo("${out_path}")}
+
     mutation_load.out.mutation_load_log_ch.collectFile(name: "mutation_load.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
     tuple_mutation_load_ch2 = new Tuple("all", mutation_load_ch2)
 
@@ -839,19 +839,19 @@ workflow {
     //rdata_tree_ch2.view()
 
     get_tree.out.no_tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: ALL SEQUENCES IN TREES FOLLOWING THE get_tree PROCESS -> NO dismissed_seq_for_tree.tsv FILE RETURNED\n\n")}}
-    no_tree_ch2 = get_tree.out.no_tree_ch.collectFile(name: "dismissed_seq_for_tree.tsv", skip: 1, keepHeader: true) // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
+    no_tree_ch2 = get_tree.out.no_tree_ch.collectFile(name: "dismissed_seq_for_tree.tsv", skip: 1, keepHeader: true)
     no_tree_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
     get_tree.out.tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: NO SEQUENCES IN TREES FOLLOWING THE get_tree PROCESS -> NO seq_for_trees.tsv FILE RETURNED\n\n")}}
-    tree_ch2 = get_tree.out.tree_ch.collectFile(name: "seq_for_trees.tsv", skip: 1, keepHeader: true) // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
+    tree_ch2 = get_tree.out.tree_ch.collectFile(name: "seq_for_trees.tsv", skip: 1, keepHeader: true)
     tree_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
     get_tree.out.no_cloneID_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: ALL SEQUENCES IN CLONAL GROUP FOLLOWING THE get_tree PROCESS -> NO dismissed_clone_id_for_tree.tsv FILE RETURNED\n\n")}}
-    no_cloneID_ch2 = get_tree.out.no_cloneID_ch.collectFile(name: "dismissed_clone_id_for_tree.tsv") // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
+    no_cloneID_ch2 = get_tree.out.no_cloneID_ch.collectFile(name: "dismissed_clone_id_for_tree.tsv")
     no_cloneID_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
     get_tree.out.cloneID_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: NO CLONAL GROUP FOLLOWING THE get_tree PROCESS -> NO clone_id_for_tree.tsv FILE RETURNED\n\n")}}
-    cloneID_ch2 = get_tree.out.cloneID_ch.collectFile(name: "clone_id_for_tree.tsv") // concatenate all the cov_report.txt files in channel cov_report_ch into a single file published into ${out_path}/reports
+    cloneID_ch2 = get_tree.out.cloneID_ch.collectFile(name: "clone_id_for_tree.tsv")
     cloneID_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
     get_tree.out.get_tree_log_ch.collectFile(name: "get_tree.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
@@ -874,9 +874,15 @@ workflow {
         cute_file
     )
 
+    tree_vizu.out.seq_not_displayed_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: -> NO seq_not_displayed.tsv FILE RETURNED\n\n")}}
+    seq_not_displayed_ch2 = tree_vizu.out.seq_not_displayed_ch.collectFile(name: "seq_not_displayed.tsv", skip: 1, keepHeader: true)
+    seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}")}
+
+
     tempo1_ch = Channel.of("all", "tree") // 1 channel with 2 values (not list)
     tempo2_ch = mutation_load_ch2.mix(tree_ch2) // 1 channel with 2 paths (flatten() -> not list)
     tempo3_ch = tempo1_ch.merge(tempo2_ch) // 2 lists
+
 
     donut(
         tempo3_ch, 

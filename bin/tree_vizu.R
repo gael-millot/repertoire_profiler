@@ -649,20 +649,6 @@ if(length(tempo.list) == 0){
         }
         # end legend
         # title
-        add.text <- NULL
-        if(tree_duplicate_seq == "TRUE" & nrow(trees$data[[i3]]@data) != nrow(db.list[[i3]])){
-            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN tree_vizu.R for clone ID ", paste(unique(db.list[[i3]]$clone_id)), "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"TRUE\"\nBUT THE NUMBER OF ROWS IN trees$data[[i3]]@data (n=", nrow(trees$data[[i3]]@data), ")\nIS DIFFERENT FROM THE NUMBER OF ROWS IN db (n=", nrow(db.list[[i3]]), ")\nAS IF SOME SEQUENCES WHERE REMOVED\n\n============\n\n"), call. = FALSE)
-        }else if(tree_duplicate_seq == "FALSE" & nrow(trees$data[[i3]]@data) == nrow(db.list[[i3]])){
-            add.text <- "Parameter tree_duplicate_seq == \"FALSE\" but no identical sequences to remove."
-        }else if(tree_duplicate_seq == "FALSE" & nrow(trees$data[[i3]]@data) != nrow(db.list[[i3]])){
-            tempo.log <- ! db.list[[i3]][[1]] %in% trees$data[[i3]]@data[[1]]
-            if( ! any(tempo.log)){
-                stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 6 IN tree_vizu.R for clone ID ", paste(unique(db.list[[i3]]$clone_id)), "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"FALSE\"\nBUT NO SEQ NAMES REMOVED FROM THE TREE IN trees$data[[i3]]@data[[1]] IS DIFFERENT FROM THE NUMBER OF ROWS IN db (n=", nrow(db.list[[i3]]), ")\ntrees$data[[i3]]@data[[1]]: ", paste(trees$data[[i3]]@data[[1]], collapse = " "), "\ndb.list[[i3]][[1]]: ", paste(db.list[[i3]][[1]], collapse = " "), "\n\n============\n\n"), call. = FALSE)
-            }else{
-                add.text <- paste0("Warning: sequences removed from the trees (Parameter tree_duplicate_seq == \"FALSE\"): ", paste(db.list[[i3]][[1]][tempo.log], collapse = " "))
-            }
-        }
-
         tempo.v <- trees$data[[i3]]@v_gene
         tempo.j <- trees$data[[i3]]@j_gene
         chain <- substr(tempo.j, 1, 3) # extract the IGH or IGK name
@@ -671,8 +657,43 @@ if(length(tempo.list) == 0){
         }
         tempo.v <- substring(tempo.v, 4)
         tempo.j <- substring(tempo.j, 4)
+        clone.name <- paste0(tempo.v, "_", tempo.j)
+        clone.id <-  trees$data[[i3]]@clone
+        removed.seq <- NULL
+        add.text <- NULL
+        if(tree_duplicate_seq == "TRUE" & nrow(trees$data[[i3]]@data) != nrow(db.list[[i3]])){
+            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN tree_vizu.R for clone ID ", clone.id, "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"TRUE\"\nBUT THE NUMBER OF ROWS IN trees$data[[i3]]@data (n=", nrow(trees$data[[i3]]@data), ")\nIS DIFFERENT FROM THE NUMBER OF ROWS IN db (n=", nrow(db.list[[i3]]), ")\nAS IF SOME SEQUENCES WHERE REMOVED\n\n============\n\n"), call. = FALSE)
+        }else if(tree_duplicate_seq == "FALSE" & nrow(trees$data[[i3]]@data) == nrow(db.list[[i3]])){
+            add.text <- "All sequences of the tree displayed"
+        }else if(tree_duplicate_seq == "FALSE" & nrow(trees$data[[i3]]@data) != nrow(db.list[[i3]])){
+            # get removed sequences info
+            duplic.seq.log <- ! db.list[[i3]][[1]] %in% trees$data[[i3]]@data[[1]]
+            if( ! any(duplic.seq.log)){
+                stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 6 IN tree_vizu.R for clone ID ", clone.id, "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"FALSE\"\nBUT NO SEQ NAMES REMOVED FROM THE TREE IN trees$data[[i3]]@data[[1]] IS DIFFERENT FROM THE NUMBER OF ROWS IN db (n=", nrow(db.list[[i3]]), ")\ntrees$data[[i3]]@data[[1]]: ", paste(trees$data[[i3]]@data[[1]], collapse = " "), "\ndb.list[[i3]][[1]]: ", paste(db.list[[i3]][[1]], collapse = " "), "\n\n============\n\n"), call. = FALSE)
+            }else{
+                removed.seq <- db.list[[i3]][[1]][duplic.seq.log]
+                add.text <- "Warning: sequences removed from the display (Parameter tree_duplicate_seq == \"FALSE\". See seq_not_displayed.tsv)"
+                identical.seq <- vector("character", length(removed.seq))
+                tempo.pos <- which(duplic.seq.log)
+                for(i4 in 1:length(tempo.pos)){
+                    for(i5 in trees$data[[i3]]@data$sequence_id){
+                        tempo.log <- db.list[[i3]]$d_identity[tempo.pos[i4]] != db.list[[i3]]$d_identity[db.list[[i3]]$sequence_id == i5] | db.list[[i3]]$j_identity[tempo.pos[i4]] != db.list[[i3]]$j_identity[db.list[[i3]]$sequence_id == i5]
+                        if(tempo.log){
+                            identical.seq[i4] <- i5
+                        }
+                    }
+                }
+                if(any(identical.seq == "")){
+                    stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 7 IN tree_vizu.R for clone ID ", clone.id, "\nidentical.seq SHOULD HAVE ", length(tempo.pos), " SEQUENCES NAMES (NO REMAINING EMPTY SLOT): ", paste(identical.seq, collapse = " "), "\n\n============\n\n"), call. = FALSE)
+                }
+                tempo.df <- data.frame(sequence_id = removed.seq, clone_id = clone.id, clone_name = clone.name, chain = chain, identical_to = identical.seq)
+                write.table(tempo.df, file = paste0("./", clone.id, "_seq_not_displayed.tsv"), row.names = FALSE, col.name = TRUE, sep = "\t")
+                # end get removed sequences info
+            }
+        }
+
         tempo.title <- paste0(
-            "Clonal Group: ", tempo.v, "_", tempo.j, "\n",
+            "Clonal Group: ", clone.name, "\n",
             "Chain: ", chain, "\n", 
             "Clonal Group full name: ", trees$data[[i3]]@v_gene, "_", trees$data[[i3]]@j_gene, "\n",
             "Clone ID: ", trees$data[[i3]]@clone, "\n",
