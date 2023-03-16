@@ -263,6 +263,12 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 ## WHAT'S NEW IN
 
 
+#### v4.1
+
+seq_not_displayed.tsv file added to better understand the absence of seq in trees
+V and J alleles added in the donut legend
+
+
 #### v4.0
 
 tree_meta_path modified so that it can now be a 'NULL' path

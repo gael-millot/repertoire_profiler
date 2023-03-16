@@ -480,6 +480,7 @@ process donut {
     tuple val(kind), path(data) // 2 parallelization expected
     val donut_hole_size
     val donut_colors
+    path cute_file
 
     output:
     path "*.tsv"
@@ -491,67 +492,13 @@ process donut {
     script:
     """
     #!/bin/bash -ue
-    /usr/bin/Rscript -e '
-        args <- commandArgs(trailingOnly = TRUE)  # recover arguments written after the call of the Rscript
-        tempo.arg.names <- c("file_name", "kind", "donut.hole.size", "donut.colors") # objects names exactly in the same order as in the bash code and recovered in args
-        if(length(args) != length(tempo.arg.names)){
-          tempo.cat <- paste0("======== ERROR: THE NUMBER OF ELEMENTS IN args (", length(args),") IS DIFFERENT FROM THE NUMBER OF ELEMENTS IN tempo.arg.names (", length(tempo.arg.names),")\nargs:", paste0(args, collapse = ","), "\ntempo.arg.names:", paste0(tempo.arg.names, collapse = ","))
-          stop(tempo.cat)
-        }
-        for(i2 in 1:length(tempo.arg.names)){
-          assign(tempo.arg.names[i2], args[i2])
-        }
-        donut.hole.size <- as.numeric(donut.hole.size)
-
-        obs <- read.table(file_name, sep = "\\t", header = TRUE)
-        obs2 <- data.frame(table(obs\$clone_id))
-        names(obs2)[1] <- "Clone_ID"
-        obs2 <- data.frame(obs2, Prop = obs2\$Freq / sum(obs2\$Freq))
-
-        obs3 <- data.frame(obs2, x = donut.hole.size)
-        tempo.gg.name <- "gg.indiv.plot."
-        tempo.gg.count <- 0
-        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::ggplot(
-            data = obs3,
-            mapping = ggplot2::aes(x = x, y = Freq, fill = Clone_ID), 
-            color = "white"
-        ))
-        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::geom_col(color = "white", size = 1.5))
-        # assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::geom_text(
-        #     ggplot2::aes(label = Freq), 
-        #     position = ggplot2::position_stack(vjust = 0.5)
-        # ))
-        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::annotate(
-            geom = "text", 
-            x = 0.2, 
-            y = 0, 
-            label = sum(obs3\$Freq), 
-            size = 15
-        ))
-        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::coord_polar(theta = "y", direction = -1))
-        if(donut.colors != "NULL"){
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_fill_brewer(palette = donut.colors))
-        }
-        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::xlim(c(0.2, donut.hole.size + 0.5)))
-        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::theme_void())
-        tempo.plot <- eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + ")))
-
-        title.grob <- grid::textGrob(
-            label = kind,
-            x = grid::unit(0, "lines"), 
-            y = grid::unit(0, "lines"),
-            hjust = 0,
-            vjust = 0,
-            gp = grid::gpar(fontsize = 16)
-        )
-        pdf(NULL)
-        tempo.plot <- gridExtra::arrangeGrob(tempo.plot, top = title.grob)
-
-        ggplot2::ggsave(filename = paste0(kind, "_donutchart.png"), plot = tempo.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        ggplot2::ggsave(filename = paste0(kind, "_donutchart.svg"), plot = tempo.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        ggplot2::ggsave(filename = paste0(kind, "_donutchart.pdf"), plot = tempo.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        write.table(obs2, file = paste0("./", kind, "_donutchart.tsv"), row.names = FALSE, sep = "\\t")
-    ' "${data}" "${kind}" ${donut_hole_size} "${donut_colors}" |& tee -a ${kind}_donut.log
+    donut.R \
+"${data}" \
+"${kind}" \
+"${donut_hole_size}" \
+"${donut_colors}" \
+"${cute_file}" \
+"${kind}_donut.log"
     """
 }
 
@@ -887,7 +834,8 @@ workflow {
     donut(
         tempo3_ch, 
         donut_hole_size, 
-        donut_colors
+        donut_colors,
+        cute_file
     )
 
 
