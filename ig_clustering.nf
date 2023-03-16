@@ -469,8 +469,8 @@ process tree_vizu {
 
 process donut {
     label 'r_ext' // see the withLabel: bash in the nextflow config file 
-    publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
-    publishDir path: "${out_path}", mode: 'copy', pattern: "{*.pdf}", overwrite: false
+    //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
+    //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.pdf}", overwrite: false
     publishDir path: "${out_path}/png", mode: 'copy', pattern: "{*.png}", overwrite: false
     publishDir path: "${out_path}/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
@@ -483,8 +483,8 @@ process donut {
     path cute_file
 
     output:
-    path "*.tsv"
-    path "*.pdf", emit: donut_ch, optional: true
+    path "*.tsv", emit: donut_tsv_ch, optional: true
+    path "*.pdf", emit: donut_pdf_ch, optional: true
     path "*.png"
     path "*.svg"
     path "*.log"
@@ -502,6 +502,27 @@ process donut {
     """
 }
 
+process donut_assembly {
+    label 'r_ext' // see the withLabel: bash in the nextflow config file 
+    publishDir path: "${out_path}", mode: 'copy', pattern: "{donuts.pdf}", overwrite: false
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{donut_assembly.log}", overwrite: false
+    cache 'true'
+
+    input:
+    path donut_pdf_ch2
+
+    output:
+    path "donuts.pdf"
+    path "donut_assembly.log"
+
+    script:
+    """
+    #!/bin/bash -ue
+    Rscript -e '
+        qpdf::pdf_combine(input = list.files(path = ".", pattern = ".pdf\$"), output = "./donuts.pdf")
+    ' |& tee -a donut_assembly.log
+    """
+}
 
 
 process backup {
@@ -838,6 +859,16 @@ workflow {
         cute_file
     )
 
+    donut.out.donut_pdf_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: EMPTY OUTPUT FOLLOWING THE donut PROCESS -> NO DONUT RETURNED\n\n")}}
+    donut_pdf_ch2 = donut.out.donut_pdf_ch.collect()
+
+    donut.out.donut_tsv_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: -> NO seq_not_displayed.tsv FILE RETURNED\n\n")}}
+    donut_tsv_ch2 = donut.out.donut_tsv_ch.collectFile(name: "donut_stats.tsv", skip: 1, keepHeader: true)
+    donut_tsv_ch2.subscribe{it -> it.copyTo("${out_path}")}
+
+    donut_assembly(
+        donut_pdf_ch2
+    )
 
     backup(
         config_file, 

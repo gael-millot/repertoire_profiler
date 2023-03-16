@@ -365,7 +365,7 @@ clone.id <-  obs$clone_id
 
 obs2 <- data.frame(table(clone.name))
 names(obs2)[1] <- "Germline_Clone_Name"
-obs2 <- data.frame(obs2, Prop = obs2$Freq / sum(obs2$Freq))
+obs2 <- data.frame(obs2, Prop = obs2$Freq / sum(obs2$Freq), kind = kind)
 obs3 <- data.frame(obs2, x = donut.hole.size)
 
 ################ End data modification
