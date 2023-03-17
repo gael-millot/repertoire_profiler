@@ -89,7 +89,6 @@ process igblast {
     val igblast_files
     val igblast_organism
     val igblast_loci
-    val igblast_aa
 
     output:
     path "*.tsv", emit: tsv_ch1, optional: true
@@ -124,23 +123,12 @@ process igblast {
 
     # Alignment <-> annotate sequence using VDJ info
     # See https://changeo.readthedocs.io/en/stable/tools/AssignGenes.html for the details
-    echo 
-    if [[ ${igblast_aa} == "false" ]] ; then
-        AssignGenes.py igblast -s \${FILE}.fa -b /usr/local/share/igblast --organism ${igblast_organism} --loci ${igblast_loci} --format blast |& tee -a igblast_report.log
-    else
-        # WARNING: does not work if the fasta file contains \\r (CR carriage return, instead or in addition of \\n, LF line feed) but ok here because removed above
-        awk -v var1=\${FILENAME} '{lineKind=(NR-1)%2;}lineKind==0{record=\$0 ; next}lineKind==1{if(\$0~/^[NATGC]*\$/){print "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nFASTA FILE\\n"var1"\\nMUST BE AN AMINO ACID SEQUENCE IF THE igblast_aa PARAMETER IS SET TO true\\nHERE IT SEEMS ONLY MADE OF NUCLEOTIDES:\\n"\$0"\\n\\n========\\n\\n" ; exit 1}}' \${FILE}.fa
-        AssignGenes.py igblast-aa -s \${FILE}.fa -b /usr/local/share/igblast --organism ${igblast_organism} --loci ${igblast_loci} |& tee -a igblast_report.log
-    fi
+    AssignGenes.py igblast -s \${FILE}.fa -b /usr/local/share/igblast --organism ${igblast_organism} --loci ${igblast_loci} --format blast |& tee -a igblast_report.log
 
     # convert to tsv
     # Also convert data from the web interface IMGT/HighV-QUEST
-    if [[ ${igblast_aa} == "false" ]] ; then
-        MakeDb.py igblast -i ./\${FILE}_igblast.fmt7 -s ./\${FILE}.fa -r \${VDJ_FILES} --extended |& tee -a igblast_report.log
-    else
-        MakeDb.py igblast-aa -i ./\${FILE}_igblast.fmt7 -s ./\${FILE}.fa -r \${VDJ_FILES} --extended |& tee -a igblast_report.log
-    fi
-
+    MakeDb.py igblast -i ./\${FILE}_igblast.fmt7 -s ./\${FILE}.fa -r \${VDJ_FILES} --extended |& tee -a igblast_report.log
+    
     # printing if no tsv file made
     if [[ ! -f ./\${FILE}_igblast_db-pass.tsv ]] ; then
         echo -e "MakeDb.py igblast FAIL FOR \${FILENAME}" |& tee -a igblast_report.log
@@ -389,7 +377,7 @@ process get_tree {
                 clone = "clone_id", 
                 minseq=1, 
                 heavy = NULL, 
-                dup_singles = TRUE,
+                dup_singles = FALSE, # Duplicate sequences in singleton clones to include them as trees? Always use FALSE. Otherwise, it will create an artificial duplicated sequences in thr tree building so that we will have two instead of one sequence in the tree, after identical seq removal. See https://rdrr.io/cran/dowser/src/R/Clones.R
                 trait = if(${tree_duplicate_seq}){names(db)[1]}else{NULL} # control the removal of identical sequences but different sequence name
             )
             trees <- dowser::getTrees(clones, build="igphyml", exec="/usr/local/share/igphyml/src/igphyml", nproc = 10)
@@ -605,11 +593,6 @@ workflow {
     if( ! igblast_files in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_files PARAMETER IN ig_clustering.config FILE:\n${igblast_files}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
-    if( ! igblast_aa in String ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_aa PARAMETER IN ig_clustering.config FILE:\n${igblast_aa}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! (igblast_aa == "true" || igblast_aa == "false")){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_aa PARAMETER IN ig_clustering.config FILE:\n${igblast_aa}\nMUST BE EITHER \"true\" OR \"false\"\n\n========\n\n"
-    }
     if( ! nb_seq_per_clone in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID nb_seq_per_clone PARAMETER IN ig_clustering.config FILE:\n${nb_seq_per_clone}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! nb_seq_per_clone =~  /^[0-9]*$/){
@@ -699,9 +682,6 @@ workflow {
     // below : those variable are already used in the config file. Thus, to late to check them. And not possible to check inside the config file
     // out_ini
     print("\n\nRESULT DIRECTORY: ${out_path}")
-    if(igblast_aa == "true"){
-        print("\n\nWARNING: ANNOTATIONS OF SEQUENCES AT THE AA LEVEL, ACCORDING TO THE igblast_aa PARAMETER")
-    }
     print("\n\nWARNING: PARAMETERS ALREADY INTERPRETED IN THE .config FILE:")
     print("    system_exec: ${system_exec}")
     print("    out_path: ${out_path_ini}")
@@ -752,8 +732,7 @@ workflow {
         igblast_database_path, 
         igblast_files, 
         igblast_organism, 
-        igblast_loci, 
-        igblast_aa
+        igblast_loci
     )
 
     igblast.out.tsv_ch1.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE igblast PROCESS\n\nCHECK THAT THE igblast_organism, igblast_loci AND igblast_files ARE CORRECTLY SET IN THE ig_clustering.config FILE\n\n========\n\n"}}

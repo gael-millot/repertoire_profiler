@@ -262,6 +262,12 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 <br /><br />
 ## WHAT'S NEW IN
 
+#### v4.3
+
+igblast_aa parameter removed from the .config file
+bug solved in tree_vizu
+
+
 #### v4.2
 
 Donut charts grouped in a single pdf

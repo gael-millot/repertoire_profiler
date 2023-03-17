@@ -401,7 +401,7 @@ tempo.plot <- eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), c
 
 
 tempo.title <- paste0(
-    "Kind of sequences: ", kind, "\n",
+    "Kind of sequences: ", kind, " (see the corresponding ", ifelse(kind == "all", "all_productive_before_tree_seq.tsv", ifelse(kind == "tree", "seq_for_trees.tsv", "=====ERROR=====")), " file)\n",
     "Chain: ", chain, "\n",
     "The total number of sequences is indicated in the center of the donut.\nSee the donutchart.tsv file for the stats of the donut."
 )
@@ -412,10 +412,10 @@ title.grob <- grid::textGrob(
     y = grid::unit(0, "lines"),
     hjust = 0,
     vjust = 0,
-    gp = grid::gpar(fontsize = 8)
+    gp = grid::gpar(fontsize = 7)
 )
 pdf(NULL)
-tempo.plot <- gridExtra::arrangeGrob(tempo.plot, top = title.grob)
+tempo.plot <- suppressMessages(suppressWarnings(gridExtra::arrangeGrob(tempo.plot, top = title.grob, left = " ", right = " "))) # , left = " ", right = " " : trick to add margins in the plot. padding =  unit(0.5, "inch") is for top margin above the title
 
 
 ################ end Plotting tree

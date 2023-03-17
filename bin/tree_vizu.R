@@ -468,9 +468,9 @@ fun_report(data = paste0("\n\n################################ RUNNING\n\n"), ou
 ################ Control
 
 
-tempo.list <- list.files(path = ".", pattern = "RData")
+tempo.list <- list.files(path = ".", pattern = "RData$")
 if(length(tempo.list) == 0){
-    cat("\\n\\nNO TREE DATA COMPUTED (no .RData detected) -> NO GRAPH PLOTTED")
+    cat("\\n\\nNO TREE DATA COMPUTED (NO .RData FILE DETECTED) -> NO GRAPH PLOTTED")
 }else{
 
 
@@ -488,6 +488,7 @@ if(length(tempo.list) == 0){
         tempo.db[[i3]] <- db
     }
     suppressWarnings(rm(trees))
+    suppressWarnings(rm(db))
     trees <- tempo
     plots <- suppressMessages(dowser::plotTrees(
         # option in https://dowser.readthedocs.io/en/latest/topics/plotTrees/
@@ -671,13 +672,21 @@ if(length(tempo.list) == 0){
             if( ! any(duplic.seq.log)){
                 stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 6 IN tree_vizu.R for clone ID ", clone.id, "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"FALSE\"\nBUT NO SEQ NAMES REMOVED FROM THE TREE IN trees$data[[i3]]@data[[1]] IS DIFFERENT FROM THE NUMBER OF ROWS IN db (n=", nrow(db.list[[i3]]), ")\ntrees$data[[i3]]@data[[1]]: ", paste(trees$data[[i3]]@data[[1]], collapse = " "), "\ndb.list[[i3]][[1]]: ", paste(db.list[[i3]][[1]], collapse = " "), "\n\n============\n\n"), call. = FALSE)
             }else{
+
                 removed.seq <- db.list[[i3]][[1]][duplic.seq.log]
                 add.text <- "Warning: sequences removed from the display (Parameter tree_duplicate_seq == \"FALSE\". See seq_not_displayed.tsv)"
                 identical.seq <- vector("character", length(removed.seq))
                 tempo.pos <- which(duplic.seq.log)
+                cat(paste0("\nduplic.seq.log: ", paste(duplic.seq.log, collapse = " ")), "\n")
+                cat(paste0("\nnrow(trees$data[[i3]]@data): ", paste(nrow(trees$data[[i3]]@data), collapse = " ")), "\n")
+                cat(paste0("\nnrow(db.list[[i3]]): ", paste(nrow(db.list[[i3]]), collapse = " ")), "\n")
+                cat(paste0("\ndb.list[[i3]][[1]]: ", paste(db.list[[i3]][[1]], collapse = " ")), "\n")
+                cat(paste0("\ntrees$data[[i3]]@data[[1]]: ", paste(trees$data[[i3]]@data[[1]], collapse = " ")), "\n")
+                cat(paste0("\nremoved.seq: ", paste(removed.seq, collapse = " ")), "\n")
+                cat(paste0("\ntempo.pos: ", paste(tempo.pos, collapse = " ")), "\n")
                 for(i4 in 1:length(tempo.pos)){
                     for(i5 in trees$data[[i3]]@data$sequence_id){
-                        tempo.log <- db.list[[i3]]$d_identity[tempo.pos[i4]] != db.list[[i3]]$d_identity[db.list[[i3]]$sequence_id == i5] | db.list[[i3]]$j_identity[tempo.pos[i4]] != db.list[[i3]]$j_identity[db.list[[i3]]$sequence_id == i5]
+                        tempo.log <- db.list[[i3]]$v_identity[tempo.pos[i4]] != db.list[[i3]]$v_identity[db.list[[i3]]$sequence_id == i5] | db.list[[i3]]$j_identity[tempo.pos[i4]] != db.list[[i3]]$j_identity[db.list[[i3]]$sequence_id == i5]
                         if(tempo.log){
                             identical.seq[i4] <- i5
                         }
@@ -712,7 +721,7 @@ if(length(tempo.list) == 0){
         )
         # end title
         pdf(NULL)
-        final.plot <- suppressMessages(suppressWarnings(gridExtra::arrangeGrob(grobs = list(eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + "))), legend.final), ncol=2, widths=c(1, legend.width), top = title.grob)))
+        final.plot <- suppressMessages(suppressWarnings(gridExtra::arrangeGrob(grobs = list(eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + "))), legend.final), ncol=2, widths=c(1, legend.width), top = title.grob, left = " ", right = " "))) # , left = " ", right = " " : trick to add margins in the plot. padding =  unit(0.5, "inch") is for top margin above the title
 
 ################ end Plotting tree
 
