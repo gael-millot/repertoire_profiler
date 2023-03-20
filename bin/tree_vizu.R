@@ -668,32 +668,21 @@ if(length(tempo.list) == 0){
             add.text <- "All sequences of the tree displayed"
         }else if(tree_duplicate_seq == "FALSE" & nrow(trees$data[[i3]]@data) != nrow(db.list[[i3]])){
             # get removed sequences info
-            duplic.seq.log <- ! db.list[[i3]][[1]] %in% trees$data[[i3]]@data[[1]]
+            no.duplic.seq.log <- db.list[[i3]][[1]] %in% trees$data[[i3]]@data[[1]]
+            duplic.seq.log <- ! no.duplic.seq.log
             if( ! any(duplic.seq.log)){
                 stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 6 IN tree_vizu.R for clone ID ", clone.id, "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"FALSE\"\nBUT NO SEQ NAMES REMOVED FROM THE TREE IN trees$data[[i3]]@data[[1]] IS DIFFERENT FROM THE NUMBER OF ROWS IN db (n=", nrow(db.list[[i3]]), ")\ntrees$data[[i3]]@data[[1]]: ", paste(trees$data[[i3]]@data[[1]], collapse = " "), "\ndb.list[[i3]][[1]]: ", paste(db.list[[i3]][[1]], collapse = " "), "\n\n============\n\n"), call. = FALSE)
             }else{
-
+                not.removed.seq <- db.list[[i3]][[1]][no.duplic.seq.log]
                 removed.seq <- db.list[[i3]][[1]][duplic.seq.log]
                 add.text <- "Warning: sequences removed from the display (Parameter tree_duplicate_seq == \"FALSE\". See seq_not_displayed.tsv)"
-                identical.seq <- vector("character", length(removed.seq))
-                tempo.pos <- which(duplic.seq.log)
-                cat(paste0("\nduplic.seq.log: ", paste(duplic.seq.log, collapse = " ")), "\n")
-                cat(paste0("\nnrow(trees$data[[i3]]@data): ", paste(nrow(trees$data[[i3]]@data), collapse = " ")), "\n")
-                cat(paste0("\nnrow(db.list[[i3]]): ", paste(nrow(db.list[[i3]]), collapse = " ")), "\n")
-                cat(paste0("\ndb.list[[i3]][[1]]: ", paste(db.list[[i3]][[1]], collapse = " ")), "\n")
-                cat(paste0("\ntrees$data[[i3]]@data[[1]]: ", paste(trees$data[[i3]]@data[[1]], collapse = " ")), "\n")
-                cat(paste0("\nremoved.seq: ", paste(removed.seq, collapse = " ")), "\n")
-                cat(paste0("\ntempo.pos: ", paste(tempo.pos, collapse = " ")), "\n")
-                for(i4 in 1:length(tempo.pos)){
-                    for(i5 in trees$data[[i3]]@data$sequence_id){
-                        tempo.log <- db.list[[i3]]$v_identity[tempo.pos[i4]] != db.list[[i3]]$v_identity[db.list[[i3]]$sequence_id == i5] | db.list[[i3]]$j_identity[tempo.pos[i4]] != db.list[[i3]]$j_identity[db.list[[i3]]$sequence_id == i5]
-                        if(tempo.log){
-                            identical.seq[i4] <- i5
-                        }
-                    }
+                identical.seq <- NULL
+                for(i4 in 1:length(removed.seq)){
+                    tempo.log <- grepl(trees$data[[i3]]@data$collapsed, pattern = removed.seq[i4]) # collapsed names are separated by comma during dowser::formatClones()
+                    identical.seq <- c(identical.seq, trees$data[[i3]]@data[[1]][tempo.log])
                 }
-                if(any(identical.seq == "")){
-                    stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 7 IN tree_vizu.R for clone ID ", clone.id, "\nidentical.seq SHOULD HAVE ", length(tempo.pos), " SEQUENCES NAMES (NO REMAINING EMPTY SLOT): ", paste(identical.seq, collapse = " "), "\n\n============\n\n"), call. = FALSE)
+                if(length(removed.seq) != length(identical.seq)){
+                    stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 7 IN tree_vizu.R for clone ID ", clone.id, "\nidentical.seq SHOULD HAVE ", length(removed.seq), " SEQUENCES NAMES\nREMOVED SEQUENCES: ", paste(removed.seq, collapse = " "), "\nIDENTICAL TO: ", paste(identical.seq, collapse = " "), "\nCOLLAPSED NAMES: ", paste(clones$data[[1]]@data$collapsed, collapse = " "), "\n\n============\n\n"), call. = FALSE)
                 }
                 tempo.df <- data.frame(sequence_id = removed.seq, clone_id = clone.id, clone_name = clone.name, chain = chain, identical_to = identical.seq)
                 write.table(tempo.df, file = paste0("./", clone.id, "_seq_not_displayed.tsv"), row.names = FALSE, col.name = TRUE, sep = "\t")

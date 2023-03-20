@@ -262,6 +262,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 <br /><br />
 ## WHAT'S NEW IN
 
+#### v4.4
+
+Bug solved in seq_not_displayed.tsv file
+
+
 #### v4.3
 
 igblast_aa parameter removed from the .config file

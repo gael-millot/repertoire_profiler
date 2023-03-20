@@ -50,8 +50,9 @@ process workflowParam { // create a file with the workflow parameters in out_pat
 //Note that variables like ${out_path} are interpreted in the script block
 
 
-process tests {
-    // cannot be test outside of process because the files are present in the docker
+process repertoire_names {
+    // cannot be repertoire_names outside of process because the files are present in the docker
+    publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
     label 'immcantation' // see the withLabel: bash in the nextflow config file 
     cache 'true'
 
@@ -59,17 +60,25 @@ process tests {
     val igblast_database_path
     val igblast_files
 
+    output:
+    path "*.tsv", emit: repertoire_names_ch
+
+
     script:
     """
     #!/bin/bash -ue
     REPO_PATH="/usr/local/share/${igblast_database_path}" # path where the imgt_human_IGHV.fasta, imgt_human_IGHD.fasta and imgt_human_IGHJ.fasta files are in the docker container
-    VDJ_FILES=\$(awk -v var1="${igblast_files}" -v var2="\${REPO_PATH}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}')
+    VDJ_FILES=\$(awk -v var1="${igblast_files}" -v var2="\${REPO_PATH}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}') # assemble files with their path
     for i1 in \$VDJ_FILES ; do
         if [[ ! -e \${i1} ]] ; then
             echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nFILE DOES NOT EXISTS:\\n\${i1}\\n\\nINDICATED PATH:\\n\${REPO_PATH}\\n\\nCONTAINS:\\n"
             ls -la -w 1 \${REPO_PATH}
             echo -e "\\n\\n========\\n\\n"
             exit 1
+        else
+            FILENAME=\$(basename -- "\${i1}") # recover a file name without path
+            FILENAME="\${FILENAME%.*}" # remove extension
+            grep -E '^>.*\$' \${i1} | cut -f2 -d'|' > \${FILENAME}.tsv # detect line starting by > and extract the 2nd field after cutting by |
         fi
     done
     """
@@ -371,12 +380,14 @@ process get_tree {
         cat ${mutation_load_ch} > seq_for_tree.tsv
         Rscript -e '
             db <- alakazam::readChangeoDb("${mutation_load_ch}")
+            db <- tibble::add_column(db, collapsed = db[[1]]) # add a column to detected collapsed identical sequences names
             clones <- dowser::formatClones(
                 data = db, 
                 seq = "sequence_alignment", 
                 clone = "clone_id", 
                 minseq=1, 
                 heavy = NULL, 
+                text_fields = "collapsed", # column collapsed
                 dup_singles = FALSE, # Duplicate sequences in singleton clones to include them as trees? Always use FALSE. Otherwise, it will create an artificial duplicated sequences in thr tree building so that we will have two instead of one sequence in the tree, after identical seq removal. See https://rdrr.io/cran/dowser/src/R/Clones.R
                 trait = if(${tree_duplicate_seq}){names(db)[1]}else{NULL} # control the removal of identical sequences but different sequence name
             )
@@ -722,7 +733,7 @@ workflow {
         modules
     )
 
-    tests(
+    repertoire_names(
         igblast_database_path, 
         igblast_files
     )
