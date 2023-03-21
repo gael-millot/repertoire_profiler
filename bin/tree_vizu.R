@@ -125,6 +125,8 @@ rm(tempo.cat)
 # file.remove(c("./all_objects.RData", "./all_trees.RData", "./trees.pdf", "./tree_vizu.log"))
 
 
+
+
 ################################ end Test
 
 ################################ Recording of the initial parameters
@@ -599,13 +601,27 @@ if(length(tempo.list) == 0){
                 ))
                 assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(fill = "none")) # never legend for fill in this context
             }else{
-                assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
-                    ggplot2::aes_string(
-                        fill = if( ! is.null(get(tempo.col.values))){tempo.col.values}else{NA}
-                    ),
-                    pch = tree_leaf_shape, 
-                    size = tree_leaf_size
-                ))
+                if( ! is.null(get(tempo.col.values))){
+                    if( ! all(is.na(get(tempo.col.values)))){
+                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
+                            ggplot2::aes_string(fill = tempo.col.values),
+                            pch = tree_leaf_shape, 
+                            size = tree_leaf_size
+                        ))
+                    }else{
+                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
+                            fill = "grey50",
+                            pch = tree_leaf_shape, 
+                            size = tree_leaf_size
+                        ))
+                    }
+                }else{
+                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
+                        fill = "grey50",
+                        pch = tree_leaf_shape, 
+                        size = tree_leaf_size
+                    ))
+                }
             }
         }
         if(any(tree_kind %in% c("rectangular", "roundrect", "slanted", "ellipse"))){
@@ -675,7 +691,7 @@ if(length(tempo.list) == 0){
             }else{
                 not.removed.seq <- db.list[[i3]][[1]][no.duplic.seq.log]
                 removed.seq <- db.list[[i3]][[1]][duplic.seq.log]
-                add.text <- "Warning: sequences removed from the display (Parameter tree_duplicate_seq == \"FALSE\". See seq_not_displayed.tsv)"
+                add.text <- "Warning: sequences removed from the display (Parameter tree_duplicate_seq == \"FALSE\". See tree_seq_not_displayed.tsv)"
                 identical.seq <- NULL
                 for(i4 in 1:length(removed.seq)){
                     tempo.log <- grepl(trees$data[[i3]]@data$collapsed, pattern = removed.seq[i4]) # collapsed names are separated by comma during dowser::formatClones()
@@ -685,7 +701,7 @@ if(length(tempo.list) == 0){
                     stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 7 IN tree_vizu.R for clone ID ", clone.id, "\nidentical.seq SHOULD HAVE ", length(removed.seq), " SEQUENCES NAMES\nREMOVED SEQUENCES: ", paste(removed.seq, collapse = " "), "\nIDENTICAL TO: ", paste(identical.seq, collapse = " "), "\nCOLLAPSED NAMES: ", paste(clones$data[[1]]@data$collapsed, collapse = " "), "\n\n============\n\n"), call. = FALSE)
                 }
                 tempo.df <- data.frame(sequence_id = removed.seq, clone_id = clone.id, clone_name = clone.name, chain = chain, identical_to = identical.seq)
-                write.table(tempo.df, file = paste0("./", clone.id, "_seq_not_displayed.tsv"), row.names = FALSE, col.name = TRUE, sep = "\t")
+                write.table(tempo.df, file = paste0("./", clone.id, "_tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = TRUE, sep = "\t")
                 # end get removed sequences info
             }
         }

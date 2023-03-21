@@ -202,13 +202,13 @@ Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.
 | **png** | Folder containing the tree.pdf graphs in png format. |
 | **svg** | Folder containing the tree.pdf graphs in svg vectorial format. |
 | **RData** | Folder containing, for each clonal group, objects that can be used in R to further analyze of plot the data:<br /><ul><li>db: tibble data frame resulting from the import by the alakazam::readChangeoDb() function<br /></li><li>clones: db in the airClone format<br /></li><li>trees: output of the dowser::getTrees() function using the clones object as input (igphylm tree)</li><br /><br />Also contains the all_trees.RData file that combine the trees R objects of the different files in a single trees object. |
-| **all_productive_before_tree_seq.tsv** | Complete analysis of the sequences before phylogenic analysis (without the unproductive, i.e., unannotated, sequences). |
-| **merge_productive-F.tsv** | Sequences that failed annotations by igblast (not returned if all the sequences are annotated). |
-| **clone_id_for_tree.tsv** | Clonal group IDs used in the tree analysis (clonal group with at least n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file). |
-| **dismissed_clone_id_for_tree.tsv** | Clonal group IDs not used in the tree analysis (clonal group with less than n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file). |
-| **seq_for_trees.tsv** | Sequences of the *all_productive_before_tree_seq.tsv* file used in the tree analysis. |
-| **dismissed_seq_for_tree.tsv** | Sequences of the *all_productive_before_tree_seq.tsv* file not used in the tree analysis. |
-| **seq_not_displayed.tsv** | Sequences file used in the tree analysis but not displayed in the graph, (1) because strictly identical to another sequence already in the tree and (2) because the tree_duplicate_seq parameter of the ig_clustering.config file has been set to "FALSE". |
+| **productive_seq.tsv** | sequences annotated by igblast, with germline clustering and mutation load added (see the unproductive_seq.tsv file for sequences that failed to be annotated by igblast). |
+| **unproductive_seq.tsv** | Sequences that failed annotations by igblast (optional file not returned if all the sequences are annotated). |
+| **tree_clone_id.tsv** | Clonal group IDs used in the tree analysis (clonal group with at least n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file). |
+| **tree_dismissed_clone_id.tsv** | Clonal group IDs not used in the tree analysis (clonal group with less than n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file). |
+| **tree_seq.tsv** | Sequences of the *productive_seq.tsv* file used in the tree analysis (clonal group with at least n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file). |
+| **tree_dismissed_seq.tsv** | Sequences of the *productive_seq.tsv* file not used in the tree analysis (clonal group with less than n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file). |
+| **tree_seq_not_displayed.tsv** | Sequences file used in the tree analysis but not displayed in the graph, (1) because strictly identical to another sequence already in the tree and (2) because the tree_duplicate_seq parameter of the ig_clustering.config file has been set to "FALSE". |
 | **trees.pdf** | Phylogenic trees of the sequences that belong to a clonal group (one page per clonal group). |
 | **donuts.pdf** | Frequency of sequences per clonal groups, among sequences used for trees (tree) and among all the productive sequences (all). |
 
@@ -261,6 +261,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 
 <br /><br />
 ## WHAT'S NEW IN
+
+#### v4.5
+
+Bug solved when the tree_meta_path_names parameter is a categorical column
+
 
 #### v4.4
 

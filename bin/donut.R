@@ -1,7 +1,7 @@
 #!/usr/bin/Rscript
 #########################################################################
 ##                                                                     ##
-##     donut.R                                                     ##
+##     donut.R                                                         ##
 ##                                                                     ##
 ##     Gael A. Millot                                                  ##
 ##     Bioinformatics and Biostatistics Hub                            ##
@@ -98,7 +98,7 @@ rm(tempo.cat)
 ################################ Test
 
 # setwd("C:/Users/gael/Documents/Git_projects/ig_clustering/dev/test")
-# file_name = "./all_productive_before_tree_seq.tsv"
+# file_name = "./productive_seq.tsv"
 # kind = "all"
 # donut.hole.size = "2"
 # donut.colors = "NULL"
@@ -401,7 +401,7 @@ tempo.plot <- eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), c
 
 
 tempo.title <- paste0(
-    "Kind of sequences: ", kind, " (see the corresponding ", ifelse(kind == "all", "all_productive_before_tree_seq.tsv", ifelse(kind == "tree", "seq_for_trees.tsv", "=====ERROR=====")), " file)\n",
+    "Kind of sequences: ", kind, " (see the corresponding ", ifelse(kind == "all", "productive_seq.tsv", ifelse(kind == "tree", "seq_for_trees.tsv", "=====ERROR=====")), " file)\n",
     "Chain: ", chain, "\n",
     "The total number of sequences is indicated in the center of the donut.\nSee the donutchart.tsv file for the stats of the donut."
 )

@@ -160,7 +160,7 @@ process parseDb_filtering {
 
     output:
     path "*_parse-select.tsv", emit: select_ch
-    path "*_productive-F.tsv", optional: true
+    path "*_productive-F.tsv", emit: unproductive_ch, optional: true
     path "*.log"
 
     script:
@@ -359,10 +359,10 @@ process get_tree {
 
     output:
     path "*.RData", emit: rdata_tree_ch, optional: true
-    path "dismissed_seq_for_tree.tsv", emit: no_tree_ch, optional: true
+    path "tree_dismissed_seq.tsv", emit: no_tree_ch, optional: true
     path "seq_for_tree.tsv", emit: tree_ch, optional: true
-    path "dismissed_clone_id_for_tree.tsv", emit: no_cloneID_ch, optional: true
-    path "clone_id_for_tree.tsv", emit: cloneID_ch, optional: true
+    path "tree_dismissed_clone_id.tsv", emit: no_cloneID_ch, optional: true
+    path "tree_clone_id.tsv", emit: cloneID_ch, optional: true
     path "get_tree.log", emit: get_tree_log_ch
     //path "HLP10_tree_parameters.tsv"
 
@@ -394,13 +394,13 @@ process get_tree {
             trees <- dowser::getTrees(clones, build="igphyml", exec="/usr/local/share/igphyml/src/igphyml", nproc = 10)
             # assign(paste0("c", trees\$clone_id, "_trees"), trees)
             save(list = c("trees", "db", "clones"), file = paste0("./", trees\$clone_id, "_trees.RData"))
-            write.table(trees\$clone_id, file = paste0("./clone_id_for_tree.tsv"), row.names = FALSE, col.names = FALSE)
+            write.table(trees\$clone_id, file = paste0("./tree_clone_id.tsv"), row.names = FALSE, col.names = FALSE)
         ' |& tee -a get_tree.log
     else
         echo -e "LESS THAN ${nb_seq_per_clone} SEQUENCES FOR THE CLONAL GROUP: NO TREE COMPUTED" |& tee -a get_tree.log 
         IFS='_' read -r -a TEMPO <<< "\${FILENAME}" # string split into array
-        echo \${TEMPO[0]} > dismissed_clone_id_for_tree.tsv
-        cat ${mutation_load_ch} > dismissed_seq_for_tree.tsv
+        echo \${TEMPO[0]} > tree_dismissed_clone_id.tsv
+        cat ${mutation_load_ch} > tree_dismissed_seq.tsv
     fi
     """
 }
@@ -437,7 +437,7 @@ process tree_vizu {
     path "*.pdf", optional: true
     path "*.png", optional: true
     path "*.svg", optional: true
-    path "*.tsv", emit: seq_not_displayed_ch, optional: true
+    path "*.tsv", emit: tree_seq_not_displayed_ch, optional: true
     path "tree_vizu.log"
     //path "HLP10_tree_parameters.tsv"
 
@@ -522,6 +522,27 @@ process donut_assembly {
     ' |& tee -a donut_assembly.log
     """
 }
+
+process repertoire {
+    label 'immcantation' // see the withLabel: bash in the nextflow config file 
+    publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{*.RData}", overwrite: false
+    cache 'true'
+
+    input:
+    path mutation_load_ch2
+
+    output:
+    path "tree_dismissed_seq.tsv", emit: no_tree_ch, optional: true
+
+    script:
+    """
+    #!/bin/bash -ue
+    Rscript -e '
+        qpdf::pdf_combine(input = list.files(path = ".", pattern = ".pdf\$"), output = "./donuts.pdf")
+    ' |& tee -a donut_assembly.log
+    """
+}
+
 
 
 process backup {
@@ -755,6 +776,9 @@ workflow {
         tsv_ch2
     )
 
+    parseDb_filtering.out.unproductive_ch.count().subscribe { n -> if ( n == 0 ){print "\n\nWARNING: EMPTY OUTPUT FOLLOWING THE parseDb_filtering PROCESS -> NO unproductive_seq.tsv FILE RETURNED\n\n"}else{it -> it.copyTo("${out_path}/unproductive_seq.tsv")}} // see https://www.nextflow.io/docs/latest/script.html?highlight=copyto#copy-files
+
+
     clone_assignment(
         parseDb_filtering.out.select_ch,
         clone_distance
@@ -779,7 +803,7 @@ workflow {
     )
 
     mutation_load.out.mutation_load_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE mutation_load PROCESS\n\n========\n\n"}}
-    mutation_load_ch2 = mutation_load.out.mutation_load_ch.collectFile(name: "all_productive_before_tree_seq.tsv", skip: 1, keepHeader: true)
+    mutation_load_ch2 = mutation_load.out.mutation_load_ch.collectFile(name: "productive_seq.tsv", skip: 1, keepHeader: true)
     mutation_load_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
     mutation_load.out.mutation_load_log_ch.collectFile(name: "mutation_load.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
@@ -796,20 +820,20 @@ workflow {
     rdata_tree_ch2 = get_tree.out.rdata_tree_ch.collect()
     //rdata_tree_ch2.view()
 
-    get_tree.out.no_tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: ALL SEQUENCES IN TREES FOLLOWING THE get_tree PROCESS -> NO dismissed_seq_for_tree.tsv FILE RETURNED\n\n")}}
-    no_tree_ch2 = get_tree.out.no_tree_ch.collectFile(name: "dismissed_seq_for_tree.tsv", skip: 1, keepHeader: true)
+    get_tree.out.no_tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: ALL SEQUENCES IN TREES FOLLOWING THE get_tree PROCESS -> NO tree_dismissed_seq.tsv FILE RETURNED\n\n")}}
+    no_tree_ch2 = get_tree.out.no_tree_ch.collectFile(name: "tree_dismissed_seq.tsv", skip: 1, keepHeader: true)
     no_tree_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
-    get_tree.out.tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: NO SEQUENCES IN TREES FOLLOWING THE get_tree PROCESS -> NO seq_for_trees.tsv FILE RETURNED\n\n")}}
-    tree_ch2 = get_tree.out.tree_ch.collectFile(name: "seq_for_trees.tsv", skip: 1, keepHeader: true)
+    get_tree.out.tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: NO SEQUENCES IN TREES FOLLOWING THE get_tree PROCESS -> NO tree_seq.tsv FILE RETURNED\n\n")}}
+    tree_ch2 = get_tree.out.tree_ch.collectFile(name: "tree_seq.tsv", skip: 1, keepHeader: true)
     tree_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
-    get_tree.out.no_cloneID_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: ALL SEQUENCES IN CLONAL GROUP FOLLOWING THE get_tree PROCESS -> NO dismissed_clone_id_for_tree.tsv FILE RETURNED\n\n")}}
-    no_cloneID_ch2 = get_tree.out.no_cloneID_ch.collectFile(name: "dismissed_clone_id_for_tree.tsv")
+    get_tree.out.no_cloneID_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: ALL SEQUENCES IN CLONAL GROUP FOLLOWING THE get_tree PROCESS -> NO tree_dismissed_clone_id.tsv FILE RETURNED\n\n")}}
+    no_cloneID_ch2 = get_tree.out.no_cloneID_ch.collectFile(name: "tree_dismissed_clone_id.tsv")
     no_cloneID_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
-    get_tree.out.cloneID_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: NO CLONAL GROUP FOLLOWING THE get_tree PROCESS -> NO clone_id_for_tree.tsv FILE RETURNED\n\n")}}
-    cloneID_ch2 = get_tree.out.cloneID_ch.collectFile(name: "clone_id_for_tree.tsv")
+    get_tree.out.cloneID_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: NO CLONAL GROUP FOLLOWING THE get_tree PROCESS -> NO tree_clone_id.tsv FILE RETURNED\n\n")}}
+    cloneID_ch2 = get_tree.out.cloneID_ch.collectFile(name: "tree_clone_id.tsv")
     cloneID_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
     get_tree.out.get_tree_log_ch.collectFile(name: "get_tree.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
@@ -832,9 +856,9 @@ workflow {
         cute_file
     )
 
-    tree_vizu.out.seq_not_displayed_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: -> NO seq_not_displayed.tsv FILE RETURNED\n\n")}}
-    seq_not_displayed_ch2 = tree_vizu.out.seq_not_displayed_ch.collectFile(name: "seq_not_displayed.tsv", skip: 1, keepHeader: true)
-    seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}")}
+    tree_vizu.out.tree_seq_not_displayed_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: -> NO tree_seq_not_displayed.tsv FILE RETURNED\n\n")}}
+    tree_seq_not_displayed_ch2 = tree_vizu.out.tree_seq_not_displayed_ch.collectFile(name: "tree_seq_not_displayed.tsv", skip: 1, keepHeader: true)
+    tree_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
 
     tempo1_ch = Channel.of("all", "tree") // 1 channel with 2 values (not list)
@@ -852,7 +876,7 @@ workflow {
     donut.out.donut_pdf_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: EMPTY OUTPUT FOLLOWING THE donut PROCESS -> NO DONUT RETURNED\n\n")}}
     donut_pdf_ch2 = donut.out.donut_pdf_ch.collect()
 
-    donut.out.donut_tsv_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: -> NO seq_not_displayed.tsv FILE RETURNED\n\n")}}
+    donut.out.donut_tsv_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: -> NO tree_seq_not_displayed.tsv FILE RETURNED\n\n")}}
     donut_tsv_ch2 = donut.out.donut_tsv_ch.collectFile(name: "donut_stats.tsv", skip: 1, keepHeader: true)
     donut_tsv_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
