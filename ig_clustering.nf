@@ -529,6 +529,7 @@ process donut {
     tuple val(kind), path(data) // 2 parallelization expected
     val donut_hole_size
     val donut_colors
+    val donut_limit_legend
     path cute_file
 
     output:
@@ -546,6 +547,7 @@ process donut {
 "${kind}" \
 "${donut_hole_size}" \
 "${donut_colors}" \
+"${donut_limit_legend}" \
 "${cute_file}" \
 "${kind}_donut.log"
     """
@@ -757,6 +759,9 @@ workflow {
     if( ! donut_colors in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_colors PARAMETER IN ig_clustering.config FILE:\n${donut_colors}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
+    if( ! donut_limit_legend in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_limit_legend PARAMETER IN ig_clustering.config FILE:\n${donut_limit_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }
     if( ! cute_path in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID cute_path PARAMETER IN ig_clustering.config FILE:\n${cute_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! file(cute_path).exists()){
@@ -934,6 +939,7 @@ workflow {
         tempo3_ch, 
         donut_hole_size, 
         donut_colors,
+        donut_limit_legend,
         cute_file
     )
 
