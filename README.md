@@ -262,10 +262,10 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 <br /><br />
 ## WHAT'S NEW IN
 
-#### v4.5
+#### v5.0
 
 Bug solved when the tree_meta_path_names parameter is a categorical column
-
+New tree_meta_name_replacement parameter
 
 #### v4.4
 

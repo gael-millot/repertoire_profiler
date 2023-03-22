@@ -347,6 +347,56 @@ process mutation_load {
     """
 }
 
+
+process seq_name_remplacement {
+    label 'r_ext' // see the withLabel: bash in the nextflow config file 
+    cache 'true'
+
+    input:
+    path mutation_load_ch
+    path meta_file
+    val tree_meta_name_replacement
+
+    output:
+    path "renamed_seq.tsv", emit: seq_name_remplacement_ch
+    path "metadata2.tsv", emit: meta_file_ch
+    path "seq_name_remplacement.log", emit: seq_name_remplacement_log_ch
+
+    script:
+    """
+    #!/bin/bash -ue
+    if [[ ! ("${meta_file}" == "NULL" && "${tree_meta_name_replacement}" == "NULL") ]] ; then # or [[ "${meta_file}" -ne "NULL" && "${tree_meta_name_replacement}" -ne "NULL" ]], but not !=
+        Rscript -e '
+            seq <- read.table("./${mutation_load_ch}", sep = "\\t", header = TRUE)
+            meta <- read.table("./${meta_file}", sep = "\\t", header = TRUE)
+            col_name <- "${tree_meta_name_replacement}"
+            if( ! any(names(meta) %in% col_name)){
+                stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIF NOT \\"NULL\\", THE tree_meta_name_replacement PARAMETER MUST BE A COLUMN NAME OF THE tree_meta_path PARAMETER (METADATA FILE): ", col_name, "\\n\\n============\\n\\n"), call. = FALSE)
+            }
+            seq2 <- data.frame(seq[1], tempo = seq[1], seq[2:length(seq)]) # the second column is created to keep the initial sequence names, before replacement
+            for(i2 in 1:nrow(meta)){
+                if(sum(seq2[ , 2] %in% meta[i2, 1]) > 1){
+                    stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIN THE METADATA FILE, A SEQUENCE NAME CANNOT BELONG TO SEVERAL VALUES OF THE tree_meta_name_replacement PARAMETER COLUMN NAME OF THE tree_meta_path PARAMETER\\nTHE METAFILE IS: ${meta_file}\\nTHE COLUM NAME IS: ", col_name, "\\nTHE PROBLEMATIC REPLACEMENT NAME IN THE METAFILE IS: ", paste(meta[i2, 1], collapse = " "), "\\n\\n============\\n\\n"), call. = FALSE)
+                }else if(any(seq2[ , 2] == meta[i2, 1])){
+                    seq2[seq2[ , 2] == meta[i2, 1], 1] <- meta[i2, col_name] # remplacement of the name in column 1
+                }
+            }
+            names(seq2)[2] <- paste0("intial_", names(seq)[1])
+            names(seq2)[1] <- names(seq)[1]
+            write.table(seq2, file = "./renamed_seq.tsv", row.names = FALSE, col.names = TRUE, sep = "\\t")
+            # modification of the metadata file for the correct use of ggtree::"%<+%" in tree_vizu.R that uses the column name "label" for that 
+            meta <- data.frame(meta, initial_label = meta[ , 1])
+            meta[ , 1] <- meta[ , col_name]
+            write.table(meta, file = "./metadata2.tsv", row.names = FALSE, col.names = TRUE, sep = "\\t")
+            # end modification of the metadata file for the correct use of ggtree::"%<+%" in tree_vizu.R that uses the column name "label" for that 
+        ' |& tee -a seq_name_remplacement.log
+    else
+        cat ${mutation_load_ch} > ./renamed_seq.tsv |& tee -a seq_name_remplacement.log
+        cat ${meta_file} > ./metadata2.tsv |& tee -a seq_name_remplacement.log
+    fi
+    """
+}
+
 process get_tree {
     label 'immcantation' // see the withLabel: bash in the nextflow config file 
     publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{*.RData}", overwrite: false
@@ -428,8 +478,8 @@ process tree_vizu {
     val tree_label_outside
     val tree_right_margin
     val tree_legend
-    path meta_file
-    val tree_meta_path_names
+    path meta_file_ch
+    val tree_meta_legend
     path cute_file
 
     output:
@@ -456,8 +506,8 @@ process tree_vizu {
 "${tree_label_outside}" \
 "${tree_right_margin}" \
 "${tree_legend}" \
-"${meta_file}" \
-"${tree_meta_path_names}" \
+"${meta_file_ch}" \
+"${tree_meta_legend}" \
 "${cute_file}" \
 "tree_vizu.log"
     """
@@ -693,8 +743,11 @@ workflow {
             error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_path PARAMETER IN ig_clustering.config FILE. IF DOES NOT EXIST): ${tree_meta_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
         }
     }
-    if( ! tree_meta_path_names in String ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_path_names PARAMETER IN ig_clustering.config FILE:\n${tree_meta_path_names}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    if( ! tree_meta_name_replacement in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_name_replacement PARAMETER IN ig_clustering.config FILE:\n${tree_meta_name_replacement}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }
+    if( ! tree_meta_legend in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_legend PARAMETER IN ig_clustering.config FILE:\n${tree_meta_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
     if( ! donut_hole_size in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_size PARAMETER IN ig_clustering.config FILE:\n${donut_hole_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
@@ -803,14 +856,25 @@ workflow {
     )
 
     mutation_load.out.mutation_load_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE mutation_load PROCESS\n\n========\n\n"}}
-    mutation_load_ch2 = mutation_load.out.mutation_load_ch.collectFile(name: "productive_seq.tsv", skip: 1, keepHeader: true)
-    mutation_load_ch2.subscribe{it -> it.copyTo("${out_path}")}
-
     mutation_load.out.mutation_load_log_ch.collectFile(name: "mutation_load.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
-    tuple_mutation_load_ch2 = new Tuple("all", mutation_load_ch2)
+
+
+    seq_name_remplacement(
+        mutation_load.out.mutation_load_ch,
+        meta_file,
+        tree_meta_name_replacement
+    )
+
+    seq_name_remplacement.out.seq_name_remplacement_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE seq_name_remplacement PROCESS\n\n========\n\n"}}
+    seq_name_remplacement_ch2 = seq_name_remplacement.out.seq_name_remplacement_ch.collectFile(name: "productive_seq.tsv", skip: 1, keepHeader: true)
+    seq_name_remplacement_ch2.subscribe{it -> it.copyTo("${out_path}")}
+    // tuple_seq_name_remplacement = new Tuple("all", seq_name_remplacement_ch2) # warning: this is not a channel but a variable now
+
+    seq_name_remplacement.out.seq_name_remplacement_log_ch.collectFile(name: "seq_name_remplacement.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
+
 
     get_tree(
-        mutation_load.out.mutation_load_ch,
+        seq_name_remplacement.out.seq_name_remplacement_ch,
         nb_seq_per_clone,
         tree_duplicate_seq
     )
@@ -851,8 +915,8 @@ workflow {
         tree_label_outside,
         tree_right_margin,
         tree_legend,
-        meta_file,
-        tree_meta_path_names,
+        seq_name_remplacement.out.meta_file_ch.first(), // first() because seq_name_remplacement process is a multi one
+        tree_meta_legend,
         cute_file
     )
 
@@ -862,7 +926,7 @@ workflow {
 
 
     tempo1_ch = Channel.of("all", "tree") // 1 channel with 2 values (not list)
-    tempo2_ch = mutation_load_ch2.mix(tree_ch2) // 1 channel with 2 paths (flatten() -> not list)
+    tempo2_ch = seq_name_remplacement_ch2.mix(tree_ch2) // 1 channel with 2 paths (flatten() -> not list)
     tempo3_ch = tempo1_ch.merge(tempo2_ch) // 2 lists
 
 

@@ -80,8 +80,8 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
         "tree_label_outside", 
         "tree_right_margin", 
         "tree_legend", 
-        "meta_file", 
-        "tree_meta_path_names", 
+        "tree_meta_path", 
+        "tree_meta_legend", 
         "cute", 
         "log"
     ) # objects names exactly in the same order as in the bash code and recovered in args. Here only one, because only the path of the config file to indicate after the tree_vizu.R script execution
@@ -118,12 +118,11 @@ rm(tempo.cat)
 # tree_label_outside = "TRUE"
 # tree_right_margin = "1.5" 
 # tree_legend = "TRUE" 
-# meta_file = "./metadata.tsv"
-# tree_meta_path_names = "KD"
+# tree_meta_path = "./metadata.tsv"
+# tree_meta_legend = "KD"
 # cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v11.8.0/cute_little_R_functions.R"
 # log = "tree_vizu.log"
 # file.remove(c("./all_objects.RData", "./all_trees.RData", "./trees.pdf", "./tree_vizu.log"))
-
 
 
 
@@ -149,8 +148,8 @@ param.list <- c(
     "tree_label_outside", 
     "tree_right_margin", 
     "tree_legend", 
-    "meta_file", 
-    "tree_meta_path_names", 
+    "tree_meta_path", 
+    "tree_meta_legend", 
     "cute", 
     "log"
 )
@@ -268,8 +267,8 @@ tempo <- fun_check(data = tree_label_rigth, class = "vector", typeof = "characte
 tempo <- fun_check(data = tree_label_outside, class = "vector", typeof = "character", length = 1) ; eval(ee)
 tempo <- fun_check(data = tree_right_margin, class = "vector", typeof = "character", length = 1) ; eval(ee)
 tempo <- fun_check(data = tree_legend, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = meta_file, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = tree_meta_path_names, class = "vector", typeof = "character", length = 1) ; eval(ee)
+tempo <- fun_check(data = tree_meta_path, class = "vector", typeof = "character", length = 1) ; eval(ee)
+tempo <- fun_check(data = tree_meta_legend, class = "vector", typeof = "character", length = 1) ; eval(ee)
 tempo <- fun_check(data = log, class = "vector", typeof = "character", length = 1) ; eval(ee)
 if(any(arg.check) == TRUE){ # normally no NA
     stop(paste0("\n\n================\n\n", paste(text.check[arg.check], collapse = "\n"), "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between == #
@@ -291,8 +290,8 @@ tempo.arg <-c(
     "tree_label_outside", 
     "tree_right_margin", 
     "tree_legend", 
-    "meta_file", 
-    "tree_meta_path_names", 
+    "tree_meta_path", 
+    "tree_meta_legend", 
     "log"
 )
 tempo.log <- sapply(lapply(tempo.arg, FUN = get, env = sys.nframe(), inherit = FALSE), FUN = is.null)
@@ -416,16 +415,16 @@ if( ! (length(tree_legend) == 1 & any(tree_legend %in% c("TRUE", "FALSE")))){ # 
     arg.check2 <- c(arg.check2, TRUE)
 }
 
-if(meta_file == "NULL"){
-    meta_file <- NULL
-}else if( ! file.exists(meta_file)){
-    tempo.cat <- paste0("ERROR IN tree_vizu.R:\nTHE meta_file PARAMETER MUST BE A VALID PATH OF A FILE IS NOT \"NULL\"\nHERE IT IS: \n", paste0(meta_file, collapse = " "))
+if(tree_meta_path == "NULL"){
+    tree_meta_path <- NULL
+}else if( ! file.exists(tree_meta_path)){
+    tempo.cat <- paste0("ERROR IN tree_vizu.R:\nTHE tree_meta_path PARAMETER MUST BE A VALID PATH OF A FILE IS NOT \"NULL\"\nHERE IT IS: \n", paste0(tree_meta_path, collapse = " "))
     text.check2 <- c(text.check2, tempo.cat)
     arg.check2 <- c(arg.check2, TRUE)
 }
 
-if(tree_meta_path_names == "NULL"){
-    tree_meta_path_names <- NULL
+if(tree_meta_legend == "NULL"){
+    tree_meta_legend <- NULL
 }
 
 if(any(arg.check2) == TRUE){ # normally no NA
@@ -472,7 +471,9 @@ fun_report(data = paste0("\n\n################################ RUNNING\n\n"), ou
 
 tempo.list <- list.files(path = ".", pattern = "RData$")
 if(length(tempo.list) == 0){
-    cat("\\n\\nNO TREE DATA COMPUTED (NO .RData FILE DETECTED) -> NO GRAPH PLOTTED")
+    tempo.cat <- "\\n\\nNO TREE DATA COMPUTED (NO .RData FILE DETECTED) -> NO GRAPH PLOTTED"
+    cat(tempo.cat)
+    fun_report(data = tempo.cat, output = log, path = "./", overwrite = FALSE)
 }else{
 
 
@@ -506,8 +507,8 @@ if(length(tempo.list) == 0){
 
 ################ Data import
 
-    if( ! is.null(meta_file)){
-        meta.df <- read.table(meta_file, sep = "\t", header = TRUE)
+    if( ! is.null(tree_meta_path)){
+        meta.df <- read.table(tree_meta_path, sep = "\t", header = TRUE)
     }
 
 
@@ -541,7 +542,7 @@ if(length(tempo.list) == 0){
         # ggplot building
         tempo.gg.name <- "gg.indiv.plot."
         tempo.gg.count <- 0
-        if(is.null(meta_file)){
+        if(is.null(tree_meta_path) | is.null(tree_meta_legend)){
             assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::ggtree(trees$trees[[i3]], layout = tree_kind))
             assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
                 ggplot2::aes(fill = tempo.names),
@@ -555,10 +556,10 @@ if(length(tempo.list) == 0){
                 labels = c("Germline", "Seq")
             ))
             assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(fill = "none")) # never legend for fill in this context
-        }else{
+        }else if( ! (is.null(tree_meta_path) & is.null(tree_meta_legend))){
             # merge of the meta data into the ggtree object. See https://yulab-smu.top/treedata-book/chapter7.html#attach-operator
-            if( ! tree_meta_path_names %in% names(meta.df)){
-                stop(paste0("\n\n============\n\nERROR IN tree_vizu.R for clone ID ", paste(unique(db.list[[i3]]$clone_id)), "\nIF NOT \"NULL\", THE tree_meta_path_names PARAMETER MUST BE A COLUMN NAME OF THE tree_meta_path PARAMETER: ", tree_meta_path_names, "\n\n============\n\n"), call. = FALSE)
+            if( ! tree_meta_legend %in% names(meta.df)){
+                stop(paste0("\n\n============\n\nERROR IN tree_vizu.R for clone ID ", paste(unique(db.list[[i3]]$clone_id)), "\nIF NOT \"NULL\", THE tree_meta_legend PARAMETER MUST BE A COLUMN NAME OF THE tree_meta_path PARAMETER: ", tree_meta_legend, "\n\n============\n\n"), call. = FALSE)
             }
             tempo.added.trees <- ggtree::"%<+%"(
                 ggtree::ggtree(trees$trees[[i3]], layout = tree_kind),
@@ -566,8 +567,8 @@ if(length(tempo.list) == 0){
             )
             tempo.added.trees$data <- tibble::add_column(tempo.added.trees$data, tempo.names)
             assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), tempo.added.trees)
-            tempo.col.values <- tree_meta_path_names
-            assign(tempo.col.values, tempo.added.trees$data[[tree_meta_path_names]])
+            tempo.col.values <- tree_meta_legend
+            assign(tempo.col.values, tempo.added.trees$data[[tree_meta_legend]])
             if(is.numeric(get(tempo.col.values))){
                 assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
                     ggplot2::aes_string(
@@ -577,15 +578,15 @@ if(length(tempo.list) == 0){
                     pch = tree_leaf_shape
                 ))
                 tempo.scale <- seq(
-                    from = min(meta.df[ , tree_meta_path_names], na.rm = TRUE), 
-                    to = max(meta.df[ , tree_meta_path_names], na.rm = TRUE), 
+                    from = min(meta.df[ , tree_meta_legend], na.rm = TRUE), 
+                    to = max(meta.df[ , tree_meta_legend], na.rm = TRUE), 
                     length.out = 5
                 )
                 assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_size(
-                    name = tree_meta_path_names,
+                    name = tree_meta_legend,
                     breaks = tempo.scale,
                     labels = formatC(tempo.scale),
-                    limits = range(c(meta.df[ , tree_meta_path_names]), na.rm = TRUE),
+                    limits = range(c(meta.df[ , tree_meta_legend]), na.rm = TRUE),
                     range = c(0, 5), 
                     guide = ggplot2::guide_legend(
                         override.aes = list(
@@ -623,6 +624,9 @@ if(length(tempo.list) == 0){
                     ))
                 }
             }
+        }else if(is.null(tree_meta_path) & ! is.null(tree_meta_legend)){
+            tempo.warn <- paste0("FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\nTHE tree_meta_path PARAMETER IS NOT \"NULL\" BUT THE tree_meta_path PARAMETER IS \"NULL\"")
+            warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
         }
         if(any(tree_kind %in% c("rectangular", "roundrect", "slanted", "ellipse"))){
             assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
@@ -659,7 +663,7 @@ if(length(tempo.list) == 0){
         if(tree_legend == "FALSE"){ # even if any(unlist(legend.disp)) is TRUE
             legend.final <- ggplot2::ggplot()+ggplot2::theme_void() # empty graph instead of legend
         }
-        if(is.null(meta_file)){
+        if(is.null(tree_meta_path)){
             legend.width = 0
         }else{
             legend.width = 0.15 # single proportion (between 0 and 1) indicating the relative width of the legend sector (on the right of the plot) relative to the width of the plot. Value 1 means that the window device width is split in 2, half for the plot and half for the legend. Value 0 means no room for the legend, which will overlay the plot region. Write NULL to inactivate the legend sector. In such case, ggplot2 will manage the room required for the legend display, meaning that the width of the plotting region can vary between graphs, depending on the text in the legend
@@ -681,7 +685,7 @@ if(length(tempo.list) == 0){
         if(tree_duplicate_seq == "TRUE" & nrow(trees$data[[i3]]@data) != nrow(db.list[[i3]])){
             stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN tree_vizu.R for clone ID ", clone.id, "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"TRUE\"\nBUT THE NUMBER OF ROWS IN trees$data[[i3]]@data (n=", nrow(trees$data[[i3]]@data), ")\nIS DIFFERENT FROM THE NUMBER OF ROWS IN db (n=", nrow(db.list[[i3]]), ")\nAS IF SOME SEQUENCES WHERE REMOVED\n\n============\n\n"), call. = FALSE)
         }else if(tree_duplicate_seq == "FALSE" & nrow(trees$data[[i3]]@data) == nrow(db.list[[i3]])){
-            add.text <- "All sequences of the tree displayed"
+            add.text <- "All sequences of the tree are displayed"
         }else if(tree_duplicate_seq == "FALSE" & nrow(trees$data[[i3]]@data) != nrow(db.list[[i3]])){
             # get removed sequences info
             no.duplic.seq.log <- db.list[[i3]][[1]] %in% trees$data[[i3]]@data[[1]]
@@ -691,7 +695,10 @@ if(length(tempo.list) == 0){
             }else{
                 not.removed.seq <- db.list[[i3]][[1]][no.duplic.seq.log]
                 removed.seq <- db.list[[i3]][[1]][duplic.seq.log]
-                add.text <- "Warning: sequences removed from the display (Parameter tree_duplicate_seq == \"FALSE\". See tree_seq_not_displayed.tsv)"
+                tempo.warn <- "sequences removed from the display (Parameter tree_duplicate_seq == \"FALSE\". See tree_seq_not_displayed.tsv)"
+                tempo.warn2 <- paste0("FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\n", tempo.warn)
+                warn <- paste0(ifelse(is.null(warn), tempo.warn2, paste0(warn, "\n\n", tempo.warn2)))
+                add.text <- paste0("Warning: ", tempo.warn)
                 identical.seq <- NULL
                 for(i4 in 1:length(removed.seq)){
                     tempo.log <- grepl(trees$data[[i3]]@data$collapsed, pattern = removed.seq[i4]) # collapsed names are separated by comma during dowser::formatClones()
@@ -784,10 +791,13 @@ fun_report(data = paste0("\n\nALL DATA SAVED IN all_objects.RData"), output = lo
 
 fun_report(data = paste0("\n\n################################ RECAPITULATION OF WARNING MESSAGES"), output = log, path = "./", overwrite = FALSE)
 if( ! is.null(warn)){
-    fun_report(data = paste0("\n\n", warn), output = log, path = "./", overwrite = FALSE)
+    tempo.cat <- paste0("IN tree_vizu.R OF THE NEXFLOW EXECUTION:\n\n", warn)
+    fun_report(data = tempo.cat, output = log, path = "./", overwrite = FALSE)
+    cat(tempo.cat)
 }else{
     fun_report(data = paste0("\n\nNO WARNING MESSAGE TO REPORT"), output = log, path = "./", overwrite = FALSE)
 }
+on.exit(exp = options(warning.length = ini.warning.length), add = TRUE)
 
 
 ################ end Warning messages

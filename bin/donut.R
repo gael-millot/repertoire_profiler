@@ -474,10 +474,14 @@ fun_report(data = paste0("\n\nALL DATA SAVED IN all_objects.RData"), output = lo
 
 fun_report(data = paste0("\n\n################################ RECAPITULATION OF WARNING MESSAGES"), output = log, path = "./", overwrite = FALSE)
 if( ! is.null(warn)){
-    fun_report(data = paste0("\n\n", warn), output = log, path = "./", overwrite = FALSE)
+    tempo.cat <- paste0("IN donut.R OF THE NEXFLOW EXECUTION:\n\n", warn)
+    fun_report(data = tempo.cat, output = log, path = "./", overwrite = FALSE)
+    cat(tempo.cat)
 }else{
     fun_report(data = paste0("\n\nNO WARNING MESSAGE TO REPORT"), output = log, path = "./", overwrite = FALSE)
 }
+on.exit(exp = options(warning.length = ini.warning.length), add = TRUE)
+
 
 
 ################ end Warning messages
