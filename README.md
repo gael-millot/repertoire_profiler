@@ -51,10 +51,10 @@ Use the xlsx2fasta.R script if sequences are in a .xlsx file (see the sequences.
 
 Use this code to split a multi sequence fasta file into fasta files made of a single sequence:
 
-<button type="button" class="btn btn-default btn-md gl-button btn-icon has-tooltip" data-title="Copy to clipboard" data-clipboard-target="pre#code-1"><svg><use xlink:href="/assets/icons-5f28ad8ab3377176325e2edb59a58c34611f3e7e6720f4a6096d8105813fafec.svg#copy-to-clipboard"></use></svg><pre data-canonical-lang="bash" class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell">
+<pre data-canonical-lang="bash" class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell">
 FASTA_FILE="./test.fasta" # add path and name of the fasta file here
 awk -v slice_size=1 -v prefix="cut" '$1 ~ /^>/{nbSeq++; currSlice=int((nbSeq-1)/slice_size)+1; myOutFile=prefix"_"currSlice".fasta"}{print $0 > myOutFile}' ${FASTA_FILE}
-</pre></button>
+</pre>
 
 <br /><br />
 ## HOW TO RUN
@@ -74,17 +74,17 @@ Installation of:<br />
 
 - Mount a server if required:
 
-```bash
+<code>
 DRIVE="C"
 sudo mkdir /mnt/c
 sudo mount -t drvfs $DRIVE: /mnt/c
-```
+</code>
 
-Warning: if no mounting, it is possible that nextflow does nothing, or displays a message like
-```bash
+Warning: if no mounting, it is possible that nextflow does nothing, or displays a message like:
+<pre data-canonical-lang="bash" class="code highlight js-syntax-highlight language-shell white" id="code-3" lang="shell">
 Launching `ig_clustering.nf` [loving_morse] - revision: d5aabe528b
 /mnt/share/Users
-```
+</pre>
 
 - Run the following command from where the ig_clustering.nf and ig_clustering.config files are (example: \\wsl$\Ubuntu-20.04\home\gael):
 
