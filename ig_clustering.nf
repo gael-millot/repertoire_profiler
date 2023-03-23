@@ -151,7 +151,7 @@ process igblast {
 
 process parseDb_filtering {
     label 'immcantation' // see the withLabel: bash in the nextflow config file 
-    publishDir path: "${out_path}", mode: 'copy', pattern: "{*_productive-F.tsv}", overwrite: false
+    publishDir path: "${out_path}", mode: 'copy', pattern: "unproductive_seq.tsv", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{ParseDb_filtering.log}", overwrite: false
     cache 'true'
 
@@ -160,8 +160,8 @@ process parseDb_filtering {
 
     output:
     path "*_parse-select.tsv", emit: select_ch
-    path "*_productive-F.tsv", emit: unproductive_ch, optional: true
-    path "*.log"
+    path "unproductive_seq.tsv"
+    path "ParseDb_filtering.log"
 
     script:
     """
@@ -172,6 +172,13 @@ process parseDb_filtering {
     else
         ParseDb.py select -d ${tsv_ch2} -f productive -u T |& tee -a ParseDb_filtering.log
         ParseDb.py split -d ${tsv_ch2} -f productive |& tee -a ParseDb_filtering.log
+        if [[ ! -s *_productive-F.tsv ]]; then
+            tempo_echo="\n\nWARNING: EMPTY unproductive_seq.tsv FILE RETURNED FOLLOWING THE parseDb_filtering PROCESS\n\n"
+            echo -e "\$tempo_echo" |& tee -a ParseDb_filtering.log
+            echo "" | cat > unproductive_seq.tsv
+        else
+            cp *_productive-F.tsv unproductive_seq.tsv
+        fi
     fi
     """
 }
@@ -834,7 +841,7 @@ workflow {
         tsv_ch2
     )
 
-    parseDb_filtering.out.unproductive_ch.count().subscribe { n -> if ( n == 0 ){print "\n\nWARNING: EMPTY OUTPUT FOLLOWING THE parseDb_filtering PROCESS -> NO unproductive_seq.tsv FILE RETURNED\n\n"}else{it -> it.copyTo("${out_path}/unproductive_seq.tsv")}} // see https://www.nextflow.io/docs/latest/script.html?highlight=copyto#copy-files
+    // parseDb_filtering.out.unproductive_ch.count().subscribe{n -> if ( n == 0 ){print "\n\nWARNING: EMPTY unproductive_seq.tsv FILE RETURNED FOLLOWING THE parseDb_filtering PROCESS\n\n"}else{it -> it.copyTo("${out_path}/unproductive_seq.tsv")}} // see https://www.nextflow.io/docs/latest/script.html?highlight=copyto#copy-files
 
 
     clone_assignment(

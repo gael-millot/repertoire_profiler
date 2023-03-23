@@ -74,23 +74,23 @@ Installation of:<br />
 
 - Mount a server if required:
 
-<code>
+<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
 DRIVE="C"
 sudo mkdir /mnt/c
 sudo mount -t drvfs $DRIVE: /mnt/c
-</code>
+</pre>
 
 Warning: if no mounting, it is possible that nextflow does nothing, or displays a message like:
-<pre data-canonical-lang="bash" class="code highlight js-syntax-highlight language-shell white" id="code-3" lang="shell">
+<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
 Launching `ig_clustering.nf` [loving_morse] - revision: d5aabe528b
 /mnt/share/Users
 </pre>
 
 - Run the following command from where the ig_clustering.nf and ig_clustering.config files are (example: \\wsl$\Ubuntu-20.04\home\gael):
 
-```bash
+<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
 nextflow run ig_clustering.nf -c ig_clustering.config
-```
+</pre>
 
 with -c to specify the name of the config file used.
 
@@ -99,9 +99,9 @@ with -c to specify the name of the config file used.
 
 Run the following command from where you want the results:
 
-```bash
+<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
 nextflow run -hub pasteur gmillot/ig_clustering -r v1.0.0
-```
+</pre>
 
 
 ### 3. Distant running (example with the Pasteur cluster)
@@ -110,7 +110,7 @@ nextflow run -hub pasteur gmillot/ig_clustering -r v1.0.0
 
 Copy-paste this after having modified the EXEC_PATH variable:
 
-```bash
+<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
 EXEC_PATH="/pasteur/zeus/projets/p01/BioIT/gmillot/ig_clustering" # where the bin folder of the ig_clustering.nf script is located
 export CONF_BEFORE=/opt/gensoft/exe # on maestro
 
@@ -123,33 +123,32 @@ export GIT_CONF_AFTER=bin/git # on maestro
 export GRAPHVIZ_CONF=graphviz/2.42.3
 export GRAPHVIZ_CONF_AFTER=bin/graphviz # on maestro
 
-
 MODULES="${CONF_BEFORE}/${JAVA_CONF}/${JAVA_CONF_AFTER},${CONF_BEFORE}/${SINGU_CONF}/${SINGU_CONF_AFTER},${CONF_BEFORE}/${GIT_CONF}/${GIT_CONF_AFTER}/${GRAPHVIZ_CONF}/${GRAPHVIZ_CONF_AFTER}"
 cd ${EXEC_PATH}
 # chmod 755 ${EXEC_PATH}/bin/*.* # not required if no bin folder
 module load ${JAVA_CONF} ${SINGU_CONF} ${GIT_CONF} ${GRAPHVIZ_CONF}
-```
+</pre>
 
 
 #### 3.2. ig_clustering.nf file in a cluster folder
 
 Modify the second line of the code below, and run from where the ig_clustering.nf and ig_clustering.config files are (which has been set thanks to the EXEC_PATH variable above):
 
-```bash
+<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
 HOME_INI=$HOME
 HOME="${ZEUSHOME}/ig_clustering/" # $HOME changed to allow the creation of .nextflow into /$ZEUSHOME/ig_clustering/, for instance. See NFX_HOME in the nextflow software script
 trap '' SIGINT
 nextflow run --modules ${MODULES} ig_clustering.nf -c ig_clustering.config
 HOME=$HOME_INI
 trap SIGINT
-```
+</pre>
 
 
 #### 3.3. ig_clustering.nf file in the public gitlab repository
 
 Modify the first and third lines of the code below, and run (results will be where the EXEC_PATH variable has been set above):
 
-```bash
+<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
 VERSION="v1.0"
 HOME_INI=$HOME
 HOME="${ZEUSHOME}/ig_clustering/" # $HOME changed to allow the creation of .nextflow into /$ZEUSHOME/ig_clustering/, for instance. See NFX_HOME in the nextflow software script
@@ -157,33 +156,33 @@ trap '' SIGINT
 nextflow run --modules ${MODULES} -hub pasteur gmillot/ig_clustering -r $VERSION -c $HOME/ig_clustering.config
 HOME=$HOME_INI
 trap SIGINT
-```
+</pre>
 
 
 
 ### 4. Error messages and solutions
 
 1)
-```bash
+<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
 Unknown error accessing project `gmillot/ig_clustering` -- Repository may be corrupted: /pasteur/sonic/homes/gmillot/.nextflow/assets/gmillot/ig_clustering
-```
+</pre>
 
 Purge using:
-```bash
+<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
 rm -rf /pasteur/sonic/homes/gmillot/.nextflow/assets/gmillot*
-```
+</pre>
 
 2)
-```bash
+<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
 WARN: Cannot read project manifest -- Cause: Remote resource not found: https://gitlab.pasteur.fr/api/v4/projects/gmillot%2Fig_clustering
-```
+</pre>
 Contact Gael Millot (distant repository is not public).
 
 3)
 
-```bash
+<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
 permission denied
-```
+</pre>
 
 Use chmod to change the user rights.
 
@@ -262,6 +261,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 
 <br /><br />
 ## WHAT'S NEW IN
+
+#### v5.1
+
+Metadata info added in donut plot
+
 
 #### v5.0
 
