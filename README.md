@@ -51,11 +51,10 @@ Use the xlsx2fasta.R script if sequences are in a .xlsx file (see the sequences.
 
 Use this code to split a multi sequence fasta file into fasta files made of a single sequence:
 
-<code><pre data-canonical-lang="bash" class="code highlight js-syntax-highlight language-shell grey" lang="shell">
+<pre data-canonical-lang="bash" class="code highlight js-syntax-highlight language-shell grey" lang="shell">
 FASTA_FILE="./test.fasta" # add path and name of the fasta file here
 awk -v slice_size=1 -v prefix="cut" '$1 ~ /^>/{nbSeq++; currSlice=int((nbSeq-1)/slice_size)+1; myOutFile=prefix"_"currSlice".fasta"}{print $0 > myOutFile}' ${FASTA_FILE}
-</pre></code>
-<copy-code><button type="button" class="btn btn-default btn-md gl-button btn-icon has-tooltip" data-title="Copy to clipboard"><svg><use xlink:href="/assets/icons-5f28ad8ab3377176325e2edb59a58c34611f3e7e6720f4a6096d8105813fafec.svg#copy-to-clipboard"></use></svg></button></copy-code>
+</pre><copy-code><button type="button" class="btn btn-default btn-md gl-button btn-icon has-tooltip" data-title="Copy to clipboard"><svg><use xlink:href="/assets/icons-5f28ad8ab3377176325e2edb59a58c34611f3e7e6720f4a6096d8105813fafec.svg#copy-to-clipboard"></use></svg></button></copy-code>
 
 
 <br /><br />
