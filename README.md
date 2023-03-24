@@ -51,7 +51,7 @@ Use the xlsx2fasta.R script if sequences are in a .xlsx file (see the sequences.
 
 Use this code to split a multi sequence fasta file into fasta files made of a single sequence:
 
-<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
+<pre>
 FASTA_FILE="./test.fasta" # add path and name of the fasta file here
 awk -v slice_size=1 -v prefix="cut" '$1 ~ /^>/{nbSeq++; currSlice=int((nbSeq-1)/slice_size)+1; myOutFile=prefix"_"currSlice".fasta"}{print $0 > myOutFile}' ${FASTA_FILE}
 </pre>
@@ -74,23 +74,23 @@ Installation of:<br />
 
 - Mount a server if required:
 
-<pre class="code highlight js-syntax-highlight language-shell red" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
+<pre>
 DRIVE="C"
 sudo mkdir /mnt/c
 sudo mount -t drvfs $DRIVE: /mnt/c
 </pre>
 
 Warning: if no mounting, it is possible that nextflow does nothing, or displays a message like:
-<pre class="code highlight js-syntax-highlight language-shell white" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
+<pre>
 Launching `ig_clustering.nf` [loving_morse] - revision: d5aabe528b
 /mnt/share/Users
 </pre>
 
 - Run the following command from where the ig_clustering.nf and ig_clustering.config files are (example: \\wsl$\Ubuntu-20.04\home\gael):
 
-
+<pre>
 nextflow run ig_clustering.nf -c ig_clustering.config
-
+</pre>
 
 with -c to specify the name of the config file used.
 
@@ -99,9 +99,9 @@ with -c to specify the name of the config file used.
 
 Run the following command from where you want the results:
 
-<div class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 6px" >
+<pre>
 nextflow run -hub pasteur gmillot/ig_clustering -r v1.0.0
-</div>
+</pre>
 
 
 ### 3. Distant running (example with the Pasteur cluster)
@@ -110,7 +110,7 @@ nextflow run -hub pasteur gmillot/ig_clustering -r v1.0.0
 
 Copy-paste this after having modified the EXEC_PATH variable:
 
-<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
+<pre>
 EXEC_PATH="/pasteur/zeus/projets/p01/BioIT/gmillot/ig_clustering" # where the bin folder of the ig_clustering.nf script is located
 export CONF_BEFORE=/opt/gensoft/exe # on maestro
 
@@ -134,7 +134,7 @@ module load ${JAVA_CONF} ${SINGU_CONF} ${GIT_CONF} ${GRAPHVIZ_CONF}
 
 Modify the second line of the code below, and run from where the ig_clustering.nf and ig_clustering.config files are (which has been set thanks to the EXEC_PATH variable above):
 
-<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
+<pre>
 HOME_INI=$HOME
 HOME="${ZEUSHOME}/ig_clustering/" # $HOME changed to allow the creation of .nextflow into /$ZEUSHOME/ig_clustering/, for instance. See NFX_HOME in the nextflow software script
 trap '' SIGINT
@@ -148,7 +148,7 @@ trap SIGINT
 
 Modify the first and third lines of the code below, and run (results will be where the EXEC_PATH variable has been set above):
 
-<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
+<pre>
 VERSION="v1.0"
 HOME_INI=$HOME
 HOME="${ZEUSHOME}/ig_clustering/" # $HOME changed to allow the creation of .nextflow into /$ZEUSHOME/ig_clustering/, for instance. See NFX_HOME in the nextflow software script
@@ -162,27 +162,28 @@ trap SIGINT
 
 ### 4. Error messages and solutions
 
-1)
-<pre class="code highlight js-syntax-highlight language-shell white" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
+- Message 1
+```
 Unknown error accessing project `gmillot/ig_clustering` -- Repository may be corrupted: /pasteur/sonic/homes/gmillot/.nextflow/assets/gmillot/ig_clustering
-</pre>
+```
 
 Purge using:
-<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
+<pre>
 rm -rf /pasteur/sonic/homes/gmillot/.nextflow/assets/gmillot*
 </pre>
 
-2)
-<pre class="code highlight js-syntax-highlight language-shell white" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
+- Message 2
+```
 WARN: Cannot read project manifest -- Cause: Remote resource not found: https://gitlab.pasteur.fr/api/v4/projects/gmillot%2Fig_clustering
-</pre>
+```
+
 Contact Gael Millot (distant repository is not public).
 
-3)
+- Message 3
 
-<pre class="code highlight js-syntax-highlight language-shell white" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
+```
 permission denied
-</pre>
+```
 
 Use chmod to change the user rights.
 
