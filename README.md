@@ -81,7 +81,7 @@ sudo mount -t drvfs $DRIVE: /mnt/c
 </pre>
 
 Warning: if no mounting, it is possible that nextflow does nothing, or displays a message like:
-<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
+<pre class="code highlight js-syntax-highlight language-shell white" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
 Launching `ig_clustering.nf` [loving_morse] - revision: d5aabe528b
 /mnt/share/Users
 </pre>
@@ -99,7 +99,7 @@ with -c to specify the name of the config file used.
 
 Run the following command from where you want the results:
 
-<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
+<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: courier; font-size: 8px" >
 nextflow run -hub pasteur gmillot/ig_clustering -r v1.0.0
 </pre>
 
@@ -163,7 +163,7 @@ trap SIGINT
 ### 4. Error messages and solutions
 
 1)
-<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
+<pre class="code highlight js-syntax-highlight language-shell white" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
 Unknown error accessing project `gmillot/ig_clustering` -- Repository may be corrupted: /pasteur/sonic/homes/gmillot/.nextflow/assets/gmillot/ig_clustering
 </pre>
 
@@ -173,14 +173,14 @@ rm -rf /pasteur/sonic/homes/gmillot/.nextflow/assets/gmillot*
 </pre>
 
 2)
-<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
+<pre class="code highlight js-syntax-highlight language-shell white" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
 WARN: Cannot read project manifest -- Cause: Remote resource not found: https://gitlab.pasteur.fr/api/v4/projects/gmillot%2Fig_clustering
 </pre>
 Contact Gael Millot (distant repository is not public).
 
 3)
 
-<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
+<pre class="code highlight js-syntax-highlight language-shell white" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
 permission denied
 </pre>
 
@@ -203,7 +203,7 @@ Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.
 | **svg** | Folder containing the tree.pdf graphs in svg vectorial format. |
 | **RData** | Folder containing, for each clonal group, objects that can be used in R to further analyze of plot the data:<br /><ul><li>db: tibble data frame resulting from the import by the alakazam::readChangeoDb() function<br /></li><li>clones: db in the airClone format<br /></li><li>trees: output of the dowser::getTrees() function using the clones object as input (igphylm tree)</li><br /><br />Also contains the all_trees.RData file that combine the trees R objects of the different files in a single trees object. |
 | **productive_seq.tsv** | sequences annotated by igblast, with germline clustering and mutation load added (see the unproductive_seq.tsv file for sequences that failed to be annotated by igblast). |
-| **unproductive_seq.tsv** | Sequences that failed annotations by igblast (optional file not returned if all the sequences are annotated). |
+| **unproductive_seq.tsv** | Sequences that failed annotations by igblast (empty file if all the sequences are annotated). |
 | **tree_clone_id.tsv** | Clonal group IDs used in the tree analysis (clonal group with at least n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file). |
 | **tree_dismissed_clone_id.tsv** | Clonal group IDs not used in the tree analysis (clonal group with less than n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file). |
 | **tree_seq.tsv** | Sequences of the *productive_seq.tsv* file used in the tree analysis (clonal group with at least n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file). |
