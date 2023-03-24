@@ -88,7 +88,7 @@ Launching `ig_clustering.nf` [loving_morse] - revision: d5aabe528b
 
 - Run the following command from where the ig_clustering.nf and ig_clustering.config files are (example: \\wsl$\Ubuntu-20.04\home\gael):
 
-<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
+<pre lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
 nextflow run ig_clustering.nf -c ig_clustering.config
 </pre>
 

@@ -173,8 +173,7 @@ process parseDb_filtering {
         ParseDb.py select -d ${tsv_ch2} -f productive -u T |& tee -a ParseDb_filtering.log
         ParseDb.py split -d ${tsv_ch2} -f productive |& tee -a ParseDb_filtering.log
         if [[ ! -s *_productive-F.tsv ]]; then
-            tempo_echo="\n\nWARNING: EMPTY unproductive_seq.tsv FILE RETURNED FOLLOWING THE parseDb_filtering PROCESS\n\n"
-            echo -e "\$tempo_echo" |& tee -a ParseDb_filtering.log
+            echo -e "\n\nWARNING: EMPTY unproductive_seq.tsv FILE RETURNED FOLLOWING THE parseDb_filtering PROCESS\n\n" |& tee -a ParseDb_filtering.log
             echo "" | cat > unproductive_seq.tsv
         else
             cp *_productive-F.tsv unproductive_seq.tsv
