@@ -88,9 +88,9 @@ Launching `ig_clustering.nf` [loving_morse] - revision: d5aabe528b
 
 - Run the following command from where the ig_clustering.nf and ig_clustering.config files are (example: \\wsl$\Ubuntu-20.04\home\gael):
 
-<div><pre>
+
 nextflow run ig_clustering.nf -c ig_clustering.config
-</pre></div>
+
 
 with -c to specify the name of the config file used.
 
@@ -99,9 +99,9 @@ with -c to specify the name of the config file used.
 
 Run the following command from where you want the results:
 
-<div><pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 6px" >
+<div class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 6px" >
 nextflow run -hub pasteur gmillot/ig_clustering -r v1.0.0
-</pre></div>
+</div>
 
 
 ### 3. Distant running (example with the Pasteur cluster)
