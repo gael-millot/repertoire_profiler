@@ -74,7 +74,7 @@ Installation of:<br />
 
 - Mount a server if required:
 
-<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
+<pre class="code highlight js-syntax-highlight language-shell red" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
 DRIVE="C"
 sudo mkdir /mnt/c
 sudo mount -t drvfs $DRIVE: /mnt/c
@@ -99,7 +99,7 @@ with -c to specify the name of the config file used.
 
 Run the following command from where you want the results:
 
-<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: courier; font-size: 8px" >
+<pre class="code highlight js-syntax-highlight language-shell grey" id="code-1" lang="shell" style="font-family: SF Mono,DejaVu Sans Mono,Liberation Mono,Consolas,Ubuntu Mono,andale mono,lucida console,monospace; font-size: 14px" >
 nextflow run -hub pasteur gmillot/ig_clustering -r v1.0.0
 </pre>
 
