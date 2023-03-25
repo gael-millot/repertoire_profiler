@@ -474,6 +474,9 @@ if(length(tempo.list) == 0){
     tempo.cat <- "\\n\\nNO TREE DATA COMPUTED (NO .RData FILE DETECTED) -> NO GRAPH PLOTTED"
     cat(tempo.cat)
     fun_report(data = tempo.cat, output = log, path = "./", overwrite = FALSE)
+    pdf(NULL)
+    final.plot <- fun_gg_empty_graph(text = "NO GRAPH PLOTTED\nNO .RData FILE DETECTED", text.size = 3)
+    dev.off()
 }else{
 
 
@@ -517,233 +520,245 @@ if(length(tempo.list) == 0){
 ################ Plotting tree
 
     for(i3 in 1:length(plots)){
-        # color of leafs and germline
-        tempo.graph.info <- ggplot2::ggplot_build(ggtree::ggtree(trees$trees[[i3]], layout = if(tree_kind %in% c("roundrect", "ellipse")){"rectangular"}else{tree_kind}) +  ggtree::geom_tippoint() + ggtree::geom_tiplab()) # plots[[i3]] is equivalent to ggtree::ggtree(trees$trees[[i3]])
-        leaf.nodes <- NULL
-        tempo.log <- NULL
-        for(i4 in 1:length(tempo.graph.info$data)){
-            if(any(names(tempo.graph.info$data[[i4]]) == "label")){
-                leaf.nodes <- c(leaf.nodes, tempo.graph.info$data[[i4]]$node)
-                tempo.log <- c(tempo.log, tempo.graph.info$data[[i4]]$label == "Germline")
-            }
-        }
-        if(is.null(leaf.nodes)){
-            stop("\n\n========\n\nINTERNAL CODE ERROR 4 IN tree_vizu.R for clone ID ", paste(unique(db.list[[i3]]$clone_id)), ":\nEMPTY leaf.nodes OBJECT GENERATED\n\n========\n\n")
-        }
-        leaf.node.germline <- leaf.nodes[tempo.log]
-        leaf.node.not.germline <- leaf.nodes[ ! tempo.log]
-        nodes <- tempo.graph.info$data[[1]]$node
-        tempo.log.germline <- nodes == leaf.node.germline
-        tempo.log.leaf <- nodes %in% leaf.nodes
-        tempo.names <- rep("Seq", length(nodes))
-        tempo.names[tempo.log.germline] <- "Germline"
-        tempo.names[ ! (tempo.log.leaf | tempo.log.germline)] <- NA
-        # end color of leafs and germline
-        # ggplot building
-        tempo.gg.name <- "gg.indiv.plot."
-        tempo.gg.count <- 0
-        if(is.null(tree_meta_path) | is.null(tree_meta_legend)){
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::ggtree(trees$trees[[i3]], layout = tree_kind))
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
-                ggplot2::aes(fill = tempo.names),
-                pch = tree_leaf_shape, 
-                size = tree_leaf_size
-            ))
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_discrete_manual(
-                aesthetics = "fill", 
-                name = NULL, 
-                values = c("black", ifelse(is.null(tree_leaf_color), "tomato", tree_leaf_color)),
-                labels = c("Germline", "Seq")
-            ))
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(fill = "none")) # never legend for fill in this context
-        }else if( ! (is.null(tree_meta_path) & is.null(tree_meta_legend))){
-            # merge of the meta data into the ggtree object. See https://yulab-smu.top/treedata-book/chapter7.html#attach-operator
-            if( ! tree_meta_legend %in% names(meta.df)){
-                stop(paste0("\n\n============\n\nERROR IN tree_vizu.R for clone ID ", paste(unique(db.list[[i3]]$clone_id)), "\nIF NOT \"NULL\", THE tree_meta_legend PARAMETER MUST BE A COLUMN NAME OF THE tree_meta_path PARAMETER: ", tree_meta_legend, "\n\n============\n\n"), call. = FALSE)
-            }
-            tempo.added.trees <- ggtree::"%<+%"(
-                ggtree::ggtree(trees$trees[[i3]], layout = tree_kind),
-                meta.df
-            )
-            tempo.added.trees$data <- tibble::add_column(tempo.added.trees$data, tempo.names)
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), tempo.added.trees)
-            tempo.col.values <- tree_meta_legend
-            assign(tempo.col.values, tempo.added.trees$data[[tree_meta_legend]])
-            if(is.numeric(get(tempo.col.values))){
-                assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
-                    ggplot2::aes_string(
-                        fill = "tempo.names", 
-                        size = if( ! is.null(get(tempo.col.values))){get(tempo.col.values)}else{NA},
-                    ),
-                    pch = tree_leaf_shape
-                ))
-                tempo.scale <- seq(
-                    from = min(meta.df[ , tree_meta_legend], na.rm = TRUE), 
-                    to = max(meta.df[ , tree_meta_legend], na.rm = TRUE), 
-                    length.out = 5
-                )
-                assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_size(
-                    name = tree_meta_legend,
-                    breaks = tempo.scale,
-                    labels = formatC(tempo.scale),
-                    limits = range(c(meta.df[ , tree_meta_legend]), na.rm = TRUE),
-                    range = c(0, 5), 
-                    guide = ggplot2::guide_legend(
-                        override.aes = list(
-                            fill = ifelse(is.null(tree_leaf_color), "tomato", tree_leaf_color)
-                        )
-                    )
-                ))
-                assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_discrete_manual(
-                    aesthetics = "fill", 
-                    name = NULL, 
-                    values = c("black", ifelse(is.null(tree_leaf_color), "tomato", tree_leaf_color)),
-                    labels = c("Germline", "Seq")
-                ))
-                assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(fill = "none")) # never legend for fill in this context
-            }else{
-                if( ! is.null(get(tempo.col.values))){
-                    if( ! all(is.na(get(tempo.col.values)))){
-                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
-                            ggplot2::aes_string(fill = tempo.col.values),
-                            pch = tree_leaf_shape, 
-                            size = tree_leaf_size
-                        ))
-                    }else{
-                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
-                            fill = "grey50",
-                            pch = tree_leaf_shape, 
-                            size = tree_leaf_size
-                        ))
+        if( ! (is.null(trees$trees[[i3]]) | length(trees$trees[[i3]]$parameters$nseq) == 0)){
+            if(trees$trees[[i3]]$parameters$nseq != 0 | is.na(trees$trees[[i3]]$parameters$nseq)){
+                # color of leafs and germline
+                tempo.graph.info <- ggplot2::ggplot_build(ggtree::ggtree(trees$trees[[i3]], layout = if(tree_kind %in% c("roundrect", "ellipse")){"rectangular"}else{tree_kind}) +  ggtree::geom_tippoint() + ggtree::geom_tiplab()) # plots[[i3]] is equivalent to ggtree::ggtree(trees$trees[[i3]])
+                leaf.nodes <- NULL
+                tempo.log <- NULL
+                for(i4 in 1:length(tempo.graph.info$data)){
+                    if(any(names(tempo.graph.info$data[[i4]]) == "label")){
+                        leaf.nodes <- c(leaf.nodes, tempo.graph.info$data[[i4]]$node)
+                        tempo.log <- c(tempo.log, tempo.graph.info$data[[i4]]$label == "Germline")
                     }
-                }else{
+                }
+                if(is.null(leaf.nodes)){
+                    stop("\n\n========\n\nINTERNAL CODE ERROR 4 IN tree_vizu.R FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), ":\nEMPTY leaf.nodes OBJECT GENERATED\n\n========\n\n")
+                }
+                leaf.node.germline <- leaf.nodes[tempo.log]
+                leaf.node.not.germline <- leaf.nodes[ ! tempo.log]
+                nodes <- tempo.graph.info$data[[1]]$node
+                tempo.log.germline <- nodes == leaf.node.germline
+                tempo.log.leaf <- nodes %in% leaf.nodes
+                tempo.names <- rep("Seq", length(nodes))
+                tempo.names[tempo.log.germline] <- "Germline"
+                tempo.names[ ! (tempo.log.leaf | tempo.log.germline)] <- NA
+                # end color of leafs and germline
+                # ggplot building
+                tempo.gg.name <- "gg.indiv.plot."
+                tempo.gg.count <- 0
+                if(is.null(tree_meta_path) | is.null(tree_meta_legend)){
+                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::ggtree(trees$trees[[i3]], layout = tree_kind))
                     assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
-                        fill = "grey50",
+                        ggplot2::aes(fill = tempo.names),
                         pch = tree_leaf_shape, 
                         size = tree_leaf_size
                     ))
+                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_discrete_manual(
+                        aesthetics = "fill", 
+                        name = NULL, 
+                        values = c("black", ifelse(is.null(tree_leaf_color), "tomato", tree_leaf_color)),
+                        labels = c("Germline", "Seq")
+                    ))
+                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(fill = "none")) # never legend for fill in this context
+                }else if( ! (is.null(tree_meta_path) & is.null(tree_meta_legend))){
+                    # merge of the meta data into the ggtree object. See https://yulab-smu.top/treedata-book/chapter7.html#attach-operator
+                    if( ! tree_meta_legend %in% names(meta.df)){
+                        stop(paste0("\n\n============\n\nERROR IN tree_vizu.R for clone ID ", paste(unique(db.list[[i3]]$clone_id)), "\nIF NOT \"NULL\", THE tree_meta_legend PARAMETER MUST BE A COLUMN NAME OF THE tree_meta_path PARAMETER: ", tree_meta_legend, "\n\n============\n\n"), call. = FALSE)
+                    }
+                    tempo.added.trees <- ggtree::"%<+%"(
+                        ggtree::ggtree(trees$trees[[i3]], layout = tree_kind),
+                        meta.df
+                    )
+                    tempo.added.trees$data <- tibble::add_column(tempo.added.trees$data, tempo.names)
+                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), tempo.added.trees)
+                    tempo.col.values <- tree_meta_legend
+                    assign(tempo.col.values, tempo.added.trees$data[[tree_meta_legend]])
+                    if(is.numeric(get(tempo.col.values))){
+                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
+                            ggplot2::aes_string(
+                                fill = "tempo.names", 
+                                size = if( ! is.null(get(tempo.col.values))){get(tempo.col.values)}else{NA},
+                            ),
+                            pch = tree_leaf_shape
+                        ))
+                        tempo.scale <- seq(
+                            from = min(meta.df[ , tree_meta_legend], na.rm = TRUE), 
+                            to = max(meta.df[ , tree_meta_legend], na.rm = TRUE), 
+                            length.out = 5
+                        )
+                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_size(
+                            name = tree_meta_legend,
+                            breaks = tempo.scale,
+                            labels = formatC(tempo.scale),
+                            limits = range(c(meta.df[ , tree_meta_legend]), na.rm = TRUE),
+                            range = c(0, 5), 
+                            guide = ggplot2::guide_legend(
+                                override.aes = list(
+                                    fill = ifelse(is.null(tree_leaf_color), "tomato", tree_leaf_color)
+                                )
+                            )
+                        ))
+                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_discrete_manual(
+                            aesthetics = "fill", 
+                            name = NULL, 
+                            values = c("black", ifelse(is.null(tree_leaf_color), "tomato", tree_leaf_color)),
+                            labels = c("Germline", "Seq")
+                        ))
+                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(fill = "none")) # never legend for fill in this context
+                    }else{
+                        if( ! is.null(get(tempo.col.values))){
+                            if( ! all(is.na(get(tempo.col.values)))){
+                                assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
+                                    ggplot2::aes_string(fill = tempo.col.values),
+                                    pch = tree_leaf_shape, 
+                                    size = tree_leaf_size
+                                ))
+                            }else{
+                                assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
+                                    fill = "grey50",
+                                    pch = tree_leaf_shape, 
+                                    size = tree_leaf_size
+                                ))
+                            }
+                        }else{
+                            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
+                                fill = "grey50",
+                                pch = tree_leaf_shape, 
+                                size = tree_leaf_size
+                            ))
+                        }
+                    }
+                }else if(is.null(tree_meta_path) & ! is.null(tree_meta_legend)){
+                    tempo.warn <- paste0("FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\nTHE tree_meta_path PARAMETER IS NOT \"NULL\" BUT THE tree_meta_path PARAMETER IS \"NULL\"")
+                    warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
                 }
-            }
-        }else if(is.null(tree_meta_path) & ! is.null(tree_meta_legend)){
-            tempo.warn <- paste0("FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\nTHE tree_meta_path PARAMETER IS NOT \"NULL\" BUT THE tree_meta_path PARAMETER IS \"NULL\"")
-            warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
-        }
-        if(any(tree_kind %in% c("rectangular", "roundrect", "slanted", "ellipse"))){
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
-                hjust = tree_label_hjust,
-                size = tree_label_size,
-                as_ylab = ifelse(tree_label_rigth == "TRUE" & tree_kind == "rectangular", TRUE, FALSE)
-            ))
-        }else if(any(tree_kind %in% c("circular", "fan", "equal_angle", "daylight"))){
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
-                ggplot2::aes(angle = angle), 
-                hjust = tree_label_hjust,
-                size = tree_label_size
-            ))
-        }else{
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
-                size = tree_label_size
-            ))
-        }
-        if( ! any(tree_kind %in% c("circular", "fan"))){
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::coord_cartesian( # to extend the text display outside of the plot region
-                clip = ifelse(tree_label_outside == "TRUE", "off", "on")
-            ))
-        }
-        if( ! any(tree_kind %in% c("circular", "fan", "equal_angle", "daylight"))){
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_treescale(width = 0.01, offset = 0.05))
-        }
-        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::theme(plot.margin = ggplot2::margin(t = 0.25, l = 0.1, b = 0.1, r = tree_right_margin, unit = "in")))
+                if(any(tree_kind %in% c("rectangular", "roundrect", "slanted", "ellipse"))){
+                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
+                        hjust = tree_label_hjust,
+                        size = tree_label_size,
+                        as_ylab = ifelse(tree_label_rigth == "TRUE" & tree_kind == "rectangular", TRUE, FALSE)
+                    ))
+                }else if(any(tree_kind %in% c("circular", "fan", "equal_angle", "daylight"))){
+                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
+                        ggplot2::aes(angle = angle), 
+                        hjust = tree_label_hjust,
+                        size = tree_label_size
+                    ))
+                }else{
+                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
+                        size = tree_label_size
+                    ))
+                }
+                if( ! any(tree_kind %in% c("circular", "fan"))){
+                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::coord_cartesian( # to extend the text display outside of the plot region
+                        clip = ifelse(tree_label_outside == "TRUE", "off", "on")
+                    ))
+                }
+                if( ! any(tree_kind %in% c("circular", "fan", "equal_angle", "daylight"))){
+                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_treescale(width = 0.01, offset = 0.05))
+                }
+                assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::theme(plot.margin = ggplot2::margin(t = 0.25, l = 0.1, b = 0.1, r = tree_right_margin, unit = "in")))
 
-        # end ggplot building
-        # legend
-        bef.final.plot <- ggplot2::ggplot_build(eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + "))))
-        legend.final <- fun_gg_get_legend(ggplot_built = bef.final.plot) # get legend
-        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(fill = "none", color = "none", size = "none")) # inactivate the initial legend
-        if(tree_legend == "FALSE"){ # even if any(unlist(legend.disp)) is TRUE
-            legend.final <- ggplot2::ggplot()+ggplot2::theme_void() # empty graph instead of legend
-        }
-        if(is.null(tree_meta_path)){
-            legend.width = 0
-        }else{
-            legend.width = 0.15 # single proportion (between 0 and 1) indicating the relative width of the legend sector (on the right of the plot) relative to the width of the plot. Value 1 means that the window device width is split in 2, half for the plot and half for the legend. Value 0 means no room for the legend, which will overlay the plot region. Write NULL to inactivate the legend sector. In such case, ggplot2 will manage the room required for the legend display, meaning that the width of the plotting region can vary between graphs, depending on the text in the legend
-        }
-        # end legend
-        # title
-        tempo.v <- trees$data[[i3]]@v_gene
-        tempo.j <- trees$data[[i3]]@j_gene
-        chain <- substr(tempo.j, 1, 3) # extract the IGH or IGK name
-        if(chain != substr(tempo.v, 1, 3)){
-            stop(paste0("\n\n============\n\nERROR IN tree_vizu.R\nTHE CHAIN OF THE clone_id ", trees$data[[i3]]@clone, " IS NOT THE SAME BETWEEN V (", tempo.v, ") AND J (", tempo.j, ")\n\n============\n\n"), call. = FALSE)
-        }
-        tempo.v <- substring(tempo.v, 4)
-        tempo.j <- substring(tempo.j, 4)
-        clone.name <- paste0(tempo.v, "_", tempo.j)
-        clone.id <-  trees$data[[i3]]@clone
-        removed.seq <- NULL
-        add.text <- NULL
-        if(tree_duplicate_seq == "TRUE" & nrow(trees$data[[i3]]@data) != nrow(db.list[[i3]])){
-            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN tree_vizu.R for clone ID ", clone.id, "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"TRUE\"\nBUT THE NUMBER OF ROWS IN trees$data[[i3]]@data (n=", nrow(trees$data[[i3]]@data), ")\nIS DIFFERENT FROM THE NUMBER OF ROWS IN db (n=", nrow(db.list[[i3]]), ")\nAS IF SOME SEQUENCES WHERE REMOVED\n\n============\n\n"), call. = FALSE)
-        }else if(tree_duplicate_seq == "FALSE" & nrow(trees$data[[i3]]@data) == nrow(db.list[[i3]])){
-            add.text <- "All sequences of the tree are displayed"
-        }else if(tree_duplicate_seq == "FALSE" & nrow(trees$data[[i3]]@data) != nrow(db.list[[i3]])){
-            # get removed sequences info
-            no.duplic.seq.log <- db.list[[i3]][[1]] %in% trees$data[[i3]]@data[[1]]
-            duplic.seq.log <- ! no.duplic.seq.log
-            if( ! any(duplic.seq.log)){
-                stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 6 IN tree_vizu.R for clone ID ", clone.id, "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"FALSE\"\nBUT NO SEQ NAMES REMOVED FROM THE TREE IN trees$data[[i3]]@data[[1]] IS DIFFERENT FROM THE NUMBER OF ROWS IN db (n=", nrow(db.list[[i3]]), ")\ntrees$data[[i3]]@data[[1]]: ", paste(trees$data[[i3]]@data[[1]], collapse = " "), "\ndb.list[[i3]][[1]]: ", paste(db.list[[i3]][[1]], collapse = " "), "\n\n============\n\n"), call. = FALSE)
+                # end ggplot building
+                # legend
+                bef.final.plot <- ggplot2::ggplot_build(eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + "))))
+                legend.final <- fun_gg_get_legend(ggplot_built = bef.final.plot) # get legend
+                assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(fill = "none", color = "none", size = "none")) # inactivate the initial legend
+                if(tree_legend == "FALSE"){ # even if any(unlist(legend.disp)) is TRUE
+                    legend.final <- ggplot2::ggplot()+ggplot2::theme_void() # empty graph instead of legend
+                }
+                if(is.null(tree_meta_path)){
+                    legend.width = 0
+                }else{
+                    legend.width = 0.15 # single proportion (between 0 and 1) indicating the relative width of the legend sector (on the right of the plot) relative to the width of the plot. Value 1 means that the window device width is split in 2, half for the plot and half for the legend. Value 0 means no room for the legend, which will overlay the plot region. Write NULL to inactivate the legend sector. In such case, ggplot2 will manage the room required for the legend display, meaning that the width of the plotting region can vary between graphs, depending on the text in the legend
+                }
+                # end legend
+                # title
+                tempo.v <- trees$data[[i3]]@v_gene
+                tempo.j <- trees$data[[i3]]@j_gene
+                chain <- substr(tempo.j, 1, 3) # extract the IGH or IGK name
+                if(chain != substr(tempo.v, 1, 3)){
+                    stop(paste0("\n\n============\n\nERROR IN tree_vizu.R\nTHE CHAIN OF THE clone_id ", trees$data[[i3]]@clone, " IS NOT THE SAME BETWEEN V (", tempo.v, ") AND J (", tempo.j, ")\n\n============\n\n"), call. = FALSE)
+                }
+                tempo.v <- substring(tempo.v, 4)
+                tempo.j <- substring(tempo.j, 4)
+                clone.name <- paste0(tempo.v, "_", tempo.j)
+                clone.id <-  trees$data[[i3]]@clone
+                removed.seq <- NULL
+                add.text <- NULL
+                if(tree_duplicate_seq == "TRUE" & nrow(trees$data[[i3]]@data) != nrow(db.list[[i3]])){
+                    stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN tree_vizu.R for clone ID ", clone.id, "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"TRUE\"\nBUT THE NUMBER OF ROWS IN trees$data[[i3]]@data (n=", nrow(trees$data[[i3]]@data), ")\nIS DIFFERENT FROM THE NUMBER OF ROWS IN db (n=", nrow(db.list[[i3]]), ")\nAS IF SOME SEQUENCES WHERE REMOVED\n\n============\n\n"), call. = FALSE)
+                }else if(tree_duplicate_seq == "FALSE" & nrow(trees$data[[i3]]@data) == nrow(db.list[[i3]])){
+                    add.text <- "All sequences of the tree are displayed"
+                }else if(tree_duplicate_seq == "FALSE" & nrow(trees$data[[i3]]@data) != nrow(db.list[[i3]])){
+                    # get removed sequences info
+                    no.duplic.seq.log <- db.list[[i3]][[1]] %in% trees$data[[i3]]@data[[1]]
+                    duplic.seq.log <- ! no.duplic.seq.log
+                    if( ! any(duplic.seq.log)){
+                        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 6 IN tree_vizu.R for clone ID ", clone.id, "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"FALSE\"\nBUT NO SEQ NAMES REMOVED FROM THE TREE IN trees$data[[i3]]@data[[1]] IS DIFFERENT FROM THE NUMBER OF ROWS IN db (n=", nrow(db.list[[i3]]), ")\ntrees$data[[i3]]@data[[1]]: ", paste(trees$data[[i3]]@data[[1]], collapse = " "), "\ndb.list[[i3]][[1]]: ", paste(db.list[[i3]][[1]], collapse = " "), "\n\n============\n\n"), call. = FALSE)
+                    }else{
+                        not.removed.seq <- db.list[[i3]][[1]][no.duplic.seq.log]
+                        removed.seq <- db.list[[i3]][[1]][duplic.seq.log]
+                        tempo.warn <- "sequences removed from the display (Parameter tree_duplicate_seq == \"FALSE\". See tree_seq_not_displayed.tsv)"
+                        tempo.warn2 <- paste0("FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\n", tempo.warn)
+                        warn <- paste0(ifelse(is.null(warn), tempo.warn2, paste0(warn, "\n\n", tempo.warn2)))
+                        add.text <- paste0("Warning: ", tempo.warn)
+                        identical.seq <- NULL
+                        for(i4 in 1:length(removed.seq)){
+                            tempo.log <- grepl(trees$data[[i3]]@data$collapsed, pattern = removed.seq[i4]) # collapsed names are separated by comma during dowser::formatClones()
+                            identical.seq <- c(identical.seq, trees$data[[i3]]@data[[1]][tempo.log])
+                        }
+                        if(length(removed.seq) != length(identical.seq)){
+                            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 7 IN tree_vizu.R for clone ID ", clone.id, "\nidentical.seq SHOULD HAVE ", length(removed.seq), " SEQUENCES NAMES\nREMOVED SEQUENCES: ", paste(removed.seq, collapse = " "), "\nIDENTICAL TO: ", paste(identical.seq, collapse = " "), "\nCOLLAPSED NAMES: ", paste(clones$data[[1]]@data$collapsed, collapse = " "), "\n\n============\n\n"), call. = FALSE)
+                        }
+                        tempo.df <- data.frame(sequence_id = removed.seq, clone_id = clone.id, clone_name = clone.name, chain = chain, identical_to = identical.seq)
+                        write.table(tempo.df, file = paste0("./", clone.id, "_tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = TRUE, sep = "\t")
+                        # end get removed sequences info
+                    }
+                }
+
+                tempo.title <- paste0(
+                    "Clonal Group: ", clone.name, "\n",
+                    "Chain: ", chain, "\n", 
+                    "Clonal Group full name: ", trees$data[[i3]]@v_gene, "_", trees$data[[i3]]@j_gene, "\n",
+                    "Clone ID: ", trees$data[[i3]]@clone, "\n",
+                    "CDR3 junction length: ", trees$data[[i3]]@junc_len, "\n",
+                    "Number of leafs: ", nrow(trees$data[[i3]]@data), "\n",
+                    "Number of sequences in the clonal group: ", nrow(db.list[[i3]]), 
+                    ifelse(is.null(add.text), "", paste0("\n", add.text))
+                )
+                title.grob <- grid::textGrob(
+                    label = tempo.title,
+                    x = grid::unit(0, "lines"), 
+                    y = grid::unit(0, "lines"),
+                    hjust = 0,
+                    vjust = 0,
+                    gp = grid::gpar(fontsize = 6)
+                )
+                # end title
+                pdf(NULL)
+                final.plot <- suppressMessages(suppressWarnings(gridExtra::arrangeGrob(grobs = list(eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + "))), legend.final), ncol=2, widths=c(1, legend.width), top = title.grob, left = " ", right = " "))) # , left = " ", right = " " : trick to add margins in the plot. padding =  unit(0.5, "inch") is for top margin above the title
+                dev.off()
             }else{
-                not.removed.seq <- db.list[[i3]][[1]][no.duplic.seq.log]
-                removed.seq <- db.list[[i3]][[1]][duplic.seq.log]
-                tempo.warn <- "sequences removed from the display (Parameter tree_duplicate_seq == \"FALSE\". See tree_seq_not_displayed.tsv)"
-                tempo.warn2 <- paste0("FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\n", tempo.warn)
-                warn <- paste0(ifelse(is.null(warn), tempo.warn2, paste0(warn, "\n\n", tempo.warn2)))
-                add.text <- paste0("Warning: ", tempo.warn)
-                identical.seq <- NULL
-                for(i4 in 1:length(removed.seq)){
-                    tempo.log <- grepl(trees$data[[i3]]@data$collapsed, pattern = removed.seq[i4]) # collapsed names are separated by comma during dowser::formatClones()
-                    identical.seq <- c(identical.seq, trees$data[[i3]]@data[[1]][tempo.log])
-                }
-                if(length(removed.seq) != length(identical.seq)){
-                    stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 7 IN tree_vizu.R for clone ID ", clone.id, "\nidentical.seq SHOULD HAVE ", length(removed.seq), " SEQUENCES NAMES\nREMOVED SEQUENCES: ", paste(removed.seq, collapse = " "), "\nIDENTICAL TO: ", paste(identical.seq, collapse = " "), "\nCOLLAPSED NAMES: ", paste(clones$data[[1]]@data$collapsed, collapse = " "), "\n\n============\n\n"), call. = FALSE)
-                }
-                tempo.df <- data.frame(sequence_id = removed.seq, clone_id = clone.id, clone_name = clone.name, chain = chain, identical_to = identical.seq)
-                write.table(tempo.df, file = paste0("./", clone.id, "_tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = TRUE, sep = "\t")
-                # end get removed sequences info
+                pdf(NULL)
+                final.plot <- fun_gg_empty_graph(text = "NO GRAPH PLOTTED FOR CLONE ID", paste(unique(db.list[[i3]]$clone_id)), "\nNO SEQUENCE DETECTED", text.size = 3)
+                dev.off()
             }
+        }else{
+            pdf(NULL)
+            final.plot <- fun_gg_empty_graph(text = "NO GRAPH PLOTTED FOR CLONE ID", paste(unique(db.list[[i3]]$clone_id)), "\nNO SEQUENCE DETECTED", text.size = 3)
+            dev.off()
         }
-
-        tempo.title <- paste0(
-            "Clonal Group: ", clone.name, "\n",
-            "Chain: ", chain, "\n", 
-            "Clonal Group full name: ", trees$data[[i3]]@v_gene, "_", trees$data[[i3]]@j_gene, "\n",
-            "Clone ID: ", trees$data[[i3]]@clone, "\n",
-            "CDR3 junction length: ", trees$data[[i3]]@junc_len, "\n",
-            "Number of leafs: ", nrow(trees$data[[i3]]@data), "\n",
-            "Number of sequences in the clonal group: ", nrow(db.list[[i3]]), 
-            ifelse(is.null(add.text), "", paste0("\n", add.text))
-        )
-        title.grob <- grid::textGrob(
-            label = tempo.title,
-            x = grid::unit(0, "lines"), 
-            y = grid::unit(0, "lines"),
-            hjust = 0,
-            vjust = 0,
-            gp = grid::gpar(fontsize = 6)
-        )
-        # end title
-        pdf(NULL)
-        final.plot <- suppressMessages(suppressWarnings(gridExtra::arrangeGrob(grobs = list(eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + "))), legend.final), ncol=2, widths=c(1, legend.width), top = title.grob, left = " ", right = " "))) # , left = " ", right = " " : trick to add margins in the plot. padding =  unit(0.5, "inch") is for top margin above the title
 
 ################ end Plotting tree
 
 ################ saving plots
 
-
         plots[[i3]] <- final.plot
-        ggplot2::ggsave(filename = paste0(trees$clone_id[i3], ".png"), plot = plots[[i3]], device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        ggplot2::ggsave(filename = paste0(trees$clone_id[i3], ".svg"), plot = plots[[i3]], device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        ggplot2::ggsave(filename = paste0(trees$clone_id[i3], ".pdf"), plot = plots[[i3]], device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = paste0("tree_cloneID_", trees$clone_id[i3], ".png"), plot = final.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = paste0("tree_cloneID_", trees$clone_id[i3], ".svg"), plot = final.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = paste0("tree_cloneID_", trees$clone_id[i3], ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
     }
     # dowser::treesToPDF(plots, file = "trees.pdf", nrow=2, ncol=2)
     qpdf::pdf_combine(input = list.files(path = ".", pattern = ".pdf$"), output = "./trees.pdf")

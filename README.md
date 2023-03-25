@@ -162,7 +162,7 @@ trap SIGINT
 
 ### 4. Error messages and solutions
 
-- Message 1
+#### Message 1
 ```
 Unknown error accessing project `gmillot/ig_clustering` -- Repository may be corrupted: /pasteur/sonic/homes/gmillot/.nextflow/assets/gmillot/ig_clustering
 ```
@@ -172,14 +172,14 @@ Purge using:
 rm -rf /pasteur/sonic/homes/gmillot/.nextflow/assets/gmillot*
 </pre>
 
-- Message 2
+#### Message 2
 ```
 WARN: Cannot read project manifest -- Cause: Remote resource not found: https://gitlab.pasteur.fr/api/v4/projects/gmillot%2Fig_clustering
 ```
 
 Contact Gael Millot (distant repository is not public).
 
-- Message 3
+#### Message 3
 
 ```
 permission denied
@@ -262,6 +262,14 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 
 <br /><br />
 ## WHAT'S NEW IN
+
+
+#### v6.0
+
+Distance histogram added
+Empty graphs added
+New parameters for the donut
+
 
 #### v5.1
 

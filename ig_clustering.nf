@@ -17,7 +17,7 @@ nextflow.enable.dsl=2
 
 
 process workflowParam { // create a file with the workflow parameters in out_path
-    label 'bash' // see the withLabel: bash in the nextflow config file 
+    label 'bash'
     publishDir "${out_path}/reports", mode: 'copy', overwrite: false
     cache 'false'
 
@@ -53,7 +53,7 @@ process workflowParam { // create a file with the workflow parameters in out_pat
 process repertoire_names {
     // cannot be repertoire_names outside of process because the files are present in the docker
     publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
-    label 'immcantation' // see the withLabel: bash in the nextflow config file 
+    label 'immcantation'
     cache 'true'
 
     input:
@@ -88,7 +88,7 @@ process repertoire_names {
 
 
 process igblast {
-    label 'immcantation' // see the withLabel: bash in the nextflow config file 
+    label 'immcantation'
     //publishDir path: "${out_path}", mode: 'copy', overwrite: false
     cache 'true'
 
@@ -150,7 +150,7 @@ process igblast {
 
 
 process parseDb_filtering {
-    label 'immcantation' // see the withLabel: bash in the nextflow config file 
+    label 'immcantation'
     publishDir path: "${out_path}", mode: 'copy', pattern: "unproductive_seq.tsv", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{ParseDb_filtering.log}", overwrite: false
     cache 'true'
@@ -184,13 +184,13 @@ process parseDb_filtering {
 
 
 process clone_assignment {
-    label 'immcantation' // see the withLabel: bash in the nextflow config file 
+    label 'immcantation'
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
     //publishDir path: "${out_path}", mode: 'copy', pattern: "{*_clone-pass.tsv}", overwrite: false
     cache 'true'
 
     input:
-    path select_ch
+    path select_ch // no parallelization
     val clone_distance
 
     output:
@@ -210,11 +210,11 @@ process clone_assignment {
 }
 
 process split_by_clones { // split the file into multiple files according to the clone_id column
-    label 'immcantation' // see the withLabel: bash in the nextflow config file 
+    label 'immcantation'
     cache 'true'
 
     input:
-    path clone_ch
+    path clone_ch // no parallelization
 
     output:
     path "*clone-pass.tsv", emit: clone_split_ch // multiple files -> parall expected
@@ -239,7 +239,7 @@ process split_by_clones { // split the file into multiple files according to the
 
 
 process closest_germline {
-    label 'immcantation' // see the withLabel: bash in the nextflow config file 
+    label 'immcantation'
     //publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
     //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
     cache 'true'
@@ -273,7 +273,7 @@ process closest_germline {
 
 
 process mutation_load {
-    label 'immcantation' // see the withLabel: bash in the nextflow config file 
+    label 'immcantation'
     //publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
     //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
     cache 'true'
@@ -355,11 +355,11 @@ process mutation_load {
 
 
 process seq_name_remplacement {
-    label 'r_ext' // see the withLabel: bash in the nextflow config file 
+    label 'r_ext'
     cache 'true'
 
     input:
-    path mutation_load_ch
+    path mutation_load_ch // parallelization expected
     path meta_file
     val tree_meta_name_replacement
 
@@ -403,13 +403,94 @@ process seq_name_remplacement {
     """
 }
 
+
+process distToNearest {
+    label 'immcantation'
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{distToNearest.log}", overwrite: false
+    cache 'true'
+
+    input:
+    path seq_name_remplacement_ch2 // no parallelization
+
+    output:
+    path "productive_seq.tsv", emit: distToNearest_ch
+    path "distToNearest.log"
+
+    script:
+    """
+    #!/bin/bash -ue
+    Rscript -e '
+        db <- read.table("${seq_name_remplacement_ch2}", header = TRUE, sep = "\\t")
+        db2 <- shazam::distToNearest(db, sequenceColumn = "junction", locusColumn = "locus", model = "ham", normalize = "len", nproc = 1)
+        write.table(db2, file = paste0("./productive_seq.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
+    ' |& tee -a distToNearest.log
+    """
+}
+
+
+process distance_hist {
+    label 'r_ext'
+    publishDir path: "${out_path}", mode: 'copy', pattern: "{productive_seq.tsv}", overwrite: false
+    publishDir path: "${out_path}/png", mode: 'copy', pattern: "{hamming_distance.png}", overwrite: false
+    publishDir path: "${out_path}/svg", mode: 'copy', pattern: "{hamming_distance.svg}", overwrite: false
+    publishDir path: "${out_path}", mode: 'copy', pattern: "{hamming_distance.pdf}", overwrite: false
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{distance_hist.log}", overwrite: false
+    cache 'true'
+
+    input:
+    path distToNearest_ch // no parallelization
+    path cute_file
+    val clone_distance
+
+    output:
+    path "productive_seq.tsv", emit: distance_hist_ch
+    path "distance_hist.log", emit: distance_hist_log_ch
+    path "hamming_distance.pdf"
+    path "hamming_distance.png"
+    path "hamming_distance.svg"
+
+    script:
+    """
+    #!/bin/bash -ue
+    Rscript -e '
+        source("${cute_file}", local = .GlobalEnv) # source the fun_ functions used below
+        db <- read.table("${distToNearest_ch}", header = TRUE, sep = "\\t")
+        if(all(is.na(db\$dist_nearest))){
+            cat("\\n\\nNO DISTANCE HISTOGRAM PLOTTED: shazam::distToNearest() FUNCTION RETURNED ONLY NA (SEE THE dist_nearest COLUMN O THE productive_seq.tsv FILE)")
+            pdf(NULL)
+            tempo.plot <- fun_gg_empty_graph(text = "NO DISTANCE HISTOGRAM PLOTTED\\nshazam::distToNearest() FUNCTION RETURNED ONLY NA\\nSEE THE dist_nearest COLUMN O THE productive_seq.tsv FILE", text.size = 3)
+        }else{
+            tempo.gg.name <- "gg.indiv.plot."
+            tempo.gg.count <- 0
+            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::ggplot(
+                data = subset(db, ! is.na(dist_nearest)),
+                mapping = ggplot2::aes(x = dist_nearest), 
+            ))
+            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::geom_histogram(color="white", binwidth=0.02))
+            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::xlab("Hamming distance"))
+            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::ylab("Count"))
+            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::geom_vline(xintercept = ${clone_distance}, color = "firebrick", linetype = 2))
+            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::theme_bw())
+            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_x_continuous(breaks=seq(0, 1, 0.1)))
+            tempo.plot <- suppressMessages(suppressWarnings(eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + ")))))
+        }
+        ggplot2::ggsave(filename = "hamming_distance.png", plot = tempo.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = "hamming_distance.svg", plot = tempo.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = "hamming_distance.pdf", plot = tempo.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        write.table(db, file = paste0("./productive_seq.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
+    ' |& tee -a distance_hist.log
+    """
+}
+
+
+
 process get_tree {
-    label 'immcantation' // see the withLabel: bash in the nextflow config file 
+    label 'immcantation'
     publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{*.RData}", overwrite: false
     cache 'true'
 
     input:
-    path mutation_load_ch
+    path mutation_load_ch // parallelization expected
     val nb_seq_per_clone
     val tree_duplicate_seq
 
@@ -449,7 +530,7 @@ process get_tree {
             )
             trees <- dowser::getTrees(clones, build="igphyml", exec="/usr/local/share/igphyml/src/igphyml", nproc = 10)
             # assign(paste0("c", trees\$clone_id, "_trees"), trees)
-            save(list = c("trees", "db", "clones"), file = paste0("./", trees\$clone_id, "_trees.RData"))
+            save(list = c("trees", "db", "clones"), file = paste0("./get_tree_cloneID_", trees\$clone_id, ".RData"))
             write.table(trees\$clone_id, file = paste0("./tree_clone_id.tsv"), row.names = FALSE, col.names = FALSE)
         ' |& tee -a get_tree.log
     else
@@ -463,7 +544,7 @@ process get_tree {
 
 
 process tree_vizu {
-    label 'r_ext' // see the withLabel: bash in the nextflow config file 
+    label 'r_ext'
     publishDir path: "${out_path}", mode: 'copy', pattern: "{trees.pdf}", overwrite: false
     publishDir path: "${out_path}/png", mode: 'copy', pattern: "{*.png}", overwrite: false
     publishDir path: "${out_path}/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
@@ -523,7 +604,7 @@ process tree_vizu {
 
 
 process donut {
-    label 'r_ext' // see the withLabel: bash in the nextflow config file 
+    label 'r_ext'
     //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
     //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.pdf}", overwrite: false
     publishDir path: "${out_path}/png", mode: 'copy', pattern: "{*.png}", overwrite: false
@@ -534,7 +615,9 @@ process donut {
     input:
     tuple val(kind), path(data) // 2 parallelization expected
     val donut_hole_size
-    val donut_colors
+    val donut_palette
+    val donut_border_color
+    val donut_border_size
     val donut_limit_legend
     path cute_file
 
@@ -552,7 +635,9 @@ process donut {
 "${data}" \
 "${kind}" \
 "${donut_hole_size}" \
-"${donut_colors}" \
+"${donut_palette}" \
+"${donut_border_color}" \
+"${donut_border_size}" \
 "${donut_limit_legend}" \
 "${cute_file}" \
 "${kind}_donut.log"
@@ -560,7 +645,7 @@ process donut {
 }
 
 process donut_assembly {
-    label 'r_ext' // see the withLabel: bash in the nextflow config file 
+    label 'r_ext'
     publishDir path: "${out_path}", mode: 'copy', pattern: "{donuts.pdf}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{donut_assembly.log}", overwrite: false
     cache 'true'
@@ -582,7 +667,7 @@ process donut_assembly {
 }
 
 process repertoire {
-    label 'immcantation' // see the withLabel: bash in the nextflow config file 
+    label 'immcantation'
     publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{*.RData}", overwrite: false
     cache 'true'
 
@@ -604,7 +689,7 @@ process repertoire {
 
 
 process backup {
-    label 'bash' // see the withLabel: bash in the nextflow config file 
+    label 'bash'
     publishDir "${out_path}/reports", mode: 'copy', overwrite: false // since I am in mode copy, all the output files will be copied into the publishDir. See \\wsl$\Ubuntu-20.04\home\gael\work\aa\a0e9a739acae026fb205bc3fc21f9b
     cache 'false'
 
@@ -762,8 +847,14 @@ workflow {
     }else if( ! donut_hole_size =~  /^[0-9]+\.*[0-9]*$/){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_size PARAMETER IN ig_clustering.config FILE:\n${donut_hole_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
-    if( ! donut_colors in String ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_colors PARAMETER IN ig_clustering.config FILE:\n${donut_colors}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    if( ! donut_palette in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_palette PARAMETER IN ig_clustering.config FILE:\n${donut_palette}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }
+    if( ! donut_border_color in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_border_color PARAMETER IN ig_clustering.config FILE:\n${donut_border_color}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }
+    if( ! donut_border_size in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_border_size PARAMETER IN ig_clustering.config FILE:\n${donut_border_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
     if( ! donut_limit_legend in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_limit_legend PARAMETER IN ig_clustering.config FILE:\n${donut_limit_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
@@ -818,10 +909,14 @@ workflow {
         modules
     )
 
+
+
     repertoire_names(
         igblast_database_path, 
         igblast_files
     )
+
+
 
     igblast(
         fs_ch, 
@@ -830,44 +925,48 @@ workflow {
         igblast_organism, 
         igblast_loci
     )
-
     igblast.out.tsv_ch1.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE igblast PROCESS\n\nCHECK THAT THE igblast_organism, igblast_loci AND igblast_files ARE CORRECTLY SET IN THE ig_clustering.config FILE\n\n========\n\n"}}
     tsv_ch2 = igblast.out.tsv_ch1.collectFile(name: "all_igblast_seq.tsv", skip: 1, keepHeader: true)
     igblast.out.log_ch.collectFile(name: "igblast_report.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
 
+
     parseDb_filtering(
         tsv_ch2
     )
-
     // parseDb_filtering.out.unproductive_ch.count().subscribe{n -> if ( n == 0 ){print "\n\nWARNING: EMPTY unproductive_seq.tsv FILE RETURNED FOLLOWING THE parseDb_filtering PROCESS\n\n"}else{it -> it.copyTo("${out_path}/unproductive_seq.tsv")}} // see https://www.nextflow.io/docs/latest/script.html?highlight=copyto#copy-files
+
 
 
     clone_assignment(
         parseDb_filtering.out.select_ch,
         clone_distance
     )
-
     // clone_assignment.out.clone_ch.view()
+
+
 
     split_by_clones(
         clone_assignment.out.clone_ch
     )
+
+
 
     closest_germline(
         split_by_clones.out.clone_split_ch.flatten(), // flatten split the list into several objects (required for parallelization)
         igblast_database_path, 
         igblast_files
     )
-
     closest_germline.out.closest_log_ch.collectFile(name: "closest_germline.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
+
+
 
     mutation_load(
         closest_germline.out.closest_ch
     )
-
     mutation_load.out.mutation_load_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE mutation_load PROCESS\n\n========\n\n"}}
     mutation_load.out.mutation_load_log_ch.collectFile(name: "mutation_load.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
+
 
 
     seq_name_remplacement(
@@ -875,13 +974,27 @@ workflow {
         meta_file,
         tree_meta_name_replacement
     )
-
     seq_name_remplacement.out.seq_name_remplacement_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE seq_name_remplacement PROCESS\n\n========\n\n"}}
-    seq_name_remplacement_ch2 = seq_name_remplacement.out.seq_name_remplacement_ch.collectFile(name: "productive_seq.tsv", skip: 1, keepHeader: true)
-    seq_name_remplacement_ch2.subscribe{it -> it.copyTo("${out_path}")}
+    seq_name_remplacement_ch2 = seq_name_remplacement.out.seq_name_remplacement_ch.collectFile(name: "renamed_seq.tsv", skip: 1, keepHeader: true)
     // tuple_seq_name_remplacement = new Tuple("all", seq_name_remplacement_ch2) # warning: this is not a channel but a variable now
-
     seq_name_remplacement.out.seq_name_remplacement_log_ch.collectFile(name: "seq_name_remplacement.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
+
+
+
+    distToNearest(
+        seq_name_remplacement_ch2
+    )
+    distToNearest.out.distToNearest_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE distToNearest PROCESS\n\n========\n\n"}}
+
+
+
+    distance_hist(
+        distToNearest.out.distToNearest_ch,
+        cute_file, 
+        clone_distance
+    )
+    distance_hist.out.distance_hist_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE distance_hist PROCESS\n\n========\n\n"}}
+
 
 
     get_tree(
@@ -889,8 +1002,6 @@ workflow {
         nb_seq_per_clone,
         tree_duplicate_seq
     )
-
-
     get_tree.out.rdata_tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: EMPTY OUTPUT FOLLOWING THE get_tree PROCESS -> NO TREE RETURNED\n\n")}}
     rdata_tree_ch2 = get_tree.out.rdata_tree_ch.collect()
     //rdata_tree_ch2.view()
@@ -913,6 +1024,8 @@ workflow {
 
     get_tree.out.get_tree_log_ch.collectFile(name: "get_tree.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
 
+
+
     tree_vizu(
         rdata_tree_ch2,
         tree_kind,
@@ -930,10 +1043,10 @@ workflow {
         tree_meta_legend,
         cute_file
     )
-
     tree_vizu.out.tree_seq_not_displayed_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: -> NO tree_seq_not_displayed.tsv FILE RETURNED\n\n")}}
     tree_seq_not_displayed_ch2 = tree_vizu.out.tree_seq_not_displayed_ch.collectFile(name: "tree_seq_not_displayed.tsv", skip: 1, keepHeader: true)
     tree_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}")}
+
 
 
     tempo1_ch = Channel.of("all", "tree") // 1 channel with 2 values (not list)
@@ -941,14 +1054,16 @@ workflow {
     tempo3_ch = tempo1_ch.merge(tempo2_ch) // 2 lists
 
 
+
     donut(
         tempo3_ch, 
         donut_hole_size, 
-        donut_colors,
+        donut_palette,
+        donut_border_color,
+        donut_border_size,
         donut_limit_legend,
         cute_file
     )
-
     donut.out.donut_pdf_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: EMPTY OUTPUT FOLLOWING THE donut PROCESS -> NO DONUT RETURNED\n\n")}}
     donut_pdf_ch2 = donut.out.donut_pdf_ch.collect()
 
@@ -956,9 +1071,13 @@ workflow {
     donut_tsv_ch2 = donut.out.donut_tsv_ch.collectFile(name: "donut_stats.tsv", skip: 1, keepHeader: true)
     donut_tsv_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
+
+
     donut_assembly(
         donut_pdf_ch2
     )
+
+
 
     backup(
         config_file, 
