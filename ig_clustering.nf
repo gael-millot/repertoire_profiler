@@ -183,6 +183,86 @@ process parseDb_filtering {
 }
 
 
+
+process distToNearest {
+    label 'immcantation'
+    publishDir path: "${out_path}", mode: 'copy', pattern: "{nearest_distance.tsv}", overwrite: false
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{distToNearest.log}", overwrite: false
+    cache 'true'
+
+    input:
+    path select_ch // no parallelization
+
+    output:
+    path "nearest_distance.tsv", emit: distToNearest_ch
+    path "distToNearest.log"
+
+    script:
+    """
+    #!/bin/bash -ue
+    Rscript -e '
+        db <- read.table("${select_ch}", header = TRUE, sep = "\\t")
+        db2 <- shazam::distToNearest(db, sequenceColumn = "junction", locusColumn = "locus", model = "ham", normalize = "len", nproc = 1)
+        write.table(db2, file = paste0("./nearest_distance.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
+    ' |& tee -a distToNearest.log
+    """
+}
+
+
+process distance_hist {
+    label 'r_ext'
+    publishDir path: "${out_path}/png", mode: 'copy', pattern: "{hamming_distance.png}", overwrite: false
+    publishDir path: "${out_path}/svg", mode: 'copy', pattern: "{hamming_distance.svg}", overwrite: false
+    publishDir path: "${out_path}", mode: 'copy', pattern: "{hamming_distance.pdf}", overwrite: false
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{distance_hist.log}", overwrite: false
+    cache 'true'
+
+    input:
+    path distToNearest_ch // no parallelization
+    path cute_file
+    val clone_distance
+
+    output:
+    path "hamming_distance.pdf"
+    path "hamming_distance.png", emit: distance_hist_ch // png plot (but sometimes empty) sustematically returned
+    path "hamming_distance.svg"
+    path "distance_hist.log"
+
+    script:
+    """
+    #!/bin/bash -ue
+    Rscript -e '
+        source("${cute_file}", local = .GlobalEnv) # source the fun_ functions used below
+        db <- read.table("${distToNearest_ch}", header = TRUE, sep = "\\t")
+        if(all(is.na(db\$dist_nearest))){
+            cat("\\n\\nNO DISTANCE HISTOGRAM PLOTTED: shazam::distToNearest() FUNCTION RETURNED ONLY NA (SEE THE dist_nearest COLUMN O THE nearest_distance.tsv FILE)")
+            pdf(NULL)
+            tempo.plot <- fun_gg_empty_graph(text = "NO DISTANCE HISTOGRAM PLOTTED\\nshazam::distToNearest() FUNCTION RETURNED ONLY NA\\nSEE THE dist_nearest COLUMN O THE nearest_distance.tsv FILE", text.size = 3)
+        }else{
+            tempo.gg.name <- "gg.indiv.plot."
+            tempo.gg.count <- 0
+            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::ggplot(
+                data = subset(db, ! is.na(dist_nearest)),
+                mapping = ggplot2::aes(x = dist_nearest), 
+            ))
+            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::geom_histogram(color="white", binwidth=0.02))
+            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::xlab("Hamming distance"))
+            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::ylab("Count"))
+            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::geom_vline(xintercept = ${clone_distance}, color = "firebrick", linetype = 2))
+            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::theme_bw())
+            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_x_continuous(breaks=seq(0, 1, 0.1)))
+            tempo.plot <- suppressMessages(suppressWarnings(eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + ")))))
+        }
+        ggplot2::ggsave(filename = "hamming_distance.png", plot = tempo.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = "hamming_distance.svg", plot = tempo.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = "hamming_distance.pdf", plot = tempo.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+    ' |& tee -a distance_hist.log
+    """
+}
+
+
+
+
 process clone_assignment {
     label 'immcantation'
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
@@ -404,84 +484,6 @@ process seq_name_remplacement {
 }
 
 
-process distToNearest {
-    label 'immcantation'
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{distToNearest.log}", overwrite: false
-    cache 'true'
-
-    input:
-    path seq_name_remplacement_ch2 // no parallelization
-
-    output:
-    path "productive_seq.tsv", emit: distToNearest_ch
-    path "distToNearest.log"
-
-    script:
-    """
-    #!/bin/bash -ue
-    Rscript -e '
-        db <- read.table("${seq_name_remplacement_ch2}", header = TRUE, sep = "\\t")
-        db2 <- shazam::distToNearest(db, sequenceColumn = "junction", locusColumn = "locus", model = "ham", normalize = "len", nproc = 1)
-        write.table(db2, file = paste0("./productive_seq.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
-    ' |& tee -a distToNearest.log
-    """
-}
-
-
-process distance_hist {
-    label 'r_ext'
-    publishDir path: "${out_path}", mode: 'copy', pattern: "{productive_seq.tsv}", overwrite: false
-    publishDir path: "${out_path}/png", mode: 'copy', pattern: "{hamming_distance.png}", overwrite: false
-    publishDir path: "${out_path}/svg", mode: 'copy', pattern: "{hamming_distance.svg}", overwrite: false
-    publishDir path: "${out_path}", mode: 'copy', pattern: "{hamming_distance.pdf}", overwrite: false
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{distance_hist.log}", overwrite: false
-    cache 'true'
-
-    input:
-    path distToNearest_ch // no parallelization
-    path cute_file
-    val clone_distance
-
-    output:
-    path "productive_seq.tsv", emit: distance_hist_ch
-    path "distance_hist.log", emit: distance_hist_log_ch
-    path "hamming_distance.pdf"
-    path "hamming_distance.png"
-    path "hamming_distance.svg"
-
-    script:
-    """
-    #!/bin/bash -ue
-    Rscript -e '
-        source("${cute_file}", local = .GlobalEnv) # source the fun_ functions used below
-        db <- read.table("${distToNearest_ch}", header = TRUE, sep = "\\t")
-        if(all(is.na(db\$dist_nearest))){
-            cat("\\n\\nNO DISTANCE HISTOGRAM PLOTTED: shazam::distToNearest() FUNCTION RETURNED ONLY NA (SEE THE dist_nearest COLUMN O THE productive_seq.tsv FILE)")
-            pdf(NULL)
-            tempo.plot <- fun_gg_empty_graph(text = "NO DISTANCE HISTOGRAM PLOTTED\\nshazam::distToNearest() FUNCTION RETURNED ONLY NA\\nSEE THE dist_nearest COLUMN O THE productive_seq.tsv FILE", text.size = 3)
-        }else{
-            tempo.gg.name <- "gg.indiv.plot."
-            tempo.gg.count <- 0
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::ggplot(
-                data = subset(db, ! is.na(dist_nearest)),
-                mapping = ggplot2::aes(x = dist_nearest), 
-            ))
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::geom_histogram(color="white", binwidth=0.02))
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::xlab("Hamming distance"))
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::ylab("Count"))
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::geom_vline(xintercept = ${clone_distance}, color = "firebrick", linetype = 2))
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::theme_bw())
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_x_continuous(breaks=seq(0, 1, 0.1)))
-            tempo.plot <- suppressMessages(suppressWarnings(eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + ")))))
-        }
-        ggplot2::ggsave(filename = "hamming_distance.png", plot = tempo.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        ggplot2::ggsave(filename = "hamming_distance.svg", plot = tempo.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        ggplot2::ggsave(filename = "hamming_distance.pdf", plot = tempo.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        write.table(db, file = paste0("./productive_seq.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
-    ' |& tee -a distance_hist.log
-    """
-}
-
 
 
 process get_tree {
@@ -513,7 +515,7 @@ process get_tree {
     FILENAME=\$(basename -- ${mutation_load_ch}) # recover a file name without path
     echo -e "\${FILENAME}:" |& tee -a get_tree.log
     LINE_NB=\$((\$(cat ${mutation_load_ch} | wc -l) - 1))
-    if [[ "\$LINE_NB" -ge "${nb_seq_per_clone}" ]] ; then # the -gt operator can compare strings and means "greater than"
+    if [[ "\$LINE_NB" -ge "${nb_seq_per_clone}" ]] ; then # the -ge operator can compare strings and means "greater or equal to"
         cat ${mutation_load_ch} > seq_for_tree.tsv
         Rscript -e '
             db <- alakazam::readChangeoDb("${mutation_load_ch}")
@@ -521,12 +523,13 @@ process get_tree {
             clones <- dowser::formatClones(
                 data = db, 
                 seq = "sequence_alignment", 
-                clone = "clone_id", 
-                minseq=1, 
-                heavy = NULL, 
-                text_fields = "collapsed", # column collapsed
+                clone = "clone_id", #  All entries in this column should be identical
+                minseq = ${nb_seq_per_clone}, # return an error if the number of seq in db (i.e., number of rows) is lower than minseq. REcontroled here but already controled by the i [[]] above
+                heavy = NULL, # name of heavy chain locus (default = "IGH")
+                text_fields = "collapsed", # column named "collapsed" (columns to retain during duplicate removal) 
                 dup_singles = FALSE, # Duplicate sequences in singleton clones to include them as trees? Always use FALSE. Otherwise, it will create an artificial duplicated sequences in thr tree building so that we will have two instead of one sequence in the tree, after identical seq removal. See https://rdrr.io/cran/dowser/src/R/Clones.R
                 trait = if(${tree_duplicate_seq}){names(db)[1]}else{NULL} # control the removal of identical sequences but different sequence name
+                # max_mask: maximum number of characters to mask at the leading and trailing sequence ends. If NULL then the upper masking bound will be automatically determined from the maximum number of observed leading or trailing Ns amongst all sequences. If set to 0 (default) then masking will not be performed
             )
             trees <- dowser::getTrees(clones, build="igphyml", exec="/usr/local/share/igphyml/src/igphyml", nproc = 10)
             # assign(paste0("c", trees\$clone_id, "_trees"), trees)
@@ -571,9 +574,9 @@ process tree_vizu {
 
     output:
     path "*.RData", optional: true
-    path "*.pdf", optional: true
-    path "*.png", optional: true
-    path "*.svg", optional: true
+    path "*.pdf"
+    path "*.png", emit: tree_vizu_ch // png plot (but sometimes empty) sustematically returned
+    path "*.svg"
     path "*.tsv", emit: tree_seq_not_displayed_ch, optional: true
     path "tree_vizu.log"
     //path "HLP10_tree_parameters.tsv"
@@ -614,11 +617,21 @@ process donut {
 
     input:
     tuple val(kind), path(data) // 2 parallelization expected
-    val donut_hole_size
     val donut_palette
+    val donut_hole_size
+    val donut_hole_text
+    val donut_hole_text_size
     val donut_border_color
     val donut_border_size
-    val donut_limit_legend
+    val donut_annotation_distance
+    val donut_annotation_size
+    val donut_annotation_force
+    val donut_annotation_force_pull
+    val donut_legend_width
+    val donut_legend_text_size
+    val donut_legend_box_size
+    val donut_legend_box_space
+    val donut_legend_limit
     path cute_file
 
     output:
@@ -634,11 +647,21 @@ process donut {
     donut.R \
 "${data}" \
 "${kind}" \
-"${donut_hole_size}" \
 "${donut_palette}" \
+"${donut_hole_size}" \
+"${donut_hole_text}" \
+"${donut_hole_text_size}" \
 "${donut_border_color}" \
 "${donut_border_size}" \
-"${donut_limit_legend}" \
+"${donut_annotation_distance}" \
+"${donut_annotation_size}" \
+"${donut_annotation_force}" \
+"${donut_annotation_force_pull}" \
+"${donut_legend_width}" \
+"${donut_legend_text_size}" \
+"${donut_legend_box_size}" \
+"${donut_legend_box_space}" \
+"${donut_legend_limit}" \
 "${cute_file}" \
 "${kind}_donut.log"
     """
@@ -654,7 +677,7 @@ process donut_assembly {
     path donut_pdf_ch2
 
     output:
-    path "donuts.pdf"
+    path "donuts.pdf", emit: donut_assembly_ch
     path "donut_assembly.log"
 
     script:
@@ -775,19 +798,33 @@ workflow {
     }
     if( ! clone_distance in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_distance PARAMETER IN ig_clustering.config FILE:\n${clone_distance}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! clone_distance =~  /^[01]{1}\.*[0-9]*$/){
+    }else if( ! clone_distance =~  /^(1)|(0)|(0\.[0-9]*)$/){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_distance PARAMETER IN ig_clustering.config FILE:\n${clone_distance}\nMUST BE A POSITIVE PROPORTION VALUE\n\n========\n\n"
+    }
+
+    if( ! tree_meta_path in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_path PARAMETER IN ig_clustering.config FILE:\n${tree_meta_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if(tree_meta_path != "NULL"){
+        if( ! file(tree_meta_path).exists()){
+            error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_path PARAMETER IN ig_clustering.config FILE. IF DOES NOT EXIST): ${tree_meta_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
+        }
+    }
+    if( ! tree_meta_name_replacement in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_name_replacement PARAMETER IN ig_clustering.config FILE:\n${tree_meta_name_replacement}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }
+    if( ! tree_meta_legend in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_legend PARAMETER IN ig_clustering.config FILE:\n${tree_meta_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
     if( ! tree_kind in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_kind PARAMETER IN ig_clustering.config FILE:\n${tree_kind}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }
-    if( ! tree_leaf_color in String ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_color PARAMETER IN ig_clustering.config FILE:\n${tree_leaf_color}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
     if( ! tree_duplicate_seq in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_duplicate_seq PARAMETER IN ig_clustering.config FILE:\n${tree_duplicate_seq}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (tree_duplicate_seq == "TRUE" || tree_duplicate_seq == "FALSE")){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_duplicate_seq PARAMETER IN ig_clustering.config FILE:\n${tree_duplicate_seq}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
+    }
+    if( ! tree_leaf_color in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_color PARAMETER IN ig_clustering.config FILE:\n${tree_leaf_color}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
     if( ! tree_leaf_shape in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_shape PARAMETER IN ig_clustering.config FILE:\n${tree_leaf_shape}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
@@ -796,17 +833,17 @@ workflow {
     }
     if( ! tree_leaf_size in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_size PARAMETER IN ig_clustering.config FILE:\n${tree_leaf_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! tree_leaf_size =~  /^[0-9]*$/){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_size PARAMETER IN ig_clustering.config FILE:\n${tree_leaf_size}\nMUST BE A POSITIVE INTEGER VALUE\n\n========\n\n"
+    }else if( ! tree_leaf_size =~  /^[0-9]+\.*[0-9]*$/){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_size PARAMETER IN ig_clustering.config FILE:\n${tree_leaf_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
     if( ! tree_label_size in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_size PARAMETER IN ig_clustering.config FILE:\n${tree_label_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! tree_label_size =~  /^[0-9]*$/){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_size PARAMETER IN ig_clustering.config FILE:\n${tree_label_size}\nMUST BE A POSITIVE INTEGER VALUE\n\n========\n\n"
+    }else if( ! tree_label_size =~  /^[0-9]+\.*[0-9]*$/){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_size PARAMETER IN ig_clustering.config FILE:\n${tree_label_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
     if( ! tree_label_hjust in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_hjust PARAMETER IN ig_clustering.config FILE:\n${tree_label_hjust}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! tree_label_hjust =~  /^\-{0,1}[0-9]+\.*[0-9]*$/){
+    }else if( ! tree_label_hjust =~  /^\-*[0-9]+\.*[0-9]*$/){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_hjust PARAMETER IN ig_clustering.config FILE:\n${tree_label_hjust}\nMUST BE A NUMERIC VALUE\n\n========\n\n"
     }
     if( ! tree_label_rigth in String ){
@@ -829,26 +866,24 @@ workflow {
     }else if( ! (tree_legend == "TRUE" || tree_legend == "FALSE")){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_legend PARAMETER IN ig_clustering.config FILE:\n${tree_legend}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
-    if( ! tree_meta_path in String ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_path PARAMETER IN ig_clustering.config FILE:\n${tree_meta_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if(tree_meta_path != "NULL"){
-        if( ! file(tree_meta_path).exists()){
-            error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_path PARAMETER IN ig_clustering.config FILE. IF DOES NOT EXIST): ${tree_meta_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
-        }
-    }
-    if( ! tree_meta_name_replacement in String ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_name_replacement PARAMETER IN ig_clustering.config FILE:\n${tree_meta_name_replacement}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }
-    if( ! tree_meta_legend in String ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_legend PARAMETER IN ig_clustering.config FILE:\n${tree_meta_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+
+    if( ! donut_palette in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_palette PARAMETER IN ig_clustering.config FILE:\n${donut_palette}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
     if( ! donut_hole_size in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_size PARAMETER IN ig_clustering.config FILE:\n${donut_hole_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! donut_hole_size =~  /^[0-9]+\.*[0-9]*$/){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_size PARAMETER IN ig_clustering.config FILE:\n${donut_hole_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
+    }else if( ! donut_hole_size =~  /^(1)|(0)|(0\.[0-9]*)$/){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_size PARAMETER IN ig_clustering.config FILE:\n${donut_hole_size}\nMUST BE A POSITIVE PROPORTION VALUE\n\n========\n\n"
     }
-    if( ! donut_palette in String ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_palette PARAMETER IN ig_clustering.config FILE:\n${donut_palette}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    if( ! donut_hole_text in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_text PARAMETER IN ig_clustering.config FILE:\n${tree_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (donut_hole_text == "TRUE" || donut_hole_text == "FALSE")){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_text PARAMETER IN ig_clustering.config FILE:\n${donut_hole_text}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
+    }
+    if( ! donut_hole_text_size in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_text_size PARAMETER IN ig_clustering.config FILE:\n${donut_hole_text_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! donut_hole_text_size =~  /^[0-9]+\.*[0-9]*$/){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_text_size PARAMETER IN ig_clustering.config FILE:\n${donut_hole_text_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
     if( ! donut_border_color in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_border_color PARAMETER IN ig_clustering.config FILE:\n${donut_border_color}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
@@ -856,8 +891,52 @@ workflow {
     if( ! donut_border_size in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_border_size PARAMETER IN ig_clustering.config FILE:\n${donut_border_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
-    if( ! donut_limit_legend in String ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_limit_legend PARAMETER IN ig_clustering.config FILE:\n${donut_limit_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    if( ! donut_annotation_distance in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_distance PARAMETER IN ig_clustering.config FILE:\n${donut_annotation_distance}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! donut_annotation_distance =~  /^[0-9]+\.*[0-9]*$/){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_distance PARAMETER IN ig_clustering.config FILE:\n${donut_annotation_distance}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
+    }
+    if( ! donut_annotation_size in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_size PARAMETER IN ig_clustering.config FILE:\n${donut_annotation_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! donut_annotation_size =~  /^[0-9]+\.*[0-9]*$/){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_size PARAMETER IN ig_clustering.config FILE:\n${donut_annotation_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
+    }
+    if( ! donut_annotation_force in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_force PARAMETER IN ig_clustering.config FILE:\n${donut_annotation_force}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! donut_annotation_force =~  /^[0-9]+\.*[0-9]*$/){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_force PARAMETER IN ig_clustering.config FILE:\n${donut_annotation_force}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
+    }
+    if( ! donut_annotation_force_pull in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_force_pull PARAMETER IN ig_clustering.config FILE:\n${donut_annotation_force_pull}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! donut_annotation_force_pull =~  /^[0-9]+\.*[0-9]*$/){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_force_pull PARAMETER IN ig_clustering.config FILE:\n${donut_annotation_force_pull}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
+    }
+    if( ! donut_legend_width in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_width PARAMETER IN ig_clustering.config FILE:\n${donut_legend_width}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! donut_legend_width =~  /^(1)|(0)|(0\.[0-9]*)$/){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_width PARAMETER IN ig_clustering.config FILE:\n${donut_legend_width}\nMUST BE A POSITIVE PROPORTION VALUE\n\n========\n\n"
+    }
+    if( ! donut_legend_text_size in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_text_size PARAMETER IN ig_clustering.config FILE:\n${donut_legend_text_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! donut_legend_text_size =~  /^[0-9]+\.*[0-9]*$/){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_text_size PARAMETER IN ig_clustering.config FILE:\n${donut_legend_text_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
+    }
+    if( ! donut_legend_box_size in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_box_size PARAMETER IN ig_clustering.config FILE:\n${donut_legend_box_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! donut_legend_box_size =~  /^[0-9]+\.*[0-9]*$/){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_box_size PARAMETER IN ig_clustering.config FILE:\n${donut_legend_box_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
+    }
+    if( ! donut_legend_box_space in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_box_space PARAMETER IN ig_clustering.config FILE:\n${donut_legend_box_space}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! donut_legend_box_space =~  /^[0-9]+\.*[0-9]*$/){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_box_space PARAMETER IN ig_clustering.config FILE:\n${donut_legend_box_space}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
+    }
+    if( ! donut_legend_limit in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_limit PARAMETER IN ig_clustering.config FILE:\n${donut_legend_limit}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! donut_legend_width ==  "NULL"){
+        if( ! donut_legend_width =~  /^(1)|(0)|(0\.[0-9]*)$/){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_limit PARAMETER IN ig_clustering.config FILE:\n${donut_legend_limit}\nMUST BE A POSITIVE PROPORTION VALUE IF NOT \"NULL\"\n\n========\n\n"
+        }
     }
     if( ! cute_path in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID cute_path PARAMETER IN ig_clustering.config FILE:\n${cute_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
@@ -938,6 +1017,22 @@ workflow {
 
 
 
+    distToNearest(
+        parseDb_filtering.out.select_ch
+    )
+    distToNearest.out.distToNearest_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE distToNearest PROCESS\n\n========\n\n"}}
+
+
+
+    distance_hist(
+        distToNearest.out.distToNearest_ch,
+        cute_file, 
+        clone_distance
+    )
+    distance_hist.out.distance_hist_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE distance_hist PROCESS\n\n========\n\n"}}
+
+
+
     clone_assignment(
         parseDb_filtering.out.select_ch,
         clone_distance
@@ -975,25 +1070,10 @@ workflow {
         tree_meta_name_replacement
     )
     seq_name_remplacement.out.seq_name_remplacement_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE seq_name_remplacement PROCESS\n\n========\n\n"}}
-    seq_name_remplacement_ch2 = seq_name_remplacement.out.seq_name_remplacement_ch.collectFile(name: "renamed_seq.tsv", skip: 1, keepHeader: true)
+    seq_name_remplacement_ch2 = seq_name_remplacement.out.seq_name_remplacement_ch.collectFile(name: "productive_seq.tsv", skip: 1, keepHeader: true)
+    seq_name_remplacement_ch2.subscribe{it -> it.copyTo("${out_path}")}
     // tuple_seq_name_remplacement = new Tuple("all", seq_name_remplacement_ch2) # warning: this is not a channel but a variable now
     seq_name_remplacement.out.seq_name_remplacement_log_ch.collectFile(name: "seq_name_remplacement.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
-
-
-
-    distToNearest(
-        seq_name_remplacement_ch2
-    )
-    distToNearest.out.distToNearest_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE distToNearest PROCESS\n\n========\n\n"}}
-
-
-
-    distance_hist(
-        distToNearest.out.distToNearest_ch,
-        cute_file, 
-        clone_distance
-    )
-    distance_hist.out.distance_hist_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE distance_hist PROCESS\n\n========\n\n"}}
 
 
 
@@ -1043,6 +1123,8 @@ workflow {
         tree_meta_legend,
         cute_file
     )
+   tree_vizu.out.tree_vizu_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}}
+
     tree_vizu.out.tree_seq_not_displayed_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: -> NO tree_seq_not_displayed.tsv FILE RETURNED\n\n")}}
     tree_seq_not_displayed_ch2 = tree_vizu.out.tree_seq_not_displayed_ch.collectFile(name: "tree_seq_not_displayed.tsv", skip: 1, keepHeader: true)
     tree_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}")}
@@ -1056,12 +1138,22 @@ workflow {
 
 
     donut(
-        tempo3_ch, 
-        donut_hole_size, 
+        tempo3_ch,
         donut_palette,
+        donut_hole_size,
+        donut_hole_text,
+        donut_hole_text_size,
         donut_border_color,
         donut_border_size,
-        donut_limit_legend,
+        donut_annotation_distance,
+        donut_annotation_size,
+        donut_annotation_force,
+        donut_annotation_force_pull,
+        donut_legend_width,
+        donut_legend_text_size,
+        donut_legend_box_size,
+        donut_legend_box_space,
+        donut_legend_limit,
         cute_file
     )
     donut.out.donut_pdf_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: EMPTY OUTPUT FOLLOWING THE donut PROCESS -> NO DONUT RETURNED\n\n")}}
@@ -1076,6 +1168,7 @@ workflow {
     donut_assembly(
         donut_pdf_ch2
     )
+   donut_assembly.out.donut_assembly_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}}
 
 
 

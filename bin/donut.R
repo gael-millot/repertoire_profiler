@@ -71,11 +71,21 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
     tempo.arg.names <- c(
         "file_name", 
         "kind", 
-        "donut.hole.size", 
-        "donut.palette", 
-        "donut_border_color", 
-        "donut_border_size", 
-        "donut_limit_legend",
+        "donut_palette",
+        "donut_hole_size",
+        "donut_hole_text",
+        "donut_hole_text_size",
+        "donut_border_color",
+        "donut_border_size",
+        "donut_annotation_distance",
+        "donut_annotation_size",
+        "donut_annotation_force",
+        "donut_annotation_force_pull",
+        "donut_legend_width",
+        "donut_legend_text_size", 
+        "donut_legend_box_size", 
+        "donut_legend_box_space", 
+        "donut_legend_limit",
         "cute", 
         "log"
     ) # objects names exactly in the same order as in the bash code and recovered in args. Here only one, because only the path of the config file to indicate after the donut.R script execution
@@ -103,12 +113,22 @@ rm(tempo.cat)
 # setwd("C:/Users/gael/Documents/Git_projects/ig_clustering/dev/test")
 # file_name = "./productive_seq.tsv"
 # kind = "all"
-# donut.hole.size = "2"
-# donut.palette = "NULL"
-# donut_border_color = "black"
-# donut_border_size = "1.5"
-# donut_limit_legend = "0.1"
-# cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v11.8.0/cute_little_R_functions.R"
+# donut_palette = "NULL" 
+# donut_hole_size = "0.5" 
+# donut_hole_text = "TRUE" 
+# donut_hole_text_size = "14" 
+# donut_border_color = "gray50" 
+# donut_border_size = "0.1" 
+# donut_annotation_distance = "0" 
+# donut_annotation_size = "3" 
+# donut_annotation_force = "1" 
+# donut_annotation_force_pull = "100" 
+# donut_legend_width = "0.25"
+# donut_legend_text_size = 10, 
+# donut_legend_box_size = 5, 
+# donut_legend_box_space = 2, 
+# donut_legend_limit = "0.1"
+# cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v11.10.0/cute_little_R_functions.R"
 # log = "all_donut.log"
 
 ################################ end Test
@@ -124,11 +144,21 @@ param.list <- c(
     if(run.way == "SCRIPT"){"command"}, 
     "file_name", 
     "kind", 
-    "donut.hole.size", 
-    "donut.palette", 
-    "donut_border_color", 
-    "donut_border_size", 
-    "donut_limit_legend", 
+    "donut_palette",
+    "donut_hole_size",
+    "donut_hole_text",
+    "donut_hole_text_size",
+    "donut_border_color",
+    "donut_border_size",
+    "donut_annotation_distance",
+    "donut_annotation_size",
+    "donut_annotation_force",
+    "donut_annotation_force_pull",
+    "donut_legend_width",
+    "donut_legend_text_size", 
+    "donut_legend_box_size", 
+    "donut_legend_box_space", 
+    "donut_legend_limit",
     "cute", 
     "log"
 )
@@ -232,11 +262,21 @@ checked.arg.names <- NULL # for function debbuging: used by r_debugging_tools
 ee <- expression(arg.check <- c(arg.check, tempo$problem) , text.check <- c(text.check, tempo$text) , checked.arg.names <- c(checked.arg.names, tempo$object.name))
 tempo <- fun_check(data = file_name, class = "vector", typeof = "character", length = 1) ; eval(ee)
 tempo <- fun_check(data = kind, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = donut.hole.size, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = donut.palette, class = "vector", typeof = "character", length = 1) ; eval(ee)
+tempo <- fun_check(data = donut_palette, class = "vector", typeof = "character", length = 1) ; eval(ee)
+tempo <- fun_check(data = donut_hole_size, class = "vector", typeof = "character", length = 1) ; eval(ee)
+tempo <- fun_check(data = donut_hole_text, class = "vector", typeof = "character", length = 1) ; eval(ee)
+tempo <- fun_check(data = donut_hole_text_size, class = "vector", typeof = "character", length = 1) ; eval(ee)
 tempo <- fun_check(data = donut_border_color, class = "vector", typeof = "character", length = 1) ; eval(ee)
 tempo <- fun_check(data = donut_border_size, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = donut_limit_legend, class = "vector", typeof = "character", length = 1) ; eval(ee)
+tempo <- fun_check(data = donut_annotation_distance, class = "vector", typeof = "character", length = 1) ; eval(ee)
+tempo <- fun_check(data = donut_annotation_size, class = "vector", typeof = "character", length = 1) ; eval(ee)
+tempo <- fun_check(data = donut_annotation_force, class = "vector", typeof = "character", length = 1) ; eval(ee)
+tempo <- fun_check(data = donut_annotation_force_pull, class = "vector", typeof = "character", length = 1) ; eval(ee)
+tempo <- fun_check(data = donut_legend_width, class = "vector", typeof = "character", length = 1) ; eval(ee)
+tempo <- fun_check(data = donut_legend_text_size, class = "vector", typeof = "character", length = 1) ; eval(ee)
+tempo <- fun_check(data = donut_legend_box_size, class = "vector", typeof = "character", length = 1) ; eval(ee)
+tempo <- fun_check(data = donut_legend_box_space, class = "vector", typeof = "character", length = 1) ; eval(ee)
+tempo <- fun_check(data = donut_legend_limit, class = "vector", typeof = "character", length = 1) ; eval(ee)
 tempo <- fun_check(data = log, class = "vector", typeof = "character", length = 1) ; eval(ee)
 if(any(arg.check) == TRUE){ # normally no NA
     stop(paste0("\n\n================\n\n", paste(text.check[arg.check], collapse = "\n"), "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between == #
@@ -249,11 +289,21 @@ if(any(arg.check) == TRUE){ # normally no NA
 tempo.arg <-c(
     "file_name", 
     "kind", 
-    "donut.hole.size", 
-    "donut.palette", 
-    "donut_border_color", 
-    "donut_border_size", 
-    "donut_limit_legend", 
+    "donut_palette",
+    "donut_hole_size",
+    "donut_hole_text",
+    "donut_hole_text_size",
+    "donut_border_color",
+    "donut_border_size",
+    "donut_annotation_distance",
+    "donut_annotation_size",
+    "donut_annotation_force",
+    "donut_annotation_force_pull",
+    "donut_legend_width",
+    "donut_legend_width",
+    "donut_legend_text_size", 
+    "donut_legend_box_size", 
+    "donut_legend_limit",
     "cute", 
     "log"
 )
@@ -273,102 +323,43 @@ warn <- NULL
 # warn.count <- 0 # not required
 # end warning initiation
 # other checkings
-
-arg.check2 <- NULL #
-text.check2 <- NULL #
-checked.arg.names2 <- NULL # for function debbuging: used by r_debugging_tools
-ee <- expression(arg.check2 <- c(arg.check2, tempo$problem) , text.check2 <- c(text.check2, tempo$text) , checked.arg.names2 <- c(checked.arg.names2, tempo$object.name))
-
 tempo <- fun_check(data = kind, options = c("all", "tree"), length = 1) ; eval(ee)
-
-if(length(donut.hole.size) != 1 & any(grepl(donut.hole.size, pattern = "^\\-{0,1}[0-9]+\\.{0,1}[0-9]*$"))){ # positive numeric
-    tempo.cat <- paste0("ERROR IN donut.R:\nTHE donut.hole.size PARAMETER MUST BE A SINGLE POSITIVE NUMBER\nHERE IT IS: \n", paste0(donut.hole.size, collapse = " "))
+if(tempo$problem == TRUE){
+    tempo.cat <- paste0("ERROR IN donut.R:\n", ifelse(sum(tempo.log, na.rm = TRUE) > 1, "THESE ARGUMENTS\n", "THIS ARGUMENT\n"), paste0(tempo.arg[tempo.log], collapse = "\n"),"\nCANNOT BE NULL")
+    stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE)
+}
+# following parameter are those of the gg_donut() function and are checked by this one
+if(donut_palette == "NULL"){
+    donut_palette <- NULL
+}
+donut_hole_size <- as.numeric(donut_hole_size) # numeric string already checked by nextflow
+if( ! (length(donut_hole_text) == 1 & any(donut_hole_text %in% c("TRUE", "FALSE")))){ # positive numeric
+    tempo.cat <- paste0("ERROR IN donut.R:\nTHE tree_label_size PARAMETER MUST BE \"TRUE\" OR \"FALSE\"\nHERE IT IS: \n", paste0(donut_hole_text, collapse = " "))
     text.check2 <- c(text.check2, tempo.cat)
     arg.check2 <- c(arg.check2, TRUE)
+}else if(donut_hole_text == "TRUE"){
+    donut_hole_text <- TRUE
 }else{
-    donut.hole.size <- as.numeric(donut.hole.size)
-    tempo <- fun_check(data = donut.hole.size, class = "vector", mode = "numeric", length = 1) ; eval(ee)
+    donut_hole_text <- FALSE
 }
-
-if(donut.palette == "NULL"){
-    donut.palette <- NULL
+donut_hole_text_size <- as.numeric(donut_hole_text_size) # numeric string already checked by nextflow
+# nothing to check for donut_border_color
+donut_border_size <- as.numeric(donut_border_size) # numeric string already checked by nextflow
+donut_annotation_distance <- as.numeric(donut_annotation_distance) # numeric string already checked by nextflow
+donut_annotation_size <- as.numeric(donut_annotation_size) # numeric string already checked by nextflow
+donut_annotation_force <- as.numeric(donut_annotation_force) # numeric string already checked by nextflow
+donut_annotation_force_pull <- as.numeric(donut_annotation_force_pull) # numeric string already checked by nextflow
+donut_legend_width <- as.numeric(donut_legend_width) # numeric string already checked by nextflow
+donut_legend_text_size <- as.numeric(donut_legend_text_size) # numeric string already checked by nextflow
+donut_legend_box_size <- as.numeric(donut_legend_box_size) # numeric string already checked by nextflow
+donut_legend_box_space <- as.numeric(donut_legend_box_space) # numeric string already checked by nextflow
+if(donut_legend_limit == "NULL"){
+    donut_legend_limit <- NULL
 }else{
-    tempo <- fun_check(data = donut.palette, options = c("BrBG", "PiYG", "PRGn", "PuOr", "RdBu", "RdGy", "RdYlBu", "RdYlGn", "Spectral", "Accent", "Dark2", "Paired", "Pastel1", "Pastel2", "Set1", "Set2", "Set3", "Blues", "BuGn", "BuPu", "GnBu", "Greens", "Greys", "Oranges", "OrRd", "PuBu", "PuBuGn", "PuRd", "Purples", "RdPu", "Reds", "YlGn", "YlGnBu", "YlOrBr", "YlOrRd"), length = 1) ; eval(ee)
-# for the moment it is inactivated below. But I can reactivate it to set specific colors
-#    tempo1 <- fun_check(data = donut.palette, class = "vector", mode = "character", length = 1)
-#    tempo2 <- fun_check(data = donut.palette, class = "vector", typeof = "integer", double.as.integer.allowed = TRUE, length = 1)
-#    checked.arg.names <- c(checked.arg.names, tempo2$object.name)
-#    if(tempo1$problem == TRUE & tempo2$problem == TRUE){
-#        tempo.cat <- paste0("ERROR IN donut.R\n\ndonut.palette ARGUMENT MUST BE (1) A HEXADECIMAL COLOR STRING STARTING BY #, OR (2) A COLOR NAME GIVEN BY colors(), OR (3) AN INTEGER VALUE")
-#        text.check2 <- c(text.check2, tempo.cat)
-#        arg.check2 <- c(arg.check2, TRUE)
-#    }else if(tempo1$problem == FALSE & tempo2$problem == TRUE){
-#        if( ! all(donut.palette %in% colors() | grepl(pattern = "^#", donut.palette), na.rm = TRUE)){
-#            tempo.cat <- paste0("ERROR IN donut.R\n\ndonut.palette ARGUMENT MUST BE (1) A HEXADECIMAL COLOR STRING STARTING BY #, OR (2) A COLOR NAME GIVEN BY colors(), OR (3) AN INTEGER VALUE")
-#            text.check2 <- c(text.check2, tempo.cat)
-#            arg.check2 <- c(arg.check2, TRUE)
-#        }
-#    }else{
-#        # no fun_check test here, it is just for checked.arg.names
-#        tempo <- fun_check(data = donut.palette, class = "vector")
-#        checked.arg.names <- c(checked.arg.names, tempo$object.name)
-#    }
-}
+    donut_legend_limit <- as.numeric(donut_legend_limit) # numeric string already checked by nextflow
 
-if(length(donut_border_color) != 1){ # positive numeric
-    tempo.cat <- paste0("ERROR IN donut.R:\nTHE donut_border_color PARAMETER MUST BE A SINGLE VALUE\nHERE IT IS: \n", paste0(donut_border_color, collapse = " "))
-    text.check2 <- c(text.check2, tempo.cat)
-    arg.check2 <- c(arg.check2, TRUE)
-}else{
-    tempo1 <- fun_check(data = donut_border_color, class = "vector", mode = "character", length = 1)
-    if(any(grepl(donut_border_color, pattern = "^[1-9][0-9]*$"))){
-        donut_border_color <- as.numeric(donut_border_color)
-    }
-    tempo2 <- fun_check(data = donut_border_color, class = "vector", typeof = "integer", double.as.integer.allowed = TRUE, length = 1)
-    checked.arg.names <- c(checked.arg.names, tempo2$object.name)
-    if(tempo1$problem == TRUE & tempo2$problem == TRUE){
-        tempo.cat <- paste0("ERROR IN donut.R\n\ndonut_border_color ARGUMENT MUST BE (1) A HEXADECIMAL COLOR STRING STARTING BY #, OR (2) A COLOR NAME GIVEN BY colors(), OR (3) AN INTEGER VALUE")
-        text.check2 <- c(text.check2, tempo.cat)
-        arg.check2 <- c(arg.check2, TRUE)
-    }else if(tempo1$problem == FALSE & tempo2$problem == TRUE){
-        if( ! all(donut_border_color %in% colors() | grepl(pattern = "^#", donut_border_color), na.rm = TRUE)){
-            tempo.cat <- paste0("ERROR IN donut.R\n\ndonut_border_color ARGUMENT MUST BE (1) A HEXADECIMAL COLOR STRING STARTING BY #, OR (2) A COLOR NAME GIVEN BY colors(), OR (3) AN INTEGER VALUE")
-            text.check2 <- c(text.check2, tempo.cat)
-            arg.check2 <- c(arg.check2, TRUE)
-        }
-    }else{
-        # no fun_check test here, it is just for checked.arg.names
-        tempo <- fun_check(data = donut_border_color, class = "vector")
-        checked.arg.names <- c(checked.arg.names, tempo$object.name)
-    }
 }
-
-if(length(donut_border_size) != 1 & any(grepl(donut_border_size, pattern = "^\\-{0,1}[0-9]+\\.{0,1}[0-9]*$"))){ # positive numeric
-    tempo.cat <- paste0("ERROR IN donut.R:\nTHE donut_border_size PARAMETER MUST BE A SINGLE POSITIVE NUMBER\nHERE IT IS: \n", paste0(donut_border_size, collapse = " "))
-    text.check2 <- c(text.check2, tempo.cat)
-    arg.check2 <- c(arg.check2, TRUE)
-}else{
-    donut_border_size <- as.numeric(donut_border_size)
-    tempo <- fun_check(data = donut_border_size, class = "vector", mode = "numeric", length = 1) ; eval(ee)
-}
-
-if(donut_limit_legend == "NULL"){
-    donut_limit_legend <- NULL
-}else{
-    if(length(donut_limit_legend) != 1 & any(grepl(donut_limit_legend, pattern = "(^{0,1}0+\\.*[0-9]*$)|(^1$)"))){ # positive numeric
-        tempo.cat <- paste0("ERROR IN donut.R:\nTHE donut_limit_legend PARAMETER MUST BE A SINGLE POSITIVE PORPORTION\nHERE IT IS: \n", paste0(donut_limit_legend, collapse = " "))
-        text.check2 <- c(text.check2, tempo.cat)
-        arg.check2 <- c(arg.check2, TRUE)
-    }else{
-        donut_limit_legend <- as.numeric(donut_limit_legend)
-        tempo <- fun_check(data = donut_limit_legend, prop = TRUE, length = 1) ; eval(ee)
-    }
-}
-
-if(any(arg.check2) == TRUE){ # normally no NA
-    stop(paste0("\n\n================\n\n", paste(text.check2[arg.check2], collapse = "\n"), "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between == #
-}
-
+# end following parameter are those of the gg_donut() function and are checked by this one
 
 # end other checkings
 # reserved word checking
@@ -434,115 +425,78 @@ names(obs2)[1] <- "Germline_Clone_Name"
 obs2 <- data.frame(obs2, Prop = obs2$Freq / sum(obs2$Freq), kind = kind)
 obs2$Germline_Clone_Name <- factor(obs2$Germline_Clone_Name, levels = obs2$Germline_Clone_Name[order(obs2$Prop, decreasing = TRUE)]) # reorder so that the donut is according to decreasing proportion starting at the top in a clockwise direction
 obs2 <- obs2[order(as.numeric(obs2$Germline_Clone_Name), decreasing = FALSE), ] # obs2 with rows in decreasing order, according to Prop
-tempo.log <- obs[ , 1] == obs[ , 2]
-if( ! all(tempo.log)){ # warning: I can do that because I have duplicated the first column of the dataset in the second column, in order to change the name in the first column with metadata
+annotation.log <- obs[ , 1] == obs[ , 2]
+all.annotation.log <- all(annotation.log)
+if(all.annotation.log == FALSE){ # warning: I can do that because I have duplicated the first column of the dataset in the second column, in order to change the name in the first column with metadata. If all(obs[ , 1] == obs[ , 2]) == TRUE, it means no annotation added
     tempo.labels <- obs[ , 1]
-    tempo.labels[tempo.log] <- NA
+    tempo.labels[annotation.log] <- NA
     tempo.data1 <- aggregate(tempo.labels ~ clone.name, FUN = function(x){paste(x, collapse = ",")})
     obs2 <- data.frame(obs2, labels = tempo.data1$tempo.labels[match(obs2$Germline_Clone_Name, tempo.data1$clone.name)])
 }
-obs3 <- data.frame(obs2, x = 0) # staked bar at the origin of the donut set to x = donut.hole.size
 
 
 ################ End data modification
 
-################ Plotting tree
+################ Plotting
 
-if(length(obs3$Freq) != 0){
-    if( ! (all(obs3$Freq == 0) | all(is.na(obs3$Freq)))){
-        tempo.gg.name <- "gg.indiv.plot."
-        tempo.gg.count <- 0
-        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::ggplot(
-            data = obs3,
-            mapping = ggplot2::aes(x = x, y = Freq, fill = Germline_Clone_Name), 
-        ))
-        bar_width = 1
-        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::geom_col(color = donut_border_color, size = donut_border_size, width = bar_width)) # size is size of the separation
-        # assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::geom_text(
-        #     ggplot2::aes(label = Freq), 
-        #     position = ggplot2::position_stack(vjust = 0.5)
-        # ))
-        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::xlim(c(- bar_width / 2 - donut.hole.size, bar_width))) # must be centered on x = 2
-        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::ylim(c(0, max(cumsum(obs3$Freq)))))
-        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::annotate(
-            geom = "text", 
-            x = - bar_width / 2 - donut.hole.size, 
-            y = 0, 
-            label = sum(obs3$Freq), 
-            size = 15
-        ))
-        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::coord_polar(theta = "y", direction = -1, start = 0, clip = "on"))
-        if( ! is.null(donut.palette)){
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_fill_brewer(palette = donut.palette))
-        }
-        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::theme_void())
-        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::theme(legend.title=element_blank()))
-        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(
-            fill = guide_legend(override.aes = list(color = NA))
-        )) # remove border of squares in legend
-
-        tempo.log <- obs[ , 1] == obs[ , 2]
-        if( ! all(tempo.log)){ # warning: I can do that because I have duplicated the first column of the dataset in the second column, in order to change the name in the first column with metadata
-            tempo <- rev(cumsum(rev(obs3$Freq)))
-            obs4 <- data.frame(obs3, text_y = tempo - (tempo - c(tempo[-1], 0)) / 2)
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggrepel::geom_text_repel(
-                data = obs4, 
-                mapping = ggplot2::aes(
-                    x = x, 
-                    y = text_y, 
-                    label = labels
-                ), 
-                size = 3, 
-                force_pull = 100, 
-                nudge_x = bar_width / 2 + (bar_width - bar_width / 2) / 2, # add nudge_x to the center of the bar
-                show.legend = FALSE
-            ))
-        }
-
-
-        if( ! is.null(donut_limit_legend)){
-            if(sum(obs3$Prop >= donut_limit_legend) == 0){
-                tempo.cat <- paste0("ERROR IN donut.R for kind ", kind, ":\n\nTHE donut_limit_legend PARAMETER VALUE (", donut_limit_legend, ") IS TOO HIGH FOR THE PROPORTIONS IN THE DONUT PLOT:\n", paste0(obs3$Prop, collapse = "\n"))
-                stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE) 
-            }else{
-                assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_fill_discrete(
-                    breaks = as.character(obs3$Germline_Clone_Name[obs3$Prop >= donut_limit_legend])
-                ))
-            }
-        }
-
-
-        tempo.plot <- eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + ")))
-        tempo.title <- paste0(
-            "Kind of sequences: ", 
-            ifelse(
-                kind == "all", 
-                "all the productive ones (see the corresponding productive_seq.tsv", 
-                ifelse(
-                    kind == "tree", 
-                    "all the sequences in trees (see the corresponding seq_for_trees.tsv", 
-                    "=====ERROR====="
-                )
-            ), " file)\n",
-            "Chain: ", chain, "\n",
-            "The total number of sequences of the donut is indicated in the center.\nSee the donut_stats.tsv file for the complete stats."
+tempo.title <- paste0(
+    "Kind of sequences: ", 
+    ifelse(
+        kind == "all", 
+        "all the productive ones (see the corresponding productive_seq.tsv", 
+        ifelse(
+            kind == "tree", 
+            "all the sequences in trees (see the corresponding seq_for_trees.tsv", 
+            "=====ERROR====="
         )
-        if( ! is.null(donut_limit_legend)){
-            if(sum(obs3$Prop >= donut_limit_legend) < length(obs3$Prop)){
-                tempo.title <- paste0(tempo.title, "\nClasses have been removed from the legend (donut_limit_legend = ", round(donut_limit_legend, 2), "). See the donut_stats.tsv file")
-            }
-        }
+    ), " file)\n",
+    "Chain: ", chain, "\n",
+    "The total number of sequences of the donut is indicated in the center.\nSee the donut_stats.tsv file for the complete stats."
+)
+if( ! is.null(donut_legend_limit)){
+    if(sum(obs2$Prop >= donut_legend_limit) < length(obs2$Prop)){
+        tempo.title <- paste0(tempo.title, "\nClasses have been removed from the legend (donut_legend_limit = ", round(donut_legend_limit, 2), "). See the donut_stats.tsv file")
+    }
+}
 
-        title.grob <- grid::textGrob(
-            label = tempo.title,
-            x = grid::unit(0, "lines"), 
-            y = grid::unit(0, "lines"),
-            hjust = 0,
-            vjust = 0,
-            gp = grid::gpar(fontsize = 7)
-        )
+if(length(obs2$Freq) != 0){
+    if( ! (all(obs2$Freq == 0) | all(is.na(obs2$Freq)))){
         pdf(NULL)
-        final.plot <- suppressMessages(suppressWarnings(gridExtra::arrangeGrob(tempo.plot, top = title.grob, left = " ", right = " "))) # , left = " ", right = " " : trick to add margins in the plot. padding =  unit(0.5, "inch") is for top margin above the title
+        tempo.plot <- fun_gg_donut(
+            data1 = obs2, 
+            freq = "Freq", 
+            categ = "Germline_Clone_Name", 
+            fill.palette = donut_palette,
+            fill.color = NULL, 
+            hole.size = donut_hole_size, 
+            hole.text = donut_hole_text, 
+            hole.text.size = donut_hole_text_size, 
+            border.color = donut_border_color, 
+            border.size = donut_border_size, 
+            title = tempo.title, 
+            title.text.size = 2, 
+            annotation = ifelse(all.annotation.log == FALSE, "labels", NULL),
+            annotation.distance = donut_annotation_distance,
+            annotation.size = donut_annotation_size,
+            annotation.force = donut_annotation_force,
+            annotation.force.pull = donut_annotation_force_pull,
+            legend.show = TRUE, 
+            legend.width = donut_legend_width, 
+            legend.name = "", 
+            legend.text.size = donut_legend_text_size, 
+            legend.box.size = donut_legend_box_size, 
+            legend.box.space = donut_legend_box_space, 
+            legend.limit = donut_legend_limit, 
+            legend.add.prop = TRUE,
+            add = NULL, 
+            return = TRUE, 
+            return.ggplot = FALSE,
+            return.gtable = TRUE,
+            plot = TRUE, 
+            warn.print = TRUE, 
+            lib.path = NULL
+        )
+        final.plot <- suppressMessages(suppressWarnings(gridExtra::grid.arrange(tempo.plot$gtable))) # , left = " ", right = " " : trick to add margins in the plot. padding =  unit(0.5, "inch") is for top margin above the title
         dev.off()
     }else{
         pdf(NULL)
@@ -559,9 +513,9 @@ if(length(obs3$Freq) != 0){
 
 ################ saving plots
 
-ggplot2::ggsave(filename = paste0(kind, "_donutchart.png"), plot = final.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-ggplot2::ggsave(filename = paste0(kind, "_donutchart.svg"), plot = final.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-ggplot2::ggsave(filename = paste0(kind, "_donutchart.pdf"), plot = final.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+ggplot2::ggsave(filename = paste0(kind, "_donutchart.png"), plot = final.plot, device = "png", path = ".", width = 120, height = 120, units = "mm", dpi = 300)
+ggplot2::ggsave(filename = paste0(kind, "_donutchart.svg"), plot = final.plot, device = "svg", path = ".", width = 120, height = 120, units = "mm", dpi = 300)
+ggplot2::ggsave(filename = paste0(kind, "_donutchart.pdf"), plot = final.plot, device = "pdf", path = ".", width = 120, height = 120, units = "mm", dpi = 300)
 
 
 ################ end saving plots

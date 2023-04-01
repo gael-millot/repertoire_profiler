@@ -66,7 +66,7 @@ Installation of:<br />
 [Graphviz](https://www.graphviz.org/download/), `sudo apt install graphviz` for Linux ubuntu<br />
 [Singularity/apptainer](https://github.com/apptainer/apptainer)<br />
 
-
+<br /><br />
 ### 2. Local running (personal computer)
 
 
@@ -94,7 +94,7 @@ nextflow run ig_clustering.nf -c ig_clustering.config
 
 with -c to specify the name of the config file used.
 
-
+<br /><br />
 #### 2.3. ig_clustering.nf file in the public gitlab repository
 
 Run the following command from where you want the results:
@@ -103,7 +103,7 @@ Run the following command from where you want the results:
 nextflow run -hub pasteur gmillot/ig_clustering -r v1.0.0
 </pre>
 
-
+<br /><br />
 ### 3. Distant running (example with the Pasteur cluster)
 
 #### 3.1. Pre-execution
@@ -129,7 +129,7 @@ cd ${EXEC_PATH}
 module load ${JAVA_CONF} ${SINGU_CONF} ${GIT_CONF} ${GRAPHVIZ_CONF}
 </pre>
 
-
+<br /><br />
 #### 3.2. ig_clustering.nf file in a cluster folder
 
 Modify the second line of the code below, and run from where the ig_clustering.nf and ig_clustering.config files are (which has been set thanks to the EXEC_PATH variable above):
@@ -143,7 +143,7 @@ HOME=$HOME_INI
 trap SIGINT
 </pre>
 
-
+<br /><br />
 #### 3.3. ig_clustering.nf file in the public gitlab repository
 
 Modify the first and third lines of the code below, and run (results will be where the EXEC_PATH variable has been set above):
@@ -158,8 +158,7 @@ HOME=$HOME_INI
 trap SIGINT
 </pre>
 
-
-
+<br /><br />
 ### 4. Error messages and solutions
 
 #### Message 1
@@ -200,9 +199,11 @@ Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.
 | Ig_clustering_xxxxx folder | Description |
 | --- | --- |
 | **reports** | Folder containing all the reports of the different processes, including the *ig_clustering.config* file used. |
-| **png** | Folder containing the tree.pdf graphs in png format. |
-| **svg** | Folder containing the tree.pdf graphs in svg vectorial format. |
+| **png** | Folder containing the graphs in png format. |
+| **svg** | Folder containing the graphs in svg vectorial format. |
 | **RData** | Folder containing, for each clonal group, objects that can be used in R to further analyze of plot the data:<br /><ul><li>db: tibble data frame resulting from the import by the alakazam::readChangeoDb() function<br /></li><li>clones: db in the airClone format<br /></li><li>trees: output of the dowser::getTrees() function using the clones object as input (igphylm tree)</li><br /><br />Also contains the all_trees.RData file that combine the trees R objects of the different files in a single trees object. |
+| **nearest_distance.tsv** | File showing the haming distances, in the last "dist_nearest" column, used in the hamming_distance.pdf plot |
+| **hamming_distance.pdf** | Distribution of the Haming distances between the two nearest sequences (see the *nearest_distance.tsv* file). |
 | **productive_seq.tsv** | sequences annotated by igblast, with germline clustering and mutation load added (see the unproductive_seq.tsv file for sequences that failed to be annotated by igblast). |
 | **unproductive_seq.tsv** | Sequences that failed annotations by igblast (empty file if all the sequences are annotated). |
 | **tree_clone_id.tsv** | Clonal group IDs used in the tree analysis (clonal group with at least n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file). |
@@ -262,6 +263,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 
 <br /><br />
 ## WHAT'S NEW IN
+
+
+#### v6.1
+
+New parameters for the donut
 
 
 #### v6.0
