@@ -616,7 +616,7 @@ process donut {
     cache 'true'
 
     input:
-    tuple val(kind), path(data) // 2 parallelization expected
+    tuple val(kind), path(data) // 3 parallelization expected
     val donut_palette
     val donut_hole_size
     val donut_hole_text
@@ -1131,10 +1131,9 @@ workflow {
 
 
 
-    tempo1_ch = Channel.of("all", "tree") // 1 channel with 2 values (not list)
-    tempo2_ch = seq_name_remplacement_ch2.mix(tree_ch2) // 1 channel with 2 paths (flatten() -> not list)
-    tempo3_ch = tempo1_ch.merge(tempo2_ch) // 2 lists
-
+    tempo1_ch = Channel.of("all", "functional", "tree") // 1 channel with 2 values (not list)
+    tempo2_ch = seq_name_remplacement_ch2.mix(seq_name_remplacement_ch2.mix(tree_ch2)) // 1 channel with 3 paths (do not use flatten() -> not list)
+    tempo3_ch = tempo1_ch.merge(tempo2_ch) // 3 lists
 
 
     donut(

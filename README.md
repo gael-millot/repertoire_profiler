@@ -265,6 +265,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 ## WHAT'S NEW IN
 
 
+#### v6.2
+
+Supp donut added regarding clonal gourps with functional annotation
+
+
 #### v6.1
 
 New parameters for the donut

@@ -124,9 +124,9 @@ rm(tempo.cat)
 # donut_annotation_force = "1" 
 # donut_annotation_force_pull = "100" 
 # donut_legend_width = "0.25"
-# donut_legend_text_size = 10, 
-# donut_legend_box_size = 5, 
-# donut_legend_box_space = 2, 
+# donut_legend_text_size = "10" 
+# donut_legend_box_size = "5" 
+# donut_legend_box_space = "2" 
 # donut_legend_limit = "0.1"
 # cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v11.10.0/cute_little_R_functions.R"
 # log = "all_donut.log"
@@ -229,7 +229,7 @@ for(i1 in req.function){
 }
 if( ! is.null(tempo)){
     tempo.cat <- paste0("ERROR IN donut.R\n\nREQUIRED cute FUNCTION", ifelse(length(tempo) > 1, "S ARE", " IS"), " MISSING IN THE R ENVIRONMENT:\n", paste0(tempo, collapse = "()\n"))
-    stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between ==
+    stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE) # == in stop(), not in tempo.cat, to be able to add several messages between ==
 }
 # end required function checking
 
@@ -279,17 +279,17 @@ tempo <- fun_check(data = donut_legend_box_space, class = "vector", typeof = "ch
 tempo <- fun_check(data = donut_legend_limit, class = "vector", typeof = "character", length = 1) ; eval(ee)
 tempo <- fun_check(data = log, class = "vector", typeof = "character", length = 1) ; eval(ee)
 if(any(arg.check) == TRUE){ # normally no NA
-    stop(paste0("\n\n================\n\n", paste(text.check[arg.check], collapse = "\n"), "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between == #
+    stop(paste0("\n\n================\n\n", paste(text.check[arg.check], collapse = "\n"), "\n\n================\n\n"), call. = FALSE) # == in stop(), not in tempo.cat, to be able to add several messages between == #
 }
 # end argument primary checking
 # second round of checking and data preparation
 # management of NA arguments
 # end management of NA arguments
-# management of NULL arguments
+# management of NULL arguments, WARNING: only for donut.R
 tempo.arg <-c(
     "file_name", 
     "kind", 
-    "donut_palette",
+    # "donut_palette", # can be NULL
     "donut_hole_size",
     "donut_hole_text",
     "donut_hole_text_size",
@@ -303,16 +303,16 @@ tempo.arg <-c(
     "donut_legend_width",
     "donut_legend_text_size", 
     "donut_legend_box_size", 
-    "donut_legend_limit",
+    # "donut_legend_limit", # can be NULL
     "cute", 
     "log"
 )
-tempo.log <- sapply(lapply(tempo.arg, FUN = get, env = sys.nframe(), inherit = FALSE), FUN = is.null)
+tempo.log <- sapply(lapply(tempo.arg, FUN = get, env = sys.nframe(), inherit = FALSE), FUN = function(x){x == "NULL"}) # WARNING: only for donut.R
 if(any(tempo.log) == TRUE){# normally no NA with is.null()
     tempo.cat <- paste0("ERROR IN donut.R:\n", ifelse(sum(tempo.log, na.rm = TRUE) > 1, "THESE ARGUMENTS\n", "THIS ARGUMENT\n"), paste0(tempo.arg[tempo.log], collapse = "\n"),"\nCANNOT BE NULL")
-    stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between ==
+    stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE) # == in stop(), not in tempo.cat, to be able to add several messages between ==
 }
-# end management of NULL arguments
+# end management of NULL arguments, WARNING: only for donut.R
 # seed
 set.seed(1)
 # end seed
@@ -323,10 +323,9 @@ warn <- NULL
 # warn.count <- 0 # not required
 # end warning initiation
 # other checkings
-tempo <- fun_check(data = kind, options = c("all", "tree"), length = 1) ; eval(ee)
+tempo <- fun_check(data = kind, options = c("all", "tree", "functional"), length = 1) ; eval(ee)
 if(tempo$problem == TRUE){
-    tempo.cat <- paste0("ERROR IN donut.R:\n", ifelse(sum(tempo.log, na.rm = TRUE) > 1, "THESE ARGUMENTS\n", "THIS ARGUMENT\n"), paste0(tempo.arg[tempo.log], collapse = "\n"),"\nCANNOT BE NULL")
-    stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE)
+    stop(paste0("\n\n================\n\n", tempo$text, "\n\n================\n\n"), call. = FALSE)
 }
 # following parameter are those of the gg_donut() function and are checked by this one
 if(donut_palette == "NULL"){
@@ -447,10 +446,15 @@ tempo.title <- paste0(
         ifelse(
             kind == "tree", 
             "all the sequences in trees (see the corresponding seq_for_trees.tsv", 
-            "=====ERROR====="
+            ifelse(
+                kind == "functional", 
+                "all the productive ones for which at least one functional annotation in the clonal group\n        (nb_seq_per_clone threshold not used, see the corresponding productive_seq.tsv", 
+                "=====ERROR====="
+            )
         )
     ), " file)\n",
     "Chain: ", chain, "\n",
+    "Proportions are indicated in the legend, after the labels.\n", 
     "The total number of sequences of the donut is indicated in the center.\nSee the donut_stats.tsv file for the complete stats."
 )
 if( ! is.null(donut_legend_limit)){
@@ -459,11 +463,17 @@ if( ! is.null(donut_legend_limit)){
     }
 }
 
-if(length(obs2$Freq) != 0){
-    if( ! (all(obs2$Freq == 0) | all(is.na(obs2$Freq)))){
+if(kind == "functional" & all.annotation.log != TRUE){
+    obs3 <- obs2[ ! is.na(obs2$labels) ,]
+}else{
+    obs3 <- obs2
+}
+
+if(length(obs3$Freq) != 0){
+    if( ! (all(obs3$Freq == 0) | all(is.na(obs3$Freq)))){
         pdf(NULL)
         tempo.plot <- fun_gg_donut(
-            data1 = obs2, 
+            data1 = obs3, # select only the classes with functional annotations if kind == "functional" & all.annotation.log != TRUE
             freq = "Freq", 
             categ = "Germline_Clone_Name", 
             fill.palette = donut_palette,
@@ -474,7 +484,7 @@ if(length(obs2$Freq) != 0){
             border.color = donut_border_color, 
             border.size = donut_border_size, 
             title = tempo.title, 
-            title.text.size = 2, 
+            title.text.size = 5, 
             annotation = ifelse(all.annotation.log == FALSE, "labels", NULL),
             annotation.distance = donut_annotation_distance,
             annotation.size = donut_annotation_size,
@@ -509,6 +519,13 @@ if(length(obs2$Freq) != 0){
     dev.off()
 }
 
+if(kind == "functional" & all.annotation.log == TRUE){
+    pdf(NULL)
+    final.plot <- fun_gg_empty_graph(text = "NO DONUT PLOTTED\nNO FUNCTIONAL ANNOTATION DETECTED", text.size = 3)
+    dev.off()
+}
+
+
 ################ end Plotting tree
 
 ################ saving plots
@@ -522,7 +539,7 @@ ggplot2::ggsave(filename = paste0(kind, "_donutchart.pdf"), plot = final.plot, d
 
 ################ data saving
 
-write.table(obs2, file = paste0("./", kind, "_donut_stats.tsv"), row.names = FALSE, sep = "\t")
+write.table(obs3, file = paste0("./", kind, "_donut_stats.tsv"), row.names = FALSE, sep = "\t")
 
 ################ End data saving
 
