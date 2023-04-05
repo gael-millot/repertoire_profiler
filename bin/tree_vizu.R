@@ -91,7 +91,7 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
     for(i1 in 1:length(tempo.arg.names)){
         assign(tempo.arg.names[i1], args[i1])
     }
-    rm(tempo.arg.names, args, i1)
+    rm(args, i1)
 }else if(sys.nframe() == 0L){ # detection of copy-paste/direct execution (for debugging). With script it is also 0, with source, it is 4
     run.way <- "COPY-PASTE"
     cat(paste0("\n\n", tempo.cat, run.way, "\n"))
@@ -136,6 +136,7 @@ param.list <- c(
     "erase.graphs", 
     "script", 
     "run.way",
+    "tempo.arg.names", 
     if(run.way == "SCRIPT"){"command"}, 
     "tree_kind", 
     "tree_duplicate_seq", 
@@ -256,28 +257,17 @@ arg.check <- NULL #
 text.check <- NULL #
 checked.arg.names <- NULL # for function debbuging: used by r_debugging_tools
 ee <- expression(arg.check <- c(arg.check, tempo$problem) , text.check <- c(text.check, tempo$text) , checked.arg.names <- c(checked.arg.names, tempo$object.name))
-tempo <- fun_check(data = tree_kind, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = tree_duplicate_seq, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = tree_leaf_color, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = tree_leaf_shape, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = tree_leaf_size, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = tree_label_size, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = tree_label_hjust, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = tree_label_rigth, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = tree_label_outside, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = tree_right_margin, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = tree_legend, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = tree_meta_path, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = tree_meta_legend, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = log, class = "vector", typeof = "character", length = 1) ; eval(ee)
+for(i0 in tempo.arg.names){
+    tempo <- fun_check(data = get(i0), class = "vector", typeof = "character", length = 1, fun.name = "slitherine_part1.R") ; eval(ee)
+}
 if(any(arg.check) == TRUE){ # normally no NA
-    stop(paste0("\n\n================\n\n", paste(text.check[arg.check], collapse = "\n"), "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between == #
+    stop(paste0("\n\n================\n\n", paste(text.check[arg.check], collapse = "\n"), "\n\n================\n\n"), call. = FALSE) # == in stop(), not in tempo.cat, to be able to add several messages between == #
 }
 # end argument primary checking
 # second round of checking and data preparation
 # management of NA arguments
 # end management of NA arguments
-# management of NULL arguments
+# management of NULL arguments, WARNING: only for tree_vizu.R because NULL is "NULL" in the nextflow.config file
 tempo.arg <-c(
     "tree_kind", 
     "tree_duplicate_seq", 
@@ -299,7 +289,7 @@ if(any(tempo.log) == TRUE){# normally no NA with is.null()
     tempo.cat <- paste0("ERROR IN tree_vizu.R:\n", ifelse(sum(tempo.log, na.rm = TRUE) > 1, "THESE ARGUMENTS\n", "THIS ARGUMENT\n"), paste0(tempo.arg[tempo.log], collapse = "\n"),"\nCANNOT BE NULL")
     stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between ==
 }
-# end management of NULL arguments
+# end management of NULL arguments, WARNING: only for tree_vizu.R because NULL is "NULL" in the nextflow.config file
 # seed
 set.seed(1)
 # end seed
@@ -309,7 +299,7 @@ options(warning.length = 8170)
 warn <- NULL
 # warn.count <- 0 # not required
 # end warning initiation
-# other checkings
+# other checkings (not full checked because already checked in the .nf file)
 
 arg.check2 <- NULL #
 text.check2 <- NULL #
@@ -432,7 +422,7 @@ if(any(arg.check2) == TRUE){ # normally no NA
 }
 
 
-# end other checkings
+# other checkings (not full checked because already checked in the .nf file)
 # reserved word checking
 # end reserved word checking
 # end second round of checking and data preparation

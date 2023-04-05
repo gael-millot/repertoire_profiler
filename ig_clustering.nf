@@ -50,10 +50,10 @@ process workflowParam { // create a file with the workflow parameters in out_pat
 //Note that variables like ${out_path} are interpreted in the script block
 
 
-process repertoire_names {
-    // cannot be repertoire_names outside of process because the files are present in the docker
-    publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
+// next process is for repertoire
+process repertoire_names { // cannot be repertoire_names outside of process because the files are present in the docker
     label 'immcantation'
+    publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
     cache 'true'
 
     input:
@@ -62,7 +62,6 @@ process repertoire_names {
 
     output:
     path "*.tsv", emit: repertoire_names_ch
-
 
     script:
     """
@@ -98,6 +97,7 @@ process igblast {
     val igblast_files
     val igblast_organism
     val igblast_loci
+    val igblast_aa
 
     output:
     path "*.tsv", emit: tsv_ch1, optional: true
@@ -132,12 +132,20 @@ process igblast {
 
     # Alignment <-> annotate sequence using VDJ info
     # See https://changeo.readthedocs.io/en/stable/tools/AssignGenes.html for the details
-    AssignGenes.py igblast -s \${FILE}.fa -b /usr/local/share/igblast --organism ${igblast_organism} --loci ${igblast_loci} --format blast |& tee -a igblast_report.log
-
+    if [[ "${igblast_aa}" == "false" ]] ; then
+        AssignGenes.py igblast -s \${FILE}.fa -b /usr/local/share/igblast --organism ${igblast_organism} --loci ${igblast_loci} --format blast |& tee -a igblast_report.log
+    else
+        # WARNING: does not work if the fasta file contains \\r (CR carriage return, instead or in addition of \\n, LF line feed) but ok here because removed above
+        awk -v var1=\${FILENAME} '{lineKind=(NR-1)%2;}lineKind==0{record=\$0 ; next}lineKind==1{if(\$0~/^[NATGC]*\$/){print "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nFASTA FILE\\n"var1"\\nMUST BE AN AMINO ACID SEQUENCE IF THE igblast_aa PARAMETER IS SET TO true\\nHERE IT SEEMS ONLY MADE OF NUCLEOTIDES:\\n"\$0"\\n\\n========\\n\\n" ; exit 1}}' \${FILE}.fa
+        AssignGenes.py igblast-aa -s \${FILE}.fa -b /usr/local/share/igblast --organism ${igblast_organism} --loci ${igblast_loci} |& tee -a igblast_report.log
+    fi
     # convert to tsv
     # Also convert data from the web interface IMGT/HighV-QUEST
-    MakeDb.py igblast -i ./\${FILE}_igblast.fmt7 -s ./\${FILE}.fa -r \${VDJ_FILES} --extended |& tee -a igblast_report.log
-    
+    if [[ "${igblast_aa}" == "false" ]] ; then
+        MakeDb.py igblast -i ./\${FILE}_igblast.fmt7 -s ./\${FILE}.fa -r \${VDJ_FILES} --extended |& tee -a igblast_report.log
+    else
+        MakeDb.py igblast-aa -i ./\${FILE}_igblast.fmt7 -s ./\${FILE}.fa -r \${VDJ_FILES} --extended |& tee -a igblast_report.log
+    fi
     # printing if no tsv file made
     if [[ ! -f ./\${FILE}_igblast_db-pass.tsv ]] ; then
         echo -e "MakeDb.py igblast FAIL FOR \${FILENAME}" |& tee -a igblast_report.log
@@ -184,6 +192,34 @@ process parseDb_filtering {
 
 
 
+process translation {
+    label 'seqkit'
+    publishDir path: "${out_path}", mode: 'copy', pattern: "aa/*.fasta", overwrite: false
+    publishDir path: "${out_path}", mode: 'copy', pattern: "aligned_seq/*.fasta", overwrite: false
+    publishDir path: "${out_path}", mode: 'copy', pattern: "aa.tsv", overwrite: false
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{translation.log}", overwrite: false
+    cache 'true'
+
+    input:
+    path select_ch // no more parallelization
+    val igblast_aa
+
+    output:
+    path "translation.tsv" , emit: translation_ch
+    path "aa.tsv" , optional: true
+    path "aligned_seq/*.*"
+    path "aa/*.*"
+    path "translation.log", emit: translation_log_ch
+
+    script:
+    """
+    #!/bin/bash -ue
+    translation.sh ${select_ch} ${igblast_aa}
+    """
+}
+
+
+
 process distToNearest {
     label 'immcantation'
     publishDir path: "${out_path}", mode: 'copy', pattern: "{nearest_distance.tsv}", overwrite: false
@@ -191,7 +227,7 @@ process distToNearest {
     cache 'true'
 
     input:
-    path select_ch // no parallelization
+    path translation_ch // no parallelization
 
     output:
     path "nearest_distance.tsv", emit: distToNearest_ch
@@ -201,7 +237,7 @@ process distToNearest {
     """
     #!/bin/bash -ue
     Rscript -e '
-        db <- read.table("${select_ch}", header = TRUE, sep = "\\t")
+        db <- read.table("${translation_ch}", header = TRUE, sep = "\\t")
         db2 <- shazam::distToNearest(db, sequenceColumn = "junction", locusColumn = "locus", model = "ham", normalize = "len", nproc = 1)
         write.table(db2, file = paste0("./nearest_distance.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
     ' |& tee -a distToNearest.log
@@ -237,7 +273,7 @@ process distance_hist {
         if(all(is.na(db\$dist_nearest))){
             cat("\\n\\nNO DISTANCE HISTOGRAM PLOTTED: shazam::distToNearest() FUNCTION RETURNED ONLY NA (SEE THE dist_nearest COLUMN O THE nearest_distance.tsv FILE)")
             pdf(NULL)
-            tempo.plot <- fun_gg_empty_graph(text = "NO DISTANCE HISTOGRAM PLOTTED\\nshazam::distToNearest() FUNCTION RETURNED ONLY NA\\nSEE THE dist_nearest COLUMN O THE nearest_distance.tsv FILE", text.size = 3)
+            tempo.plot <- fun_gg_empty_graph(text = "NO DISTANCE HISTOGRAM PLOTTED\\nshazam::distToNearest() FUNCTION RETURNED ONLY NA\\nSEE THE dist_nearest COLUMN OF THE nearest_distance.tsv FILE", text.size = 3)
         }else{
             tempo.gg.name <- "gg.indiv.plot."
             tempo.gg.count <- 0
@@ -270,7 +306,7 @@ process clone_assignment {
     cache 'true'
 
     input:
-    path select_ch // no parallelization
+    path translation_ch // no parallelization
     val clone_distance
 
     output:
@@ -280,11 +316,11 @@ process clone_assignment {
     script:
     """
     #!/bin/bash -ue
-    if [[ ! -s ${select_ch} ]]; then
+    if [[ ! -s ${translation_ch} ]]; then
         echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nEMPTY FILE GENERATED BY THE parseDb_filtering PROCESS\\nCHECK THE clone_assignment.log AND *_productive-F.tsv FILES IN THE report FOLDER\\n\\n========\\n\\n"
         exit 1
     else
-        DefineClones.py -d ${select_ch} --act set --model ham --norm len --dist ${clone_distance} |& tee -a clone_assignment.log
+        DefineClones.py -d ${translation_ch} --act set --model ham --norm len --dist ${clone_distance} |& tee -a clone_assignment.log
     fi
     """
 }
@@ -432,7 +468,6 @@ process mutation_load {
     # rm tempo_shm-pass.tsv
     """
 }
-
 
 process seq_name_remplacement {
     label 'r_ext'
@@ -733,9 +768,9 @@ process backup {
 }
 
 
+//////// End Processes
 
-
-
+//////// Workflow
 
 
 
@@ -787,6 +822,11 @@ workflow {
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_loci PARAMETER IN ig_clustering.config FILE:\n${igblast_loci}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (igblast_loci == "ig" || igblast_loci == "tr")){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_loci PARAMETER IN ig_clustering.config FILE:\n${igblast_loci}\nMUST BE EITHER \"ig\" OR \"tr\"\n\n========\n\n"
+    }
+    if( ! igblast_aa in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_aa PARAMETER IN ig_clustering.config FILE:\n${igblast_aa}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (igblast_aa == "false" || igblast_aa == "true")){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_aa PARAMETER IN ig_clustering.config FILE:\n${igblast_aa}\nMUST BE EITHER \"true\" OR \"false\"\n\n========\n\n"
     }
     if( ! igblast_files in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_files PARAMETER IN ig_clustering.config FILE:\n${igblast_files}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
@@ -1002,12 +1042,12 @@ workflow {
         igblast_database_path, 
         igblast_files, 
         igblast_organism, 
-        igblast_loci
+        igblast_loci, 
+        igblast_aa
     )
     igblast.out.tsv_ch1.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE igblast PROCESS\n\nCHECK THAT THE igblast_organism, igblast_loci AND igblast_files ARE CORRECTLY SET IN THE ig_clustering.config FILE\n\n========\n\n"}}
     tsv_ch2 = igblast.out.tsv_ch1.collectFile(name: "all_igblast_seq.tsv", skip: 1, keepHeader: true)
     igblast.out.log_ch.collectFile(name: "igblast_report.log").subscribe{it -> it.copyTo("${out_path}/reports")}
-
 
 
     parseDb_filtering(
@@ -1016,9 +1056,15 @@ workflow {
     // parseDb_filtering.out.unproductive_ch.count().subscribe{n -> if ( n == 0 ){print "\n\nWARNING: EMPTY unproductive_seq.tsv FILE RETURNED FOLLOWING THE parseDb_filtering PROCESS\n\n"}else{it -> it.copyTo("${out_path}/unproductive_seq.tsv")}} // see https://www.nextflow.io/docs/latest/script.html?highlight=copyto#copy-files
 
 
+    translation(
+        parseDb_filtering.out.select_ch,
+        igblast_aa
+    )
+
+
 
     distToNearest(
-        parseDb_filtering.out.select_ch
+        translation.out.translation_ch
     )
     distToNearest.out.distToNearest_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE distToNearest PROCESS\n\n========\n\n"}}
 
@@ -1034,7 +1080,7 @@ workflow {
 
 
     clone_assignment(
-        parseDb_filtering.out.select_ch,
+        translation.out.translation_ch,
         clone_distance
     )
     // clone_assignment.out.clone_ch.view()

@@ -196,6 +196,9 @@ Results are present in a *Ig_clustering_xxxxx* folder, inside the nextflow *resu
 Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.docx (contact Gael Millot).
 <br /><br />
 
+
+Mandatory elements:
+<br /><br />
 | Ig_clustering_xxxxx folder | Description |
 | --- | --- |
 | **reports** | Folder containing all the reports of the different processes, including the *ig_clustering.config* file used. |
@@ -204,7 +207,7 @@ Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.
 | **RData** | Folder containing, for each clonal group, objects that can be used in R to further analyze of plot the data:<br /><ul><li>db: tibble data frame resulting from the import by the alakazam::readChangeoDb() function<br /></li><li>clones: db in the airClone format<br /></li><li>trees: output of the dowser::getTrees() function using the clones object as input (igphylm tree)</li><br /><br />Also contains the all_trees.RData file that combine the trees R objects of the different files in a single trees object. |
 | **nearest_distance.tsv** | File showing the haming distances, in the last "dist_nearest" column, used in the hamming_distance.pdf plot |
 | **hamming_distance.pdf** | Distribution of the Haming distances between the two nearest sequences (see the *nearest_distance.tsv* file). |
-| **productive_seq.tsv** | sequences annotated by igblast, with germline clustering and mutation load added (see the unproductive_seq.tsv file for sequences that failed to be annotated by igblast). |
+| **productive_seq.tsv** | Sequences annotated by igblast, with germline clustering and mutation load added (see the unproductive_seq.tsv file for sequences that failed to be annotated by igblast). |
 | **unproductive_seq.tsv** | Sequences that failed annotations by igblast (empty file if all the sequences are annotated). |
 | **tree_clone_id.tsv** | Clonal group IDs used in the tree analysis (clonal group with at least n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file). |
 | **tree_dismissed_clone_id.tsv** | Clonal group IDs not used in the tree analysis (clonal group with less than n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file). |
@@ -212,7 +215,15 @@ Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.
 | **tree_dismissed_seq.tsv** | Sequences of the *productive_seq.tsv* file not used in the tree analysis (clonal group with less than n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file). |
 | **tree_seq_not_displayed.tsv** | Sequences file used in the tree analysis but not displayed in the graph, (1) because strictly identical to another sequence already in the tree and (2) because the tree_duplicate_seq parameter of the ig_clustering.config file has been set to "FALSE". |
 | **trees.pdf** | Phylogenic trees of the sequences that belong to a clonal group (one page per clonal group). |
-| **donuts.pdf** | Frequency of sequences per clonal groups, among sequences used for trees (tree) and among all the productive sequences (all). |
+| **donuts.pdf** | Frequency of sequences per clonal groups, among sequences used for trees (tree), among all the productive sequences (all) and among functional sequences (functional). |
+
+Optional elements only returned if the igblast_aa parameter is 'false' and if the input fasta are nucleotide sequences:
+<br /><br />
+| Ig_clustering_xxxxx folder | Description |
+| --- | --- |
+| **aligned_seq** | Folder containing the alignment_sequence column of the *productive_seq.tsv* file in fasta files. |
+| **aa** | Folder containing the translation of the alignment_sequence column of the *productive_seq.tsv* file in fasta files. |
+| **aa.tsv** |  File containing all the translation of the alignment_sequence column of the *productive_seq.tsv* file. |
 
 
 <br /><br />
@@ -265,9 +276,14 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 ## WHAT'S NEW IN
 
 
+#### v6.3
+
+AA sequences added. Translation of the alignment_sequence column is added in the returned productive_seq.tsv and new aa.tsv file
+
+
 #### v6.2
 
-Supp donut added regarding clonal gourps with functional annotation
+Supp donut added regarding clonal groups with functional annotation
 
 
 #### v6.1

@@ -95,7 +95,7 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
     for(i1 in 1:length(tempo.arg.names)){
         assign(tempo.arg.names[i1], args[i1])
     }
-    rm(tempo.arg.names, args, i1)
+    rm(args, i1)
 }else if(sys.nframe() == 0L){ # detection of copy-paste/direct execution (for debugging). With script it is also 0, with source, it is 4
     run.way <- "COPY-PASTE"
     cat(paste0("\n\n", tempo.cat, run.way, "\n"))
@@ -141,6 +141,7 @@ param.list <- c(
     "erase.graphs", 
     "script", 
     "run.way",
+    "tempo.arg.names", 
     if(run.way == "SCRIPT"){"command"}, 
     "file_name", 
     "kind", 
@@ -260,24 +261,9 @@ arg.check <- NULL #
 text.check <- NULL #
 checked.arg.names <- NULL # for function debbuging: used by r_debugging_tools
 ee <- expression(arg.check <- c(arg.check, tempo$problem) , text.check <- c(text.check, tempo$text) , checked.arg.names <- c(checked.arg.names, tempo$object.name))
-tempo <- fun_check(data = file_name, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = kind, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = donut_palette, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = donut_hole_size, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = donut_hole_text, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = donut_hole_text_size, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = donut_border_color, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = donut_border_size, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = donut_annotation_distance, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = donut_annotation_size, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = donut_annotation_force, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = donut_annotation_force_pull, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = donut_legend_width, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = donut_legend_text_size, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = donut_legend_box_size, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = donut_legend_box_space, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = donut_legend_limit, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = log, class = "vector", typeof = "character", length = 1) ; eval(ee)
+for(i0 in tempo.arg.names){
+    tempo <- fun_check(data = get(i0), class = "vector", typeof = "character", length = 1, fun.name = "slitherine_part1.R") ; eval(ee)
+}
 if(any(arg.check) == TRUE){ # normally no NA
     stop(paste0("\n\n================\n\n", paste(text.check[arg.check], collapse = "\n"), "\n\n================\n\n"), call. = FALSE) # == in stop(), not in tempo.cat, to be able to add several messages between == #
 }
@@ -285,7 +271,7 @@ if(any(arg.check) == TRUE){ # normally no NA
 # second round of checking and data preparation
 # management of NA arguments
 # end management of NA arguments
-# management of NULL arguments, WARNING: only for donut.R
+# management of NULL arguments, WARNING: only for donut.R because NULL is "NULL" in the nextflow.config file
 tempo.arg <-c(
     "file_name", 
     "kind", 
@@ -312,7 +298,7 @@ if(any(tempo.log) == TRUE){# normally no NA with is.null()
     tempo.cat <- paste0("ERROR IN donut.R:\n", ifelse(sum(tempo.log, na.rm = TRUE) > 1, "THESE ARGUMENTS\n", "THIS ARGUMENT\n"), paste0(tempo.arg[tempo.log], collapse = "\n"),"\nCANNOT BE NULL")
     stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE) # == in stop(), not in tempo.cat, to be able to add several messages between ==
 }
-# end management of NULL arguments, WARNING: only for donut.R
+# end management of NULL arguments, WARNING: only for donut.R because NULL is "NULL" in the nextflow.config file
 # seed
 set.seed(1)
 # end seed
@@ -322,7 +308,11 @@ options(warning.length = 8170)
 warn <- NULL
 # warn.count <- 0 # not required
 # end warning initiation
-# other checkings
+# other checkings (not full checked because already checked in the .nf file)
+if( ! file.exists(file_name)){
+    tempo.cat <- paste0("ERROR IN donut.R:\nTHE file_name PARAMETER MUST BE A VALID PATH OF A FILE IS NOT \"NULL\"\nHERE IT IS: \n", paste0(file_name, collapse = " "))
+    stop(paste0("\n\n================\n\n", tempo$text, "\n\n================\n\n"), call. = FALSE)
+}
 tempo <- fun_check(data = kind, options = c("all", "tree", "functional"), length = 1) ; eval(ee)
 if(tempo$problem == TRUE){
     stop(paste0("\n\n================\n\n", tempo$text, "\n\n================\n\n"), call. = FALSE)
@@ -360,7 +350,7 @@ if(donut_legend_limit == "NULL"){
 }
 # end following parameter are those of the gg_donut() function and are checked by this one
 
-# end other checkings
+# other checkings (not full checked because already checked in the .nf file)
 # reserved word checking
 # end reserved word checking
 # end second round of checking and data preparation
