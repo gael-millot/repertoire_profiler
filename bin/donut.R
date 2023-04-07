@@ -111,7 +111,7 @@ rm(tempo.cat)
 ################################ Test
 
 # setwd("C:/Users/gael/Documents/Git_projects/ig_clustering/dev/test")
-# file_name = "./productive_seq.tsv"
+# file_name = "./caca.tsv"
 # kind = "all"
 # donut_palette = "NULL" 
 # donut_hole_size = "0.5" 
@@ -128,8 +128,9 @@ rm(tempo.cat)
 # donut_legend_box_size = "5" 
 # donut_legend_box_space = "2" 
 # donut_legend_limit = "0.1"
-# cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v11.10.0/cute_little_R_functions.R"
+# cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.2.0/cute_little_R_functions.R"
 # log = "all_donut.log"
+
 
 ################################ end Test
 
@@ -262,7 +263,7 @@ text.check <- NULL #
 checked.arg.names <- NULL # for function debbuging: used by r_debugging_tools
 ee <- expression(arg.check <- c(arg.check, tempo$problem) , text.check <- c(text.check, tempo$text) , checked.arg.names <- c(checked.arg.names, tempo$object.name))
 for(i0 in tempo.arg.names){
-    tempo <- fun_check(data = get(i0), class = "vector", typeof = "character", length = 1, fun.name = "slitherine_part1.R") ; eval(ee)
+    tempo <- fun_check(data = get(i0), class = "vector", typeof = "character", length = 1) ; eval(ee)
 }
 if(any(arg.check) == TRUE){ # normally no NA
     stop(paste0("\n\n================\n\n", paste(text.check[arg.check], collapse = "\n"), "\n\n================\n\n"), call. = FALSE) # == in stop(), not in tempo.cat, to be able to add several messages between == #
@@ -475,7 +476,7 @@ if(length(obs3$Freq) != 0){
             border.size = donut_border_size, 
             title = tempo.title, 
             title.text.size = 5, 
-            annotation = ifelse(all.annotation.log == FALSE, "labels", NULL),
+            annotation = if(all.annotation.log == FALSE){"labels"}else{NULL},
             annotation.distance = donut_annotation_distance,
             annotation.size = donut_annotation_size,
             annotation.force = donut_annotation_force,

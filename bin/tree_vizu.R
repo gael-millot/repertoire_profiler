@@ -120,7 +120,7 @@ rm(tempo.cat)
 # tree_legend = "TRUE" 
 # tree_meta_path = "./metadata.tsv"
 # tree_meta_legend = "KD"
-# cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v11.8.0/cute_little_R_functions.R"
+# cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.2.0/cute_little_R_functions.R"
 # log = "tree_vizu.log"
 # file.remove(c("./all_objects.RData", "./all_trees.RData", "./trees.pdf", "./tree_vizu.log"))
 
@@ -258,7 +258,7 @@ text.check <- NULL #
 checked.arg.names <- NULL # for function debbuging: used by r_debugging_tools
 ee <- expression(arg.check <- c(arg.check, tempo$problem) , text.check <- c(text.check, tempo$text) , checked.arg.names <- c(checked.arg.names, tempo$object.name))
 for(i0 in tempo.arg.names){
-    tempo <- fun_check(data = get(i0), class = "vector", typeof = "character", length = 1, fun.name = "slitherine_part1.R") ; eval(ee)
+    tempo <- fun_check(data = get(i0), class = "vector", typeof = "character", length = 1) ; eval(ee)
 }
 if(any(arg.check) == TRUE){ # normally no NA
     stop(paste0("\n\n================\n\n", paste(text.check[arg.check], collapse = "\n"), "\n\n================\n\n"), call. = FALSE) # == in stop(), not in tempo.cat, to be able to add several messages between == #

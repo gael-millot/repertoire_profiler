@@ -276,6 +276,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 ## WHAT'S NEW IN
 
 
+#### v6.4
+
+Distances added in the returned productive_seq.tsv, now 3 histograms to help to set the distance threshold, many bugs fixed
+
+
 #### v6.3
 
 AA sequences added. Translation of the alignment_sequence column is added in the returned productive_seq.tsv and new aa.tsv file

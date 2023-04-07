@@ -222,12 +222,15 @@ process translation {
 
 process distToNearest {
     label 'immcantation'
-    publishDir path: "${out_path}", mode: 'copy', pattern: "{nearest_distance.tsv}", overwrite: false
+    //publishDir path: "${out_path}", mode: 'copy', pattern: "{nearest_distance.tsv}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{distToNearest.log}", overwrite: false
     cache 'true'
 
     input:
     path translation_ch // no parallelization
+    val igblast_aa
+    val clone_model
+    val clone_normalize
 
     output:
     path "nearest_distance.tsv", emit: distToNearest_ch
@@ -237,8 +240,13 @@ process distToNearest {
     """
     #!/bin/bash -ue
     Rscript -e '
+         # WEIRD stuf: if db alone is returned, and if distToNearest_ch is used for the clone_assignment process and followings, everything is fine. But if db3 is returned with db3 <- data.frame(db, dist_nearest = db2\$dist_nearest) or db3 <- data.frame(db, caca = db2\$dist_nearest) or data.frame(db, caca = db\$sequence_id) or db3 <- data.frame(db, caca = as.numeric(db2\$dist_nearest)) or db3 <- data.frame(db[1:3], caca = db\$sequence_id, db[4:length(db)]), the get_tree process cannot make trees, while the productive.tsv seem identical at the end, between the use of db or db3, except that the clone_id order is not the same
         db <- read.table("${translation_ch}", header = TRUE, sep = "\\t")
-        db2 <- shazam::distToNearest(db, sequenceColumn = "junction", locusColumn = "locus", model = "ham", normalize = "len", nproc = 1)
+        if("${clone_model}" != "aa" & "${igblast_aa}" == "true"){
+          tempo.cat <- paste0("\\n\\n========\\n\\nERROR IN THE NEXTFLOW EXECUTION OF THE distToNearest PROCESS\\nclone_model PARAMETER SHOULD BE \\"aa\\" IF AA FASTA FILES ARE USED (igblast_aa PARAMETER SET TO \\"true\\"). HERE:\\nclone_model: ${clone_model}\\n\\n========\\n\\n")
+          stop(tempo.cat)
+        }
+        db2 <- shazam::distToNearest(db, sequenceColumn = "junction", locusColumn = "locus", model = "${clone_model}", normalize = "${clone_normalize}", nproc = 1)
         write.table(db2, file = paste0("./nearest_distance.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
     ' |& tee -a distToNearest.log
     """
@@ -246,57 +254,58 @@ process distToNearest {
 
 
 process distance_hist {
-    label 'r_ext'
-    publishDir path: "${out_path}/png", mode: 'copy', pattern: "{hamming_distance.png}", overwrite: false
-    publishDir path: "${out_path}/svg", mode: 'copy', pattern: "{hamming_distance.svg}", overwrite: false
-    publishDir path: "${out_path}", mode: 'copy', pattern: "{hamming_distance.pdf}", overwrite: false
+    label 'immcantation'
+    publishDir path: "${out_path}/png", mode: 'copy', pattern: "{*.png}", overwrite: false
+    publishDir path: "${out_path}/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{distance_hist.log}", overwrite: false
     cache 'true'
 
     input:
     path distToNearest_ch // no parallelization
     path cute_file
+    val clone_model
+    val clone_normalize
     val clone_distance
 
     output:
-    path "hamming_distance.pdf"
-    path "hamming_distance.png", emit: distance_hist_ch // png plot (but sometimes empty) sustematically returned
-    path "hamming_distance.svg"
+    path "*.pdf", emit: histogram_pdf_ch
+    path "*.png", emit: distance_hist_ch // png plot (but sometimes empty) sustematically returned
+    path "*.svg"
     path "distance_hist.log"
 
     script:
     """
     #!/bin/bash -ue
-    Rscript -e '
-        source("${cute_file}", local = .GlobalEnv) # source the fun_ functions used below
-        db <- read.table("${distToNearest_ch}", header = TRUE, sep = "\\t")
-        if(all(is.na(db\$dist_nearest))){
-            cat("\\n\\nNO DISTANCE HISTOGRAM PLOTTED: shazam::distToNearest() FUNCTION RETURNED ONLY NA (SEE THE dist_nearest COLUMN O THE nearest_distance.tsv FILE)")
-            pdf(NULL)
-            tempo.plot <- fun_gg_empty_graph(text = "NO DISTANCE HISTOGRAM PLOTTED\\nshazam::distToNearest() FUNCTION RETURNED ONLY NA\\nSEE THE dist_nearest COLUMN OF THE nearest_distance.tsv FILE", text.size = 3)
-        }else{
-            tempo.gg.name <- "gg.indiv.plot."
-            tempo.gg.count <- 0
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::ggplot(
-                data = subset(db, ! is.na(dist_nearest)),
-                mapping = ggplot2::aes(x = dist_nearest), 
-            ))
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::geom_histogram(color="white", binwidth=0.02))
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::xlab("Hamming distance"))
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::ylab("Count"))
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::geom_vline(xintercept = ${clone_distance}, color = "firebrick", linetype = 2))
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::theme_bw())
-            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_x_continuous(breaks=seq(0, 1, 0.1)))
-            tempo.plot <- suppressMessages(suppressWarnings(eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + ")))))
-        }
-        ggplot2::ggsave(filename = "hamming_distance.png", plot = tempo.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        ggplot2::ggsave(filename = "hamming_distance.svg", plot = tempo.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        ggplot2::ggsave(filename = "hamming_distance.pdf", plot = tempo.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-    ' |& tee -a distance_hist.log
+    histogram.R \
+"${distToNearest_ch}" \
+"${clone_model}" \
+"${clone_normalize}" \
+"${clone_distance}" \
+"${cute_file}" \
+"distance_hist.log"
     """
 }
 
+process histogram_assembly {
+    label 'r_ext'
+    publishDir path: "${out_path}", mode: 'copy', pattern: "{seq_distance.pdf}", overwrite: false
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{histogram_assembly.log}", overwrite: false
+    cache 'true'
 
+    input:
+    path histogram_pdf_ch
+
+    output:
+    path "seq_distance.pdf"
+
+    script:
+    """
+    #!/bin/bash -ue
+    Rscript -e '
+        qpdf::pdf_combine(input = list.files(path = ".", pattern = ".pdf\$"), output = "./seq_distance.pdf")
+    ' |& tee -a histogram_assembly.log
+    """
+}
 
 
 process clone_assignment {
@@ -423,7 +432,7 @@ process mutation_load {
         args <- commandArgs(trailingOnly = TRUE)  # recover arguments written after the call of the Rscript
         tempo.arg.names <- c("file_name") # objects names exactly in the same order as in the bash code and recovered in args
         if(length(args) != length(tempo.arg.names)){
-          tempo.cat <- paste0("======== ERROR: THE NUMBER OF ELEMENTS IN args (", length(args),") IS DIFFERENT FROM THE NUMBER OF ELEMENTS IN tempo.arg.names (", length(tempo.arg.names),")\nargs:", paste0(args, collapse = ","), "\ntempo.arg.names:", paste0(tempo.arg.names, collapse = ","))
+          tempo.cat <- paste0("======== ERROR IN THE NEXTFLOW EXECUTION OF THE mutation_load PROCESS\\n THE NUMBER OF ELEMENTS IN args (", length(args),") IS DIFFERENT FROM THE NUMBER OF ELEMENTS IN tempo.arg.names (", length(tempo.arg.names),")\nargs:", paste0(args, collapse = ","), "\ntempo.arg.names:", paste0(tempo.arg.names, collapse = ","))
           stop(tempo.cat)
         }
         for(i2 in 1:length(tempo.arg.names)){
@@ -486,7 +495,7 @@ process seq_name_remplacement {
     script:
     """
     #!/bin/bash -ue
-    if [[ ! ("${meta_file}" == "NULL" && "${tree_meta_name_replacement}" == "NULL") ]] ; then # or [[ "${meta_file}" -ne "NULL" && "${tree_meta_name_replacement}" -ne "NULL" ]], but not !=
+    if [[ "${meta_file}" != "NULL" && "${tree_meta_name_replacement}" != "NULL" ]] ; then # or [[ "${meta_file}" -ne "NULL" && "${tree_meta_name_replacement}" -ne "NULL" ]], but not !=
         Rscript -e '
             seq <- read.table("./${mutation_load_ch}", sep = "\\t", header = TRUE)
             meta <- read.table("./${meta_file}", sep = "\\t", header = TRUE)
@@ -502,7 +511,7 @@ process seq_name_remplacement {
                     seq2[seq2[ , 2] == meta[i2, 1], 1] <- meta[i2, col_name] # remplacement of the name in column 1
                 }
             }
-            names(seq2)[2] <- paste0("intial_", names(seq)[1])
+            names(seq2)[2] <- paste0("initial_", names(seq)[1])
             names(seq2)[1] <- names(seq)[1]
             write.table(seq2, file = "./renamed_seq.tsv", row.names = FALSE, col.names = TRUE, sep = "\\t")
             # modification of the metadata file for the correct use of ggtree::"%<+%" in tree_vizu.R that uses the column name "label" for that 
@@ -521,6 +530,66 @@ process seq_name_remplacement {
 
 
 
+process file_assembly {
+    label 'immcantation'
+    publishDir path: "${out_path}", mode: 'copy', pattern: "{productive_seq.tsv}", overwrite: false
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{file_assembly.log}", overwrite: false
+    cache 'true'
+
+    input:
+    path seq_name_remplacement_ch2 // no parallelization
+    path distToNearest_ch
+
+    output:
+    path "productive_seq.tsv", emit: file_assembly_ch
+    path "file_assembly.log"
+
+    script:
+    """
+    #!/bin/bash -ue
+    Rscript -e '
+        db <- read.table("${seq_name_remplacement_ch2}", header = TRUE, sep = "\\t")
+        nd <- read.table("${distToNearest_ch}", header = TRUE, sep = "\\t")
+        # replace TRUE and FALSE of the read.table() conversion by the initial T and F
+        # tempo.log <- sapply(db, FUN = function(x){class(x) == "logical"})
+        # db[tempo.log] <- lapply(db[tempo.log], FUN = function(x){substr(as.character(x), 1, 1)})
+        # end replace TRUE and FALSE of the read.table() conversion by the initial T and F
+        if(nrow(db) != nrow(nd)){
+          tempo.cat <- paste0("\\n\\n========\\n\\nERROR IN THE NEXTFLOW EXECUTION OF THE file_assembly PROCESS\\ndb SHOULD HAVE THE SAME NUMBER OF ROWS. HERE:\\ndb: ", nrow(db), "\\nnd: ", nrow(nd), "\\n\\n========\\n\\n")
+          stop(tempo.cat)
+        }
+        if( ! any(c("sequence_id", "initial_sequence_id") %in% names(db))){
+          tempo.cat <- paste0("\\n\\n========\\n\\nERROR IN THE NEXTFLOW EXECUTION OF THE file_assembly PROCESS\\ndb SHOULD HAVE \\"sequence_id\\" AND ALSO POTENTIALLY \\"initial_sequence_id\\" AS COLUMN NAME. HERE:\\nNAMES: ", paste(names(db), collapse = " "), "\\n\\n========\\n\\n")
+          stop(tempo.cat)
+        }else{
+            tempo.col.name <- ifelse("initial_sequence_id" %in% names(db), "initial_sequence_id", "sequence_id")
+        }
+        if(all(c("sequence_id", "initial_sequence_id") %in% names(db))){
+            if(all(db\$sequence_id == db\$initial_sequence_id)){
+                tempo.cat <- paste0("\\n\\n========\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nTHE tree_meta_path AND tree_meta_name_replacement PARAMETERS ARE NOT \\"NULL\\" BUT NO SEQUENCE NAMES HAVE BEEN REPLACED WHEN USING THE tree_meta_name_replacement COLUMN\\n\\n========\\n\\n")
+                stop(tempo.cat)
+            }
+        }
+        if(any(is.na(match(nd\$sequence_id, db[, tempo.col.name])))){
+          tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL CODE ERROR IN THE NEXTFLOW EXECUTION OF THE file_assembly PROCESS\\nNO NA SHOULD APPEAR AT THAT STAGE WITH match()\\n\\n========\\n\\n")
+          stop(tempo.cat)
+        }else{
+            db2 <- db[match(nd\$sequence_id, db[, tempo.col.name]), ]
+        }
+        if(all(db2[, tempo.col.name] == nd\$sequence_id)){
+            db3 <- data.frame(db2, dist_nearest = nd\$dist_nearest)
+            write.table(db3, file = paste0("./productive_seq.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
+        }else{
+          tempo.cat <- paste0("\\n\\n========\\n\\nERROR IN THE NEXTFLOW EXECUTION OF THE file_assembly PROCESS\\n", tempo.col.name, " COLUMNS OF db AND sequence_id COLUMN OF nd SHOULD BE IDENTICAL. HERE THEY ARE\\ndb\$", tempo.col.name, ":\\n", paste0(db[, tempo.col.name], collapse = ","), "\\nnd\$sequence_id:\\n", paste0(nd\$sequence_id, collapse = ","), "\\n\\n========\\n\\n")
+          stop(tempo.cat)
+        }
+    ' |& tee -a file_assembly.log
+    """
+}
+
+
+
+
 process get_tree {
     label 'immcantation'
     publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{*.RData}", overwrite: false
@@ -528,7 +597,7 @@ process get_tree {
 
     input:
     path mutation_load_ch // parallelization expected
-    val nb_seq_per_clone
+    val clone_nb_seq
     val tree_duplicate_seq
 
     output:
@@ -550,7 +619,7 @@ process get_tree {
     FILENAME=\$(basename -- ${mutation_load_ch}) # recover a file name without path
     echo -e "\${FILENAME}:" |& tee -a get_tree.log
     LINE_NB=\$((\$(cat ${mutation_load_ch} | wc -l) - 1))
-    if [[ "\$LINE_NB" -ge "${nb_seq_per_clone}" ]] ; then # the -ge operator can compare strings and means "greater or equal to"
+    if [[ "\$LINE_NB" -ge "${clone_nb_seq}" ]] ; then # the -ge operator can compare strings and means "greater or equal to"
         cat ${mutation_load_ch} > seq_for_tree.tsv
         Rscript -e '
             db <- alakazam::readChangeoDb("${mutation_load_ch}")
@@ -559,7 +628,7 @@ process get_tree {
                 data = db, 
                 seq = "sequence_alignment", 
                 clone = "clone_id", #  All entries in this column should be identical
-                minseq = ${nb_seq_per_clone}, # return an error if the number of seq in db (i.e., number of rows) is lower than minseq. REcontroled here but already controled by the i [[]] above
+                minseq = ${clone_nb_seq}, # return an error if the number of seq in db (i.e., number of rows) is lower than minseq. REcontroled here but already controled by the i [[]] above
                 heavy = NULL, # name of heavy chain locus (default = "IGH")
                 text_fields = "collapsed", # column named "collapsed" (columns to retain during duplicate removal) 
                 dup_singles = FALSE, # Duplicate sequences in singleton clones to include them as trees? Always use FALSE. Otherwise, it will create an artificial duplicated sequences in thr tree building so that we will have two instead of one sequence in the tree, after identical seq removal. See https://rdrr.io/cran/dowser/src/R/Clones.R
@@ -572,7 +641,7 @@ process get_tree {
             write.table(trees\$clone_id, file = paste0("./tree_clone_id.tsv"), row.names = FALSE, col.names = FALSE)
         ' |& tee -a get_tree.log
     else
-        echo -e "LESS THAN ${nb_seq_per_clone} SEQUENCES FOR THE CLONAL GROUP: NO TREE COMPUTED" |& tee -a get_tree.log 
+        echo -e "LESS THAN ${clone_nb_seq} SEQUENCES FOR THE CLONAL GROUP: NO TREE COMPUTED" |& tee -a get_tree.log 
         IFS='_' read -r -a TEMPO <<< "\${FILENAME}" # string split into array
         echo \${TEMPO[0]} > tree_dismissed_clone_id.tsv
         cat ${mutation_load_ch} > tree_dismissed_seq.tsv
@@ -831,10 +900,20 @@ workflow {
     if( ! igblast_files in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_files PARAMETER IN ig_clustering.config FILE:\n${igblast_files}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
-    if( ! nb_seq_per_clone in String ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID nb_seq_per_clone PARAMETER IN ig_clustering.config FILE:\n${nb_seq_per_clone}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! nb_seq_per_clone =~  /^[0-9]*$/){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID nb_seq_per_clone PARAMETER IN ig_clustering.config FILE:\n${nb_seq_per_clone}\nMUST BE A POSITIVE INTEGER VALUE\n\n========\n\n"
+    if( ! clone_nb_seq in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_nb_seq PARAMETER IN ig_clustering.config FILE:\n${clone_nb_seq}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! clone_nb_seq =~  /^[0-9]*$/){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_nb_seq PARAMETER IN ig_clustering.config FILE:\n${clone_nb_seq}\nMUST BE A POSITIVE INTEGER VALUE\n\n========\n\n"
+    }
+    if( ! clone_model in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_model PARAMETER IN ig_clustering.config FILE:\n${clone_model}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (clone_model == "ham" || clone_model == "aa" || clone_model == "hh_s1f" || clone_model == "hh_s5f" || clone_model == "mk_rs1nf" || clone_model == "mk_rs5nf" || clone_model == "m1n_compat" || clone_model == "hs1f_compat")){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_model PARAMETER IN ig_clustering.config FILE:\n${clone_model}\nMUST BE EITHER \"ham\", \"aa\", \"hh_s1f\", \"hh_s5f\", \"mk_rs1nf\", \"mk_rs5nf\", \"m1n_compat\", \"hs1f_compat\"\n\n========\n\n"
+    }
+    if( ! clone_normalize in String ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_normalize PARAMETER IN ig_clustering.config FILE:\n${clone_normalize}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (clone_normalize == "len" || clone_normalize == "none")){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_normalize PARAMETER IN ig_clustering.config FILE:\n${clone_normalize}\nMUST BE EITHER \"len\" OR \"none\"\n\n========\n\n"
     }
     if( ! clone_distance in String ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_distance PARAMETER IN ig_clustering.config FILE:\n${clone_distance}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
@@ -1050,21 +1129,28 @@ workflow {
     igblast.out.log_ch.collectFile(name: "igblast_report.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
 
+
     parseDb_filtering(
         tsv_ch2
     )
     // parseDb_filtering.out.unproductive_ch.count().subscribe{n -> if ( n == 0 ){print "\n\nWARNING: EMPTY unproductive_seq.tsv FILE RETURNED FOLLOWING THE parseDb_filtering PROCESS\n\n"}else{it -> it.copyTo("${out_path}/unproductive_seq.tsv")}} // see https://www.nextflow.io/docs/latest/script.html?highlight=copyto#copy-files
+    parseDb_filtering.out.select_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE parseDb_filtering PROCESS\n\n========\n\n"}}
+
 
 
     translation(
         parseDb_filtering.out.select_ch,
         igblast_aa
     )
+    translation.out.translation_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE translation PROCESS\n\n========\n\n"}}
 
 
 
     distToNearest(
-        translation.out.translation_ch
+        translation.out.translation_ch,
+        igblast_aa,
+        clone_model,
+        clone_normalize
     )
     distToNearest.out.distToNearest_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE distToNearest PROCESS\n\n========\n\n"}}
 
@@ -1073,9 +1159,17 @@ workflow {
     distance_hist(
         distToNearest.out.distToNearest_ch,
         cute_file, 
+        clone_model,
+        clone_normalize,
         clone_distance
     )
     distance_hist.out.distance_hist_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE distance_hist PROCESS\n\n========\n\n"}}
+
+
+
+    histogram_assembly(
+        distance_hist.out.histogram_pdf_ch.collect()
+    )
 
 
 
@@ -1116,16 +1210,25 @@ workflow {
         tree_meta_name_replacement
     )
     seq_name_remplacement.out.seq_name_remplacement_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE seq_name_remplacement PROCESS\n\n========\n\n"}}
-    seq_name_remplacement_ch2 = seq_name_remplacement.out.seq_name_remplacement_ch.collectFile(name: "productive_seq.tsv", skip: 1, keepHeader: true)
-    seq_name_remplacement_ch2.subscribe{it -> it.copyTo("${out_path}")}
+    seq_name_remplacement_ch2 = seq_name_remplacement.out.seq_name_remplacement_ch.collectFile(name: "replacement.tsv", skip: 1, keepHeader: true)
+    //seq_name_remplacement_ch2.subscribe{it -> it.copyTo("${out_path}")}
     // tuple_seq_name_remplacement = new Tuple("all", seq_name_remplacement_ch2) # warning: this is not a channel but a variable now
     seq_name_remplacement.out.seq_name_remplacement_log_ch.collectFile(name: "seq_name_remplacement.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
 
 
 
+
+    file_assembly(
+        seq_name_remplacement_ch2, 
+        distToNearest.out.distToNearest_ch
+    )
+    file_assembly.out.file_assembly_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE file_assembly PROCESS\n\n========\n\n"}}
+
+
+
     get_tree(
         seq_name_remplacement.out.seq_name_remplacement_ch,
-        nb_seq_per_clone,
+        clone_nb_seq,
         tree_duplicate_seq
     )
     get_tree.out.rdata_tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: EMPTY OUTPUT FOLLOWING THE get_tree PROCESS -> NO TREE RETURNED\n\n")}}
