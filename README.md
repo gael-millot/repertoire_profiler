@@ -276,6 +276,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 ## WHAT'S NEW IN
 
 
+#### v6.5
+
+Code secured and bug fixed for NULL metadata file path
+
+
 #### v6.4
 
 Distances added in the returned productive_seq.tsv, now 3 histograms to help to set the distance threshold, many bugs fixed
