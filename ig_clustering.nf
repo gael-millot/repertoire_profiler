@@ -489,12 +489,21 @@ process seq_name_remplacement {
 
     output:
     path "renamed_seq.tsv", emit: seq_name_remplacement_ch
-    path "metadata2.tsv", emit: meta_file_ch
+    path '{metadata2.tsv,NULL}', includeInputs: true, emit: meta_file_ch // either take metadata2.tsv or NULL file
     path "seq_name_remplacement.log", emit: seq_name_remplacement_log_ch
 
     script:
     """
     #!/bin/bash -ue
+    # check first that the data file does not have the second column name starting by "initial_". Otherwise, with create unproper behavior in donut
+    if [[ "${meta_file}" == "NULL" ]] ; then
+        Rscript -e '
+            seq <- read.table("./${mutation_load_ch}", sep = "\\t", header = TRUE)
+            if(grepl(x = names(seq[ , 2]), pattern = "^initial_"))){
+                stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIF THE tree_meta_path PARAMETER IS \\"NULL\\", THEN THE SECOND COLUMN OF THE DATA IN THE sample_path PARAMETER CANNOT HAVE THE NAME OF THE SECOND COLUNM STARTING BY \\"initial_\\"\\n\\n============\\n\\n"), call. = FALSE)
+            }
+        ' |& tee -a seq_name_remplacement.log
+    fi
     if [[ "${meta_file}" != "NULL" && "${tree_meta_name_replacement}" != "NULL" ]] ; then # or [[ "${meta_file}" -ne "NULL" && "${tree_meta_name_replacement}" -ne "NULL" ]], but not !=
         Rscript -e '
             seq <- read.table("./${mutation_load_ch}", sep = "\\t", header = TRUE)
@@ -522,14 +531,13 @@ process seq_name_remplacement {
         ' |& tee -a seq_name_remplacement.log
     else
         cat ${mutation_load_ch} > ./renamed_seq.tsv |& tee -a seq_name_remplacement.log
-        cat ${meta_file} > ./metadata2.tsv |& tee -a seq_name_remplacement.log
     fi
     """
 }
 
 
 
-
+// add the distance to the data file to return
 process file_assembly {
     label 'immcantation'
     publishDir path: "${out_path}", mode: 'copy', pattern: "{productive_seq.tsv}", overwrite: false
@@ -1213,8 +1221,9 @@ workflow {
     seq_name_remplacement_ch2 = seq_name_remplacement.out.seq_name_remplacement_ch.collectFile(name: "replacement.tsv", skip: 1, keepHeader: true)
     //seq_name_remplacement_ch2.subscribe{it -> it.copyTo("${out_path}")}
     // tuple_seq_name_remplacement = new Tuple("all", seq_name_remplacement_ch2) # warning: this is not a channel but a variable now
-    seq_name_remplacement.out.seq_name_remplacement_log_ch.collectFile(name: "seq_name_remplacement.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
+    seq_name_remplacement.out.seq_name_remplacement_log_ch.collectFile(name: "seq_name_remplacement.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
+    seq_name_remplacement.out.meta_file_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE seq_name_remplacement PROCESS\n\n========\n\n"}}
 
 
 
