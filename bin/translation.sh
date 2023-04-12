@@ -38,7 +38,7 @@ if [[ "${igblast_aa}" == "false" ]] ; then
                 exit 1
             }
         }else{
-            if($COL_SEQ!~/^[NATGC.]*$/){
+            if($COL_SEQ!~/^[-NATGC.]*$/){
                 print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE translation PROCESS\n\nsequence_alignment COLUMN NAME OF THE INPUT FILE MUST BE A NUCLEOTIDE SEQUENCE IF THE igblast_aa PARAMETER IS SET TO false\nHERE IT SEEMS TO BE MADE OF AMINO ACIDS:\n"$0"\n\n========\n\n"
                 exit 1
             }

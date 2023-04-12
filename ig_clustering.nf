@@ -489,7 +489,7 @@ process seq_name_remplacement {
 
     output:
     path "renamed_seq.tsv", emit: seq_name_remplacement_ch
-    path '{metadata2.tsv,NULL}', includeInputs: true, emit: meta_file_ch // either take metadata2.tsv or NULL file
+    path '{metadata2.tsv,NULL}', includeInputs: true, emit: meta_file_ch // either take metadata2.tsv or NULL file. includeInputs: true to authorize the taking of input files, like NULL
     path "seq_name_remplacement.log", emit: seq_name_remplacement_log_ch
 
     script:
@@ -604,7 +604,8 @@ process get_tree {
     cache 'true'
 
     input:
-    path mutation_load_ch // parallelization expected
+    path seq_name_remplacement_ch // parallelization expected
+    path meta_file // just to determine if metadata have been provided (TRUE means NULL) meta_file_ch not required here
     val clone_nb_seq
     val tree_duplicate_seq
 
@@ -620,17 +621,17 @@ process get_tree {
     script:
     """
     #!/bin/bash -ue
-    if [[ ! -s ${mutation_load_ch} ]]; then
-        echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nEMPTY ${mutation_load_ch} FILE AS INPUT OF THE mutation_load PROCESS\\nCHECK THE mutation_load.log IN THE report FOLDER\\n\\n========\\n\\n"
+    if [[ ! -s ${seq_name_remplacement_ch} ]]; then
+        echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nEMPTY ${seq_name_remplacement_ch} FILE AS INPUT OF THE mutation_load PROCESS\\nCHECK THE mutation_load.log IN THE report FOLDER\\n\\n========\\n\\n"
         exit 1
     fi
-    FILENAME=\$(basename -- ${mutation_load_ch}) # recover a file name without path
+    FILENAME=\$(basename -- ${seq_name_remplacement_ch}) # recover a file name without path
     echo -e "\${FILENAME}:" |& tee -a get_tree.log
-    LINE_NB=\$((\$(cat ${mutation_load_ch} | wc -l) - 1))
+    LINE_NB=\$((\$(cat ${seq_name_remplacement_ch} | wc -l) - 1))
     if [[ "\$LINE_NB" -ge "${clone_nb_seq}" ]] ; then # the -ge operator can compare strings and means "greater or equal to"
-        cat ${mutation_load_ch} > seq_for_tree.tsv
+        cat ${seq_name_remplacement_ch} > seq_for_tree.tsv
         Rscript -e '
-            db <- alakazam::readChangeoDb("${mutation_load_ch}")
+            db <- alakazam::readChangeoDb("${seq_name_remplacement_ch}")
             db <- tibble::add_column(db, collapsed = db[[1]]) # add a column to detected collapsed identical sequences names
             clones <- dowser::formatClones(
                 data = db, 
@@ -638,11 +639,25 @@ process get_tree {
                 clone = "clone_id", #  All entries in this column should be identical
                 minseq = ${clone_nb_seq}, # return an error if the number of seq in db (i.e., number of rows) is lower than minseq. REcontroled here but already controled by the i [[]] above
                 heavy = NULL, # name of heavy chain locus (default = "IGH")
-                text_fields = "collapsed", # column named "collapsed" (columns to retain during duplicate removal) 
+                text_fields = "collapsed", # column of db named "collapsed" (columns to retain during duplicate removal, that will be present in the clones tibble but collapsed depending on the line removal) 
                 dup_singles = FALSE, # Duplicate sequences in singleton clones to include them as trees? Always use FALSE. Otherwise, it will create an artificial duplicated sequences in thr tree building so that we will have two instead of one sequence in the tree, after identical seq removal. See https://rdrr.io/cran/dowser/src/R/Clones.R
                 trait = if(${tree_duplicate_seq}){names(db)[1]}else{NULL} # control the removal of identical sequences but different sequence name
                 # max_mask: maximum number of characters to mask at the leading and trailing sequence ends. If NULL then the upper masking bound will be automatically determined from the maximum number of observed leading or trailing Ns amongst all sequences. If set to 0 (default) then masking will not be performed
             )
+            # add the metadata names in the first column of clones\$data[[1]]@data to have them in final trees
+            if("${meta_file}" != "NULL" & ! ${tree_duplicate_seq}){
+                meta <- read.table("${meta_file}", header = TRUE, sep = "\\t")
+                tempo.df <- clones\$data[[1]]@data # it is "class data.frame"
+                for(i4 in 1:nrow(tempo.df)){
+                    tempo <- strsplit(tempo.df\$collapsed[i4], split = ",")[[1]] # recover collapsed names
+                    tempo.log <- tempo %in% meta\$Name
+                    if(any(tempo %in% meta\$Name)){
+                        tempo.df\$sequence_id[i4] <- paste(tempo[tempo.log], collapse = ",") # info not lost in tempo.df\$sequence_id[i4] because all the names are in tempo.df\$collapsed
+                    }
+                }
+                clones\$data[[1]]@data <- tempo.df
+            }
+            # end add the metadata names in the first column of clones\$data[[1]]@data to have them in final trees
             trees <- dowser::getTrees(clones, build="igphyml", exec="/usr/local/share/igphyml/src/igphyml", nproc = 10)
             # assign(paste0("c", trees\$clone_id, "_trees"), trees)
             save(list = c("trees", "db", "clones"), file = paste0("./get_tree_cloneID_", trees\$clone_id, ".RData"))
@@ -652,7 +667,7 @@ process get_tree {
         echo -e "LESS THAN ${clone_nb_seq} SEQUENCES FOR THE CLONAL GROUP: NO TREE COMPUTED" |& tee -a get_tree.log 
         IFS='_' read -r -a TEMPO <<< "\${FILENAME}" # string split into array
         echo \${TEMPO[0]} > tree_dismissed_clone_id.tsv
-        cat ${mutation_load_ch} > tree_dismissed_seq.tsv
+        cat ${seq_name_remplacement_ch} > tree_dismissed_seq.tsv
     fi
     """
 }
@@ -933,7 +948,7 @@ workflow {
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_path PARAMETER IN ig_clustering.config FILE:\n${tree_meta_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if(tree_meta_path != "NULL"){
         if( ! file(tree_meta_path).exists()){
-            error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_path PARAMETER IN ig_clustering.config FILE. IF DOES NOT EXIST): ${tree_meta_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
+            error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_path PARAMETER IN ig_clustering.config FILE (DOES NOT EXIST): ${tree_meta_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
         }
     }
     if( ! tree_meta_name_replacement in String ){
@@ -1237,6 +1252,7 @@ workflow {
 
     get_tree(
         seq_name_remplacement.out.seq_name_remplacement_ch,
+        meta_file, // first() because get_tree process is a parallele one and because meta_file is single
         clone_nb_seq,
         tree_duplicate_seq
     )
@@ -1277,7 +1293,7 @@ workflow {
         tree_label_outside,
         tree_right_margin,
         tree_legend,
-        seq_name_remplacement.out.meta_file_ch.first(), // first() because seq_name_remplacement process is a multi one
+        seq_name_remplacement.out.meta_file_ch.first(), // first() because seq_name_remplacement process is a parallele one
         tree_meta_legend,
         cute_file
     )

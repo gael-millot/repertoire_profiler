@@ -276,6 +276,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 ## WHAT'S NEW IN
 
 
+#### v6.6
+
+Names of metadata now systematically present in trees, even when identical sequences are removed
+
+
 #### v6.5
 
 Code secured and bug fixed for NULL metadata file path

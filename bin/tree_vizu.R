@@ -554,7 +554,7 @@ if(length(tempo.list) == 0){
                 }else if( ! (is.null(tree_meta_path) & is.null(tree_meta_legend))){
                     # merge of the meta data into the ggtree object. See https://yulab-smu.top/treedata-book/chapter7.html#attach-operator
                     if( ! tree_meta_legend %in% names(meta.df)){
-                        stop(paste0("\n\n============\n\nERROR IN tree_vizu.R for clone ID ", paste(unique(db.list[[i3]]$clone_id)), "\nIF NOT \"NULL\", THE tree_meta_legend PARAMETER MUST BE A COLUMN NAME OF THE tree_meta_path PARAMETER: ", tree_meta_legend, "\n\n============\n\n"), call. = FALSE)
+                        stop(paste0("\n\n============\n\nERROR IN tree_vizu.R for clone ID ", paste(unique(db.list[[i3]]$clone_id)), "\nIF NOT \"NULL\", THE tree_meta_legend PARAMETER MUST BE A COLUMN NAME OF THE tree_meta_path PARAMETER. HERE IT IS:\ntree_meta_legend: ", tree_meta_legend, "\nCOLUMN NAMES OF tree_meta_path: ", paste(names(meta.df), collapse = " "), "\n\n============\n\n"), call. = FALSE)
                     }
                     tempo.added.trees <- ggtree::"%<+%"(
                         ggtree::ggtree(trees$trees[[i3]], layout = tree_kind),
