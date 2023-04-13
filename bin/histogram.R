@@ -331,7 +331,7 @@ if(all(is.na(db$dist_nearest))){
     cat("\n\nNO DISTANCE HISTOGRAM PLOTTED: shazam::distToNearest() FUNCTION RETURNED ONLY NA (SEE THE dist_nearest COLUMN O THE nearest_distance.tsv FILE)")
     # no need to use pdf(NULL) with fun_gg_empty_graph()
     tempo.plot <- fun_gg_empty_graph(text = "NO DISTANCE HISTOGRAM PLOTTED\nshazam::distToNearest() FUNCTION RETURNED ONLY NA\nSEE THE dist_nearest COLUMN OF THE nearest_distance.tsv FILE", text.size = 3)
-    tempo.name <- "seq_distance"
+    tempo.name <- "sequence_distance" # do not use "seq_distance" !! It creates a replacement of the seq_distance.pdf file
 }else{
     tempo.gg.name <- "gg.indiv.plot."
     tempo.gg.count <- 0

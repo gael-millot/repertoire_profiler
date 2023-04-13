@@ -748,7 +748,7 @@ if(length(tempo.list) == 0){
         ggplot2::ggsave(filename = paste0("tree_cloneID_", trees$clone_id[i3], ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
     }
     # dowser::treesToPDF(plots, file = "trees.pdf", nrow=2, ncol=2)
-    qpdf::pdf_combine(input = list.files(path = ".", pattern = ".pdf$"), output = "./trees.pdf")
+    tempo <- qpdf::pdf_combine(input = list.files(path = ".", pattern = ".pdf$"), output = "./trees.pdf") # assignation to prevent a returned element
 }
 
 ################ end saving plots

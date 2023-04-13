@@ -268,7 +268,7 @@ process distance_hist {
     val clone_distance
 
     output:
-    path "seq_distance*.pdf", emit: histogram_pdf_ch
+    path "seq*.pdf", emit: histogram_pdf_ch
     path "*.png", emit: distance_hist_ch // png plot (but sometimes empty) sustematically returned
     path "*.svg"
     path "distance_hist.log"
@@ -302,7 +302,8 @@ process histogram_assembly {
     """
     #!/bin/bash -ue
     Rscript -e '
-        qpdf::pdf_combine(input = list.files(path = ".", pattern = "^seq_distance.*.pdf\$"), output = "./seq_distance.pdf")
+    # assignation to prevent a returned element
+        tempo <- qpdf::pdf_combine(input = list.files(path = ".", pattern = "^seq.*.pdf\$"), output = "./seq_distance.pdf")
     ' |& tee -a histogram_assembly.log
     """
 }
@@ -1293,7 +1294,7 @@ workflow {
         tree_label_outside,
         tree_right_margin,
         tree_legend,
-        seq_name_remplacement.out.meta_file_ch.first(), // first() because seq_name_remplacement process is a parallele one
+        seq_name_remplacement.out.meta_file_ch.first(), // first() because seq_name_remplacement process is a parallele one. Possible that it prevent the cache to work, depending on the order in 
         tree_meta_legend,
         cute_file
     )
