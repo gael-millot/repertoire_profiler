@@ -97,10 +97,16 @@ rm(tempo.cat)
 
 ################################ Test
 
-# setwd("C:/Users/gael/Documents/Git_projects/ig_clustering/dev/test")
-# cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.2.0/cute_little_R_functions.R"
+# setwd("C:/Users/gael/Documents/Git_projects/ig_clustering/work/72/b43d4e26736d47baef36ed10330319")
+# file.name <- "nearest_distance.tsv"
+# clone_model <- "ham"
+# clone_normalize <- "len"
+# clone_distance <- "0.15"
+# cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.3.0/cute_little_R_functions.R"
 # log = "histogram.log"
-# file.remove(c("./all_objects.RData", "./all_trees.RData", "./trees.pdf", "./histogram.log"))
+
+
+
 
 
 
@@ -323,9 +329,8 @@ db <- read.table(file.name, header = TRUE, sep = "\t")
 
 if(all(is.na(db$dist_nearest))){
     cat("\n\nNO DISTANCE HISTOGRAM PLOTTED: shazam::distToNearest() FUNCTION RETURNED ONLY NA (SEE THE dist_nearest COLUMN O THE nearest_distance.tsv FILE)")
-    pdf(NULL)
+    # no need to use pdf(NULL) with fun_gg_empty_graph()
     tempo.plot <- fun_gg_empty_graph(text = "NO DISTANCE HISTOGRAM PLOTTED\nshazam::distToNearest() FUNCTION RETURNED ONLY NA\nSEE THE dist_nearest COLUMN OF THE nearest_distance.tsv FILE", text.size = 3)
-    dev.off()
     tempo.name <- "seq_distance"
 }else{
     tempo.gg.name <- "gg.indiv.plot."
@@ -375,9 +380,8 @@ if(all(is.na(db$dist_nearest))){
         plot(output, title = paste0("Density Method | threshold estimated: ", round(output@threshold, 3)))
         dev.off()
     }else{
-        pdf(NULL)
+        # no need to use pdf(NULL) with fun_gg_empty_graph()
         tempo.plot2 <- fun_gg_empty_graph(text = "NO SMOOTHED DENSITY DISTANCE HISTOGRAM PLOTTED\nshazam::findThreshold FUNCTION RETURNED NULL", text.size = 3)
-        dev.off()
         ggplot2::ggsave(filename = "seq_distance_smoothed_auto.png", plot = tempo.plot2, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
         ggplot2::ggsave(filename = "seq_distance_smoothed_auto.svg", plot = tempo.plot2, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
         ggplot2::ggsave(filename = "seq_distance_smoothed_auto.pdf", plot = tempo.plot2, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
@@ -397,9 +401,8 @@ if(all(is.na(db$dist_nearest))){
         plot(output2, title = paste0("GMM Method: gamma-gamma Method | threshold estimated: ", round(output2@threshold, 3)), binwidth = 0.02)
         dev.off()
     }else{
-        pdf(NULL)
+        # no need to use pdf(NULL) with fun_gg_empty_graph()
         tempo.plot3 <- fun_gg_empty_graph(text = "NO MIXTURE MODEL DISTANCE HISTOGRAM PLOTTED\nshazam::findThreshold FUNCTION RETURNED NULL", text.size = 3)
-        dev.off()
         ggplot2::ggsave(filename = "seq_distance_mixture_auto.png", plot = tempo.plot3, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
         ggplot2::ggsave(filename = "seq_distance_mixture_auto.svg", plot = tempo.plot3, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
         ggplot2::ggsave(filename = "seq_distance_mixture_auto.pdf", plot = tempo.plot3, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
@@ -409,7 +412,7 @@ if(all(is.na(db$dist_nearest))){
 ggplot2::ggsave(filename = paste0(tempo.name, ".png"), plot = tempo.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
 ggplot2::ggsave(filename = paste0(tempo.name, ".svg"), plot = tempo.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
 ggplot2::ggsave(filename = paste0(tempo.name, ".pdf"), plot = tempo.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-# qpdf::pdf_combine(input = list.files(path = ".", pattern = ".pdf$"), output = "./seq_distance.pdf")
+
 
 
 
@@ -419,7 +422,7 @@ ggplot2::ggsave(filename = paste0(tempo.name, ".pdf"), plot = tempo.plot, device
 ################ Pdf window closing
 
 
-graphics.off()
+# graphics.off()
 
 
 ################ end Pdf window closing

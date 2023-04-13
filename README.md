@@ -278,7 +278,7 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 
 #### v6.6
 
-Names of metadata now systematically present in trees, even when identical sequences are removed
+Names of metadata now systematically present in trees, even when identical sequences are removed, and bug fixed for empty pdf plot
 
 
 #### v6.5

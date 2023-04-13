@@ -464,9 +464,8 @@ if(length(tempo.list) == 0){
     tempo.cat <- "\\n\\nNO TREE DATA COMPUTED (NO .RData FILE DETECTED) -> NO GRAPH PLOTTED"
     cat(tempo.cat)
     fun_report(data = tempo.cat, output = log, path = "./", overwrite = FALSE)
-    pdf(NULL)
+    # no need to use pdf(NULL) with fun_gg_empty_graph()
     final.plot <- fun_gg_empty_graph(text = "NO GRAPH PLOTTED\nNO .RData FILE DETECTED", text.size = 3)
-    dev.off()
 }else{
 
 
@@ -731,14 +730,12 @@ if(length(tempo.list) == 0){
                 final.plot <- suppressMessages(suppressWarnings(gridExtra::arrangeGrob(grobs = list(eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + "))), legend.final), ncol=2, widths=c(1, legend.width), top = title.grob, left = " ", right = " "))) # , left = " ", right = " " : trick to add margins in the plot. padding =  unit(0.5, "inch") is for top margin above the title
                 dev.off()
             }else{
-                pdf(NULL)
+                # no need to use pdf(NULL) with fun_gg_empty_graph()
                 final.plot <- fun_gg_empty_graph(text = "NO GRAPH PLOTTED FOR CLONE ID", paste(unique(db.list[[i3]]$clone_id)), "\nNO SEQUENCE DETECTED", text.size = 3)
-                dev.off()
             }
         }else{
-            pdf(NULL)
+            # no need to use pdf(NULL) with fun_gg_empty_graph()
             final.plot <- fun_gg_empty_graph(text = "NO GRAPH PLOTTED FOR CLONE ID", paste(unique(db.list[[i3]]$clone_id)), "\nNO SEQUENCE DETECTED", text.size = 3)
-            dev.off()
         }
 
 ################ end Plotting tree

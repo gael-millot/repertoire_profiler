@@ -467,7 +467,7 @@ if(kind == "functional" & all.annotation.log != TRUE){
 
 if(length(obs3$Freq) != 0){
     if( ! (all(obs3$Freq == 0) | all(is.na(obs3$Freq)))){
-        pdf(NULL)
+        pdf(NULL) # used because I need plot = TRUE for return.gtable
         tempo.plot <- fun_gg_donut(
             data1 = obs3, # select only the classes with functional annotations if kind == "functional" & all.annotation.log != TRUE
             freq = "Freq", 
@@ -498,27 +498,24 @@ if(length(obs3$Freq) != 0){
             return = TRUE, 
             return.ggplot = FALSE,
             return.gtable = TRUE,
-            plot = TRUE, 
+            plot = FALSE, 
             warn.print = TRUE, 
             lib.path = NULL
         )
         final.plot <- suppressMessages(suppressWarnings(gridExtra::grid.arrange(tempo.plot$gtable))) # , left = " ", right = " " : trick to add margins in the plot. padding =  unit(0.5, "inch") is for top margin above the title
         dev.off()
     }else{
-        pdf(NULL)
+        # no need to use pdf(NULL) with fun_gg_empty_graph()
         final.plot <- fun_gg_empty_graph(text = "NO DONUT PLOTTED\nNO FREQUENCY DETECTED", text.size = 3)
-        dev.off()
     }
 }else{
-    pdf(NULL)
+    # no need to use pdf(NULL) with fun_gg_empty_graph()
     final.plot <- fun_gg_empty_graph(text = "NO DONUT PLOTTED\nNO FREQUENCY DETECTED", text.size = 3)
-    dev.off()
 }
 
 if(kind == "functional" & all.annotation.log == TRUE){
-    pdf(NULL)
+    # no need to use pdf(NULL) with fun_gg_empty_graph()
     final.plot <- fun_gg_empty_graph(text = "NO DONUT PLOTTED\nNO FUNCTIONAL ANNOTATION DETECTED", text.size = 3)
-    dev.off()
 }
 
 

@@ -268,7 +268,7 @@ process distance_hist {
     val clone_distance
 
     output:
-    path "*.pdf", emit: histogram_pdf_ch
+    path "seq_distance*.pdf", emit: histogram_pdf_ch
     path "*.png", emit: distance_hist_ch // png plot (but sometimes empty) sustematically returned
     path "*.svg"
     path "distance_hist.log"
@@ -302,7 +302,7 @@ process histogram_assembly {
     """
     #!/bin/bash -ue
     Rscript -e '
-        qpdf::pdf_combine(input = list.files(path = ".", pattern = ".pdf\$"), output = "./seq_distance.pdf")
+        qpdf::pdf_combine(input = list.files(path = ".", pattern = "^seq_distance.*.pdf\$"), output = "./seq_distance.pdf")
     ' |& tee -a histogram_assembly.log
     """
 }
