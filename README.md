@@ -276,9 +276,14 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 ## WHAT'S NEW IN
 
 
+#### v6.8
+
+- igblast_aa parameter not operational yet. igblast_aa = "true" does not work for the moment because no j data in the imgt database and no junction data are returned which block the clone_assignment process
+- tree_vizu process not sensitive to cache
+
 #### v6.7
 
-Problem of cache fixed for distance_hist process and bug fixed for empty pdf plot in this process
+Problem of cache fixed for distance_hist process and bug fixed for empty pdf plot in this process. It was the name seq_distance, creating a replacement of the seq_distance.pdf file
 
 
 #### v6.6
