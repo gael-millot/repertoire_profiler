@@ -11,6 +11,7 @@
 
 
    - [AIM](#aim)
+   - [WARNING](#warning)
    - [CONTENT](#content)
    - [INPUT](#input)
    - [HOW TO RUN](#how-to-run)
@@ -28,6 +29,11 @@
 - Annotation of mRNA sequencing of the Immunoglobuline Heavy or Light variable region (fasta file sequences).
 - Clustering of the annotated sequences into clonal groups (same germline origin).
 - Tree visualization of the clonal groups.
+
+<br /><br />
+## WARNING
+
+Right now, only dedicated to the analysis of VDJ repertoires (corresponding to the germlines/imgt/*<SPECIES>*/vdj folder of the [IMGT database](https://www.imgt.org/IMGTrepertoire/Proteins/index.php#C)
 
 
 <br /><br />
@@ -202,6 +208,7 @@ Mandatory elements:
 | Ig_clustering_xxxxx folder | Description |
 | --- | --- |
 | **reports** | Folder containing all the reports of the different processes, including the *ig_clustering.config* file used. |
+| **repertoires** | Folder containing the repertoires (i.e., contingency tables of the VDJ allele usage. |
 | **png** | Folder containing the graphs in png format. |
 | **svg** | Folder containing the graphs in svg vectorial format. |
 | **RData** | Folder containing, for each clonal group, objects that can be used in R to further analyze of plot the data:<br /><ul><li>db: tibble data frame resulting from the import by the alakazam::readChangeoDb() function<br /></li><li>clones: db in the airClone format<br /></li><li>trees: output of the dowser::getTrees() function using the clones object as input (igphylm tree)</li><br /><br />Also contains the all_trees.RData file that combine the trees R objects of the different files in a single trees object. |

@@ -53,7 +53,7 @@ process workflowParam { // create a file with the workflow parameters in out_pat
 // next process is for repertoire
 process repertoire_names { // cannot be repertoire_names outside of process because the files are present in the docker
     label 'immcantation'
-    publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
+    //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
     cache 'true'
 
     input:
@@ -606,6 +606,35 @@ process file_assembly {
 
 
 
+process repertoire {
+    label 'r_ext'
+    publishDir path: "${out_path}/repertoires", mode: 'copy', pattern: "{rep_*.tsv}", overwrite: false
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{repertoire.log}", overwrite: false
+    cache 'true'
+
+    input:
+    val igblast_database_path
+    path file_assembly_ch
+    path repertoire_names_ch
+    path cute_file
+
+    output:
+    path "rep_*.tsv"
+    path "repertoire.log"
+
+    script:
+    """
+    #!/bin/bash -ue
+    repertoire.R \
+"${igblast_database_path}" \
+"${file_assembly_ch}" \
+"${repertoire_names_ch}" \
+"${cute_file}" \
+"repertoire.log"
+    """
+}
+
+
 
 process get_tree {
     label 'immcantation'
@@ -737,7 +766,6 @@ process tree_vizu {
 "${cute_file}" \
 "tree_vizu.log"
     """
-    // Warning: $workflow.projectDir/bin/ is the only way to have the execution rights of a .R file in the bin directory when the gitlab repo is pulled into /pasteur/sonic/homes/gmillot/.nextflow/assets/. See https://github.com/nextflow-io/nextflow/issues/698. Otherwise, the following message can appear: Fatal error: cannot open file '/pasteur/sonic/homes/gmillot/.nextflow/assets/gmillot/14985_loot/bin/plot_fivep_filtering.R': No such file or directory
 }
 
 
@@ -825,25 +853,6 @@ process donut_assembly {
     """
 }
 
-process repertoire {
-    label 'immcantation'
-    publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{*.RData}", overwrite: false
-    cache 'true'
-
-    input:
-    path mutation_load_ch2
-
-    output:
-    path "tree_dismissed_seq.tsv", emit: no_tree_ch, optional: true
-
-    script:
-    """
-    #!/bin/bash -ue
-    Rscript -e '
-        qpdf::pdf_combine(input = list.files(path = ".", pattern = ".pdf\$"), output = "./donuts.pdf")
-    ' |& tee -a donut_assembly.log
-    """
-}
 
 
 
@@ -1259,6 +1268,15 @@ workflow {
         distToNearest.out.distToNearest_ch
     )
     file_assembly.out.file_assembly_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE file_assembly PROCESS\n\n========\n\n"}}
+
+
+
+    repertoire(
+        igblast_database_path,
+        file_assembly.out.file_assembly_ch,
+        repertoire_names.out.repertoire_names_ch,
+        cute_file
+    )
 
 
 
