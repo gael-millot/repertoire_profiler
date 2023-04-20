@@ -104,7 +104,6 @@ rm(tempo.cat)
 # log = "repertoire.log"
 
 
-
 ################################ end Test
 
 ################################ Recording of the initial parameters
@@ -151,6 +150,148 @@ for(i in 1:length(param.list)){
 # 2) Argument names of each function must not be a name of Global objects (error message otherwise)
 # 3) Argument name of each function ends with "_fun" in the first function, "_2fun" in the second, etc. This prevent conflicts with the argument partial names when using these functions, notably when they are imbricated
 
+
+
+fun_gg_heatmap2 <- function(
+    data1, 
+    x = NULL, 
+    y = NULL, 
+    z, 
+    label.size = 12, 
+    color.low = "white", 
+    color.high = "blue", 
+    title = "", 
+    title.size = 12
+){
+    # AIM
+    # Plot a ggplot2 heatmap using contingency data
+    # For ggplot2 specifications, see: https://ggplot2.tidyverse.org/articles/ggplot2-specs.html
+    # WARNINGS
+    # Size arguments (hole.text.size, border.size, title.text.size and annotation.size) are in mm. See Hadley comment in https://stackoverflow.com/questions/17311917/ggplot2-the-unit-of-size. See also http://sape.inf.usi.ch/quick-reference/ggplot2/size). Unit object are not accepted, but conversion can be used (e.g., grid::convertUnit(grid::unit(0.2, "inches"), "mm", valueOnly = TRUE))
+    # ARGUMENTS
+    # data1: a dataframe compatible with ggplot2 or a matrix of contingency
+    # x: single character string of the data1 column name of the x-axis heatmap if data1 is a data.frame. Ignored if data1 is a matrix. Write NULL if data1 is a data.frame with a single categorical column and that the returned heatmap is vertical (single colum)
+    # x: single character string of the data1 column name of the y-axis heatmap if data1 is a data.frame. Ignored if data1 is a matrix. Write NULL if data1 is a data.frame with a single categorical column and that the returned heatmap is horizontal (single row)
+    # z: single character string of the data1 column name of the heatmap frequencie if data1 is a data.frame. Ignored if data1 is a matrix
+    # label.size: single positive numeric value of the x-axis and y-axis font size in mm
+    # color.low: a single character string or integer of the color corresponding to the lower value in the gradient color. Colors can be color names (see ?colors() in R), hexadecimal color codes, or integers (according to the ggplot2 palette)
+    # color.high: as the color.lower argument but for the higher value in the gradient color
+    # title: single character string of the graph title
+    # title.size: single numeric value of the title font size in mm
+
+    # add: character string allowing to add more ggplot2 features (dots, lines, themes, facet, etc.). Ignored if NULL
+    # WARNING: (1) the string must start with "+", (2) the string must finish with ")" and (3) each function must be preceded by "ggplot2::". Example: "+ ggplot2::coord_flip() + ggplot2::theme_bw()"
+    # If the character string contains the "ggplot2::theme" string, then the article argument of fun_gg_donut() (see above) is ignored with a warning. In addition, some arguments can be overwritten, like x.angle (check all the arguments)
+    # Handle the add argument with caution since added functions can create conflicts with the preexisting internal ggplot2 functions
+    # WARNING: the call of objects inside the quotes of add can lead to an error if the name of these objects are some of the fun_gg_donut() arguments. Indeed, the function will use the internal argument instead of the global environment object. Example article <- "a" in the working environment and add = '+ ggplot2::ggtitle(article)'. The risk here is to have TRUE as title. To solve this, use add = '+ ggplot2::ggtitle(get("article", envir = .GlobalEnv))'
+    # return: logical (either TRUE or FALSE). Return the graph parameters?
+    # return.ggplot: logical (either TRUE or FALSE). Return the ggplot object in the output list? Ignored if return argument is FALSE. WARNING: always assign the fun_gg_donut() function (e.g., a <- fun_gg_donut()) into something if the return.ggplot argument is TRUE, otherwise, double plotting is performed. See $ggplot in the RETURN section below for more details
+    # return.gtable: logical (either TRUE or FALSE). Return the full graph (main, title and legend) as a gtable of grobs in the output list? See $gtable in the RETURN section below for more details
+    # plot: logical (either TRUE or FALSE). Plot the graphic? If FALSE and return argument is TRUE, graphical parameters and associated warnings are provided without plotting
+    # warn.print: logical (either TRUE or FALSE). Print warnings at the end of the execution? ? If FALSE, warning messages are never printed, but can still be recovered in the returned list. Some of the warning messages (those delivered by the internal ggplot2 functions) are not apparent when using the argument plot = FALSE
+    # lib.path: vector of character strings indicating the absolute path of the required packages (see below). if NULL, the function will use the R library default folders
+    # RETURN
+    # a heatmap  if plot argument is TRUE
+    # a list of the graph info if return argument is TRUE:
+    # $data: the initial data with modifications and with graphic information added
+    # $removed.row.nb: a list of the removed rows numbers in data frames (because of NA). NULL if no row removed
+    # $removed.rows: a list of the removed rows in data frames (because of NA). NULL if no row removed
+    # $plot.data
+    # $panel: the variable names used for the panels (NULL if no panels). WARNING: NA can be present according to ggplot2 upgrade to v3.3.0
+    # $axes: the x-axis and y-axis info
+    # $warn: the warning messages. Use cat() for proper display. NULL if no warning. WARNING: warning messages delivered by the internal ggplot2 functions are not apparent when using the argument plot = FALSE
+    # $ggplot: ggplot object that can be used for reprint (use print($ggplot) or update (use $ggplot + ggplot2::...). NULL if return.ggplot argument is FALSE. Warning: the legend is not in $ggplot as it is in a separated grob (use $gtable to get it). Of note, a non-null $ggplot in the output list is sometimes annoying as the manipulation of this list prints the plot
+    # $gtable: gtable object that can be used for reprint (use gridExtra::grid.arrange(...$ggplot) or with additionnal grobs (see the grob decomposition in the examples). Contrary to $ggplot, a non-NULL $gtable in the output list is not annoying as the manipulation of this list does not print the plot
+    # REQUIRED PACKAGES
+    # ggplot2
+    # gridExtra
+    # grid
+    # lemon (in case of use in the add argument)
+    # REQUIRED FUNCTIONS FROM THE cute PACKAGE
+    # fun_gg_palette()
+    # fun_gg_get_legend()
+    # fun_pack()
+    # fun_check()
+    # EXAMPLES
+    # obs1 <- data.frame(X = "A", Var1 = c("TUUT", "WIIM", "BIP", "WROUM"), Count = c(20,15,0,1), stringsAsFactors = TRUE) ; fun_gg_heatmap(data1 = obs1, x = "X", y = "Var1", z = "Count", label.size = 12, size.min = 1, color.low = "white", color.high = "blue", title = tempo.title, title.size = 12)
+    # DEBUGGING
+    # obs1 <- data.frame(X = "A", Var1 = c("TUUT", "WIIM", "BIP", "WROUM"), Count = c(20,15,0,1), stringsAsFactors = TRUE) ; data1 = obs1 ; x = "X" ; y = "Var1" ; z = "Count" ; label.size = 12 ; size.min = 1 ; color.low = "white" ; color.high = "blue" ; title = tempo.title ; title.size = 12 ; add = NULL ; return = TRUE ; return.ggplot = FALSE ; return.gtable = TRUE ; plot = TRUE ; warn.print = FALSE ; lib.path = NULL
+    # function name
+    tempo.gg.name <- "gg.indiv.plot."
+    tempo.gg.count <- 0
+
+
+    if(class(data1) == "data.frame" & (is.null(x) | is.null(y)) & ncol(data1) != 2){
+        stop(paste0("\n\n================\n\nERROR IN repertoire.R:\ndata1 ARGUMENT MUST BE A TWO COLUMN DATA FRAME IF data1 ARGUMENT IS A DATA FRAME AND IF x OR y ARGUMENT IS NULL\n\n================\n\n"), call. = FALSE)
+    }
+    if(class(data1) == "data.frame" & is.null(x) & ncol(data1) == 2){
+        data1 <- data.frame(data1, X = "A")
+        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::ggplot(
+            data = data1,
+            ggplot2::aes_string(x = "X", y = y, fill= z) # Var1 with first capital letter because converted by table()
+        ))
+    }else if(class(data1) == "data.frame" & is.null(y) & ncol(data1) == 2){
+        data1 <- data.frame(data1, Y = "A")
+        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::ggplot(
+            data = data1,
+            ggplot2::aes_string(x = x, y = "Y", fill= z) # Var1 with first capital letter because converted by table()
+        ))
+    }else if(class(data1) == "data.frame" & ncol(data1) == 3){
+        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::ggplot(
+            data = data1,
+             ggplot2::aes_string(x = x, y = y, fill= z) # Var1 with first capital letter because converted by table()
+        ))
+    }else{
+        stop(paste0("\n\n================\n\nINTERNAL CODE ERROR IN repertoire.R\n\n================\n\n"), call. = FALSE)
+    }
+    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::geom_tile())
+    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_fill_gradient2(
+        low = color.low, 
+        high = color.high,
+        breaks = seq(0, max(data1[ , z], na.rm = TRUE), length.out = 5),
+        limits = c(0, max(data1[ , z], na.rm = TRUE))
+    ))
+    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::coord_fixed(ratio = 1))
+    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_y_discrete(
+        expand = c(0, 0)
+    ))
+    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_x_discrete(
+        expand = c(0, 0)
+    ))
+    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::theme(
+        axis.text.x =  if(is.null(x)){ggplot2::element_blank()}else{ggplot2::element_text(size = label.size, angle = 90)},
+        axis.title.x =  ggplot2::element_blank(),
+        axis.ticks.x = if(is.null(x)){ggplot2::element_line(size = NA)}else{ggplot2::element_line(size = 0.1)},
+        axis.text.y = if(is.null(y)){ggplot2::element_blank()}else{ggplot2::element_text(size = label.size)},
+        axis.title.y =  ggplot2::element_blank(),
+        axis.ticks.y = if(is.null(y)){ggplot2::element_line(size = NA)}else{ggplot2::element_line(size = 0.1)},
+        panel.border = element_rect(linetype = "solid", fill = NA, size = 0.1),
+        panel.background = element_rect(fill = "white", colour = "white"),
+        legend.title = ggplot2::element_text(size = 12), 
+        legend.text = ggplot2::element_text(size = 8)
+    ))
+    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(
+        fill = ggplot2::guide_colourbar(
+            ticks = FALSE
+        )
+    ))
+    bef.final.plot <- ggplot2::ggplot_build(eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + "))))
+    legend.final <- fun_gg_get_legend(ggplot_built = bef.final.plot) # get legend
+    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(fill = "none", color = "none", size = "none")) # inactivate the initial legend
+    title.grob <- grid::textGrob(
+        label = title,
+        x = grid::unit(0, "lines"), 
+        y = grid::unit(0, "lines"),
+        hjust = 0,
+        vjust = 0,
+        gp = grid::gpar(fontsize = 12)
+    )
+    # end title
+    pdf(NULL)
+    output <- suppressMessages(suppressWarnings(gridExtra::arrangeGrob(grobs = list(eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + "))), legend.final), ncol=2, widths=c(1, 0.5), top = title.grob, left = " ", right = " "))) # , left = " ", right = " " : trick to add margins in the plot. padding =  unit(0.5, "inch") is for top margin above the title
+    suppressMessages(dev.off())
+    return(output)
+}
 
 ################ import functions from cute little functions toolbox
 
@@ -333,6 +474,7 @@ for(i1 in 1:length(alleles)){
 
 ################ data verification
 
+
 if( ! all(var1 %in% c("v_call", "j_call"))){
     stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 5 IN repertoire.R:\nPROBLEM WITH THE var1 INTERNAL VARIABLE THAT MUST BE \"v_call\" AND \"j_call\"\nHERE IT IS:\n", paste(var1, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
 }
@@ -348,10 +490,12 @@ for(i1 in 1:length(alleles)){
     }
 }
 
+
 ################ end data verification
 
 
-################ data modification and saving
+################ data modification, plotting and saving
+
 
 # first loop with v_call and second with j_call
 allele.kind <- tolower(substring(names(alleles), nchar(names(alleles)))) # get V from IGHV
@@ -366,27 +510,43 @@ for(i0 in 1:length(var1)){
         tempo.table <- table(df[ , names(df) == var1[i0]])
         write.table(tempo.table, file = paste0("./rep_", names(alleles)[tempo.pos], ".tsv"), row.names = FALSE, col.names = FALSE, sep = "\t") # separate repertoires
         # plot
-        tempo.table.gg <- data.frame(as.data.frame(tempo.table), X = 1)
-        tempo.gg.name <- "gg.indiv.plot."
-        tempo.gg.count <- 0
-        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::ggplot(
-            data = tempo.table.gg,
-             aes(x = X, y = var1, fill= Freq)
-        ))
-        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::geom_tile())
-        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_fill_gradient(low="white", high="blue"))
-        # assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), hrbrthemes::theme_ipsum())
-        final.plot <- eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + ")))
-        ggplot2::ggsave(filename = paste0(names(alleles)[tempo.pos], ".png"), plot = final.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        ggplot2::ggsave(filename = paste0(names(alleles)[tempo.pos], ".svg"), plot = final.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        ggplot2::ggsave(filename = paste0(names(alleles)[tempo.pos], ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        for(i4 in c("non-zero", "all")){
+            if(sum(tempo.table, na.rm = TRUE) > 0){
+                if(i4 == "non-zero"){
+                    tempo.table.gg <- tempo.table[tempo.table > 0]
+                }else{
+                    tempo.table.gg <- tempo.table
+                }
+                tempo.table.gg <- as.data.frame(tempo.table.gg)
+                names(tempo.table.gg)[names(tempo.table.gg) == "Freq"] <- "Count"
+                output.name <- names(alleles)[tempo.pos]
+                tempo.title <- paste0(
+                    "Locus: ", names(alleles)[tempo.pos], "\n",
+                    "Alleles: ", i4
+                )
+                label.size <- -5/132 * nrow(tempo.table.gg) + 1081/66 # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
+                final.plot <- fun_gg_heatmap2(
+                    data1 = tempo.table.gg,
+                    x = NULL,
+                    y = "Var1",
+                    z = "Count",
+                    label.size = ifelse(label.size <= 0, 1, label.size),
+                    color.low = "white",
+                    color.high = "blue",
+                    title = tempo.title,
+                    title.size = 12
+                )
+            }else{
+                # no need to use pdf(NULL) with fun_gg_empty_graph()
+                final.plot <- fun_gg_empty_graph(text = "NO GRAPH PLOTTED FOR ", output.name, "\nNO ALLELE DETECTED", text.size = 3)
+            }
+            ggplot2::ggsave(filename = paste0(output.name, "_", i4, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300) # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
+            ggplot2::ggsave(filename = paste0(output.name, "_", i4, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300)
+            ggplot2::ggsave(filename = paste0(output.name, "_", i4, ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 4, height = 10, units = "in", dpi = 300)
+        }
+        # end plot
     }
 }
-
-
-################ end data modification and saving
-
-################ saving
 
 
 # combined repertoires
@@ -401,25 +561,56 @@ for(i0 in 1:(length(var1) - 1)){
         }else{
             tempo.pos1 <- which(tempo.log1)
             tempo.pos2 <- which(tempo.log2)
-            write.table(table(df[names(df) %in% c(var1[i0], var1[i1])]), file = paste0("./rep_", names(alleles)[tempo.pos1], "x", names(alleles)[tempo.pos2], ".tsv"), row.names = TRUE, col.names = NA, sep = "\t") # separate repertoires
+            tempo.table2 <- table(df[names(df) %in% c(var1[i0], var1[i1])])
+            output.name <- paste0(names(alleles)[tempo.pos1], "_x_", names(alleles)[tempo.pos2])
+            write.table(tempo.table2, file = paste0("./rep_", output.name, ".tsv"), row.names = TRUE, col.names = NA, sep = "\t") # separate repertoires
+            # plot
+            for(i4 in c("non-zero", "all")){
+                if(sum(tempo.table2, na.rm = TRUE) > 0){
+                    if(i4 == "non-zero"){
+                        tempo.log <- apply(tempo.table2, 1, sum, na.rm = TRUE) > 0
+                        tempo.table3 <- tempo.table2[tempo.log, ]
+                        tempo.log <- apply(tempo.table3, 2, sum, na.rm = TRUE) > 0
+                        tempo.table3 <- tempo.table3[ , tempo.log]
+                        tempo.table.gg <- tempo.table3
+                    }else{
+                        tempo.table.gg <- tempo.table2
+                    }
+                    tempo.table.gg <- as.data.frame(tempo.table.gg)
+                    names(tempo.table.gg)[names(tempo.table.gg) == "Freq"] <- "Count"
+                    tempo.title <- paste0(
+                        "Locus: ", output.name, "\n",
+                        "Alleles: ", i4
+                    )
+                    label.size <- -5/132 * nrow(tempo.table.gg) + 1081/66 # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
+                    final.plot <- fun_gg_heatmap2(
+                        data1 = tempo.table.gg,
+                        x = var1[2],
+                        y = var1[1],
+                        z = "Count",
+                        label.size = ifelse(label.size <= 0, 1, label.size), 
+                        color.low = "white",
+                        color.high = "blue",
+                        title = tempo.title,
+                        title.size = 12
+                    )
+                }else{
+                    # no need to use pdf(NULL) with fun_gg_empty_graph()
+                    final.plot <- fun_gg_empty_graph(text = "NO GRAPH PLOTTED FOR ", output.name, "\nNO ALLELE DETECTED", text.size = 3)
+                }
+                ggplot2::ggsave(filename = paste0(output.name, "_", i4, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300) # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
+                ggplot2::ggsave(filename = paste0(output.name, "_", i4, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300)
+                ggplot2::ggsave(filename = paste0(output.name, "_", i4, ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 4, height = 10, units = "in", dpi = 300)
+            }
+            # end plot
         }
     }
 }
 
-
-################ end saving
-
+tempo <- qpdf::pdf_combine(input = list.files(path = ".", pattern = ".pdf$"), output = "./repertoire.pdf") # assignation to prevent a returned element
 
 
-################ Plotting
-
-
-
-
-
-
-
-################ end Plotting tree
+################ end data modification, plotting and saving
 
 
 ################ Pdf window closing

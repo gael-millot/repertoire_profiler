@@ -608,6 +608,9 @@ process file_assembly {
 
 process repertoire {
     label 'r_ext'
+    publishDir path: "${out_path}", mode: 'copy', pattern: "{repertoire.pdf}", overwrite: false
+    publishDir path: "${out_path}/png", mode: 'copy', pattern: "{*.png}", overwrite: false
+    publishDir path: "${out_path}/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
     publishDir path: "${out_path}/repertoires", mode: 'copy', pattern: "{rep_*.tsv}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{repertoire.log}", overwrite: false
     cache 'true'
@@ -619,6 +622,9 @@ process repertoire {
     path cute_file
 
     output:
+    path "repertoire.pdf"
+    path "*.svg"
+    path "*.png"
     path "rep_*.tsv"
     path "repertoire.log"
 

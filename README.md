@@ -283,6 +283,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 ## WHAT'S NEW IN
 
 
+#### v6.9
+
+Repertoires added
+
+
 #### v6.8
 
 - igblast_aa parameter not operational yet. igblast_aa = "true" does not work for the moment because no j data in the imgt database and no junction data are returned which block the clone_assignment process
