@@ -416,9 +416,9 @@ obs2 <- data.frame(obs2, Prop = obs2$Freq / sum(obs2$Freq), kind = kind)
 obs2$Germline_Clone_Name <- factor(obs2$Germline_Clone_Name, levels = obs2$Germline_Clone_Name[order(obs2$Prop, decreasing = TRUE)]) # reorder so that the donut is according to decreasing proportion starting at the top in a clockwise direction
 obs2 <- obs2[order(as.numeric(obs2$Germline_Clone_Name), decreasing = FALSE), ] # obs2 with rows in decreasing order, according to Prop
 # # warning: I can use all.annotation.log because I have duplicated the first column of the dataset in the second column, in order to change the name in the first column with metadata. If all(obs[ , 1] == obs[ , 2]) == TRUE, it means no annotation added
-if(grepl(x = names(obs)[2], pattern = "^initial_")){
+if(grepl(x = names(obs)[2], pattern = "^initial_")){ # means that fonctional annotations are present
     annotation.log <- obs[ , 1] == obs[ , 2]
-    all.annotation.log <- all(annotation.log)
+    all.annotation.log <- all(annotation.log) # if one difference between obs[ , 1] == obs[ , 2], then all.annotation.log is FALSE
 }else{
     all.annotation.log <- TRUE
 }

@@ -103,7 +103,6 @@ rm(tempo.cat)
 # cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.4.0/cute_little_R_functions.R"
 # log = "repertoire.log"
 
-
 ################################ end Test
 
 ################################ Recording of the initial parameters
@@ -160,6 +159,9 @@ fun_gg_heatmap2 <- function(
     label.size = 12, 
     color.low = "white", 
     color.high = "blue", 
+    zero.color = grey(0.9),
+    cell.value = TRUE,
+    cell.value.size = 6,
     title = "", 
     title.size = 12
 ){
@@ -176,6 +178,9 @@ fun_gg_heatmap2 <- function(
     # label.size: single positive numeric value of the x-axis and y-axis font size in mm
     # color.low: a single character string or integer of the color corresponding to the lower value in the gradient color. Colors can be color names (see ?colors() in R), hexadecimal color codes, or integers (according to the ggplot2 palette)
     # color.high: as the color.lower argument but for the higher value in the gradient color
+    # zero.color: as the color.lower argument but for the empty cells (zero value or NA)
+    # cell.value: single logical value (TRUE or FALSE). Display values inside cells ?
+    # cell.value.size: single positive numeric value of the cell value font size in mm. Ignored if cell.value is FALSE
     # title: single character string of the graph title
     # title.size: single numeric value of the title font size in mm
 
@@ -215,14 +220,14 @@ fun_gg_heatmap2 <- function(
     # EXAMPLES
     # obs1 <- data.frame(X = "A", Var1 = c("TUUT", "WIIM", "BIP", "WROUM"), Count = c(20,15,0,1), stringsAsFactors = TRUE) ; fun_gg_heatmap(data1 = obs1, x = "X", y = "Var1", z = "Count", label.size = 12, size.min = 1, color.low = "white", color.high = "blue", title = tempo.title, title.size = 12)
     # DEBUGGING
-    # obs1 <- data.frame(X = "A", Var1 = c("TUUT", "WIIM", "BIP", "WROUM"), Count = c(20,15,0,1), stringsAsFactors = TRUE) ; data1 = obs1 ; x = "X" ; y = "Var1" ; z = "Count" ; label.size = 12 ; size.min = 1 ; color.low = "white" ; color.high = "blue" ; title = tempo.title ; title.size = 12 ; add = NULL ; return = TRUE ; return.ggplot = FALSE ; return.gtable = TRUE ; plot = TRUE ; warn.print = FALSE ; lib.path = NULL
+    # obs1 <- data.frame(X = "A", Var1 = c("TUUT", "WIIM", "BIP", "WROUM"), Count = c(20,15,NA,1), stringsAsFactors = TRUE) ; data1 = obs1 ; x = "X" ; y = "Var1" ; z = "Count" ; label.size = 12 ; size.min = 1 ; color.low = "white" ; color.high = "blue" ; zero.color = grey(0.9) ; cell.value = TRUE ; cell.value.size = 6 ; title = tempo.title ; title.size = 12 ; add = NULL ; return = TRUE ; return.ggplot = FALSE ; return.gtable = TRUE ; plot = TRUE ; warn.print = FALSE ; lib.path = NULL
     # function name
     tempo.gg.name <- "gg.indiv.plot."
     tempo.gg.count <- 0
 
 
     if(class(data1) == "data.frame" & (is.null(x) | is.null(y)) & ncol(data1) != 2){
-        stop(paste0("\n\n================\n\nERROR IN repertoire.R:\ndata1 ARGUMENT MUST BE A TWO COLUMN DATA FRAME IF data1 ARGUMENT IS A DATA FRAME AND IF x OR y ARGUMENT IS NULL\n\n================\n\n"), call. = FALSE)
+        stop(paste0("\n\n================\n\nERROR IN fun_gg_heatmap2:\ndata1 ARGUMENT MUST BE A TWO COLUMN DATA FRAME IF data1 ARGUMENT IS A DATA FRAME AND IF x OR y ARGUMENT IS NULL\n\n================\n\n"), call. = FALSE)
     }
     if(class(data1) == "data.frame" & is.null(x) & ncol(data1) == 2){
         data1 <- data.frame(data1, X = "A")
@@ -242,14 +247,18 @@ fun_gg_heatmap2 <- function(
              ggplot2::aes_string(x = x, y = y, fill= z) # Var1 with first capital letter because converted by table()
         ))
     }else{
-        stop(paste0("\n\n================\n\nINTERNAL CODE ERROR IN repertoire.R\n\n================\n\n"), call. = FALSE)
+        stop(paste0("\n\n================\n\nINTERNAL CODE ERROR IN fun_gg_heatmap2\n\n================\n\n"), call. = FALSE)
     }
     assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::geom_tile())
+    if(cell.value){
+        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::geom_text(aes_string(label = z), size = cell.value.size))
+    }
     assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_fill_gradient2(
         low = color.low, 
         high = color.high,
         breaks = seq(0, max(data1[ , z], na.rm = TRUE), length.out = 5),
-        limits = c(0, max(data1[ , z], na.rm = TRUE))
+        limits = c(0, max(data1[ , z], na.rm = TRUE)), 
+        na.value = zero.color
     ))
     assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::coord_fixed(ratio = 1))
     assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_y_discrete(
@@ -276,7 +285,7 @@ fun_gg_heatmap2 <- function(
         )
     ))
     bef.final.plot <- ggplot2::ggplot_build(eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + "))))
-    legend.final <- fun_gg_get_legend(ggplot_built = bef.final.plot) # get legend
+    legend.final <- suppressMessages(suppressWarnings(fun_gg_get_legend(ggplot_built = bef.final.plot))) # get legend
     assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(fill = "none", color = "none", size = "none")) # inactivate the initial legend
     title.grob <- grid::textGrob(
         label = title,
@@ -432,6 +441,7 @@ if(any(arg.check2) == TRUE){ # normally no NA
 ################ internal variables
 
 var1 <- c("v_call", "j_call") # names of the columns to deal with
+var2 <- c("non-zero", "all") # kind of repertoire (warning functional can be added in var2 below)
 
 ################ end internal variables
 
@@ -496,6 +506,15 @@ for(i1 in 1:length(alleles)){
 
 ################ data modification, plotting and saving
 
+if(grepl(x = names(df)[2], pattern = "^initial_")){ # means that fonctional annotations are present
+    annotation.log <- df[ , 1] == df[ , 2]
+    all.annotation.log <- all(annotation.log) # if one difference between df[ , 1] == df[ , 2], then all.annotation.log is FALSE
+}else{
+    all.annotation.log <- TRUE
+}
+if(all.annotation.log == FALSE){
+    var2 <- c(var2, "functional")
+}
 
 # first loop with v_call and second with j_call
 allele.kind <- tolower(substring(names(alleles), nchar(names(alleles)))) # get V from IGHV
@@ -506,22 +525,31 @@ for(i0 in 1:length(var1)){
         stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 8 IN repertoire.R:\nPROBLEM WITH tempo.log:\n", paste(tempo.log, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
     }else{
         tempo.pos <- which(tempo.log)
-        df[ , names(df) == var1[i0]] <- factor(df[ , names(df) == var1[i0]], levels = alleles[[tempo.pos]])
-        tempo.table <- table(df[ , names(df) == var1[i0]])
-        write.table(tempo.table, file = paste0("./rep_", names(alleles)[tempo.pos], ".tsv"), row.names = FALSE, col.names = FALSE, sep = "\t") # separate repertoires
+        output.name <- names(alleles)[tempo.pos]
+        df[ , names(df) == var1[i0]] <- factor(df[ , names(df) == var1[i0]], levels = unique(alleles[[tempo.pos]]))
         # plot
-        for(i4 in c("non-zero", "all")){
-            if(sum(tempo.table, na.rm = TRUE) > 0){
-                if(i4 == "non-zero"){
-                    tempo.table.gg <- tempo.table[tempo.table > 0]
+        for(i4 in var2){
+            if(i4 == "non-zero"){
+                tempo.table <- table(df[ , names(df) == var1[i0]])
+                tempo.table.gg <- tempo.table[tempo.table > 0]
+            }else if(i4 == "functional"){
+                tempo.table <- table(df[ ! annotation.log, names(df) == var1[i0]])
+                tempo.table.gg <- tempo.table[tempo.table > 0]
+            }else{
+                tempo.table <- table(df[ , names(df) == var1[i0]])
+                write.table(tempo.table, file = paste0("./rep_", names(alleles)[tempo.pos], ".tsv"), row.names = FALSE, col.names = FALSE, sep = "\t") # separate repertoires
+                tempo.table.gg <- tempo.table
+            }
+            if(sum(tempo.table.gg, na.rm = TRUE) > 0){
+                if(length(tempo.table.gg) == 1){
+                    tempo.table.gg <- data.frame(Var1 = names(tempo.table.gg), Count = tempo.table.gg, row.names = NULL)
                 }else{
-                    tempo.table.gg <- tempo.table
+                    tempo.table.gg <- as.data.frame(tempo.table.gg)
+                    names(tempo.table.gg)[names(tempo.table.gg) == "Freq"] <- "Count"
                 }
-                tempo.table.gg <- as.data.frame(tempo.table.gg)
-                names(tempo.table.gg)[names(tempo.table.gg) == "Freq"] <- "Count"
-                output.name <- names(alleles)[tempo.pos]
+                tempo.table.gg$Count[tempo.table.gg$Count == 0] <- NA
                 tempo.title <- paste0(
-                    "Locus: ", names(alleles)[tempo.pos], "\n",
+                    "Locus: ", output.name, "\n",
                     "Alleles: ", i4
                 )
                 label.size <- -5/132 * nrow(tempo.table.gg) + 1081/66 # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
@@ -533,6 +561,9 @@ for(i0 in 1:length(var1)){
                     label.size = ifelse(label.size <= 0, 1, label.size),
                     color.low = "white",
                     color.high = "blue",
+                    zero.color = grey(0.95),
+                    cell.value = TRUE,
+                    cell.value.size = ifelse(label.size <= 0, 1, label.size) / 2,
                     title = tempo.title,
                     title.size = 12
                 )
@@ -561,23 +592,36 @@ for(i0 in 1:(length(var1) - 1)){
         }else{
             tempo.pos1 <- which(tempo.log1)
             tempo.pos2 <- which(tempo.log2)
-            tempo.table2 <- table(df[names(df) %in% c(var1[i0], var1[i1])])
             output.name <- paste0(names(alleles)[tempo.pos1], "_x_", names(alleles)[tempo.pos2])
-            write.table(tempo.table2, file = paste0("./rep_", output.name, ".tsv"), row.names = TRUE, col.names = NA, sep = "\t") # separate repertoires
             # plot
-            for(i4 in c("non-zero", "all")){
-                if(sum(tempo.table2, na.rm = TRUE) > 0){
-                    if(i4 == "non-zero"){
-                        tempo.log <- apply(tempo.table2, 1, sum, na.rm = TRUE) > 0
-                        tempo.table3 <- tempo.table2[tempo.log, ]
-                        tempo.log <- apply(tempo.table3, 2, sum, na.rm = TRUE) > 0
-                        tempo.table3 <- tempo.table3[ , tempo.log]
-                        tempo.table.gg <- tempo.table3
+            for(i4 in var2){
+                # here the work is using data frames because it keeps the structure even if one cell
+                if(i4 == "non-zero"){
+                    tempo.table2 <- as.data.frame.matrix(table(df[names(df) %in% c(var1[i0], var1[i1])]))
+                    tempo.log <- apply(tempo.table2, 1, sum, na.rm = TRUE) > 0
+                    tempo.table3 <- tempo.table2[tempo.log, ]
+                    tempo.log <- apply(tempo.table3, 2, sum, na.rm = TRUE) > 0
+                    tempo.table3 <- tempo.table3[tempo.log]
+                }else if(i4 == "functional"){
+                    tempo.table2 <- as.data.frame.matrix(table(df[ ! annotation.log, names(df) %in% c(var1[i0], var1[i1])]))
+                    tempo.log <- apply(tempo.table2, 1, sum, na.rm = TRUE) > 0
+                    tempo.table3 <- tempo.table2[tempo.log, ]
+                    tempo.log <- apply(tempo.table3, 2, sum, na.rm = TRUE) > 0
+                    tempo.table3 <- tempo.table3[tempo.log]
+                }else{
+                    tempo.table2 <- as.data.frame.matrix(table(df[names(df) %in% c(var1[i0], var1[i1])]))
+                    write.table(tempo.table2, file = paste0("./rep_", output.name, ".tsv"), row.names = TRUE, col.names = NA, sep = "\t") # separate repertoires
+                    tempo.table3 <- tempo.table2
+                }
+                # end here the work is using data frames because it keeps the structure even if one cell
+                if(sum(tempo.table3, na.rm = TRUE) > 0){
+                    if(nrow(tempo.table3) > 1 & ncol(tempo.table3) > 1){
+                        tempo.table.gg <- as.data.frame(as.table(as.matrix(tempo.table3)))
                     }else{
-                        tempo.table.gg <- tempo.table2
+                        tempo.table.gg <- data.frame(Var1 = rownames(tempo.table3), Var2 = colnames(tempo.table3), Freq = tempo.table3, row.names = NULL)
                     }
-                    tempo.table.gg <- as.data.frame(tempo.table.gg)
-                    names(tempo.table.gg)[names(tempo.table.gg) == "Freq"] <- "Count"
+                    names(tempo.table.gg) <- c(var1, "Count")
+                    tempo.table.gg$Count[tempo.table.gg$Count == 0] <- NA
                     tempo.title <- paste0(
                         "Locus: ", output.name, "\n",
                         "Alleles: ", i4
@@ -591,6 +635,9 @@ for(i0 in 1:(length(var1) - 1)){
                         label.size = ifelse(label.size <= 0, 1, label.size), 
                         color.low = "white",
                         color.high = "blue",
+                        zero.color = grey(0.95),
+                        cell.value = TRUE,
+                        cell.value.size = ifelse(label.size <= 0, 1, label.size) / 3,
                         title = tempo.title,
                         title.size = 12
                     )

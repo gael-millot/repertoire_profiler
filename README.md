@@ -283,6 +283,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 ## WHAT'S NEW IN
 
 
+#### v6.10
+
+Repertoires improved
+
+
 #### v6.9
 
 Repertoires added
