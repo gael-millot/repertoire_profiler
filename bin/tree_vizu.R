@@ -107,8 +107,9 @@ rm(tempo.cat)
 ################################ Test
 
 # setwd("C:/Users/gael/Documents/Git_projects/ig_clustering/dev/test")
+# setwd("Z:/Alice/sort1_VH/ig_clustering-v6.11/work/09/5b992566fc7ad2e7bea36f04ecf57e")
 # tree_kind = "rectangular"
-# tree_duplicate_seq = "TRUE" 
+# tree_duplicate_seq = "FALSE" 
 # tree_leaf_color = "NULL" 
 # tree_leaf_shape = "23" 
 # tree_leaf_size = "3" 
@@ -119,7 +120,7 @@ rm(tempo.cat)
 # tree_right_margin = "1.5" 
 # tree_legend = "TRUE" 
 # tree_meta_path = "./metadata.tsv"
-# tree_meta_legend = "KD"
+# tree_meta_legend = "inverted_KD"
 # cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.2.0/cute_little_R_functions.R"
 # log = "tree_vizu.log"
 # file.remove(c("./all_objects.RData", "./all_trees.RData", "./trees.pdf", "./tree_vizu.log"))
@@ -408,7 +409,7 @@ if( ! (length(tree_legend) == 1 & any(tree_legend %in% c("TRUE", "FALSE")))){ # 
 if(tree_meta_path == "NULL"){
     tree_meta_path <- NULL
 }else if( ! file.exists(tree_meta_path)){
-    tempo.cat <- paste0("ERROR IN tree_vizu.R:\nTHE tree_meta_path PARAMETER MUST BE A VALID PATH OF A FILE IS NOT \"NULL\"\nHERE IT IS: \n", paste0(tree_meta_path, collapse = " "))
+    tempo.cat <- paste0("ERROR IN tree_vizu.R:\nTHE tree_meta_path PARAMETER MUST BE A VALID PATH OF A FILE IF NOT \"NULL\"\nHERE IT IS: \n", paste0(tree_meta_path, collapse = " "))
     text.check2 <- c(text.check2, tempo.cat)
     arg.check2 <- c(arg.check2, TRUE)
 }
@@ -701,6 +702,7 @@ if(length(tempo.list) == 0){
                         if(length(removed.seq) != length(identical.seq)){
                             stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 7 IN tree_vizu.R for clone ID ", clone.id, "\nidentical.seq SHOULD HAVE ", length(removed.seq), " SEQUENCES NAMES\nREMOVED SEQUENCES: ", paste(removed.seq, collapse = " "), "\nIDENTICAL TO: ", paste(identical.seq, collapse = " "), "\nCOLLAPSED NAMES: ", paste(clones$data[[1]]@data$collapsed, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
                         }
+                        suppressWarnings(rm(tempo.df))
                         tempo.df <- data.frame(sequence_id = removed.seq, clone_id = clone.id, clone_name = clone.name, chain = chain, identical_to = identical.seq)
                         write.table(tempo.df, file = paste0("./", clone.id, "_tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = TRUE, sep = "\t")
                         # end get removed sequences info

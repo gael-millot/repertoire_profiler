@@ -351,7 +351,7 @@ process split_by_clones { // split the file into multiple files according to the
     path clone_ch // no parallelization
 
     output:
-    path "*clone-pass.tsv", emit: clone_split_ch // multiple files -> parall expected
+    path "*_translation_clone-pass.tsv", emit: clone_split_ch // multiple files -> parall expected
 
     script:
     """
@@ -363,7 +363,14 @@ process split_by_clones { // split the file into multiple files according to the
     cp -rp TEMPO.tsv "\$FILENAME" # -p for preserve permissions
     rm TEMPO.tsv
     awk -v var1=\$FILENAME -F "\\t" '{
-        if (NR == 1){header=\$0 ; next}else{print header > \$NF"_"var1 ; print \$0 > \$NF"_"var1}
+        if(NR == 1){
+            header=\$0 ; next
+        }else{
+            if(system( "[ -f " \$NF"_"var1 " ] " ) > 0){ # test if a file exists
+                print header > \$NF"_"var1
+            }
+            print \$0 > \$NF"_"var1
+        }
     }' \$FILENAME
     # \$NF is the last column of the file. The value in the last column is used as name
     #  print \$0 > \$NF"_"var1 print the line into the file named \$NF"_"var1
@@ -497,7 +504,7 @@ process seq_name_remplacement {
     val tree_meta_name_replacement
 
     output:
-    path "renamed_seq.tsv", emit: seq_name_remplacement_ch
+    path "*_renamed_seq.tsv", emit: seq_name_remplacement_ch
     path '{metadata2.tsv,NULL}', includeInputs: true, emit: meta_file_ch // either take metadata2.tsv or NULL file. includeInputs: true to authorize the taking of input files, like NULL
     path "seq_name_remplacement.log", emit: seq_name_remplacement_log_ch
 
@@ -515,6 +522,7 @@ process seq_name_remplacement {
     fi
     if [[ "${meta_file}" != "NULL" && "${tree_meta_name_replacement}" != "NULL" ]] ; then # or [[ "${meta_file}" -ne "NULL" && "${tree_meta_name_replacement}" -ne "NULL" ]], but not !=
         Rscript -e '
+            clone_id <- strsplit("${mutation_load_ch}", split = "_")[[1]][1] # because the file name starts by the clone id
             seq <- read.table("./${mutation_load_ch}", sep = "\\t", header = TRUE)
             meta <- read.table("./${meta_file}", sep = "\\t", header = TRUE)
             col_name <- "${tree_meta_name_replacement}"
@@ -531,7 +539,7 @@ process seq_name_remplacement {
             }
             names(seq2)[2] <- paste0("initial_", names(seq)[1])
             names(seq2)[1] <- names(seq)[1]
-            write.table(seq2, file = "./renamed_seq.tsv", row.names = FALSE, col.names = TRUE, sep = "\\t")
+            write.table(seq2, file = paste0("./", clone_id, "_renamed_seq.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
             # modification of the metadata file for the correct use of ggtree::"%<+%" in tree_vizu.R that uses the column name "label" for that 
             meta <- data.frame(meta, initial_label = meta[ , 1])
             meta[ , 1] <- meta[ , col_name]
@@ -539,7 +547,9 @@ process seq_name_remplacement {
             # end modification of the metadata file for the correct use of ggtree::"%<+%" in tree_vizu.R that uses the column name "label" for that 
         ' |& tee -a seq_name_remplacement.log
     else
-        cat ${mutation_load_ch} > ./renamed_seq.tsv |& tee -a seq_name_remplacement.log
+        FILENAME=\$(basename -- ${mutation_load_ch}) # recover a file name without path
+        IFS='_' read -r -a TEMPO <<< "\${FILENAME}" # string split into array
+        cat ${mutation_load_ch} > ./\${TEMPO[0]}_renamed_seq.tsv |& tee -a seq_name_remplacement.log
     fi
     """
 }
@@ -670,7 +680,7 @@ process get_tree {
         exit 1
     fi
     FILENAME=\$(basename -- ${seq_name_remplacement_ch}) # recover a file name without path
-    echo -e "\${FILENAME}:" |& tee -a get_tree.log
+    # echo -e "\${FILENAME}" |& tee -a get_tree.log # activate this line to display the name of the file
     LINE_NB=\$((\$(cat ${seq_name_remplacement_ch} | wc -l) - 1))
     if [[ "\$LINE_NB" -ge "${clone_nb_seq}" ]] ; then # the -ge operator can compare strings and means "greater or equal to"
         cat ${seq_name_remplacement_ch} > seq_for_tree.tsv
@@ -748,7 +758,7 @@ process tree_vizu {
     path "*.pdf"
     path "*.png", emit: tree_vizu_ch // png plot (but sometimes empty) sustematically returned
     path "*.svg"
-    path "*.tsv", emit: tree_seq_not_displayed_ch, optional: true
+    path "*_tree_seq_not_displayed.tsv", emit: tree_seq_not_displayed_ch, optional: true
     path "tree_vizu.log"
     //path "HLP10_tree_parameters.tsv"
 
@@ -1368,7 +1378,7 @@ workflow {
     donut.out.donut_pdf_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: EMPTY OUTPUT FOLLOWING THE donut PROCESS -> NO DONUT RETURNED\n\n")}}
     donut_pdf_ch2 = donut.out.donut_pdf_ch.collect()
 
-    donut.out.donut_tsv_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: -> NO tree_seq_not_displayed.tsv FILE RETURNED\n\n")}}
+    donut.out.donut_tsv_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: -> NO donut_stats.tsv FILE RETURNED\n\n")}}
     donut_tsv_ch2 = donut.out.donut_tsv_ch.collectFile(name: "donut_stats.tsv", skip: 1, keepHeader: true)
     donut_tsv_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
