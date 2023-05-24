@@ -534,6 +534,51 @@ if(length(tempo.list) == 0){
                 tempo.names[tempo.log.germline] <- "Germline"
                 tempo.names[ ! (tempo.log.leaf | tempo.log.germline)] <- NA
                 # end color of leafs and germline
+                # title prep and leaf labeling modification
+                tempo.v <- trees$data[[i3]]@v_gene
+                tempo.j <- trees$data[[i3]]@j_gene
+                chain <- substr(tempo.j, 1, 3) # extract the IGH or IGK name
+                if(chain != substr(tempo.v, 1, 3)){
+                    stop(paste0("\n\n============\n\nERROR IN tree_vizu.R\nTHE CHAIN OF THE clone_id ", trees$data[[i3]]@clone, " IS NOT THE SAME BETWEEN V (", tempo.v, ") AND J (", tempo.j, ")\n\n============\n\n"), call. = FALSE)
+                }
+                tempo.v <- substring(tempo.v, 4)
+                tempo.j <- substring(tempo.j, 4)
+                clone.name <- paste0(tempo.v, "_", tempo.j)
+                clone.id <-  trees$data[[i3]]@clone
+                removed.seq <- NULL
+                add.text <- NULL
+                if(tree_duplicate_seq == "TRUE" & nrow(trees$data[[i3]]@data) != nrow(db.list[[i3]])){
+                    stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN tree_vizu.R for clone ID ", clone.id, "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"TRUE\"\nBUT THE NUMBER OF ROWS IN trees$data[[i3]]@data (n=", nrow(trees$data[[i3]]@data), ")\nIS DIFFERENT FROM THE NUMBER OF ROWS IN db (n=", nrow(db.list[[i3]]), ")\nAS IF SOME SEQUENCES WHERE REMOVED\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                }else if(tree_duplicate_seq == "FALSE" & nrow(trees$data[[i3]]@data) == nrow(db.list[[i3]])){
+                    add.text <- "All sequences of the tree are displayed"
+                }else if(tree_duplicate_seq == "FALSE" & nrow(trees$data[[i3]]@data) != nrow(db.list[[i3]])){
+                    # get removed sequences info
+                    no.duplic.seq.log <- db.list[[i3]][[1]] %in% trees$data[[i3]]@data[[1]]
+                    duplic.seq.log <- ! no.duplic.seq.log
+                    if( ! any(duplic.seq.log)){
+                        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 6 IN tree_vizu.R for clone ID ", clone.id, "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"FALSE\"\nBUT NO SEQ NAMES REMOVED FROM THE TREE IN trees$data[[i3]]@data[[1]] IS DIFFERENT FROM THE NUMBER OF ROWS IN db (n=", nrow(db.list[[i3]]), ")\ntrees$data[[i3]]@data[[1]]: ", paste(trees$data[[i3]]@data[[1]], collapse = " "), "\ndb.list[[i3]][[1]]: ", paste(db.list[[i3]][[1]], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                    }else{
+                        not.removed.seq <- db.list[[i3]][[1]][no.duplic.seq.log]
+                        removed.seq <- db.list[[i3]][[1]][duplic.seq.log]
+                        tempo.warn <- "sequences removed from the display (Parameter tree_duplicate_seq == \"FALSE\". See tree_seq_not_displayed.tsv)"
+                        tempo.warn2 <- paste0("FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\n", tempo.warn)
+                        warn <- paste0(ifelse(is.null(warn), tempo.warn2, paste0(warn, "\n\n", tempo.warn2)))
+                        add.text <- paste0("Warning: ", tempo.warn)
+                        identical.seq <- NULL
+                        for(i4 in 1:length(removed.seq)){
+                            tempo.log <- grepl(trees$data[[i3]]@data$collapsed, pattern = removed.seq[i4]) # collapsed names are separated by comma during dowser::formatClones()
+                            identical.seq <- c(identical.seq, trees$data[[i3]]@data[[1]][tempo.log])
+                        }
+                        if(length(removed.seq) != length(identical.seq)){
+                            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 7 IN tree_vizu.R for clone ID ", clone.id, "\nidentical.seq SHOULD HAVE ", length(removed.seq), " SEQUENCES NAMES\nREMOVED SEQUENCES: ", paste(removed.seq, collapse = " "), "\nIDENTICAL TO: ", paste(identical.seq, collapse = " "), "\nCOLLAPSED NAMES: ", paste(clones$data[[1]]@data$collapsed, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                        }
+                        suppressWarnings(rm(tempo.df))
+                        tempo.df <- data.frame(sequence_id = removed.seq, clone_id = clone.id, clone_name = clone.name, chain = chain, identical_to = identical.seq)
+                        write.table(tempo.df, file = paste0("./", clone.id, "_tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = TRUE, sep = "\t")
+                        # end get removed sequences info
+                    }
+                }
+                # end title prep and leaf labeling modification
                 # ggplot building
                 tempo.gg.name <- "gg.indiv.plot."
                 tempo.gg.count <- 0
@@ -562,7 +607,7 @@ if(length(tempo.list) == 0){
                     )
                     tempo.added.trees$data <- tibble::add_column(tempo.added.trees$data, tempo.names)
                     assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), tempo.added.trees)
-                    tempo.col.values <- tree_meta_legend
+                    tempo.col.values <- tree_meta_legend # name of the legend scale for the tippoints
                     assign(tempo.col.values, tempo.added.trees$data[[tree_meta_legend]])
                     if(is.numeric(get(tempo.col.values))){
                         assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
@@ -664,51 +709,7 @@ if(length(tempo.list) == 0){
                     legend.width = 0.15 # single proportion (between 0 and 1) indicating the relative width of the legend sector (on the right of the plot) relative to the width of the plot. Value 1 means that the window device width is split in 2, half for the plot and half for the legend. Value 0 means no room for the legend, which will overlay the plot region. Write NULL to inactivate the legend sector. In such case, ggplot2 will manage the room required for the legend display, meaning that the width of the plotting region can vary between graphs, depending on the text in the legend
                 }
                 # end legend
-                # title
-                tempo.v <- trees$data[[i3]]@v_gene
-                tempo.j <- trees$data[[i3]]@j_gene
-                chain <- substr(tempo.j, 1, 3) # extract the IGH or IGK name
-                if(chain != substr(tempo.v, 1, 3)){
-                    stop(paste0("\n\n============\n\nERROR IN tree_vizu.R\nTHE CHAIN OF THE clone_id ", trees$data[[i3]]@clone, " IS NOT THE SAME BETWEEN V (", tempo.v, ") AND J (", tempo.j, ")\n\n============\n\n"), call. = FALSE)
-                }
-                tempo.v <- substring(tempo.v, 4)
-                tempo.j <- substring(tempo.j, 4)
-                clone.name <- paste0(tempo.v, "_", tempo.j)
-                clone.id <-  trees$data[[i3]]@clone
-                removed.seq <- NULL
-                add.text <- NULL
-                if(tree_duplicate_seq == "TRUE" & nrow(trees$data[[i3]]@data) != nrow(db.list[[i3]])){
-                    stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN tree_vizu.R for clone ID ", clone.id, "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"TRUE\"\nBUT THE NUMBER OF ROWS IN trees$data[[i3]]@data (n=", nrow(trees$data[[i3]]@data), ")\nIS DIFFERENT FROM THE NUMBER OF ROWS IN db (n=", nrow(db.list[[i3]]), ")\nAS IF SOME SEQUENCES WHERE REMOVED\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
-                }else if(tree_duplicate_seq == "FALSE" & nrow(trees$data[[i3]]@data) == nrow(db.list[[i3]])){
-                    add.text <- "All sequences of the tree are displayed"
-                }else if(tree_duplicate_seq == "FALSE" & nrow(trees$data[[i3]]@data) != nrow(db.list[[i3]])){
-                    # get removed sequences info
-                    no.duplic.seq.log <- db.list[[i3]][[1]] %in% trees$data[[i3]]@data[[1]]
-                    duplic.seq.log <- ! no.duplic.seq.log
-                    if( ! any(duplic.seq.log)){
-                        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 6 IN tree_vizu.R for clone ID ", clone.id, "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"FALSE\"\nBUT NO SEQ NAMES REMOVED FROM THE TREE IN trees$data[[i3]]@data[[1]] IS DIFFERENT FROM THE NUMBER OF ROWS IN db (n=", nrow(db.list[[i3]]), ")\ntrees$data[[i3]]@data[[1]]: ", paste(trees$data[[i3]]@data[[1]], collapse = " "), "\ndb.list[[i3]][[1]]: ", paste(db.list[[i3]][[1]], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
-                    }else{
-                        not.removed.seq <- db.list[[i3]][[1]][no.duplic.seq.log]
-                        removed.seq <- db.list[[i3]][[1]][duplic.seq.log]
-                        tempo.warn <- "sequences removed from the display (Parameter tree_duplicate_seq == \"FALSE\". See tree_seq_not_displayed.tsv)"
-                        tempo.warn2 <- paste0("FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\n", tempo.warn)
-                        warn <- paste0(ifelse(is.null(warn), tempo.warn2, paste0(warn, "\n\n", tempo.warn2)))
-                        add.text <- paste0("Warning: ", tempo.warn)
-                        identical.seq <- NULL
-                        for(i4 in 1:length(removed.seq)){
-                            tempo.log <- grepl(trees$data[[i3]]@data$collapsed, pattern = removed.seq[i4]) # collapsed names are separated by comma during dowser::formatClones()
-                            identical.seq <- c(identical.seq, trees$data[[i3]]@data[[1]][tempo.log])
-                        }
-                        if(length(removed.seq) != length(identical.seq)){
-                            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 7 IN tree_vizu.R for clone ID ", clone.id, "\nidentical.seq SHOULD HAVE ", length(removed.seq), " SEQUENCES NAMES\nREMOVED SEQUENCES: ", paste(removed.seq, collapse = " "), "\nIDENTICAL TO: ", paste(identical.seq, collapse = " "), "\nCOLLAPSED NAMES: ", paste(clones$data[[1]]@data$collapsed, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
-                        }
-                        suppressWarnings(rm(tempo.df))
-                        tempo.df <- data.frame(sequence_id = removed.seq, clone_id = clone.id, clone_name = clone.name, chain = chain, identical_to = identical.seq)
-                        write.table(tempo.df, file = paste0("./", clone.id, "_tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = TRUE, sep = "\t")
-                        # end get removed sequences info
-                    }
-                }
-
+                #title
                 tempo.title <- paste0(
                     "Clonal Group: ", clone.name, "\n",
                     "Chain: ", chain, "\n", 
