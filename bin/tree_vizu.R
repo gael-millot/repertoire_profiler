@@ -560,10 +560,10 @@ if(length(tempo.list) == 0){
                     }else{
                         not.removed.seq <- db.list[[i3]][[1]][no.duplic.seq.log]
                         removed.seq <- db.list[[i3]][[1]][duplic.seq.log]
-                        tempo.warn <- "sequences removed from the display (Parameter tree_duplicate_seq == \"FALSE\". See tree_seq_not_displayed.tsv)"
+                        tempo.warn <- paste0(length(removed.seq), " sequences removed from the display (Parameter tree_duplicate_seq == \"FALSE\". See tree_seq_not_displayed.tsv)")
                         tempo.warn2 <- paste0("FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\n", tempo.warn)
                         warn <- paste0(ifelse(is.null(warn), tempo.warn2, paste0(warn, "\n\n", tempo.warn2)))
-                        add.text <- paste0("Warning: ", tempo.warn)
+                        add.text <- paste0("Warning: ", tempo.warn, "\nNumber of removed sequences are indicated between brackets in leaf labelings")
                         identical.seq <- NULL
                         for(i4 in 1:length(removed.seq)){
                             tempo.log <- grepl(trees$data[[i3]]@data$collapsed, pattern = removed.seq[i4]) # collapsed names are separated by comma during dowser::formatClones()
@@ -576,6 +576,18 @@ if(length(tempo.list) == 0){
                         tempo.df <- data.frame(sequence_id = removed.seq, clone_id = clone.id, clone_name = clone.name, chain = chain, identical_to = identical.seq)
                         write.table(tempo.df, file = paste0("./", clone.id, "_tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = TRUE, sep = "\t")
                         # end get removed sequences info
+                        # modif of the tree tip labeling
+                        if(length(trees$trees[[i3]]$tip.label) - 1 != length(trees$data[[i3]]@data$sequence_id)){
+                            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 8 IN tree_vizu.R for clone ID ", clone.id, "\nLENGTH OF trees$trees[[i3]]$tip.label SHOULD BE -1 OF LENGTH OF trees$data[[i3]]@data$sequence_id. HERE IT IS:\n\nLENGTH - 1 OF trees$trees[[i3]]$tip.label: ", length(trees$trees[[i3]]$tip.label) - 1, " \nLENGTH OF trees$data[[i3]]@data$sequence_id: ", length(trees$data[[i3]]@data$sequence_id), "\n\ntrees$trees[[i3]]$tip.label:\n", paste(trees$trees[[i3]]$tip.label, collapse = "\n"), "\n\ntrees$data[[i3]]@data$sequence_id:\n", paste(trees$data[[i3]]@data$sequence_id, collapse = "\n"), "\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                        }else{
+                            tempo.pos <- match(trees$trees[[i3]]$tip.label[-length(trees$trees[[i3]]$tip.label)], trees$data[[i3]]@data$sequence_id) # [-length(trees$trees[[i3]]$tip.label)] to remove the "Germline" label from the elements
+                            if( ! all(trees$data[[i3]]@data$sequence_id[tempo.pos] == trees$trees[[i3]]$tip.label[-length(trees$trees[[i3]]$tip.label)])){
+                                stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 9 IN tree_vizu.R for clone ID ", clone.id, "\nELEMENTS SHOULD BE THE SAME. HERE IT IS:\n\ntrees$data[[i3]]@data$sequence_id[tempo.pos]:\n", paste(trees$data[[i3]]@data$sequence_id[tempo.pos], collapse = "\n"), "\n\ntrees$trees[[i3]]$tip.label[-length(trees$trees[[i3]]$tip.label)]:\n", paste(trees$trees[[i3]]$tip.label[-length(trees$trees[[i3]]$tip.label)], collapse = "\n"), "\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                            }else{
+                                trees$trees[[i3]]$tip.label[-length(trees$trees[[i3]]$tip.label)] <- paste0("(", trees$data[[i3]]@data$collapse_count[tempo.pos], ") ", trees$data[[i3]]@data$sequence_id[tempo.pos])
+                            }
+                        }
+                        # end modif of the tree tip labeling
                     }
                 }
                 # end title prep and leaf labeling modification
