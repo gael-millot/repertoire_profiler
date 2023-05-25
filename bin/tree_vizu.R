@@ -460,7 +460,7 @@ fun_report(data = paste0("\n\n################################ RUNNING\n\n"), ou
 ################ Control
 
 
-tempo.list <- list.files(path = ".", pattern = "RData$")
+tempo.list <- list.files(path = ".", pattern = "RData$") # gather all the .RData file names into tempo.list
 if(length(tempo.list) == 0){
     tempo.cat <- "\\n\\nNO TREE DATA COMPUTED (NO .RData FILE DETECTED) -> NO GRAPH PLOTTED"
     cat(tempo.cat)
@@ -474,6 +474,8 @@ if(length(tempo.list) == 0){
 
 ################ concatenation of all tibble trees into a same tibble and plot
 
+
+    # gathering trees and db from each .RData in tempo.list and trees -> tempo and db -> tempo.db[[i3]]
     tempo <- NULL
     tempo.db <- vector("list", length(tempo.list))
     for(i3 in 1:length(tempo.list)){
@@ -485,20 +487,24 @@ if(length(tempo.list) == 0){
     }
     suppressWarnings(rm(trees))
     suppressWarnings(rm(db))
-    trees <- tempo
-    plots <- suppressMessages(dowser::plotTrees(
+    # end gathering trees and db from each .RData in tempo.list and trees -> tempo and db -> tempo.db[[i3]]
+
+    trees <- tempo # creation of the trees tibble object, made of all the trees
+    plots <- suppressMessages(dowser::plotTrees( # creation of the plots list object, using the trees tibble object
         # option in https://dowser.readthedocs.io/en/latest/topics/plotTrees/
         trees, 
         layout = tree_kind, 
         title = TRUE
     ))
-    db.list <- tempo.db
+    db.list <- tempo.db # creation of the db.list tibble object, made of all the db
     save(list = c("trees", "plots", "db.list"), file = "./all_trees.RData")
+
 
 ################ end concatenation of all tibble trees into a same tibble and plot
 
 
 ################ Data import
+
 
     if( ! is.null(tree_meta_path)){
         meta.df <- read.table(tree_meta_path, sep = "\t", header = TRUE)

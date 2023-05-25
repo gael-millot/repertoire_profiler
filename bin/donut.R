@@ -400,9 +400,9 @@ tempo.v <- obs$germline_v_call
 tempo.j <- obs$germline_j_call
 chain <- unique(substr(tempo.j, 1, 3)) # extract the IGH or IGK name
 if(length(chain) != 1){
-    stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 1 IN donut.R for kind ", kind, ": chain MUST BE A SINGLE VALUE.\nHERE IT IS: ", paste(chain, collapse = " "), "\n\n============\n\n"), call. = FALSE)
+    stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 4 IN donut.R for kind ", kind, ": chain MUST BE A SINGLE VALUE.\nHERE IT IS: ", paste(chain, collapse = " "), "\n\n============\n\n"), call. = FALSE)
 }else if(chain != unique(substr(tempo.v, 1, 3))){
-    stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 2 IN donut.R for kind ", kind, ": CHAIN OF J DIFFERENT FROM CHAIN OF V.\nCHAIN OF V: ", paste(chain, collapse = " "), "\nCHAIN OF J: ", paste(unique(substr(tempo.v, 1, 3)), collapse = " "), "\n\n============\n\n"), call. = FALSE)
+    stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN donut.R for kind ", kind, ": CHAIN OF J DIFFERENT FROM CHAIN OF V.\nCHAIN OF V: ", paste(chain, collapse = " "), "\nCHAIN OF J: ", paste(unique(substr(tempo.v, 1, 3)), collapse = " "), "\n\n============\n\n"), call. = FALSE)
 }
 tempo.v <- substring(tempo.v, 4)
 tempo.j <- substring(tempo.j, 4)
@@ -435,6 +435,7 @@ if(all.annotation.log == FALSE){
 ################ Plotting
 
 tempo.title <- paste0(
+    "Donut plot of the productive sequences grouped by same V and J alleles\nWarning: this is different from clonal groups since the latter must have also the same CDR3 length\n",
     "Kind of sequences: ", 
     ifelse(
         kind == "all", 
@@ -444,7 +445,7 @@ tempo.title <- paste0(
             "all the sequences in trees (see the corresponding seq_for_trees.tsv", 
             ifelse(
                 kind == "functional", 
-                "all the productive ones for which at least one functional annotation in the clonal group\n        (nb_seq_per_clone threshold not used, see the corresponding productive_seq.tsv", 
+                "all the productive ones for which at least one functional annotation in the group of same V and J alleles\n        (nb_seq_per_clone threshold not used, see the corresponding productive_seq.tsv", 
                 "=====ERROR====="
             )
         )
@@ -455,7 +456,7 @@ tempo.title <- paste0(
 )
 if( ! is.null(donut_legend_limit)){
     if(sum(obs2$Prop >= donut_legend_limit) < length(obs2$Prop)){
-        tempo.title <- paste0(tempo.title, "\nClasses have been removed from the legend (donut_legend_limit = ", round(donut_legend_limit, 2), "). See the donut_stats.tsv file")
+        tempo.title <- paste0(tempo.title, "\nSome classes have been removed from the legend (donut_legend_limit = ", round(donut_legend_limit, 2), "). See the donut_stats.tsv file")
     }
 }
 

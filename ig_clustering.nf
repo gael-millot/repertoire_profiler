@@ -654,21 +654,22 @@ process repertoire {
 
 process get_tree {
     label 'immcantation'
-    publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{*.RData}", overwrite: false
+    publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{*_get_tree_cloneID.RData}", overwrite: false
     cache 'true'
 
     input:
     path seq_name_remplacement_ch // parallelization expected
     path meta_file // just to determine if metadata have been provided (TRUE means NULL) meta_file_ch not required here
+    path cute_file
     val clone_nb_seq
     val tree_duplicate_seq
 
     output:
-    path "*.RData", emit: rdata_tree_ch, optional: true
-    path "tree_dismissed_seq.tsv", emit: no_tree_ch, optional: true
-    path "seq_for_tree.tsv", emit: tree_ch, optional: true
-    path "tree_dismissed_clone_id.tsv", emit: no_cloneID_ch, optional: true
-    path "tree_clone_id.tsv", emit: cloneID_ch, optional: true
+    path "*_get_tree_cloneID.RData", emit: rdata_tree_ch, optional: true
+    path "tree_dismissed_seq.tsv", emit: no_tree_ch
+    path "seq_for_tree.tsv", emit: tree_ch
+    path "tree_dismissed_clone_id.tsv", emit: no_cloneID_ch
+    path "tree_clone_id.tsv", emit: cloneID_ch
     path "get_tree.log", emit: get_tree_log_ch
     //path "HLP10_tree_parameters.tsv"
 
@@ -679,50 +680,13 @@ process get_tree {
         echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nEMPTY ${seq_name_remplacement_ch} FILE AS INPUT OF THE mutation_load PROCESS\\nCHECK THE mutation_load.log IN THE report FOLDER\\n\\n========\\n\\n"
         exit 1
     fi
-    FILENAME=\$(basename -- ${seq_name_remplacement_ch}) # recover a file name without path
-    # echo -e "\${FILENAME}" |& tee -a get_tree.log # activate this line to display the name of the file
-    LINE_NB=\$((\$(cat ${seq_name_remplacement_ch} | wc -l) - 1))
-    if [[ "\$LINE_NB" -ge "${clone_nb_seq}" ]] ; then # the -ge operator can compare strings and means "greater or equal to"
-        cat ${seq_name_remplacement_ch} > seq_for_tree.tsv
-        Rscript -e '
-            db <- alakazam::readChangeoDb("${seq_name_remplacement_ch}")
-            db <- tibble::add_column(db, collapsed = db[[1]]) # add a column to detected collapsed identical sequences names
-            clones <- dowser::formatClones(
-                data = db, 
-                seq = "sequence_alignment", 
-                clone = "clone_id", #  All entries in this column should be identical
-                minseq = ${clone_nb_seq}, # return an error if the number of seq in db (i.e., number of rows) is lower than minseq. REcontroled here but already controled by the i [[]] above
-                heavy = NULL, # name of heavy chain locus (default = "IGH")
-                text_fields = "collapsed", # column of db named "collapsed" (columns to retain during duplicate removal, that will be present in the clones tibble but collapsed depending on the line removal) 
-                dup_singles = FALSE, # Duplicate sequences in singleton clones to include them as trees? Always use FALSE. Otherwise, it will create an artificial duplicated sequences in thr tree building so that we will have two instead of one sequence in the tree, after identical seq removal. See https://rdrr.io/cran/dowser/src/R/Clones.R
-                trait = if(${tree_duplicate_seq}){names(db)[1]}else{NULL} # control the removal of identical sequences but different sequence name
-                # max_mask: maximum number of characters to mask at the leading and trailing sequence ends. If NULL then the upper masking bound will be automatically determined from the maximum number of observed leading or trailing Ns amongst all sequences. If set to 0 (default) then masking will not be performed
-            )
-            # add the metadata names in the first column of clones\$data[[1]]@data to have them in final trees
-            if("${meta_file}" != "NULL" & ! ${tree_duplicate_seq}){
-                meta <- read.table("${meta_file}", header = TRUE, sep = "\\t")
-                tempo.df <- clones\$data[[1]]@data # it is "class data.frame"
-                for(i4 in 1:nrow(tempo.df)){
-                    tempo <- strsplit(tempo.df\$collapsed[i4], split = ",")[[1]] # recover collapsed names
-                    tempo.log <- tempo %in% meta\$Name
-                    if(any(tempo %in% meta\$Name)){
-                        tempo.df\$sequence_id[i4] <- paste(tempo[tempo.log], collapse = ",") # info not lost in tempo.df\$sequence_id[i4] because all the names are in tempo.df\$collapsed
-                    }
-                }
-                clones\$data[[1]]@data <- tempo.df
-            }
-            # end add the metadata names in the first column of clones\$data[[1]]@data to have them in final trees
-            trees <- dowser::getTrees(clones, build="igphyml", exec="/usr/local/share/igphyml/src/igphyml", nproc = 10)
-            # assign(paste0("c", trees\$clone_id, "_trees"), trees)
-            save(list = c("trees", "db", "clones"), file = paste0("./get_tree_cloneID_", trees\$clone_id, ".RData"))
-            write.table(trees\$clone_id, file = paste0("./tree_clone_id.tsv"), row.names = FALSE, col.names = FALSE)
-        ' |& tee -a get_tree.log
-    else
-        echo -e "LESS THAN ${clone_nb_seq} SEQUENCES FOR THE CLONAL GROUP: NO TREE COMPUTED" |& tee -a get_tree.log 
-        IFS='_' read -r -a TEMPO <<< "\${FILENAME}" # string split into array
-        echo \${TEMPO[0]} > tree_dismissed_clone_id.tsv
-        cat ${seq_name_remplacement_ch} > tree_dismissed_seq.tsv
-    fi
+    get_tree.R \
+"${seq_name_remplacement_ch}" \
+"${meta_file}" \
+"${clone_nb_seq}" \
+"${tree_duplicate_seq}" \
+"${cute_file}" \
+"get_tree.log"
     """
 }
 
@@ -931,192 +895,192 @@ workflow {
 
     // tbi = file("${sample_path}.tbi") does not need .tbi 
 
-    if( ! sample_path in String ){
+    if( ! (sample_path in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID sample_path PARAMETER IN ig_clustering.config FILE:\n${sample_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! file(sample_path).exists()){
+    }else if( ! (file(sample_path).exists()) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID sample_path PARAMETER IN ig_clustering.config FILE (DOES NOT EXIST): ${sample_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
     }
-    if( ! igblast_database_path in String ){
+    if( ! (igblast_database_path in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_database_path PARAMETER IN ig_clustering.config FILE:\n${igblast_database_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
-    if( ! igblast_organism in String ){
+    if( ! (igblast_organism in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_organism PARAMETER IN ig_clustering.config FILE:\n${igblast_organism}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! (igblast_organism == "mouse" || igblast_organism == "human" || igblast_organism == "rabbit" || igblast_organism == "rat" || igblast_organism == "rhesus_monkey")){
+    }else if( ! (igblast_organism == "mouse" || igblast_organism == "human" || igblast_organism == "rabbit" || igblast_organism == "rat" || igblast_organism == "rhesus_monkey") ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_organism PARAMETER IN ig_clustering.config FILE:\n${igblast_organism}\nMUST BE EITHER \"mouse\", \"human\", \"rabbit\", \"rat\" OR \"rhesus_monkey\"\n\n========\n\n"
     }
-    if( ! igblast_loci in String ){
+    if( ! (igblast_loci in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_loci PARAMETER IN ig_clustering.config FILE:\n${igblast_loci}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! (igblast_loci == "ig" || igblast_loci == "tr")){
+    }else if( ! (igblast_loci == "ig" || igblast_loci == "tr") ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_loci PARAMETER IN ig_clustering.config FILE:\n${igblast_loci}\nMUST BE EITHER \"ig\" OR \"tr\"\n\n========\n\n"
     }
-    if( ! igblast_aa in String ){
+    if( ! (igblast_aa in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_aa PARAMETER IN ig_clustering.config FILE:\n${igblast_aa}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! (igblast_aa == "false" || igblast_aa == "true")){
+    }else if( ! (igblast_aa == "false" || igblast_aa == "true") ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_aa PARAMETER IN ig_clustering.config FILE:\n${igblast_aa}\nMUST BE EITHER \"true\" OR \"false\"\n\n========\n\n"
     }
-    if( ! igblast_files in String ){
+    if( ! (igblast_files in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_files PARAMETER IN ig_clustering.config FILE:\n${igblast_files}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
-    if( ! clone_nb_seq in String ){
+    if( ! (clone_nb_seq in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_nb_seq PARAMETER IN ig_clustering.config FILE:\n${clone_nb_seq}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! clone_nb_seq =~  /^[0-9]*$/){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_nb_seq PARAMETER IN ig_clustering.config FILE:\n${clone_nb_seq}\nMUST BE A POSITIVE INTEGER VALUE\n\n========\n\n"
+    }else if( ( ! (clone_nb_seq =~/^\d+$/)) || clone_nb_seq.toInteger() < 3 ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_nb_seq PARAMETER IN ig_clustering.config FILE:\n${clone_nb_seq}\nMUST BE A POSITIVE INTEGER VALUE EQUAL OR GREATER TO 3\n\n========\n\n"
     }
-    if( ! clone_model in String ){
+    if( ! (clone_model in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_model PARAMETER IN ig_clustering.config FILE:\n${clone_model}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! (clone_model == "ham" || clone_model == "aa" || clone_model == "hh_s1f" || clone_model == "hh_s5f" || clone_model == "mk_rs1nf" || clone_model == "mk_rs5nf" || clone_model == "m1n_compat" || clone_model == "hs1f_compat")){
+    }else if( ! (clone_model == "ham" || clone_model == "aa" || clone_model == "hh_s1f" || clone_model == "hh_s5f" || clone_model == "mk_rs1nf" || clone_model == "mk_rs5nf" || clone_model == "m1n_compat" || clone_model == "hs1f_compat") ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_model PARAMETER IN ig_clustering.config FILE:\n${clone_model}\nMUST BE EITHER \"ham\", \"aa\", \"hh_s1f\", \"hh_s5f\", \"mk_rs1nf\", \"mk_rs5nf\", \"m1n_compat\", \"hs1f_compat\"\n\n========\n\n"
     }
-    if( ! clone_normalize in String ){
+    if( ! (clone_normalize in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_normalize PARAMETER IN ig_clustering.config FILE:\n${clone_normalize}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! (clone_normalize == "len" || clone_normalize == "none")){
+    }else if( ! (clone_normalize == "len" || clone_normalize == "none") ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_normalize PARAMETER IN ig_clustering.config FILE:\n${clone_normalize}\nMUST BE EITHER \"len\" OR \"none\"\n\n========\n\n"
     }
-    if( ! clone_distance in String ){
+    if( ! (clone_distance in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_distance PARAMETER IN ig_clustering.config FILE:\n${clone_distance}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! clone_distance =~  /^(1)|(0)|(0\.[0-9]*)$/){
+    }else if( ! (clone_distance =~ /^((1)|(0)|(0\.[0-9]*))$/) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_distance PARAMETER IN ig_clustering.config FILE:\n${clone_distance}\nMUST BE A POSITIVE PROPORTION VALUE\n\n========\n\n"
     }
 
-    if( ! tree_meta_path in String ){
+    if( ! (tree_meta_path in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_path PARAMETER IN ig_clustering.config FILE:\n${tree_meta_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if(tree_meta_path != "NULL"){
-        if( ! file(tree_meta_path).exists()){
+        if( ! (file(tree_meta_path).exists()) ){
             error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_path PARAMETER IN ig_clustering.config FILE (DOES NOT EXIST): ${tree_meta_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
         }
     }
-    if( ! tree_meta_name_replacement in String ){
+    if( ! (tree_meta_name_replacement in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_name_replacement PARAMETER IN ig_clustering.config FILE:\n${tree_meta_name_replacement}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
-    if( ! tree_meta_legend in String ){
+    if( ! (tree_meta_legend in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_legend PARAMETER IN ig_clustering.config FILE:\n${tree_meta_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
-    if( ! tree_kind in String ){
+    if( ! (tree_kind in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_kind PARAMETER IN ig_clustering.config FILE:\n${tree_kind}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
-    if( ! tree_duplicate_seq in String ){
+    if( ! (tree_duplicate_seq in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_duplicate_seq PARAMETER IN ig_clustering.config FILE:\n${tree_duplicate_seq}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! (tree_duplicate_seq == "TRUE" || tree_duplicate_seq == "FALSE")){
+    }else if( ! (tree_duplicate_seq == "TRUE" || tree_duplicate_seq == "FALSE") ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_duplicate_seq PARAMETER IN ig_clustering.config FILE:\n${tree_duplicate_seq}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
-    if( ! tree_leaf_color in String ){
+    if( ! (tree_leaf_color in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_color PARAMETER IN ig_clustering.config FILE:\n${tree_leaf_color}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
-    if( ! tree_leaf_shape in String ){
+    if( ! (tree_leaf_shape in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_shape PARAMETER IN ig_clustering.config FILE:\n${tree_leaf_shape}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! tree_leaf_shape =~  /^[0-9]*$/){
+    }else if( ! (tree_leaf_shape =~  /^[0-9]*$/) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_shape PARAMETER IN ig_clustering.config FILE:\n${tree_leaf_shape}\nMUST BE A POSITIVE INTEGER VALUE\n\n========\n\n"
     }
-    if( ! tree_leaf_size in String ){
+    if( ! (tree_leaf_size in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_size PARAMETER IN ig_clustering.config FILE:\n${tree_leaf_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! tree_leaf_size =~  /^[0-9]+\.*[0-9]*$/){
+    }else if( ! (tree_leaf_size =~  /^[0-9]+\.*[0-9]*$/) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_size PARAMETER IN ig_clustering.config FILE:\n${tree_leaf_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
-    if( ! tree_label_size in String ){
+    if( ! (tree_label_size in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_size PARAMETER IN ig_clustering.config FILE:\n${tree_label_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! tree_label_size =~  /^[0-9]+\.*[0-9]*$/){
+    }else if( ! (tree_label_size =~  /^[0-9]+\.*[0-9]*$/) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_size PARAMETER IN ig_clustering.config FILE:\n${tree_label_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
-    if( ! tree_label_hjust in String ){
+    if( ! (tree_label_hjust in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_hjust PARAMETER IN ig_clustering.config FILE:\n${tree_label_hjust}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! tree_label_hjust =~  /^\-*[0-9]+\.*[0-9]*$/){
+    }else if( ! (tree_label_hjust =~  /^\-{0,1}[0-9]+\.*[0-9]*$/) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_hjust PARAMETER IN ig_clustering.config FILE:\n${tree_label_hjust}\nMUST BE A NUMERIC VALUE\n\n========\n\n"
     }
-    if( ! tree_label_rigth in String ){
+    if( ! (tree_label_rigth in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_rigth PARAMETER IN ig_clustering.config FILE:\n${tree_label_rigth}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! (tree_label_rigth == "TRUE" || tree_label_rigth == "FALSE")){
+    }else if( ! (tree_label_rigth == "TRUE" || tree_label_rigth == "FALSE") ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_rigth PARAMETER IN ig_clustering.config FILE:\n${tree_label_rigth}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
-    if( ! tree_label_outside in String ){
+    if( ! (tree_label_outside in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_outside PARAMETER IN ig_clustering.config FILE:\n${tree_label_outside}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! (tree_label_outside == "TRUE" || tree_label_outside == "FALSE")){
+    }else if( ! (tree_label_outside == "TRUE" || tree_label_outside == "FALSE") ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_outside PARAMETER IN ig_clustering.config FILE:\n${tree_label_outside}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
-    if( ! tree_right_margin in String ){
+    if( ! (tree_right_margin in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_right_margin PARAMETER IN ig_clustering.config FILE:\n${tree_right_margin}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! tree_right_margin =~  /^[0-9]+\.*[0-9]*$/){
+    }else if( ! (tree_right_margin =~  /^[0-9]+\.*[0-9]*$/) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_right_margin PARAMETER IN ig_clustering.config FILE:\n${tree_right_margin}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
-    if( ! tree_legend in String ){
+    if( ! (tree_legend in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_legend PARAMETER IN ig_clustering.config FILE:\n${tree_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! (tree_legend == "TRUE" || tree_legend == "FALSE")){
+    }else if( ! (tree_legend == "TRUE" || tree_legend == "FALSE") ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_legend PARAMETER IN ig_clustering.config FILE:\n${tree_legend}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
 
-    if( ! donut_palette in String ){
+    if( ! (donut_palette in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_palette PARAMETER IN ig_clustering.config FILE:\n${donut_palette}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
-    if( ! donut_hole_size in String ){
+    if( ! (donut_hole_size in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_size PARAMETER IN ig_clustering.config FILE:\n${donut_hole_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! donut_hole_size =~  /^(1)|(0)|(0\.[0-9]*)$/){
+    }else if( ! (donut_hole_size =~  /^((1)|(0)|(0\.[0-9]*))$/) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_size PARAMETER IN ig_clustering.config FILE:\n${donut_hole_size}\nMUST BE A POSITIVE PROPORTION VALUE\n\n========\n\n"
     }
-    if( ! donut_hole_text in String ){
+    if( ! (donut_hole_text in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_text PARAMETER IN ig_clustering.config FILE:\n${tree_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! (donut_hole_text == "TRUE" || donut_hole_text == "FALSE")){
+    }else if( ! (donut_hole_text == "TRUE" || donut_hole_text == "FALSE") ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_text PARAMETER IN ig_clustering.config FILE:\n${donut_hole_text}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
-    if( ! donut_hole_text_size in String ){
+    if( ! (donut_hole_text_size in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_text_size PARAMETER IN ig_clustering.config FILE:\n${donut_hole_text_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! donut_hole_text_size =~  /^[0-9]+\.*[0-9]*$/){
+    }else if( ! (donut_hole_text_size =~  /^[0-9]+\.*[0-9]*$/) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_text_size PARAMETER IN ig_clustering.config FILE:\n${donut_hole_text_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
-    if( ! donut_border_color in String ){
+    if( ! (donut_border_color in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_border_color PARAMETER IN ig_clustering.config FILE:\n${donut_border_color}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
-    if( ! donut_border_size in String ){
+    if( ! (donut_border_size in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_border_size PARAMETER IN ig_clustering.config FILE:\n${donut_border_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
-    if( ! donut_annotation_distance in String ){
+    if( ! (donut_annotation_distance in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_distance PARAMETER IN ig_clustering.config FILE:\n${donut_annotation_distance}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! donut_annotation_distance =~  /^[0-9]+\.*[0-9]*$/){
+    }else if( ! (donut_annotation_distance =~  /^[0-9]+\.*[0-9]*$/) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_distance PARAMETER IN ig_clustering.config FILE:\n${donut_annotation_distance}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
-    if( ! donut_annotation_size in String ){
+    if( ! (donut_annotation_size in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_size PARAMETER IN ig_clustering.config FILE:\n${donut_annotation_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! donut_annotation_size =~  /^[0-9]+\.*[0-9]*$/){
+    }else if( ! (donut_annotation_size =~  /^[0-9]+\.*[0-9]*$/) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_size PARAMETER IN ig_clustering.config FILE:\n${donut_annotation_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
-    if( ! donut_annotation_force in String ){
+    if( ! (donut_annotation_force in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_force PARAMETER IN ig_clustering.config FILE:\n${donut_annotation_force}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! donut_annotation_force =~  /^[0-9]+\.*[0-9]*$/){
+    }else if( ! (donut_annotation_force =~  /^[0-9]+\.*[0-9]*$/) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_force PARAMETER IN ig_clustering.config FILE:\n${donut_annotation_force}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
-    if( ! donut_annotation_force_pull in String ){
+    if( ! (donut_annotation_force_pull in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_force_pull PARAMETER IN ig_clustering.config FILE:\n${donut_annotation_force_pull}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! donut_annotation_force_pull =~  /^[0-9]+\.*[0-9]*$/){
+    }else if( ! (donut_annotation_force_pull =~  /^[0-9]+\.*[0-9]*$/) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_force_pull PARAMETER IN ig_clustering.config FILE:\n${donut_annotation_force_pull}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
-    if( ! donut_legend_width in String ){
+    if( ! (donut_legend_width in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_width PARAMETER IN ig_clustering.config FILE:\n${donut_legend_width}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! donut_legend_width =~  /^(1)|(0)|(0\.[0-9]*)$/){
+    }else if( ! (donut_legend_width =~  /^((1)|(0)|(0\.[0-9]*))$/) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_width PARAMETER IN ig_clustering.config FILE:\n${donut_legend_width}\nMUST BE A POSITIVE PROPORTION VALUE\n\n========\n\n"
     }
-    if( ! donut_legend_text_size in String ){
+    if( ! (donut_legend_text_size in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_text_size PARAMETER IN ig_clustering.config FILE:\n${donut_legend_text_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! donut_legend_text_size =~  /^[0-9]+\.*[0-9]*$/){
+    }else if( ! (donut_legend_text_size =~  /^[0-9]+\.*[0-9]*$/) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_text_size PARAMETER IN ig_clustering.config FILE:\n${donut_legend_text_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
-    if( ! donut_legend_box_size in String ){
+    if( ! (donut_legend_box_size in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_box_size PARAMETER IN ig_clustering.config FILE:\n${donut_legend_box_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! donut_legend_box_size =~  /^[0-9]+\.*[0-9]*$/){
+    }else if( ! (donut_legend_box_size =~  /^[0-9]+\.*[0-9]*$/) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_box_size PARAMETER IN ig_clustering.config FILE:\n${donut_legend_box_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
-    if( ! donut_legend_box_space in String ){
+    if( ! (donut_legend_box_space in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_box_space PARAMETER IN ig_clustering.config FILE:\n${donut_legend_box_space}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! donut_legend_box_space =~  /^[0-9]+\.*[0-9]*$/){
+    }else if( ! (donut_legend_box_space =~  /^[0-9]+\.*[0-9]*$/) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_box_space PARAMETER IN ig_clustering.config FILE:\n${donut_legend_box_space}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
-    if( ! donut_legend_limit in String ){
+    if( ! (donut_legend_limit in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_limit PARAMETER IN ig_clustering.config FILE:\n${donut_legend_limit}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! donut_legend_width ==  "NULL"){
-        if( ! donut_legend_width =~  /^(1)|(0)|(0\.[0-9]*)$/){
+    }else if( ! (donut_legend_width ==  "NULL") ){
+        if( ! (donut_legend_width =~  /^((1)|(0)|(0\.[0-9]*))$/) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_limit PARAMETER IN ig_clustering.config FILE:\n${donut_legend_limit}\nMUST BE A POSITIVE PROPORTION VALUE IF NOT \"NULL\"\n\n========\n\n"
         }
     }
-    if( ! cute_path in String ){
+    if( ! (cute_path in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID cute_path PARAMETER IN ig_clustering.config FILE:\n${cute_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! file(cute_path).exists()){
+    }else if( ! (file(cute_path).exists()) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID cute_path PARAMETER IN ig_clustering.config FILE (DOES NOT EXIST): ${cute_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
     }
 
@@ -1299,6 +1263,7 @@ workflow {
     get_tree(
         seq_name_remplacement.out.seq_name_remplacement_ch,
         meta_file, // first() because get_tree process is a parallele one and because meta_file is single
+        cute_file, 
         clone_nb_seq,
         tree_duplicate_seq
     )
@@ -1306,19 +1271,19 @@ workflow {
     rdata_tree_ch2 = get_tree.out.rdata_tree_ch.collect()
     //rdata_tree_ch2.view()
 
-    get_tree.out.no_tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: ALL SEQUENCES IN TREES FOLLOWING THE get_tree PROCESS -> NO tree_dismissed_seq.tsv FILE RETURNED\n\n")}}
+    get_tree.out.no_tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: ALL SEQUENCES IN TREES FOLLOWING THE get_tree PROCESS -> EMPTY tree_dismissed_seq.tsv FILE RETURNED\n\n")}}
     no_tree_ch2 = get_tree.out.no_tree_ch.collectFile(name: "tree_dismissed_seq.tsv", skip: 1, keepHeader: true)
     no_tree_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
-    get_tree.out.tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: NO SEQUENCES IN TREES FOLLOWING THE get_tree PROCESS -> NO tree_seq.tsv FILE RETURNED\n\n")}}
+    get_tree.out.tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: NO SEQUENCES IN TREES FOLLOWING THE get_tree PROCESS -> EMPTY tree_seq.tsv FILE RETURNED\n\n")}}
     tree_ch2 = get_tree.out.tree_ch.collectFile(name: "tree_seq.tsv", skip: 1, keepHeader: true)
     tree_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
-    get_tree.out.no_cloneID_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: ALL SEQUENCES IN CLONAL GROUP FOLLOWING THE get_tree PROCESS -> NO tree_dismissed_clone_id.tsv FILE RETURNED\n\n")}}
+    get_tree.out.no_cloneID_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: ALL SEQUENCES IN CLONAL GROUP FOLLOWING THE get_tree PROCESS -> EMPTY tree_dismissed_clone_id.tsv FILE RETURNED\n\n")}}
     no_cloneID_ch2 = get_tree.out.no_cloneID_ch.collectFile(name: "tree_dismissed_clone_id.tsv")
     no_cloneID_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
-    get_tree.out.cloneID_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: NO CLONAL GROUP FOLLOWING THE get_tree PROCESS -> NO tree_clone_id.tsv FILE RETURNED\n\n")}}
+    get_tree.out.cloneID_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: NO CLONAL GROUP FOLLOWING THE get_tree PROCESS -> EMPTY tree_clone_id.tsv and trees.pdf FILES RETURNED\n\n")}}
     cloneID_ch2 = get_tree.out.cloneID_ch.collectFile(name: "tree_clone_id.tsv")
     cloneID_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
