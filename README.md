@@ -292,6 +292,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 ## WHAT'S NEW IN
 
 
+#### v7.1
+
+Clean version of the xlsx2fasta.R script: can now be run on any excel file
+
+
 #### v7.0
 
 - Bug of the tree_seq_not_displayed.tsv file fixed

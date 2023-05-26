@@ -26,11 +26,6 @@
 ################################ Introduction
 
 
-# The xlsx imported file must contain these column names: "ClusterId", "VH_Full_length_DNA", "VL_Full_length_DNA", "Roc_spe", "Vec_spe" and "Panc_spe"
-# And must not have an empty sequence in "VH_Full_length_DNA" or "VL_Full_length_DNA" columns
-# To use xlsx2tsv.R, 1) open it, 2) complete the "Parameters that need to be set by the user" section below, 3) save the modifications and 4) run.
-
-
 ################################ End Introduction
 
 
@@ -60,16 +55,27 @@ script <- "xlsx2tsv"
 ################################ End Initialization
 
 
+
+
+
 ################################ Parameters that need to be set by the user
 
 
-path <- "Z://ROCURONIUM PROJECT//01 Primary data//04.Repertoire analysis//SORT2//SORT2 Seq-refiltered//ROC-Sort2(421)-20reads_specificity.xlsx" # true values of x_lim if x_lim = "whole", as imported through nextflow
-out.path <- "./"
-cute <- "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v11.4.0/cute_little_R_functions.R" # 
-log <- "xlsx2tsv.log"
+path <- "X://Alice//Human_serum//Repertoire analysis human roc//ELISA SN Repertoire analysis human Mab_GM.xlsx" # single character string indicating the full path of the xlsx file
+Ig_name <- "Ab_name" # single character string indicating the column name of the xlsx file for the Ig names
+VH <- "VH_NN" # single character string indicating the column name of the xlsx file for the VH sequences
+VL <- "VL_NN" # single character string indicating the column name of the xlsx file for the VL sequences
+categ <- "NULL" # vector of character strings indicating additional column names of the xlsx file. A specific folder will be generated for each of these column with the fasta sequence in it when non NA or empty cells are present in this column. Write "NULL" if not required
+out.path <- "C://Users//Gael//Desktop" # single character string indicating the path of the output folder
+cute <- "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v11.4.0/cute_little_R_functions.R" # single character string indicating the path of the cute_little_R_functions.R file required for this script
+log <- "xlsx2tsv.log" # single character string indicating the name of the log file
 
 
 ################################ End Parameters that need to be set by the user
+
+
+
+
 
 
 ################################ Config import
@@ -86,6 +92,10 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
     }
     tempo.arg.names <- c(
         "path", 
+        "Ig_name", 
+        "VH", 
+        "VL", 
+        "categ", 
         "out.path", 
         "cute", 
         "log"
@@ -128,6 +138,10 @@ param.list <- c(
     "run.way",
     if(run.way == "SCRIPT"){"command"}, 
     "path", 
+    "Ig_name", 
+    "VH", 
+    "VL", 
+    "categ", 
     "out.path",
     "cute", 
     "log"
@@ -235,7 +249,11 @@ text.check <- NULL #
 checked.arg.names <- NULL # for function debbuging: used by r_debugging_tools
 ee <- expression(arg.check <- c(arg.check, tempo$problem) , text.check <- c(text.check, tempo$text) , checked.arg.names <- c(checked.arg.names, tempo$object.name))
 tempo <- fun_check(data = path, class = "vector", typeof = "character", length = 1) ; eval(ee)
-# tempo <- fun_check(data = cute, class = "vector", typeof = "character", length = 1) ; eval(ee)
+tempo <- fun_check(data = Ig_name, class = "vector", typeof = "character", length = 1) ; eval(ee)
+tempo <- fun_check(data = VH, class = "vector", typeof = "character", length = 1) ; eval(ee)
+tempo <- fun_check(data = VL, class = "vector", typeof = "character", length = 1) ; eval(ee)
+tempo <- fun_check(data = categ, class = "vector", typeof = "character") ; eval(ee)
+tempo <- fun_check(data = out.path, class = "vector", typeof = "character", length = 1) ; eval(ee)
 # cute already tested above
 tempo <- fun_check(data = log, class = "vector", typeof = "character", length = 1) ; eval(ee)
 if(any(arg.check) == TRUE){ # normally no NA
@@ -283,6 +301,10 @@ warn <- NULL
 
 if( ! file.exists(path)){
     stop(paste0("\n\n============\n\nERROR IN xlsx2tsv.R\nFILE INDICATED IN THE path PARAMETER DOES NOT EXISTS:\n", path, "\n\n============\n\n"), call. = FALSE)
+}
+
+if(all(categ == "NULL")){
+    categ <- NULL
 }
 
 if( ! dir.exists(out.path)){
@@ -339,16 +361,29 @@ if(length(obs) == 0 || nrow(obs) == 0){
     stop(paste0("\n\n============\n\nERROR IN xlsx2tsv.R\nFILE INDICATED IN THE path PARAMETER IS EMPTY:\n", path, "\n\n============\n\n"), call. = FALSE)
 }
 
-if( ! all(c("ClusterId", "VH_Full_length_DNA", "VL_Full_length_DNA") %in% names(obs))){
-    stop(paste0("\n\n============\n\nERROR IN xlsx2tsv.R\nIMPORTED FILE:\n", path, "\nMUST CONTAIN THESE COLUMN NAMES:\n\"ClusterId\", \"VH_Full_length_DNA\", \"VL_Full_length_DNA\", \"Roc_spe\", \"Vec_spe\" AND \"Panc_spe\"\n\n============\n\n"), call. = FALSE)
+if( ! Ig_name %in% names(obs)){
+    stop(paste0("\n\n============\n\nERROR IN xlsx2tsv.R\n\nTHE Ig_name PARAMETER MUST BE A COLUMN NAME OF THE IMPORTED FILE:\n", path, "\n\nHERE IT IS Ig_name:\n", Ig_name, "\n\nCOLUMN NAMES:\n", paste(names(obs), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
 }
 
-for(i0 in c("VH_Full_length_DNA", "VL_Full_length_DNA")){
+if( ! VH %in% names(obs)){
+    stop(paste0("\n\n============\n\nERROR IN xlsx2tsv.R\n\nTHE VH PARAMETER MUST BE A COLUMN NAME OF THE IMPORTED FILE:\n", path, "\n\nHERE IT IS VH:\n", VH, "\n\nCOLUMN NAMES:\n", paste(names(obs), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
+}
+
+if( ! VL %in% names(obs)){
+    stop(paste0("\n\n============\n\nERROR IN xlsx2tsv.R\n\nTHE VL PARAMETER MUST BE A COLUMN NAME OF THE IMPORTED FILE:\n", path, "\n\nHERE IT IS VL:\n", VL, "\n\nCOLUMN NAMES:\n", paste(names(obs), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
+}
+
+if( ! all(categ %in% names(obs))){
+    stop(paste0("\n\n============\n\nERROR IN xlsx2tsv.R\n\nTHE categ PARAMETER MUST BE COLUMN NAMES OF THE IMPORTED FILE:\n", path, "\n\nHERE IT IS categ:\n", paste(categ, collapse = "\n"), "\n\nCOLUMN NAMES:\n", paste(names(obs), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
+}
+
+for(i0 in Ig_name){
     tempo.log <- is.na(obs[ , i0]) | obs[ , i0] == ""
     if(any(tempo.log)){
-        stop(paste0("\n\n============\n\nERROR IN xlsx2tsv.R\nIMPORTED FILE:\n", path, "\nHAS AN EMPTY SEQUENCE IN THE \"VH_Full_length_DNA\" OR \"VL_Full_length_DNA\" COLUMNS IN LINES:\n", paste(which(tempo.log), collapse = ", "), "\n\n============\n\n"), call. = FALSE)
+        stop(paste0("\n\n============\n\nERROR IN xlsx2tsv.R\nIMPORTED FILE:\n", path, "\nHAS AN EMPTY SEQUENCE IN THE ", Ig_name, " COLUMN IN LINES:\n", paste(which(tempo.log), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
     }
 }
+
 
 
 ############ end check
@@ -359,32 +394,40 @@ for(i0 in c("VH_Full_length_DNA", "VL_Full_length_DNA")){
 
 path.all <- paste0(out.path, "/All")
 dir.create(path.all)
-for(i0 in 1:nrow(obs)){
-    tempo.cat <- paste0(">", obs$ClusterId[i0], "_VH\n", obs$VH_Full_length_DNA[i0])
-    cat(tempo.cat, file = paste0(path.all, "/", obs$ClusterId[i0], "_VH_all.fasta"))
-    tempo.cat <- paste0(">", obs$ClusterId[i0], "_VL\n", obs$VL_Full_length_DNA[i0])
-    cat(tempo.cat, file = paste0(path.all, "/", obs$ClusterId[i0], "_VL_all.fasta"))
-}
-
-for(i0 in c("Roc_spe", "Vec_spe", "Panc_spe")){
-    tempo.path <- paste0(out.path, "/", i0)
-    dir.create(tempo.path)
-    tempo.log <- obs[ ! is.na(obs[ , i0]), i0] == "T"
-    if(all(is.na(obs[ , i0])) | ! (length(tempo.log) != 0 & any(tempo.log))){
-        tempo.warn <- paste0(i0, " COLUMN HAS NO \"T\"")
-        cat(paste0("\n\nWARNING: ", tempo.warn, "\n\n"))
-        fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = out.path, overwrite = FALSE)
-        warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
-    }else{
-        for(i2 in which(tempo.log)){
-            tempo.cat <- paste0(">", obs$ClusterId[i2], "_VH\n", obs$VH_Full_length_DNA[i2])
-            cat(tempo.cat, file = paste0(tempo.path, "/", obs$ClusterId[i2], "_VH_", i0, ".fasta"))
-            tempo.cat <- paste0(">", obs$ClusterId[i2], "_VL\n", obs$VL_Full_length_DNA[i2])
-            cat(tempo.cat, file = paste0(tempo.path, "/", obs$ClusterId[i2], "_VL_", i0, ".fasta"))
+chain <- c("VH", "VL")
+for(i0 in 1:length(chain)){
+    dir.create(paste0(path.all, "/", chain[i0]))
+    for(i1 in 1:nrow(obs)){
+        tempo.log <- is.na(obs[i1, get(chain[i0])]) | obs[i1, get(chain[i0])] == ""
+        if(any(tempo.log)){
+            tempo.warn <- paste0("IMPORTED FILE:\n", path, "\nHAS EMPTY SEQUENCES IN THE ", get(chain[i0]), " COLUMN IN LINES:\n", paste(which(tempo.log), collapse = "\n"))
+            cat(paste0("\n\nWARNING: ", tempo.warn, "\n\n"))
+            fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = out.path, overwrite = FALSE)
+            warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
+        }else{
+            tempo.cat <- paste0(">", obs[i1, Ig_name], "_", chain[i0], "\n", obs[i1, get(chain[i0])])
+            cat(tempo.cat, file = paste0(path.all,  "/", chain[i0], "/", obs[i1, Ig_name], "_", chain[i0],"_all.fasta"))
         }
     }
 }
 
+if( ! is.null(categ)){
+    for(i1 in categ){
+        tempo.path <- paste0(out.path, "/", i1)
+        dir.create(tempo.path)
+        chain <- c("VH", "VL")
+        for(i2 in 1:length(chain)){
+            dir.create(paste0(tempo.path, "/", chain[i2]))
+            for(i3 in 1:nrow(obs)){
+                tempo.log <- ( ! (is.na(obs[i3, i1]) | obs[i3, i1] == "")) & ( ! (is.na(obs[i3, get(chain[i2])]) | obs[i3, get(chain[i2])] == ""))
+                if(tempo.log == TRUE){
+                    tempo.cat <- paste0(">", obs[i3, Ig_name], "_", chain[i2], "\n", obs[i3, get(chain[i2])])
+                    cat(tempo.cat, file = paste0(tempo.path,  "/", chain[i2], "/", obs[i3, Ig_name], "_", chain[i2],"_", i1,".fasta"))
+                }
+            }
+        }
+    }
+}
 
 ############ end main
 
