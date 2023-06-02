@@ -459,16 +459,21 @@ fun_report(data = paste0("\n\n################################ RUNNING\n\n"), ou
 
 ################ Control
 
-
+empty.tsv <- TRUE
 tempo.list <- list.files(path = ".", pattern = "RData$") # gather all the .RData file names into tempo.list
 if(length(tempo.list) == 0){
-    tempo.cat <- "\\n\\nNO TREE DATA COMPUTED (NO .RData FILE DETECTED) -> NO GRAPH PLOTTED"
+    tempo.cat <- "\\n\\nNO SEQUENCE DATA COMPUTED (NO .RData FILE DETECTED) -> NO GRAPH PLOTTED"
     cat(tempo.cat)
     fun_report(data = tempo.cat, output = log, path = "./", overwrite = FALSE)
     # no need to use pdf(NULL) with fun_gg_empty_graph()
     final.plot <- fun_gg_empty_graph(text = "NO GRAPH PLOTTED\nNO .RData FILE DETECTED", text.size = 3)
+    ggplot2::ggsave(filename = paste0("tree.png"), plot = final.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+    ggplot2::ggsave(filename = paste0("tree.svg"), plot = final.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+    ggplot2::ggsave(filename = paste0("tree.pdf"), plot = final.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+    tempo.df <- matrix(c("sequence_id", "clone_id", "clone_name", "chain", "identical_to"), nrow = 1)
+    write.table(tempo.df, file = paste0("./tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = FALSE, sep = "\t")
 }else{
-
+    clone.id <- sapply(tempo.list, FUN = function(x){strsplit(x, split = "_")[[1]][1]})
 
 ################ end Control
 
@@ -476,28 +481,38 @@ if(length(tempo.list) == 0){
 
 
     # gathering trees and db from each .RData in tempo.list and trees -> tempo and db -> tempo.db[[i3]]
-    tempo <- NULL
+    tempo.trees <- NULL
+    tempo.clones <- NULL
     tempo.db <- vector("list", length(tempo.list))
-    for(i3 in 1:length(tempo.list)){
+    for(i1 in 1:length(tempo.list)){
         suppressWarnings(rm(trees))
+        suppressWarnings(rm(clones))
         suppressWarnings(rm(db))
-        load(tempo.list[i3])
-        tempo <- dplyr::bind_rows(tempo, trees)
-        tempo.db[[i3]] <- db
+        load(tempo.list[i1])
+        if( ! exists("trees")){
+            trees <- NULL
+        }
+        if( ! exists("clones")){
+            clones <- NULL
+        }
+        tempo.trees <- dplyr::bind_rows(tempo, trees)
+        tempo.clones <- dplyr::bind_rows(tempo, clones)
+        tempo.db[[i1]] <- db
     }
     suppressWarnings(rm(trees))
+    suppressWarnings(rm(clones))
     suppressWarnings(rm(db))
     # end gathering trees and db from each .RData in tempo.list and trees -> tempo and db -> tempo.db[[i3]]
-
-    trees <- tempo # creation of the trees tibble object, made of all the trees
+    trees <- tempo.trees # creation of the trees tibble object, made of all the trees
     plots <- suppressMessages(dowser::plotTrees( # creation of the plots list object, using the trees tibble object
         # option in https://dowser.readthedocs.io/en/latest/topics/plotTrees/
         trees, 
         layout = tree_kind, 
         title = TRUE
     ))
+    clones <- tempo.clones
     db.list <- tempo.db # creation of the db.list tibble object, made of all the db
-    save(list = c("trees", "plots", "db.list"), file = "./all_trees.RData")
+    save(list = c("trees", "plots", "clones", "db.list", "clone.id"), file = "./all_trees.RData")
 
 
 ################ end concatenation of all tibble trees into a same tibble and plot
@@ -515,9 +530,37 @@ if(length(tempo.list) == 0){
 
 ################ Plotting tree
 
-    for(i3 in 1:length(plots)){
+    for(i3 in 1:length(trees)){
+        empty.tsv <- TRUE
+        tempo.title <- paste0(
+            "Clonal Group: ", ifelse(exists("clones$data[[i3]]@clone"), clones$data[[i3]]@clone, ""), "\n",
+            "Chain: ", ifelse(exists("clones$locus[i3]"), clones$locus[i3], ""), "\n", 
+            "Clonal Group full name: ", ifelse(exists("clones$data[[i3]]@v_gene") | exists("clones$data[[i3]]@j_gene"), paste0(clones$data[[i3]]@v_gene, "_", clones$data[[i3]]@j_gene), ""), "\n",
+            "Clone ID: ", ifelse(exists("clones$clone_id[i3]"), clones$clone_id[i3], ""), "\n",
+            "CDR3 junction length: ", ifelse(exists("clones$data[[i3]]@junc_len"), clones$data[[i3]]@junc_len, ""), "\n",
+            "Number of leafs: ", ifelse(exists("clones$data[[i3]]@data"), nrow(clones$data[[i3]]@data), ""), "\n",
+            "Number of sequences in the clonal group: ", ifelse(exists("nrow(db.list[[i3]])"), nrow(db.list[[i3]]), "")
+        )
         if( ! (is.null(trees$trees[[i3]]) | length(trees$trees[[i3]]$parameters$nseq) == 0)){
             if(trees$trees[[i3]]$parameters$nseq != 0 | is.na(trees$trees[[i3]]$parameters$nseq)){
+                if(any(trees$data[[i3]]@clone != clones$data[[i3]]@clone)){
+                    stop("\n\n========\n\nINTERNAL CODE ERROR 4 IN tree_vizu.R FOR CLONE ID ", clone.id[[i3]], ":\ntrees$data[[i3]]@clone AND clones$data[[i3]]@clone SHOULD BE iDENTICAL\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
+                }
+                if(any(trees$data[[i3]]@v_gene != clones$data[[i3]]@v_gene)){
+                    stop("\n\n========\n\nINTERNAL CODE ERROR 4 IN tree_vizu.R FOR CLONE ID ", clone.id[[i3]], ":\ntrees$data[[i3]]@v_gene AND clones$data[[i3]]@v_gene SHOULD BE iDENTICAL\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
+                }
+                if(any(trees$data[[i3]]@j_gene != clones$data[[i3]]@j_gene)){
+                    stop("\n\n========\n\nINTERNAL CODE ERROR 4 IN tree_vizu.R FOR CLONE ID ", clone.id[[i3]], ":\ntrees$data[[i3]]@j_gene AND clones$data[[i3]]@j_gene SHOULD BE iDENTICAL\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
+                }
+                if(any(trees$data[[i3]]@junc_len != clones$data[[i3]]@junc_len)){
+                    stop("\n\n========\n\nINTERNAL CODE ERROR 4 IN tree_vizu.R FOR CLONE ID ", clone.id[[i3]], ":\ntrees$data[[i3]]@junc_len AND clones$data[[i3]]@junc_len SHOULD BE iDENTICAL\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
+                }
+                if(nrow(trees$data[[i3]]@data) != nrow(clones$data[[i3]]@data)){
+                    stop("\n\n========\n\nINTERNAL CODE ERROR 4 IN tree_vizu.R FOR CLONE ID ", clone.id[[i3]], ":\nnrow(trees$data[[i3]]@data) AND nrow(clones$data[[i3]]@data) SHOULD BE iDENTICAL\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
+                }
+                if(any(clone.id[[i3]] != trees$data[[i3]]@clone)){
+                    stop("\n\n========\n\nINTERNAL CODE ERROR 4 IN tree_vizu.R FOR CLONE ID ", clone.id[[i3]], ":\nclone.id[[i3]] AND trees$data[[i3]]@clone SHOULD BE iDENTICAL\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
+                }
                 # color of leafs and germline
                 tempo.graph.info <- ggplot2::ggplot_build(ggtree::ggtree(trees$trees[[i3]], layout = if(tree_kind %in% c("roundrect", "ellipse")){"rectangular"}else{tree_kind}) +  ggtree::geom_tippoint() + ggtree::geom_tiplab()) # plots[[i3]] is equivalent to ggtree::ggtree(trees$trees[[i3]])
                 leaf.nodes <- NULL
@@ -550,11 +593,10 @@ if(length(tempo.list) == 0){
                 tempo.v <- substring(tempo.v, 4)
                 tempo.j <- substring(tempo.j, 4)
                 clone.name <- paste0(tempo.v, "_", tempo.j)
-                clone.id <-  trees$data[[i3]]@clone
                 removed.seq <- NULL
                 add.text <- NULL
                 if(tree_duplicate_seq == "TRUE" & nrow(trees$data[[i3]]@data) != nrow(db.list[[i3]])){
-                    stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN tree_vizu.R for clone ID ", clone.id, "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"TRUE\"\nBUT THE NUMBER OF ROWS IN trees$data[[i3]]@data (n=", nrow(trees$data[[i3]]@data), ")\nIS DIFFERENT FROM THE NUMBER OF ROWS IN db (n=", nrow(db.list[[i3]]), ")\nAS IF SOME SEQUENCES WHERE REMOVED\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                    stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"TRUE\"\nBUT THE NUMBER OF ROWS IN trees$data[[i3]]@data (n=", nrow(trees$data[[i3]]@data), ")\nIS DIFFERENT FROM THE NUMBER OF ROWS IN db (n=", nrow(db.list[[i3]]), ")\nAS IF SOME SEQUENCES WHERE REMOVED\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
                 }else if(tree_duplicate_seq == "FALSE" & nrow(trees$data[[i3]]@data) == nrow(db.list[[i3]])){
                     add.text <- "All sequences of the tree are displayed"
                 }else if(tree_duplicate_seq == "FALSE" & nrow(trees$data[[i3]]@data) != nrow(db.list[[i3]])){
@@ -562,7 +604,7 @@ if(length(tempo.list) == 0){
                     no.duplic.seq.log <- db.list[[i3]][[1]] %in% trees$data[[i3]]@data[[1]]
                     duplic.seq.log <- ! no.duplic.seq.log
                     if( ! any(duplic.seq.log)){
-                        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 6 IN tree_vizu.R for clone ID ", clone.id, "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"FALSE\"\nBUT NO SEQ NAMES REMOVED FROM THE TREE IN trees$data[[i3]]@data[[1]] IS DIFFERENT FROM THE NUMBER OF ROWS IN db (n=", nrow(db.list[[i3]]), ")\ntrees$data[[i3]]@data[[1]]: ", paste(trees$data[[i3]]@data[[1]], collapse = " "), "\ndb.list[[i3]][[1]]: ", paste(db.list[[i3]][[1]], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 6 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"FALSE\"\nBUT NO SEQ NAMES REMOVED FROM THE TREE IN trees$data[[i3]]@data[[1]] IS DIFFERENT FROM THE NUMBER OF ROWS IN db (n=", nrow(db.list[[i3]]), ")\ntrees$data[[i3]]@data[[1]]: ", paste(trees$data[[i3]]@data[[1]], collapse = " "), "\ndb.list[[i3]][[1]]: ", paste(db.list[[i3]][[1]], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
                     }else{
                         not.removed.seq <- db.list[[i3]][[1]][no.duplic.seq.log]
                         removed.seq <- db.list[[i3]][[1]][duplic.seq.log]
@@ -576,19 +618,20 @@ if(length(tempo.list) == 0){
                             identical.seq <- c(identical.seq, trees$data[[i3]]@data[[1]][tempo.log])
                         }
                         if(length(removed.seq) != length(identical.seq)){
-                            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 7 IN tree_vizu.R for clone ID ", clone.id, "\nidentical.seq SHOULD HAVE ", length(removed.seq), " SEQUENCES NAMES\nREMOVED SEQUENCES: ", paste(removed.seq, collapse = " "), "\nIDENTICAL TO: ", paste(identical.seq, collapse = " "), "\nCOLLAPSED NAMES: ", paste(clones$data[[1]]@data$collapsed, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 7 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nidentical.seq SHOULD HAVE ", length(removed.seq), " SEQUENCES NAMES\nREMOVED SEQUENCES: ", paste(removed.seq, collapse = " "), "\nIDENTICAL TO: ", paste(identical.seq, collapse = " "), "\nCOLLAPSED NAMES: ", paste(clones$data[[1]]@data$collapsed, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
                         }
                         suppressWarnings(rm(tempo.df))
-                        tempo.df <- data.frame(sequence_id = removed.seq, clone_id = clone.id, clone_name = clone.name, chain = chain, identical_to = identical.seq)
-                        write.table(tempo.df, file = paste0("./", clone.id, "_tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = TRUE, sep = "\t")
+                        tempo.df <- data.frame(sequence_id = removed.seq, clone_id = clone.id[[i3]], clone_name = clone.name, chain = chain, identical_to = identical.seq)
+                        write.table(tempo.df, file = paste0("./", clone.id[[i3]], "_tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = TRUE, sep = "\t")
+                        empty.tsv <- FALSE
                         # end get removed sequences info
                         # modif of the tree tip labeling
                         if(length(trees$trees[[i3]]$tip.label) - 1 != length(trees$data[[i3]]@data$sequence_id)){
-                            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 8 IN tree_vizu.R for clone ID ", clone.id, "\nLENGTH OF trees$trees[[i3]]$tip.label SHOULD BE -1 OF LENGTH OF trees$data[[i3]]@data$sequence_id. HERE IT IS:\n\nLENGTH - 1 OF trees$trees[[i3]]$tip.label: ", length(trees$trees[[i3]]$tip.label) - 1, " \nLENGTH OF trees$data[[i3]]@data$sequence_id: ", length(trees$data[[i3]]@data$sequence_id), "\n\ntrees$trees[[i3]]$tip.label:\n", paste(trees$trees[[i3]]$tip.label, collapse = "\n"), "\n\ntrees$data[[i3]]@data$sequence_id:\n", paste(trees$data[[i3]]@data$sequence_id, collapse = "\n"), "\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 8 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nLENGTH OF trees$trees[[i3]]$tip.label SHOULD BE -1 OF LENGTH OF trees$data[[i3]]@data$sequence_id. HERE IT IS:\n\nLENGTH - 1 OF trees$trees[[i3]]$tip.label: ", length(trees$trees[[i3]]$tip.label) - 1, " \nLENGTH OF trees$data[[i3]]@data$sequence_id: ", length(trees$data[[i3]]@data$sequence_id), "\n\ntrees$trees[[i3]]$tip.label:\n", paste(trees$trees[[i3]]$tip.label, collapse = "\n"), "\n\ntrees$data[[i3]]@data$sequence_id:\n", paste(trees$data[[i3]]@data$sequence_id, collapse = "\n"), "\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
                         }else{
                             tempo.pos <- match(trees$trees[[i3]]$tip.label[-length(trees$trees[[i3]]$tip.label)], trees$data[[i3]]@data$sequence_id) # [-length(trees$trees[[i3]]$tip.label)] to remove the "Germline" label from the elements
                             if( ! all(trees$data[[i3]]@data$sequence_id[tempo.pos] == trees$trees[[i3]]$tip.label[-length(trees$trees[[i3]]$tip.label)])){
-                                stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 9 IN tree_vizu.R for clone ID ", clone.id, "\nELEMENTS SHOULD BE THE SAME. HERE IT IS:\n\ntrees$data[[i3]]@data$sequence_id[tempo.pos]:\n", paste(trees$data[[i3]]@data$sequence_id[tempo.pos], collapse = "\n"), "\n\ntrees$trees[[i3]]$tip.label[-length(trees$trees[[i3]]$tip.label)]:\n", paste(trees$trees[[i3]]$tip.label[-length(trees$trees[[i3]]$tip.label)], collapse = "\n"), "\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                                stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 9 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nELEMENTS SHOULD BE THE SAME. HERE IT IS:\n\ntrees$data[[i3]]@data$sequence_id[tempo.pos]:\n", paste(trees$data[[i3]]@data$sequence_id[tempo.pos], collapse = "\n"), "\n\ntrees$trees[[i3]]$tip.label[-length(trees$trees[[i3]]$tip.label)]:\n", paste(trees$trees[[i3]]$tip.label[-length(trees$trees[[i3]]$tip.label)], collapse = "\n"), "\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
                             }else{
                                 trees$trees[[i3]]$tip.label[-length(trees$trees[[i3]]$tip.label)] <- paste0("(", trees$data[[i3]]@data$collapse_count[tempo.pos], ") ", trees$data[[i3]]@data$sequence_id[tempo.pos])
                             }
@@ -729,13 +772,7 @@ if(length(tempo.list) == 0){
                 # end legend
                 #title
                 tempo.title <- paste0(
-                    "Clonal Group: ", clone.name, "\n",
-                    "Chain: ", chain, "\n", 
-                    "Clonal Group full name: ", trees$data[[i3]]@v_gene, "_", trees$data[[i3]]@j_gene, "\n",
-                    "Clone ID: ", trees$data[[i3]]@clone, "\n",
-                    "CDR3 junction length: ", trees$data[[i3]]@junc_len, "\n",
-                    "Number of leafs: ", nrow(trees$data[[i3]]@data), "\n",
-                    "Number of sequences in the clonal group: ", nrow(db.list[[i3]]), 
+                    tempo.title, 
                     ifelse(is.null(add.text), "", paste0("\n", add.text))
                 )
                 title.grob <- grid::textGrob(
@@ -752,14 +789,23 @@ if(length(tempo.list) == 0){
                 dev.off()
             }else{
                 # no need to use pdf(NULL) with fun_gg_empty_graph()
-                final.plot <- fun_gg_empty_graph(text = "NO GRAPH PLOTTED FOR CLONE ID", paste(unique(db.list[[i3]]$clone_id)), "\nNO SEQUENCE DETECTED", text.size = 3)
+                final.plot <- fun_gg_empty_graph(text = "NO GRAPH PLOTTED FOR CLONE ID", paste(unique(db.list[[i3]]$clone_id)), "\nNO SEQUENCE DETECTED", text.size = 3, title = tempo.title, title.size = 3)
             }
         }else{
             # no need to use pdf(NULL) with fun_gg_empty_graph()
-            final.plot <- fun_gg_empty_graph(text = "NO GRAPH PLOTTED FOR CLONE ID", paste(unique(db.list[[i3]]$clone_id)), "\nNO SEQUENCE DETECTED", text.size = 3)
+            final.plot <- fun_gg_empty_graph(text = "NO GRAPH PLOTTED FOR CLONE ID", paste(unique(db.list[[i3]]$clone_id)), "\nNO SEQUENCE DETECTED", text.size = 3, title = tempo.title, title.size = 3)
         }
 
 ################ end Plotting tree
+
+################ save empty tsv
+
+        if(empty.tsv == TRUE){
+            tempo.df <- matrix(c("sequence_id", "clone_id", "clone_name", "chain", "identical_to"), nrow = 1)
+            write.table(tempo.df, file = paste0("./", clone.id[[i3]], "_tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = FALSE, sep = "\t")
+        }
+
+################ end save empty tsv
 
 ################ saving plots
 

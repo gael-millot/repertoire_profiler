@@ -359,6 +359,7 @@ if(nrow(clones$data[[1]]@data) < clone_nb_seq){
     write.table(matrix(names(db), nrow = 1), file = "./seq_for_tree.tsv", row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t") # empty file
     file.create("./tree_clone_id.tsv") # empty file
     write.table(clone.id, file = "./tree_dismissed_clone_id.tsv", row.names = FALSE, col.names = FALSE)
+    save(list = c("db", "clones"), file = paste0("./", clones$clone_id, "_get_tree_cloneID.RData"))
 }else{
     file.copy(from = paste0("./", seq_name_remplacement_ch), to = "./seq_for_tree.tsv")
     file.create("./tree_dismissed_clone_id.tsv") # empty file

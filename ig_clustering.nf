@@ -722,7 +722,7 @@ process tree_vizu {
     path "*.pdf"
     path "*.png", emit: tree_vizu_ch // png plot (but sometimes empty) sustematically returned
     path "*.svg"
-    path "*_tree_seq_not_displayed.tsv", emit: tree_seq_not_displayed_ch, optional: true
+    path "*tree_seq_not_displayed.tsv", emit: tree_seq_not_displayed_ch
     path "tree_vizu.log"
     //path "HLP10_tree_parameters.tsv"
 
