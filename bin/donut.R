@@ -396,46 +396,9 @@ obs <- read.table(file_name, sep = "\t", header = TRUE)
 
 ################ data modification
 
-tempo.v <- obs$germline_v_call
-tempo.j <- obs$germline_j_call
-chain <- unique(substr(tempo.j, 1, 3)) # extract the IGH or IGK name
-if(length(chain) != 1){
-    stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 4 IN donut.R for kind ", kind, ": chain MUST BE A SINGLE VALUE.\nHERE IT IS: ", paste(chain, collapse = " "), "\n\n============\n\n"), call. = FALSE)
-}else if(chain != unique(substr(tempo.v, 1, 3))){
-    stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN donut.R for kind ", kind, ": CHAIN OF J DIFFERENT FROM CHAIN OF V.\nCHAIN OF V: ", paste(chain, collapse = " "), "\nCHAIN OF J: ", paste(unique(substr(tempo.v, 1, 3)), collapse = " "), "\n\n============\n\n"), call. = FALSE)
-}
-tempo.v <- substring(tempo.v, 4)
-tempo.j <- substring(tempo.j, 4)
-clone.name <- paste0(tempo.v, "_", tempo.j)
-clone.id <-  obs$clone_id
-
-
-obs2 <- data.frame(table(clone.name))
-names(obs2)[1] <- "Germline_Clone_Name"
-obs2 <- data.frame(obs2, Prop = obs2$Freq / sum(obs2$Freq), kind = kind)
-obs2$Germline_Clone_Name <- factor(obs2$Germline_Clone_Name, levels = obs2$Germline_Clone_Name[order(obs2$Prop, decreasing = TRUE)]) # reorder so that the donut is according to decreasing proportion starting at the top in a clockwise direction
-obs2 <- obs2[order(as.numeric(obs2$Germline_Clone_Name), decreasing = FALSE), ] # obs2 with rows in decreasing order, according to Prop
-# # warning: I can use all.annotation.log because I have duplicated the first column of the dataset in the second column, in order to change the name in the first column with metadata. If all(obs[ , 1] == obs[ , 2]) == TRUE, it means no annotation added
-if(grepl(x = names(obs)[2], pattern = "^initial_")){ # means that fonctional annotations are present
-    annotation.log <- obs[ , 1] == obs[ , 2]
-    all.annotation.log <- all(annotation.log) # if one difference between obs[ , 1] == obs[ , 2], then all.annotation.log is FALSE
-}else{
-    all.annotation.log <- TRUE
-}
-if(all.annotation.log == FALSE){
-    tempo.labels <- obs[ , 1]
-    tempo.labels[annotation.log] <- NA
-    tempo.data1 <- aggregate(tempo.labels ~ clone.name, FUN = function(x){paste(x, collapse = ",")})
-    obs2 <- data.frame(obs2, labels = tempo.data1$tempo.labels[match(obs2$Germline_Clone_Name, tempo.data1$clone.name)])
-}
-
-
-################ End data modification
-
-################ Plotting
 
 tempo.title <- paste0(
-    "Donut plot of the productive sequences grouped by same V and J alleles\nWarning: this is different from clonal groups since the latter must have also the same CDR3 length\n",
+    "Donut plot of the productive sequences grouped by same V and J alleles\nWarning: this is different from clonal groups since the latter must have also the same CDR3 length\n\n",
     "Kind of sequences: ", 
     ifelse(
         kind == "all", 
@@ -449,75 +412,124 @@ tempo.title <- paste0(
                 "=====ERROR====="
             )
         )
-    ), " file)\n",
-    "Chain: ", chain, "\n",
-    "Proportions are indicated in the legend, after the labels.\n", 
-    "The total number of sequences of the donut is indicated in the center.\nSee the donut_stats.tsv file for the complete stats."
+    ), " file)"
 )
-if( ! is.null(donut_legend_limit)){
-    if(sum(obs2$Prop >= donut_legend_limit) < length(obs2$Prop)){
-        tempo.title <- paste0(tempo.title, "\nSome classes have been removed from the legend (donut_legend_limit = ", round(donut_legend_limit, 2), "). See the donut_stats.tsv file")
+
+
+if(nrow(obs) > 0){
+    tempo.v <- obs$germline_v_call
+    tempo.j <- obs$germline_j_call
+    chain <- unique(substr(tempo.j, 1, 3)) # extract the IGH or IGK name
+    if(length(chain) != 1){
+        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 4 IN donut.R for kind ", kind, ": chain MUST BE A SINGLE VALUE.\nHERE IT IS: ", paste(chain, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) 
+    }else if(chain != unique(substr(tempo.v, 1, 3))){
+        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN donut.R for kind ", kind, ": CHAIN OF J DIFFERENT FROM CHAIN OF V.\nCHAIN OF V: ", paste(chain, collapse = " "), "\nCHAIN OF J: ", paste(unique(substr(tempo.v, 1, 3)), collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) 
     }
-}
+    tempo.v <- substring(tempo.v, 4)
+    tempo.j <- substring(tempo.j, 4)
+    clone.name <- paste0(tempo.v, "_", tempo.j)
+    clone.id <-  obs$clone_id
 
-if(kind == "functional" & all.annotation.log != TRUE){
-    obs3 <- obs2[ ! is.na(obs2$labels) ,]
-}else{
-    obs3 <- obs2
-}
 
-if(length(obs3$Freq) != 0){
-    if( ! (all(obs3$Freq == 0) | all(is.na(obs3$Freq)))){
-        pdf(NULL) # used because I need plot = TRUE for return.gtable
-        tempo.plot <- fun_gg_donut(
-            data1 = obs3, # select only the classes with functional annotations if kind == "functional" & all.annotation.log != TRUE
-            freq = "Freq", 
-            categ = "Germline_Clone_Name", 
-            fill.palette = donut_palette,
-            fill.color = NULL, 
-            hole.size = donut_hole_size, 
-            hole.text = donut_hole_text, 
-            hole.text.size = donut_hole_text_size, 
-            border.color = donut_border_color, 
-            border.size = donut_border_size, 
-            title = tempo.title, 
-            title.text.size = 5, 
-            annotation = if(all.annotation.log == FALSE){"labels"}else{NULL},
-            annotation.distance = donut_annotation_distance,
-            annotation.size = donut_annotation_size,
-            annotation.force = donut_annotation_force,
-            annotation.force.pull = donut_annotation_force_pull,
-            legend.show = TRUE, 
-            legend.width = donut_legend_width, 
-            legend.name = "", 
-            legend.text.size = donut_legend_text_size, 
-            legend.box.size = donut_legend_box_size, 
-            legend.box.space = donut_legend_box_space, 
-            legend.limit = donut_legend_limit, 
-            legend.add.prop = TRUE,
-            add = NULL, 
-            return = TRUE, 
-            return.ggplot = FALSE,
-            return.gtable = TRUE,
-            plot = FALSE, 
-            warn.print = TRUE, 
-            lib.path = NULL
-        )
-        final.plot <- suppressMessages(suppressWarnings(gridExtra::grid.arrange(tempo.plot$gtable))) # , left = " ", right = " " : trick to add margins in the plot. padding =  unit(0.5, "inch") is for top margin above the title
-        dev.off()
+    obs2 <- data.frame(table(clone.name))
+    names(obs2)[1] <- "Germline_Clone_Name"
+    obs2 <- data.frame(obs2, Prop = obs2$Freq / sum(obs2$Freq), kind = kind)
+    obs2$Germline_Clone_Name <- factor(obs2$Germline_Clone_Name, levels = obs2$Germline_Clone_Name[order(obs2$Prop, decreasing = TRUE)]) # reorder so that the donut is according to decreasing proportion starting at the top in a clockwise direction
+    obs2 <- obs2[order(as.numeric(obs2$Germline_Clone_Name), decreasing = FALSE), ] # obs2 with rows in decreasing order, according to Prop
+    # # warning: I can use all.annotation.log because I have duplicated the first column of the dataset in the second column, in order to change the name in the first column with metadata. If all(obs[ , 1] == obs[ , 2]) == TRUE, it means no annotation added
+    if(grepl(x = names(obs)[2], pattern = "^initial_")){ # means that fonctional annotations are present
+        annotation.log <- obs[ , 1] == obs[ , 2]
+        all.annotation.log <- all(annotation.log) # if one difference between obs[ , 1] == obs[ , 2], then all.annotation.log is FALSE
+    }else{
+        all.annotation.log <- TRUE
+    }
+    if(all.annotation.log == FALSE){
+        tempo.labels <- obs[ , 1]
+        tempo.labels[annotation.log] <- NA
+        tempo.data1 <- aggregate(tempo.labels ~ clone.name, FUN = function(x){paste(x, collapse = ",")})
+        obs2 <- data.frame(obs2, labels = tempo.data1$tempo.labels[match(obs2$Germline_Clone_Name, tempo.data1$clone.name)])
+    }
+
+
+    ################ End data modification
+
+    ################ Plotting
+
+    tempo.title <- paste0(
+        tempo.title,
+        "\nChain: ", chain, "\n",
+        "Proportions are indicated in the legend, after the labels.\n", 
+        "The total number of sequences of the donut is indicated in the center.\nSee the donut_stats.tsv file for the complete stats."
+    )
+    if( ! is.null(donut_legend_limit)){
+        if(sum(obs2$Prop >= donut_legend_limit) < length(obs2$Prop)){
+            tempo.title <- paste0(tempo.title, "\nSome classes have been removed from the legend (donut_legend_limit = ", round(donut_legend_limit, 2), "). See the donut_stats.tsv file")
+        }
+    }
+
+    if(kind == "functional" & all.annotation.log != TRUE){
+        obs3 <- obs2[ ! is.na(obs2$labels) ,]
+    }else{
+        obs3 <- obs2
+    }
+
+    if(length(obs3$Freq) != 0){
+        if( ! (all(obs3$Freq == 0) | all(is.na(obs3$Freq)))){
+            pdf(NULL) # used because I need plot = TRUE for return.gtable
+            tempo.plot <- fun_gg_donut(
+                data1 = obs3, # select only the classes with functional annotations if kind == "functional" & all.annotation.log != TRUE
+                freq = "Freq", 
+                categ = "Germline_Clone_Name", 
+                fill.palette = donut_palette,
+                fill.color = NULL, 
+                hole.size = donut_hole_size, 
+                hole.text = donut_hole_text, 
+                hole.text.size = donut_hole_text_size, 
+                border.color = donut_border_color, 
+                border.size = donut_border_size, 
+                title = tempo.title, 
+                title.text.size = 5, 
+                annotation = if(all.annotation.log == FALSE){"labels"}else{NULL},
+                annotation.distance = donut_annotation_distance,
+                annotation.size = donut_annotation_size,
+                annotation.force = donut_annotation_force,
+                annotation.force.pull = donut_annotation_force_pull,
+                legend.show = TRUE, 
+                legend.width = donut_legend_width, 
+                legend.name = "", 
+                legend.text.size = donut_legend_text_size, 
+                legend.box.size = donut_legend_box_size, 
+                legend.box.space = donut_legend_box_space, 
+                legend.limit = donut_legend_limit, 
+                legend.add.prop = TRUE,
+                add = NULL, 
+                return = TRUE, 
+                return.ggplot = FALSE,
+                return.gtable = TRUE,
+                plot = FALSE, 
+                warn.print = TRUE, 
+                lib.path = NULL
+            )
+            final.plot <- suppressMessages(suppressWarnings(gridExtra::grid.arrange(tempo.plot$gtable))) # , left = " ", right = " " : trick to add margins in the plot. padding =  unit(0.5, "inch") is for top margin above the title
+            dev.off()
+        }else{
+            # no need to use pdf(NULL) with fun_gg_empty_graph()
+            final.plot <- fun_gg_empty_graph(text = "NO DONUT PLOTTED\nNO FREQUENCY DETECTED", text.size = 3, title = tempo.title, title.size = 4)
+        }
     }else{
         # no need to use pdf(NULL) with fun_gg_empty_graph()
-        final.plot <- fun_gg_empty_graph(text = "NO DONUT PLOTTED\nNO FREQUENCY DETECTED", text.size = 3)
+        final.plot <- fun_gg_empty_graph(text = "NO DONUT PLOTTED\nNO FREQUENCY DETECTED", text.size = 3, title = tempo.title, title.size = 4)
+    }
+    if(kind == "functional" & all.annotation.log == TRUE){ # overwrite final.plot
+        # no need to use pdf(NULL) with fun_gg_empty_graph()
+        final.plot <- fun_gg_empty_graph(text = "NO DONUT PLOTTED\nNO FUNCTIONAL ANNOTATION DETECTED", text.size = 3, title = tempo.title, title.size = 4)
     }
 }else{
-    # no need to use pdf(NULL) with fun_gg_empty_graph()
-    final.plot <- fun_gg_empty_graph(text = "NO DONUT PLOTTED\nNO FREQUENCY DETECTED", text.size = 3)
+    final.plot <- fun_gg_empty_graph(text = "NO DONUT PLOTTED\nNO SEQUENCE DETECTED", text.size = 3, title = tempo.title, title.size = 4)
+    obs3 <- obs
 }
 
-if(kind == "functional" & all.annotation.log == TRUE){
-    # no need to use pdf(NULL) with fun_gg_empty_graph()
-    final.plot <- fun_gg_empty_graph(text = "NO DONUT PLOTTED\nNO FUNCTIONAL ANNOTATION DETECTED", text.size = 3)
-}
+
 
 
 ################ end Plotting tree

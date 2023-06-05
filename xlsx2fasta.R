@@ -406,7 +406,7 @@ for(i0 in 1:length(chain)){
             warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
         }else{
             tempo.cat <- paste0(">", obs[i1, Ig_name], "_", chain[i0], "\n", obs[i1, get(chain[i0])])
-            cat(tempo.cat, file = paste0(path.all,  "/", chain[i0], "/", obs[i1, Ig_name], "_", chain[i0],"_all.fasta"))
+            cat(tempo.cat, file = paste0(path.all,  "/", chain[i0], "/", obs[i1, Ig_name], "_", chain[i0], ".fasta"))
         }
     }
 }
@@ -422,7 +422,7 @@ if( ! is.null(categ)){
                 tempo.log <- ( ! (is.na(obs[i3, i1]) | obs[i3, i1] == "")) & ( ! (is.na(obs[i3, get(chain[i2])]) | obs[i3, get(chain[i2])] == ""))
                 if(tempo.log == TRUE){
                     tempo.cat <- paste0(">", obs[i3, Ig_name], "_", chain[i2], "\n", obs[i3, get(chain[i2])])
-                    cat(tempo.cat, file = paste0(tempo.path,  "/", chain[i2], "/", obs[i3, Ig_name], "_", chain[i2],"_", i1,".fasta"))
+                    cat(tempo.cat, file = paste0(tempo.path,  "/", chain[i2], "/", obs[i3, Ig_name], "_", chain[i2], ".fasta"))
                 }
             }
         }

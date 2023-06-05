@@ -703,6 +703,7 @@ process tree_vizu {
     input:
     path rdata_tree_ch2 // no more parallelization
     val tree_kind
+    val clone_nb_seq
     val tree_duplicate_seq
     val tree_leaf_color
     val tree_leaf_shape
@@ -731,6 +732,7 @@ process tree_vizu {
     #!/bin/bash -ue
     tree_vizu.R \
 "${tree_kind}" \
+"${clone_nb_seq}" \
 "${tree_duplicate_seq}" \
 "${tree_leaf_color}" \
 "${tree_leaf_shape}" \
@@ -1294,6 +1296,7 @@ workflow {
     tree_vizu(
         rdata_tree_ch2,
         tree_kind,
+        clone_nb_seq,
         tree_duplicate_seq,
         tree_leaf_color,
         tree_leaf_shape,
