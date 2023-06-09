@@ -663,6 +663,7 @@ process get_tree {
     path cute_file
     val clone_nb_seq
     val tree_duplicate_seq
+    val igphylm_exe_path // warning : here val and not path because we do not want the igphyml file to be imported in the work dir
 
     output:
     path "*_get_tree_cloneID.RData", emit: rdata_tree_ch, optional: true
@@ -685,6 +686,7 @@ process get_tree {
 "${meta_file}" \
 "${clone_nb_seq}" \
 "${tree_duplicate_seq}" \
+"${igphylm_exe_path}" \
 "${cute_file}" \
 "get_tree.log"
     """
@@ -1086,6 +1088,10 @@ workflow {
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID cute_path PARAMETER IN ig_clustering.config FILE (DOES NOT EXIST): ${cute_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
     }
 
+    if( ! (igphylm_exe_path in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igphylm_exe_path PARAMETER IN ig_clustering.config FILE:\n${igphylm_exe_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }
+
 
     // below : those variable are already used in the config file. Thus, to late to check them. And not possible to check inside the config file
     // out_ini
@@ -1267,7 +1273,8 @@ workflow {
         meta_file, // first() because get_tree process is a parallele one and because meta_file is single
         cute_file, 
         clone_nb_seq,
-        tree_duplicate_seq
+        tree_duplicate_seq,
+        igphylm_exe_path
     )
     get_tree.out.rdata_tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: EMPTY OUTPUT FOLLOWING THE get_tree PROCESS -> NO TREE RETURNED\n\n")}}
     rdata_tree_ch2 = get_tree.out.rdata_tree_ch.collect()

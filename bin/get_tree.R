@@ -73,6 +73,7 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
         "meta_file", 
         "clone_nb_seq", 
         "tree_duplicate_seq", 
+        "igphylm_exe_path", 
         "cute", 
         "log"
     ) # objects names exactly in the same order as in the bash code and recovered in args. Here only one, because only the path of the config file to indicate after the get_tree.R script execution
@@ -97,13 +98,27 @@ rm(tempo.cat)
 
 ################################ Test
 
-# setwd("C:/Users/gael/Documents/Git_projects/ig_clustering/work/a3/846b35a61837880a74ae0445a5e929")
-# seq_name_remplacement_ch = "1_renamed_seq.tsv"
+
+# Can only be run on Lunix because igphylm cannot be installed on Windows
+# To run locally on WSL2
+# copy-paste the output in /home/gael/20211126_dejoux/dataset/
+# Then:
+# sudo docker run -ti -v /home/gael/20211126_dejoux/:/caca gmillot/immcantation_v1.2:gitlab_v10.1
+# Inside the image:
+# cd /caca/dataset/fd7f938fe6ebcb2bdbefb2334d45c6/
+# R
+# Inside R:
+# getwd() # to check that we are indeed in /caca/dataset/fd7f938fe6ebcb2bdbefb2334d45c6/
+# copy-paste this code:
+
+# seq_name_remplacement_ch = "17_renamed_seq.tsv"
 # tree_duplicate_seq = "FALSE" 
-# meta_file = "metadata.tsv"
+# meta_file = "metadata_sort1.tsv"
 # clone_nb_seq = "3"
-# cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.2.0/cute_little_R_functions.R"
+# igphylm_exe_path = "/usr/local/share/igphyml/src/igphyml"
+# cute = "cute_little_R_functions.R"
 # log = "get_tree.log"
+
 
 
 
@@ -123,6 +138,7 @@ param.list <- c(
     "meta_file", 
     "clone_nb_seq", 
     "tree_duplicate_seq", 
+    "igphylm_exe_path", 
     "cute", 
     "log"
 )
@@ -241,6 +257,7 @@ tempo.arg <-c(
     "meta_file", 
     "clone_nb_seq", 
     "tree_duplicate_seq", 
+    "igphylm_exe_path", 
     "log"
 )
 tempo.log <- sapply(lapply(tempo.arg, FUN = get, env = sys.nframe(), inherit = FALSE), FUN = is.null)
@@ -300,6 +317,11 @@ if( ! (length(tree_duplicate_seq) == 1 & any(tree_duplicate_seq %in% c("TRUE", "
 }
 
 
+if( ! file.exists(igphylm_exe_path)){
+    tempo.cat <- paste0("ERROR IN get_tree.R:\nTHE igphylm FILE IS NOT CORRECTLY IMPORTED INTO THE NEXTFLOW work DIRECTORY BECAUSE igphylm_exe_path PARAMETER MUST BE A VALID PATH\nHERE IT IS: \n", paste0(igphylm_exe_path, collapse = " "))
+    text.check2 <- c(text.check2, tempo.cat)
+    arg.check2 <- c(arg.check2, TRUE)
+}
 
 if(any(arg.check2) == TRUE){ # normally no NA
     stop(paste0("\n\n================\n\n", paste(text.check2[arg.check2], collapse = "\n"), "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between == #
@@ -372,13 +394,13 @@ if(nrow(clones$data[[1]]@data) < clone_nb_seq){
             tempo <- strsplit(tempo.df$collapsed[i4], split = ",")[[1]] # recover collapsed names
             tempo.log <- tempo %in% meta$Name
             if(any(tempo %in% meta$Name)){
-                tempo.df$sequence_id[i4] <- paste(tempo[tempo.log], collapse = ",") # all the annotated names are in the first column now # info not lost in tempo.df$sequence_id[i4] because all the names are in tempo.df$collapsed
+                tempo.df$sequence_id[i4] <- paste(tempo[tempo.log], collapse = "_") # all the annotated names are in the first column now # info not lost in tempo.df$sequence_id[i4] because all the names are in tempo.df$collapsed
             }
         }
         clones$data[[1]]@data <- tempo.df
     }
     # end add the metadata names in the first column of clones$data[[1]]@data to have them in final trees
-    trees <- dowser::getTrees(clones, build="igphyml", exec="/usr/local/share/igphyml/src/igphyml", nproc = 10)
+    trees <- dowser::getTrees(clones, build = "igphyml", exec = igphylm_exe_path, nproc = 10)
     # assign(paste0("c", trees$clone_id, "_trees"), trees)
     save(list = c("trees", "db", "clones"), file = paste0("./", trees$clone_id, "_get_tree_cloneID.RData"))
     write.table(trees$clone_id, file = "./tree_clone_id.tsv", row.names = FALSE, col.names = FALSE)

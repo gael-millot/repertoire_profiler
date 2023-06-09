@@ -286,6 +286,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 ## WHAT'S NEW IN
 
 
+#### v8.1
+
+Bug fixed in get_tree
+
+
 #### v8.0
 
 - xlsx2fasta.R file modified so that fasta files have correct names
