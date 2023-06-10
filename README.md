@@ -286,6 +286,17 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 ## WHAT'S NEW IN
 
 
+#### v8.3
+
+- Bug fixed in tree_vizu: now nb of removed seq are displayed again
+- Now annotated seq are colored
+
+
+#### v8.2
+
+Bug fixed in tree_vizu: now meta are displayed again
+
+
 #### v8.1
 
 Bug fixed in get_tree

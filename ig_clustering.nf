@@ -653,7 +653,7 @@ process repertoire {
 
 
 process get_tree {
-    label 'immcantation'
+    label 'immcantation_10cpu'
     publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{*_get_tree_cloneID.RData}", overwrite: false
     cache 'true'
 

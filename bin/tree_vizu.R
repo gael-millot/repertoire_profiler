@@ -122,12 +122,11 @@ rm(tempo.cat)
 # tree_label_outside = "TRUE"
 # tree_right_margin = "1.5" 
 # tree_legend = "TRUE" 
-# tree_meta_path = "./metadata.tsv"
-# tree_meta_legend = "KD"
+# tree_meta_path = "./metadata2.tsv"
+# tree_meta_legend = "inverted_KD"
 # cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.2.0/cute_little_R_functions.R"
 # log = "tree_vizu.log"
 # file.remove(c("./all_objects.RData", "./all_trees.RData", "./trees.pdf", "./tree_vizu.log"))
-
 
 
 ################################ end Test
@@ -614,9 +613,9 @@ if(length(tempo.list) == 0){
                 nodes <- tempo.graph.info$data[[1]]$node
                 tempo.log.germline <- nodes == leaf.node.germline
                 tempo.log.leaf <- nodes %in% leaf.nodes
-                tempo.names2 <- rep("Seq", length(nodes))
-                tempo.names2[tempo.log.germline] <- "Germline"
-                tempo.names2[ ! (tempo.log.leaf | tempo.log.germline)] <- NA
+                tip.kind <- rep("Seq", length(nodes)) # kind of tip: either germline or seq
+                tip.kind[tempo.log.germline] <- "Germline"
+                tip.kind[ ! (tempo.log.leaf | tempo.log.germline)] <- NA
                 # end color of leafs and germline
                 # title prep and leaf labeling modification
                 tempo.v <- trees$data[[i3]]@v_gene
@@ -687,7 +686,7 @@ if(length(tempo.list) == 0){
                 if(is.null(tree_meta_path) | is.null(tree_meta_legend)){
                     assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::ggtree(trees$trees[[i3]], layout = tree_kind))
                     assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
-                        ggplot2::aes(fill = tempo.names2),
+                        ggplot2::aes(fill = tip.kind),
                         pch = tree_leaf_shape, 
                         size = tree_leaf_size
                     ))
@@ -703,19 +702,36 @@ if(length(tempo.list) == 0){
                     if( ! tree_meta_legend %in% names(meta.df)){
                         stop(paste0("\n\n============\n\nERROR IN tree_vizu.R for clone ID ", paste(unique(db.list[[i3]]$clone_id)), "\nIF NOT \"NULL\", THE tree_meta_legend PARAMETER MUST BE A COLUMN NAME OF THE tree_meta_path PARAMETER. HERE IT IS:\ntree_meta_legend: ", tree_meta_legend, "\nCOLUMN NAMES OF tree_meta_path: ", paste(names(meta.df), collapse = " "), "\n\n============\n\n"), call. = FALSE)
                     }
+
+
                     tempo.added.trees <- ggtree::"%<+%"( # it seems that this command uses the tip.label compartment to merge meta.df into ggtree::ggtree(trees$trees[[i3]], layout = tree_kind)
                         ggtree::ggtree(trees$trees[[i3]], layout = tree_kind),
                         meta.df
                     )
-                    tempo.added.trees$trees[[i3]]$tip.label <- tempo.added.trees$trees[[i3]]$new.tip.label # to have the tip labels in the plot
-                    tempo.added.trees$data <- tibble::add_column(tempo.added.trees$data, tempo.names2)
+                    # adding new tip labels into tempo.added.trees (because they are lost with ggtree::"%<+%")
+                    tempo.log <- tempo.added.trees$data$label %in% trees$trees[[i3]]$tip.label
+                    if(all(tempo.added.trees$data$label[tempo.log] == trees$trees[[i3]]$tip.label)){
+                        tempo.added.trees$data$label[tempo.log] <- trees$trees[[i3]]$new.tip.label
+                    }else{
+                        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 17 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nELEMENTS SHOULD BE THE SAME. HERE IT IS:\n\ntempo.added.trees$data$label[tempo.log]:\n", paste(tempo.added.trees$data$label[tempo.log], collapse = "\n"), "\n\ntrees$trees[[i3]]$tip.label:\n", paste(trees$trees[[i3]]$tip.label, collapse = "\n"), "\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                    }
+                    # end adding new tip labels into tempo.added.trees (because they are lost with ggtree::"%<+%")
+                    # 
+                    tempo.added.trees$data <- tibble::add_column(tempo.added.trees$data, tip.kind)
+                    Annotated <- character(length = nrow(tempo.added.trees$data))
+                    Annotated[] <- NA
+                    Annotated[tempo.added.trees$data$tip.kind == "Seq"] <- "No"
+                    if(any( ! is.na(tempo.added.trees$data$Name))){
+                        Annotated[ ! is.na(tempo.added.trees$data$Name)] <- "Yes"
+                    }
+                    tempo.added.trees$data <- tibble::add_column(tempo.added.trees$data, Annotated)
                     assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), tempo.added.trees)
                     tempo.col.values <- tree_meta_legend # name of the legend scale for the tippoints
                     assign(tempo.col.values, tempo.added.trees$data[[tree_meta_legend]])
                     if(is.numeric(get(tempo.col.values))){
                         assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
                             ggplot2::aes_string(
-                                fill = "tempo.names2", 
+                                fill = "tip.kind", 
                                 size = if( ! is.null(get(tempo.col.values))){get(tempo.col.values)}else{NA},
                             ),
                             pch = tree_leaf_shape
@@ -772,21 +788,69 @@ if(length(tempo.list) == 0){
                     warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
                 }
                 if(any(tree_kind %in% c("rectangular", "roundrect", "slanted", "ellipse"))){
-                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
-                        hjust = tree_label_hjust,
-                        size = tree_label_size,
-                        as_ylab = ifelse(tree_label_rigth == "TRUE" & tree_kind == "rectangular", TRUE, FALSE)
-                    ))
+                    if(any(names(tempo.added.trees$data) == "Annotated")){
+                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
+                            ggplot2::aes(color = Annotated), 
+                            hjust = tree_label_hjust,
+                            size = tree_label_size,
+                            as_ylab = ifelse(tree_label_rigth == "TRUE" & tree_kind == "rectangular", TRUE, FALSE)
+                        ))
+                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_color_manual(
+                            name = "Annotated", 
+                            values = c("black", ifelse(is.null(tree_leaf_color), "tomato", tree_leaf_color)),
+                            labels = c("No", "Yes")
+                        ))
+                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(
+                            color = "none"
+                        ))
+                    }else{
+                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
+                            hjust = tree_label_hjust,
+                            size = tree_label_size,
+                            as_ylab = ifelse(tree_label_rigth == "TRUE" & tree_kind == "rectangular", TRUE, FALSE)
+                        ))
+                    }
                 }else if(any(tree_kind %in% c("circular", "fan", "equal_angle", "daylight"))){
-                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
-                        ggplot2::aes(angle = angle), 
-                        hjust = tree_label_hjust,
-                        size = tree_label_size
-                    ))
+                    if(any(names(tempo.added.trees$data) == "Annotated")){
+                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
+                            ggplot2::aes(angle = angle, color = Annotated), 
+                            hjust = tree_label_hjust,
+                            size = tree_label_size
+                        ))
+                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_color_manual(
+                            name = "Annotated", 
+                            values = c("black", ifelse(is.null(tree_leaf_color), "tomato", tree_leaf_color)),
+                            labels = c("No", "Yes")
+                        ))
+                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(
+                            color = "none"
+                        ))
+                    }else{
+                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
+                            ggplot2::aes(angle = angle), 
+                            hjust = tree_label_hjust,
+                            size = tree_label_size
+                        ))
+                    }
                 }else{
-                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
-                        size = tree_label_size
-                    ))
+                    if(any(names(tempo.added.trees$data) == "Annotated")){
+                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
+                            ggplot2::aes(color = Annotated), 
+                            size = tree_label_size
+                        ))
+                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_color_manual(
+                            name = "Annotated", 
+                            values = c("black", ifelse(is.null(tree_leaf_color), "tomato", tree_leaf_color)),
+                            labels = c("No", "Yes")
+                        ))
+                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(
+                            color = "none"
+                        ))
+                    }else{
+                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
+                            size = tree_label_size
+                        ))
+                    }
                 }
                 if( ! any(tree_kind %in% c("circular", "fan"))){
                     assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::coord_cartesian( # to extend the text display outside of the plot region
