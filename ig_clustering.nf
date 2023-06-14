@@ -529,7 +529,7 @@ process seq_name_remplacement {
     if [[ "${meta_file}" == "NULL" ]] ; then
         Rscript -e '
             seq <- read.table("./${mutation_load_ch}", sep = "\\t", header = TRUE)
-            if(grepl(x = names(seq[ , 2]), pattern = "^initial_"))){
+            if(grepl(x = names(seq)[2], pattern = "^initial_")){
                 stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIF THE tree_meta_path PARAMETER IS \\"NULL\\", THEN THE SECOND COLUMN OF THE DATA IN THE sample_path PARAMETER CANNOT HAVE THE NAME OF THE SECOND COLUNM STARTING BY \\"initial_\\"\\n\\n============\\n\\n"), call. = FALSE)
             }
         ' |& tee -a seq_name_remplacement.log
@@ -592,11 +592,12 @@ process file_assembly {
     Rscript -e '
         db <- read.table("${seq_name_remplacement_ch2}", header = TRUE, sep = "\\t")
         dtn <- read.table("${distToNearest_ch}", header = TRUE, sep = "\\t")
+
         # replace TRUE and FALSE of the read.table() conversion by the initial T and F
         # tempo.log <- sapply(db, FUN = function(x){class(x) == "logical"})
         # db[tempo.log] <- lapply(db[tempo.log], FUN = function(x){substr(as.character(x), 1, 1)})
         # end replace TRUE and FALSE of the read.table() conversion by the initial T and F
-        print(file.info("${failed_clone_ch}")\$size > 0L)
+
         if(file.info("${failed_clone_ch}")\$size > 1L){ # check for empty file: 1L and not 0L because one LF gives size 1
             dtn.fail <- read.table("${failed_clone_ch}", header = TRUE, sep = "\\t")
         }else{
@@ -616,7 +617,7 @@ process file_assembly {
         }
         if(all(c("sequence_id", "initial_sequence_id") %in% names(db))){
             if(all(db\$sequence_id == db\$initial_sequence_id)){
-                tempo.cat <- paste0("\\n\\n========\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nTHE tree_meta_path AND tree_meta_name_replacement PARAMETERS ARE NOT \\"NULL\\" BUT NO SEQUENCE NAMES HAVE BEEN REPLACED WHEN USING THE tree_meta_name_replacement COLUMN\\n\\n========\\n\\n")
+                tempo.cat <- paste0("\\n\\n========\\n\\nERROR IN THE file_assembly PROCESS OF NEXTFLOW\\nTHE tree_meta_path AND tree_meta_name_replacement PARAMETERS ARE NOT \\"NULL\\" BUT NO SEQUENCE NAMES HAVE BEEN REPLACED WHEN USING THE tree_meta_name_replacement COLUMN\\n\\n========\\n\\n")
                 stop(tempo.cat)
             }
         }

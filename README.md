@@ -288,6 +288,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 ## WHAT'S NEW IN
 
 
+#### v8.4
+
+Bugs fixed in clone_assignment and get_tree with a new output file created non_clone_assigned_sequence.tsv
+
+
 #### v8.3
 
 - Bug fixed in tree_vizu: now nb of removed seq are displayed again
