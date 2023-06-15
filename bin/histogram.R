@@ -109,7 +109,6 @@ rm(tempo.cat)
 
 
 
-
 ################################ end Test
 
 ################################ Recording of the initial parameters
@@ -367,20 +366,29 @@ if(all(is.na(db$dist_nearest))){
 
 # Plotting of ancillary histograms
     # Automated threshold detection via smoothed density
-    output <- shazam::findThreshold(db$dist_nearest, method="density")
-    save(list = ls(), file = paste0("./all.RData"))
-    if( ! is.null(output)){
-        png(filename = "seq_distance_smoothed_auto.png", width = 5, height = 5, units = "in", res = 300)
-        plot(output, title = paste0("Density Method | threshold estimated: ", round(output@threshold, 3)))
-        dev.off()
-        svg(filename = "seq_distance_smoothed_auto.svg", width = 5, height = 5)
-        plot(output, title = paste0("Density Method | threshold estimated: ", round(output@threshold, 3)))
-        dev.off()
-        pdf(file = "seq_distance_smoothed_auto.pdf", width = 5, height = 5)
-        plot(output, title = paste0("Density Method | threshold estimated: ", round(output@threshold, 3)))
-        dev.off()
+    tempo.get <- fun_get_message("shazam::findThreshold(db$dist_nearest, method='density')", kind = "error")
+    if(is.null(tempo.get)){
+        output <- shazam::findThreshold(db$dist_nearest, method="density")
+        save(list = ls(), file = paste0("./all.RData"))
+        if( ! is.null(output)){
+            png(filename = "seq_distance_smoothed_auto.png", width = 5, height = 5, units = "in", res = 300)
+            plot(output, title = paste0("Density Method | threshold estimated: ", round(output@threshold, 3)))
+            dev.off()
+            svg(filename = "seq_distance_smoothed_auto.svg", width = 5, height = 5)
+            plot(output, title = paste0("Density Method | threshold estimated: ", round(output@threshold, 3)))
+            dev.off()
+            pdf(file = "seq_distance_smoothed_auto.pdf", width = 5, height = 5)
+            plot(output, title = paste0("Density Method | threshold estimated: ", round(output@threshold, 3)))
+            dev.off()
+        }else{
+            # no need to use pdf(NULL) with fun_gg_empty_graph()
+            tempo.plot2 <- fun_gg_empty_graph(text = "NO SMOOTHED DENSITY DISTANCE HISTOGRAM PLOTTED\nshazam::findThreshold FUNCTION RETURNED NULL", text.size = 3)
+            ggplot2::ggsave(filename = "seq_distance_smoothed_auto.png", plot = tempo.plot2, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+            ggplot2::ggsave(filename = "seq_distance_smoothed_auto.svg", plot = tempo.plot2, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+            ggplot2::ggsave(filename = "seq_distance_smoothed_auto.pdf", plot = tempo.plot2, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        }
     }else{
-        # no need to use pdf(NULL) with fun_gg_empty_graph()
+    # no need to use pdf(NULL) with fun_gg_empty_graph()
         tempo.plot2 <- fun_gg_empty_graph(text = "NO SMOOTHED DENSITY DISTANCE HISTOGRAM PLOTTED\nshazam::findThreshold FUNCTION RETURNED NULL", text.size = 3)
         ggplot2::ggsave(filename = "seq_distance_smoothed_auto.png", plot = tempo.plot2, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
         ggplot2::ggsave(filename = "seq_distance_smoothed_auto.svg", plot = tempo.plot2, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
@@ -388,20 +396,29 @@ if(all(is.na(db$dist_nearest))){
     }
 
     # Automated threshold detection via a mixture model
-    output2 <- shazam::findThreshold(db$dist_nearest, method="gmm", model="gamma-gamma")
-    save(list = ls(), file = paste0("./all2.RData"))
-    if( ! is.null(output2)){
-        png(filename = "seq_distance_mixture_auto.png", width = 5, height = 5, units = "in", res = 300)
-        plot(output2, title = paste0("GMM Method: gamma-gamma Method | threshold estimated: ", round(output2@threshold, 3)), binwidth = 0.02)
-        dev.off()
-        svg(filename = "seq_distance_mixture_auto.svg", width = 5, height = 5)
-        plot(output2, title = paste0("GMM Method: gamma-gamma Method | threshold estimated: ", round(output2@threshold, 3)), binwidth = 0.02)
-        dev.off()
-        pdf(file = "seq_distance_mixture_auto.pdf", width = 5, height = 5)
-        plot(output2, title = paste0("GMM Method: gamma-gamma Method | threshold estimated: ", round(output2@threshold, 3)), binwidth = 0.02)
-        dev.off()
+    tempo.get <- fun_get_message("shazam::findThreshold(db$dist_nearest, method='gmm', model='gamma-gamma'))", kind = "error")
+    if(is.null(tempo.get)){
+        output2 <- shazam::findThreshold(db$dist_nearest, method="gmm", model="gamma-gamma")
+        save(list = ls(), file = paste0("./all2.RData"))
+        if( ! is.null(output2)){
+            png(filename = "seq_distance_mixture_auto.png", width = 5, height = 5, units = "in", res = 300)
+            plot(output2, title = paste0("GMM Method: gamma-gamma Method | threshold estimated: ", round(output2@threshold, 3)), binwidth = 0.02)
+            dev.off()
+            svg(filename = "seq_distance_mixture_auto.svg", width = 5, height = 5)
+            plot(output2, title = paste0("GMM Method: gamma-gamma Method | threshold estimated: ", round(output2@threshold, 3)), binwidth = 0.02)
+            dev.off()
+            pdf(file = "seq_distance_mixture_auto.pdf", width = 5, height = 5)
+            plot(output2, title = paste0("GMM Method: gamma-gamma Method | threshold estimated: ", round(output2@threshold, 3)), binwidth = 0.02)
+            dev.off()
+        }else{
+            # no need to use pdf(NULL) with fun_gg_empty_graph()
+            tempo.plot3 <- fun_gg_empty_graph(text = "NO MIXTURE MODEL DISTANCE HISTOGRAM PLOTTED\nshazam::findThreshold FUNCTION RETURNED NULL", text.size = 3)
+            ggplot2::ggsave(filename = "seq_distance_mixture_auto.png", plot = tempo.plot3, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+            ggplot2::ggsave(filename = "seq_distance_mixture_auto.svg", plot = tempo.plot3, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+            ggplot2::ggsave(filename = "seq_distance_mixture_auto.pdf", plot = tempo.plot3, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        }
     }else{
-        # no need to use pdf(NULL) with fun_gg_empty_graph()
+    # no need to use pdf(NULL) with fun_gg_empty_graph()
         tempo.plot3 <- fun_gg_empty_graph(text = "NO MIXTURE MODEL DISTANCE HISTOGRAM PLOTTED\nshazam::findThreshold FUNCTION RETURNED NULL", text.size = 3)
         ggplot2::ggsave(filename = "seq_distance_mixture_auto.png", plot = tempo.plot3, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
         ggplot2::ggsave(filename = "seq_distance_mixture_auto.svg", plot = tempo.plot3, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
