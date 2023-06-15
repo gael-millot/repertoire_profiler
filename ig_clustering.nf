@@ -515,7 +515,7 @@ process seq_name_remplacement {
     input:
     path mutation_load_ch // parallelization expected
     path meta_file
-    val tree_meta_name_replacement
+    val meta_name_replacement
 
     output:
     path "*_renamed_seq.tsv", emit: seq_name_remplacement_ch
@@ -530,23 +530,23 @@ process seq_name_remplacement {
         Rscript -e '
             seq <- read.table("./${mutation_load_ch}", sep = "\\t", header = TRUE)
             if(grepl(x = names(seq)[2], pattern = "^initial_")){
-                stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIF THE tree_meta_path PARAMETER IS \\"NULL\\", THEN THE SECOND COLUMN OF THE DATA IN THE sample_path PARAMETER CANNOT HAVE THE NAME OF THE SECOND COLUNM STARTING BY \\"initial_\\"\\n\\n============\\n\\n"), call. = FALSE)
+                stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS \\"NULL\\", THEN THE SECOND COLUMN OF THE DATA IN THE sample_path PARAMETER CANNOT HAVE THE NAME OF THE SECOND COLUNM STARTING BY \\"initial_\\"\\n\\n============\\n\\n"), call. = FALSE)
             }
         ' |& tee -a seq_name_remplacement.log
     fi
-    if [[ "${meta_file}" != "NULL" && "${tree_meta_name_replacement}" != "NULL" ]] ; then # or [[ "${meta_file}" -ne "NULL" && "${tree_meta_name_replacement}" -ne "NULL" ]], but not !=
+    if [[ "${meta_file}" != "NULL" && "${meta_name_replacement}" != "NULL" ]] ; then # or [[ "${meta_file}" -ne "NULL" && "${meta_name_replacement}" -ne "NULL" ]], but not !=
         Rscript -e '
             clone_id <- strsplit("${mutation_load_ch}", split = "_")[[1]][1] # because the file name starts by the clone id
             seq <- read.table("./${mutation_load_ch}", sep = "\\t", header = TRUE)
             meta <- read.table("./${meta_file}", sep = "\\t", header = TRUE)
-            col_name <- "${tree_meta_name_replacement}"
+            col_name <- "${meta_name_replacement}"
             if( ! any(names(meta) %in% col_name)){
-                stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIF NOT \\"NULL\\", THE tree_meta_name_replacement PARAMETER MUST BE A COLUMN NAME OF THE tree_meta_path PARAMETER (METADATA FILE): ", col_name, "\\n\\n============\\n\\n"), call. = FALSE)
+                stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIF NOT \\"NULL\\", THE meta_name_replacement PARAMETER MUST BE A COLUMN NAME OF THE meta_path PARAMETER (METADATA FILE): ", col_name, "\\n\\n============\\n\\n"), call. = FALSE)
             }
             seq2 <- data.frame(seq[1], tempo = seq[1], seq[2:length(seq)]) # the second column is created to keep the initial sequence names, before replacement
             for(i2 in 1:nrow(meta)){
                 if(sum(seq2[ , 2] %in% meta[i2, 1]) > 1){
-                    stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIN THE METADATA FILE, A SEQUENCE NAME CANNOT BELONG TO SEVERAL VALUES OF THE tree_meta_name_replacement PARAMETER COLUMN NAME OF THE tree_meta_path PARAMETER\\nTHE METAFILE IS: ${meta_file}\\nTHE COLUM NAME IS: ", col_name, "\\nTHE PROBLEMATIC REPLACEMENT NAME IN THE METAFILE IS: ", paste(meta[i2, 1], collapse = " "), "\\n\\n============\\n\\n"), call. = FALSE)
+                    stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIN THE METADATA FILE, A SEQUENCE NAME CANNOT BELONG TO SEVERAL VALUES OF THE meta_name_replacement PARAMETER COLUMN NAME OF THE meta_path PARAMETER\\nTHE METAFILE IS: ${meta_file}\\nTHE COLUM NAME IS: ", col_name, "\\nTHE PROBLEMATIC REPLACEMENT NAME IN THE METAFILE IS: ", paste(meta[i2, 1], collapse = " "), "\\n\\n============\\n\\n"), call. = FALSE)
                 }else if(any(seq2[ , 2] == meta[i2, 1])){
                     seq2[seq2[ , 2] == meta[i2, 1], 1] <- meta[i2, col_name] # remplacement of the name in column 1
                 }
@@ -617,7 +617,7 @@ process file_assembly {
         }
         if(all(c("sequence_id", "initial_sequence_id") %in% names(db))){
             if(all(db\$sequence_id == db\$initial_sequence_id)){
-                tempo.cat <- paste0("\\n\\n========\\n\\nERROR IN THE file_assembly PROCESS OF NEXTFLOW\\nTHE tree_meta_path AND tree_meta_name_replacement PARAMETERS ARE NOT \\"NULL\\" BUT NO SEQUENCE NAMES HAVE BEEN REPLACED WHEN USING THE tree_meta_name_replacement COLUMN\\n\\n========\\n\\n")
+                tempo.cat <- paste0("\\n\\n========\\n\\nERROR IN THE file_assembly PROCESS OF NEXTFLOW\\nTHE meta_path AND meta_name_replacement PARAMETERS ARE NOT \\"NULL\\" BUT NO SEQUENCE NAMES HAVE BEEN REPLACED WHEN USING THE meta_name_replacement COLUMN\\n\\n========\\n\\n")
                 stop(tempo.cat)
             }
         }
@@ -753,7 +753,7 @@ process tree_vizu {
     val tree_right_margin
     val tree_legend
     path meta_file_ch
-    val tree_meta_legend
+    val meta_legend
     path cute_file
 
     output:
@@ -782,7 +782,7 @@ process tree_vizu {
 "${tree_right_margin}" \
 "${tree_legend}" \
 "${meta_file_ch}" \
-"${tree_meta_legend}" \
+"${meta_legend}" \
 "${cute_file}" \
 "tree_vizu.log"
     """
@@ -982,18 +982,18 @@ workflow {
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_distance PARAMETER IN ig_clustering.config FILE:\n${clone_distance}\nMUST BE A POSITIVE PROPORTION VALUE\n\n========\n\n"
     }
 
-    if( ! (tree_meta_path in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_path PARAMETER IN ig_clustering.config FILE:\n${tree_meta_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if(tree_meta_path != "NULL"){
-        if( ! (file(tree_meta_path).exists()) ){
-            error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_path PARAMETER IN ig_clustering.config FILE (DOES NOT EXIST): ${tree_meta_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
+    if( ! (meta_path in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_path PARAMETER IN ig_clustering.config FILE:\n${meta_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if(meta_path != "NULL"){
+        if( ! (file(meta_path).exists()) ){
+            error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_path PARAMETER IN ig_clustering.config FILE (DOES NOT EXIST): ${meta_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
         }
     }
-    if( ! (tree_meta_name_replacement in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_name_replacement PARAMETER IN ig_clustering.config FILE:\n${tree_meta_name_replacement}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    if( ! (meta_name_replacement in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_name_replacement PARAMETER IN ig_clustering.config FILE:\n${meta_name_replacement}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
-    if( ! (tree_meta_legend in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_meta_legend PARAMETER IN ig_clustering.config FILE:\n${tree_meta_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    if( ! (meta_legend in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_legend PARAMETER IN ig_clustering.config FILE:\n${meta_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
     if( ! (tree_kind in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_kind PARAMETER IN ig_clustering.config FILE:\n${tree_kind}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
@@ -1160,7 +1160,7 @@ workflow {
 
     //////// files import
 
-    meta_file = file(tree_meta_path) // in variable because a single file. If "NULL", will create a file named NULL.
+    meta_file = file(meta_path) // in variable because a single file. If "NULL", will create a empty file, present in work folders, but that cannot be correctly linked. Thus, if the file has to be redirected into a channel inside a process, it will not work
     cute_file=file(cute_path) // in variable because a single file
 
     //////// end files import
@@ -1275,7 +1275,7 @@ workflow {
     seq_name_remplacement(
         mutation_load.out.mutation_load_ch,
         meta_file,
-        tree_meta_name_replacement
+        meta_name_replacement
     )
     seq_name_remplacement.out.seq_name_remplacement_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE seq_name_remplacement PROCESS\n\n========\n\n"}}
     seq_name_remplacement_ch2 = seq_name_remplacement.out.seq_name_remplacement_ch.collectFile(name: "replacement.tsv", skip: 1, keepHeader: true)
@@ -1352,7 +1352,7 @@ workflow {
         tree_right_margin,
         tree_legend,
         seq_name_remplacement.out.meta_file_ch.first(), // first() because seq_name_remplacement process is a parallele one. Possible that it prevent the cache to work, depending on the order in 
-        tree_meta_legend,
+        meta_legend,
         cute_file
     )
    tree_vizu.out.tree_vizu_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}}
