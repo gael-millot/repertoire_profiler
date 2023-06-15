@@ -290,7 +290,8 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 
 #### v8.4
 
-Bugs fixed in clone_assignment and get_tree with a new output file created non_clone_assigned_sequence.tsv
+- Bugs fixed in clone_assignment and get_tree with a new output file created non_clone_assigned_sequence.tsv
+- Bugs fixed in tree_vizu when no metadata
 
 
 #### v8.3

@@ -129,6 +129,8 @@ rm(tempo.cat)
 # file.remove(c("./all_objects.RData", "./all_trees.RData", "./trees.pdf", "./tree_vizu.log"))
 
 
+
+
 ################################ end Test
 
 ################################ Recording of the initial parameters
@@ -428,7 +430,13 @@ if(tree_meta_path == "NULL"){
 }
 
 if(tree_meta_legend == "NULL"){
-    tree_meta_legend <- NULL
+    if( ! is.null(tree_meta_path)){
+        tempo.cat <- paste0("ERROR IN tree_vizu.R:\nTHE tree_meta_legend PARAMETER CANNOT BE \"NULL\" IF THE tree_meta_path PARAMETER IS NOT \"NULL\"")
+        text.check2 <- c(text.check2, tempo.cat)
+        arg.check2 <- c(arg.check2, TRUE)
+    }else{
+        tree_meta_legend <- NULL
+    }
 }
 
 if(any(arg.check2) == TRUE){ # normally no NA
@@ -683,27 +691,12 @@ if(length(tempo.list) == 0){
                 # ggplot building
                 tempo.gg.name <- "gg.indiv.plot."
                 tempo.gg.count <- 0
-                if(is.null(tree_meta_path) | is.null(tree_meta_legend)){
-                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::ggtree(trees$trees[[i3]], layout = tree_kind))
-                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
-                        ggplot2::aes(fill = tip.kind),
-                        pch = tree_leaf_shape, 
-                        size = tree_leaf_size
-                    ))
-                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_discrete_manual(
-                        aesthetics = "fill", 
-                        name = NULL, 
-                        values = c("black", ifelse(is.null(tree_leaf_color), "tomato", tree_leaf_color)),
-                        labels = c("Germline", "Seq")
-                    ))
-                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(fill = "none")) # never legend for fill in this context
-                }else if( ! (is.null(tree_meta_path) & is.null(tree_meta_legend))){
+                # tree with metadata
+                if( ( ! is.null(tree_meta_path)) & ! is.null(tree_meta_legend)){
                     # merge of the meta data into the ggtree object. See https://yulab-smu.top/treedata-book/chapter7.html#attach-operator
                     if( ! tree_meta_legend %in% names(meta.df)){
                         stop(paste0("\n\n============\n\nERROR IN tree_vizu.R for clone ID ", paste(unique(db.list[[i3]]$clone_id)), "\nIF NOT \"NULL\", THE tree_meta_legend PARAMETER MUST BE A COLUMN NAME OF THE tree_meta_path PARAMETER. HERE IT IS:\ntree_meta_legend: ", tree_meta_legend, "\nCOLUMN NAMES OF tree_meta_path: ", paste(names(meta.df), collapse = " "), "\n\n============\n\n"), call. = FALSE)
                     }
-
-
                     tempo.added.trees <- ggtree::"%<+%"( # it seems that this command uses the tip.label compartment to merge meta.df into ggtree::ggtree(trees$trees[[i3]], layout = tree_kind)
                         ggtree::ggtree(trees$trees[[i3]], layout = tree_kind),
                         meta.df
@@ -759,7 +752,7 @@ if(length(tempo.list) == 0){
                             values = c("black", ifelse(is.null(tree_leaf_color), "tomato", tree_leaf_color)),
                             labels = c("Germline", "Seq")
                         ))
-                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(fill = "none")) # never legend for fill in this context
+                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(fill = "none")) # no legend for fill in this context
                     }else{
                         if( ! is.null(get(tempo.col.values))){
                             if( ! all(is.na(get(tempo.col.values)))){
@@ -783,68 +776,102 @@ if(length(tempo.list) == 0){
                             ))
                         }
                     }
-                }else if(is.null(tree_meta_path) & ! is.null(tree_meta_legend)){
-                    tempo.warn <- paste0("FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\nTHE tree_meta_legend PARAMETER IS NOT \"NULL\" BUT THE tree_meta_path PARAMETER IS \"NULL\"")
-                    warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
-                }
-                if(any(tree_kind %in% c("rectangular", "roundrect", "slanted", "ellipse"))){
-                    if(any(names(tempo.added.trees$data) == "Annotated")){
-                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
-                            ggplot2::aes(color = Annotated), 
-                            hjust = tree_label_hjust,
-                            size = tree_label_size,
-                            as_ylab = ifelse(tree_label_rigth == "TRUE" & tree_kind == "rectangular", TRUE, FALSE)
-                        ))
-                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_color_manual(
-                            name = "Annotated", 
-                            values = c("black", ifelse(is.null(tree_leaf_color), "tomato", tree_leaf_color)),
-                            labels = c("No", "Yes")
-                        ))
-                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(
-                            color = "none"
-                        ))
+                    if(any(tree_kind %in% c("rectangular", "roundrect", "slanted", "ellipse"))){
+                        if(any(names(tempo.added.trees$data) == "Annotated")){
+                            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
+                                ggplot2::aes(color = Annotated), 
+                                hjust = tree_label_hjust,
+                                size = tree_label_size,
+                                as_ylab = ifelse(tree_label_rigth == "TRUE" & tree_kind == "rectangular", TRUE, FALSE)
+                            ))
+                            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_color_manual(
+                                name = "Annotated", 
+                                values = c("black", ifelse(is.null(tree_leaf_color), "tomato", tree_leaf_color)),
+                                labels = c("No", "Yes")
+                            ))
+                            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(
+                                color = "none"
+                            ))
+                        }else{
+                            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
+                                hjust = tree_label_hjust,
+                                size = tree_label_size,
+                                as_ylab = ifelse(tree_label_rigth == "TRUE" & tree_kind == "rectangular", TRUE, FALSE)
+                            ))
+                        }
+                    }else if(any(tree_kind %in% c("circular", "fan", "equal_angle", "daylight"))){
+                        if(any(names(tempo.added.trees$data) == "Annotated")){
+                            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
+                                ggplot2::aes(angle = angle, color = Annotated), 
+                                hjust = tree_label_hjust,
+                                size = tree_label_size
+                            ))
+                            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_color_manual(
+                                name = "Annotated", 
+                                values = c("black", ifelse(is.null(tree_leaf_color), "tomato", tree_leaf_color)),
+                                labels = c("No", "Yes")
+                            ))
+                            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(
+                                color = "none"
+                            ))
+                        }else{
+                            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
+                                ggplot2::aes(angle = angle), 
+                                hjust = tree_label_hjust,
+                                size = tree_label_size
+                            ))
+                        }
                     }else{
-                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
-                            hjust = tree_label_hjust,
-                            size = tree_label_size,
-                            as_ylab = ifelse(tree_label_rigth == "TRUE" & tree_kind == "rectangular", TRUE, FALSE)
-                        ))
+                        if(any(names(tempo.added.trees$data) == "Annotated")){
+                            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
+                                ggplot2::aes(color = Annotated), 
+                                size = tree_label_size
+                            ))
+                            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_color_manual(
+                                name = "Annotated", 
+                                values = c("black", ifelse(is.null(tree_leaf_color), "tomato", tree_leaf_color)),
+                                labels = c("No", "Yes")
+                            ))
+                            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(
+                                color = "none"
+                            ))
+                        }else{
+                            assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
+                                size = tree_label_size
+                            ))
+                        }
                     }
-                }else if(any(tree_kind %in% c("circular", "fan", "equal_angle", "daylight"))){
-                    if(any(names(tempo.added.trees$data) == "Annotated")){
+                # end tree with metadata
+                # tree with no metadata
+                }else{ # tree with no metadata
+                    if(is.null(tree_meta_path) & ! is.null(tree_meta_legend)){
+                        tempo.warn <- paste0("FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\nTHE tree_meta_legend PARAMETER IS NOT \"NULL\" BUT THE tree_meta_path PARAMETER IS \"NULL\"")
+                        warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
+                    }
+                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::ggtree(trees$trees[[i3]], layout = tree_kind))
+                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
+                        ggplot2::aes(fill = tip.kind),
+                        pch = tree_leaf_shape, 
+                        size = tree_leaf_size
+                    ))
+                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_discrete_manual(
+                        aesthetics = "fill", 
+                        name = NULL, 
+                        values = c("black", ifelse(is.null(tree_leaf_color), "tomato", tree_leaf_color)),
+                        labels = c("Germline", "Seq")
+                    ))
+                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(fill = "none")) # no legend for fill in this context
+                    if(any(tree_kind %in% c("rectangular", "roundrect", "slanted", "ellipse"))){
                         assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
-                            ggplot2::aes(angle = angle, color = Annotated), 
                             hjust = tree_label_hjust,
-                            size = tree_label_size
+                            size = tree_label_size,
+                            as_ylab = ifelse(tree_label_rigth == "TRUE" & tree_kind == "rectangular", TRUE, FALSE)
                         ))
-                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_color_manual(
-                            name = "Annotated", 
-                            values = c("black", ifelse(is.null(tree_leaf_color), "tomato", tree_leaf_color)),
-                            labels = c("No", "Yes")
-                        ))
-                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(
-                            color = "none"
-                        ))
-                    }else{
+                    }else if(any(tree_kind %in% c("circular", "fan", "equal_angle", "daylight"))){
                         assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
                             ggplot2::aes(angle = angle), 
                             hjust = tree_label_hjust,
                             size = tree_label_size
-                        ))
-                    }
-                }else{
-                    if(any(names(tempo.added.trees$data) == "Annotated")){
-                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
-                            ggplot2::aes(color = Annotated), 
-                            size = tree_label_size
-                        ))
-                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_color_manual(
-                            name = "Annotated", 
-                            values = c("black", ifelse(is.null(tree_leaf_color), "tomato", tree_leaf_color)),
-                            labels = c("No", "Yes")
-                        ))
-                        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(
-                            color = "none"
                         ))
                     }else{
                         assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
@@ -862,20 +889,21 @@ if(length(tempo.list) == 0){
                 }
                 assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::theme(plot.margin = ggplot2::margin(t = 0.25, l = 0.1, b = 0.1, r = tree_right_margin, unit = "in")))
 
-                # end ggplot building
                 # legend
-                bef.final.plot <- ggplot2::ggplot_build(eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + "))))
-                legend.final <- fun_gg_get_legend(ggplot_built = bef.final.plot) # get legend
-                assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(fill = "none", color = "none", size = "none")) # inactivate the initial legend
-                if(tree_legend == "FALSE"){ # even if any(unlist(legend.disp)) is TRUE
-                    legend.final <- ggplot2::ggplot()+ggplot2::theme_void() # empty graph instead of legend
+                if( ( ! is.null(tree_meta_path)) & ! is.null(tree_meta_legend)){
+                    bef.final.plot <- ggplot2::ggplot_build(eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + "))))
+                    legend.final <- fun_gg_get_legend(ggplot_built = bef.final.plot) # get legend
+                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(fill = "none", color = "none", size = "none")) # inactivate the initial legend
+                    if(tree_legend == "FALSE"){ # even if any(unlist(legend.disp)) is TRUE
+                        legend.final <- ggplot2::ggplot()+ggplot2::theme_void() # empty graph instead of legend
+                    }
                 }
-                # end title
-                final.plot <- suppressMessages(suppressWarnings(eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + "))))) # , left = " ", right = " " : trick to add margins in the plot. padding =  unit(0.5, "inch") is for top margin above the title
+                # end legend
+                final.plot <- suppressMessages(suppressWarnings(eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + ")))))
             }else{
                 # no need to use pdf(NULL) with fun_gg_empty_graph()
                 final.plot <- fun_gg_empty_graph(text = paste0("NO GRAPH PLOTTED FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\nNOT ENOUGH SEQUENCES DETECTED"), text.size = 3)
-                if( ! (is.null(tree_meta_path) & is.null(tree_meta_legend))){
+                if( ( ! is.null(tree_meta_path)) & ! is.null(tree_meta_legend)){
                     tempo.log <- clones$data[[i3]]@data$sequence_id %in% meta.df$Name
                     if(any(tempo.log)){
                         tempo.cat <- paste0("Annotated sequences in this clonal group: ", paste(clones$data[[i3]]@data$sequence_id[tempo.log], collapse = ", "))
@@ -886,7 +914,7 @@ if(length(tempo.list) == 0){
         }else{
             # no need to use pdf(NULL) with fun_gg_empty_graph()
             final.plot <- fun_gg_empty_graph(text = paste0("NO GRAPH PLOTTED FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\nNOT ENOUGH SEQUENCES DETECTED"), text.size = 3)
-            if( ! (is.null(tree_meta_path) & is.null(tree_meta_legend))){
+            if( ( ! is.null(tree_meta_path)) & ! is.null(tree_meta_legend)){
                 tempo.log <- clones$data[[i3]]@data$sequence_id %in% meta.df$Name
                 if(any(tempo.log)){
                     tempo.cat <- paste0("Annotated sequences in this clonal group: ", paste(clones$data[[i3]]@data$sequence_id[tempo.log], collapse = ", "))
