@@ -441,7 +441,7 @@ if(any(arg.check2) == TRUE){ # normally no NA
 ################ internal variables
 
 var1 <- c("v_call", "j_call") # names of the columns to deal with
-var2 <- c("non-zero", "all") # kind of repertoire (warning functional can be added in var2 below)
+var2 <- c("non-zero", "all") # kind of repertoire (warning annotated can be added in var2 below)
 
 ################ end internal variables
 
@@ -513,7 +513,7 @@ if(grepl(x = names(df)[2], pattern = "^initial_")){ # means that fonctional anno
     all.annotation.log <- TRUE
 }
 if(all.annotation.log == FALSE){
-    var2 <- c(var2, "functional")
+    var2 <- c(var2, "annotated")
 }
 
 # first loop with v_call and second with j_call
@@ -532,7 +532,7 @@ for(i0 in 1:length(var1)){
             if(i4 == "non-zero"){
                 tempo.table <- table(df[ , names(df) == var1[i0]])
                 tempo.table.gg <- tempo.table[tempo.table > 0]
-            }else if(i4 == "functional"){
+            }else if(i4 == "annotated"){
                 tempo.table <- table(df[ ! annotation.log, names(df) == var1[i0]])
                 tempo.table.gg <- tempo.table[tempo.table > 0]
             }else{
@@ -550,7 +550,8 @@ for(i0 in 1:length(var1)){
                 tempo.table.gg$Count[tempo.table.gg$Count == 0] <- NA
                 tempo.title <- paste0(
                     "Locus: ", output.name, "\n",
-                    "Alleles: ", i4
+                    "Alleles: ", i4, "\n",
+                    "Total count: ", sum(tempo.table.gg$Count, na.rm = TRUE)
                 )
                 label.size <- -5/132 * nrow(tempo.table.gg) + 1081/66 # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
                 final.plot <- fun_gg_heatmap2(
@@ -602,7 +603,7 @@ for(i0 in 1:(length(var1) - 1)){
                     tempo.table3 <- tempo.table2[tempo.log, ]
                     tempo.log <- apply(tempo.table3, 2, sum, na.rm = TRUE) > 0
                     tempo.table3 <- tempo.table3[tempo.log]
-                }else if(i4 == "functional"){
+                }else if(i4 == "annotated"){
                     tempo.table2 <- as.data.frame.matrix(table(df[ ! annotation.log, names(df) %in% c(var1[i0], var1[i1])]))
                     tempo.log <- apply(tempo.table2, 1, sum, na.rm = TRUE) > 0
                     tempo.table3 <- tempo.table2[tempo.log, ]
@@ -624,7 +625,8 @@ for(i0 in 1:(length(var1) - 1)){
                     tempo.table.gg$Count[tempo.table.gg$Count == 0] <- NA
                     tempo.title <- paste0(
                         "Locus: ", output.name, "\n",
-                        "Alleles: ", i4
+                        "Alleles: ", i4, "\n",
+                        "Total count: ", sum(tempo.table.gg$Count, na.rm = TRUE)
                     )
                     label.size <- -5/132 * nrow(tempo.table.gg) + 1081/66 # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
                     final.plot <- fun_gg_heatmap2(

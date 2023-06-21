@@ -314,7 +314,7 @@ if( ! file.exists(file_name)){
     tempo.cat <- paste0("ERROR IN donut.R:\nTHE file_name PARAMETER MUST BE A VALID PATH OF A FILE IS NOT \"NULL\"\nHERE IT IS: \n", paste0(file_name, collapse = " "))
     stop(paste0("\n\n================\n\n", tempo$text, "\n\n================\n\n"), call. = FALSE)
 }
-tempo <- fun_check(data = kind, options = c("all", "tree", "functional"), length = 1) ; eval(ee)
+tempo <- fun_check(data = kind, options = c("all", "tree", "annotated"), length = 1) ; eval(ee)
 if(tempo$problem == TRUE){
     stop(paste0("\n\n================\n\n", tempo$text, "\n\n================\n\n"), call. = FALSE)
 }
@@ -407,8 +407,8 @@ tempo.title <- paste0(
             kind == "tree", 
             "all the sequences in trees (see the corresponding seq_for_trees.tsv", 
             ifelse(
-                kind == "functional", 
-                "all the productive ones for which at least one functional annotation in the group of same V and J alleles\n        (nb_seq_per_clone threshold not used, see the corresponding productive_seq.tsv", 
+                kind == "annotated", 
+                "all the productive ones for which at least one annotation in the group of same V and J alleles\n        (nb_seq_per_clone threshold not used, see the corresponding productive_seq.tsv", 
                 "=====ERROR====="
             )
         )
@@ -467,7 +467,7 @@ if(nrow(obs) > 0){
         }
     }
 
-    if(kind == "functional" & all.annotation.log != TRUE){
+    if(kind == "annotated" & all.annotation.log != TRUE){
         obs3 <- obs2[ ! is.na(obs2$labels) ,]
     }else{
         obs3 <- obs2
@@ -477,7 +477,7 @@ if(nrow(obs) > 0){
         if( ! (all(obs3$Freq == 0) | all(is.na(obs3$Freq)))){
             pdf(NULL) # used because I need plot = TRUE for return.gtable
             tempo.plot <- fun_gg_donut(
-                data1 = obs3, # select only the classes with functional annotations if kind == "functional" & all.annotation.log != TRUE
+                data1 = obs3, # select only the classes with annotations if kind == "annotated" & all.annotation.log != TRUE
                 freq = "Freq", 
                 categ = "Germline_Clone_Name", 
                 fill.palette = donut_palette,
@@ -520,9 +520,9 @@ if(nrow(obs) > 0){
         # no need to use pdf(NULL) with fun_gg_empty_graph()
         final.plot <- fun_gg_empty_graph(text = "NO DONUT PLOTTED\nNO FREQUENCY DETECTED", text.size = 3, title = tempo.title, title.size = 4)
     }
-    if(kind == "functional" & all.annotation.log == TRUE){ # overwrite final.plot
+    if(kind == "annotated" & all.annotation.log == TRUE){ # overwrite final.plot
         # no need to use pdf(NULL) with fun_gg_empty_graph()
-        final.plot <- fun_gg_empty_graph(text = "NO DONUT PLOTTED\nNO FUNCTIONAL ANNOTATION DETECTED", text.size = 3, title = tempo.title, title.size = 4)
+        final.plot <- fun_gg_empty_graph(text = "NO DONUT PLOTTED\nNO ANNOTATION DETECTED", text.size = 3, title = tempo.title, title.size = 4)
     }
 }else{
     final.plot <- fun_gg_empty_graph(text = "NO DONUT PLOTTED\nNO SEQUENCE DETECTED", text.size = 3, title = tempo.title, title.size = 4)

@@ -658,7 +658,7 @@ if(length(tempo.list) == 0){
                         tempo.warn <- paste0(length(removed.seq), " sequences removed from the display (Parameter tree_duplicate_seq == \"FALSE\". See tree_seq_not_displayed.tsv)")
                         tempo.warn2 <- paste0("FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\n", tempo.warn)
                         warn <- paste0(ifelse(is.null(warn), tempo.warn2, paste0(warn, "\n\n", tempo.warn2)))
-                        tempo.cat <- paste0("Warning: ", tempo.warn, "\nNumber of removed sequences are indicated between brackets in leaf labelings")
+                        tempo.cat <- paste0("Warning: ", tempo.warn, "\nNumber of total sequences are indicated between brackets in leaf labelings (removed = total - 1)")
                         add.text <- paste0(ifelse(is.null(add.text), tempo.cat, paste0(add.text, "\n", tempo.cat)))
                         identical.seq <- NULL
                         for(i4 in 1:length(removed.seq)){
@@ -674,14 +674,14 @@ if(length(tempo.list) == 0){
                         empty.tsv <- FALSE
                         # end get removed sequences info
                         # modif of the tree tip labeling
-                        if(length(trees$trees[[i3]]$new.tip.label) - 1 != length(trees$data[[i3]]@data$sequence_id)){
+                        if(length(trees$trees[[i3]]$new.tip.label) - 1 != length(trees$data[[i3]]@data$sequence_id)){ # - 1 because "Germline" label removed
                             stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 16 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nLENGTH OF trees$trees[[i3]]$new.tip.label SHOULD BE -1 OF LENGTH OF trees$data[[i3]]@data$sequence_id. HERE IT IS:\n\nLENGTH - 1 OF trees$trees[[i3]]$new.tip.label: ", length(trees$trees[[i3]]$new.tip.label) - 1, " \nLENGTH OF trees$data[[i3]]@data$sequence_id: ", length(trees$data[[i3]]@data$sequence_id), "\n\ntrees$trees[[i3]]$new.tip.label:\n", paste(trees$trees[[i3]]$new.tip.label, collapse = "\n"), "\n\ntrees$data[[i3]]@data$sequence_id:\n", paste(trees$data[[i3]]@data$sequence_id, collapse = "\n"), "\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
                         }else{
                             tempo.pos <- match(trees$trees[[i3]]$new.tip.label[-length(trees$trees[[i3]]$new.tip.label)], trees$data[[i3]]@data$sequence_id) # [-length(trees$trees[[i3]]$new.tip.label)] to remove the "Germline" label from the elements
                             if( ! all(trees$data[[i3]]@data$sequence_id[tempo.pos] == trees$trees[[i3]]$new.tip.label[-length(trees$trees[[i3]]$new.tip.label)])){
                                 stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 17 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nELEMENTS SHOULD BE THE SAME. HERE IT IS:\n\ntrees$data[[i3]]@data$sequence_id[tempo.pos]:\n", paste(trees$data[[i3]]@data$sequence_id[tempo.pos], collapse = "\n"), "\n\ntrees$trees[[i3]]$new.tip.label[-length(trees$trees[[i3]]$new.tip.label)]:\n", paste(trees$trees[[i3]]$new.tip.label[-length(trees$trees[[i3]]$new.tip.label)], collapse = "\n"), "\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
                             }else{
-                                trees$trees[[i3]]$new.tip.label[-length(trees$trees[[i3]]$new.tip.label)] <- paste0("(", trees$data[[i3]]@data$collapse_count[tempo.pos] - 1, ") ", trees$data[[i3]]@data$sequence_id[tempo.pos]) # -1 because it is the number of "removed" sequences, not "total" number of sequences
+                                trees$trees[[i3]]$new.tip.label[-length(trees$trees[[i3]]$new.tip.label)] <- paste0("(", trees$data[[i3]]@data$collapse_count[tempo.pos], ") ", trees$data[[i3]]@data$sequence_id[tempo.pos]) # -1 because it is the number of "removed" sequences, not "total" number of sequences
                             }
                         }
                         # end modif of the tree tip labeling
@@ -706,7 +706,7 @@ if(length(tempo.list) == 0){
                     if(all(tempo.added.trees$data$label[tempo.log] == trees$trees[[i3]]$tip.label)){
                         tempo.added.trees$data$label[tempo.log] <- trees$trees[[i3]]$new.tip.label
                     }else{
-                        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 17 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nELEMENTS SHOULD BE THE SAME. HERE IT IS:\n\ntempo.added.trees$data$label[tempo.log]:\n", paste(tempo.added.trees$data$label[tempo.log], collapse = "\n"), "\n\ntrees$trees[[i3]]$tip.label:\n", paste(trees$trees[[i3]]$tip.label, collapse = "\n"), "\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 18 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nELEMENTS SHOULD BE THE SAME. HERE IT IS:\n\ntempo.added.trees$data$label[tempo.log]:\n", paste(tempo.added.trees$data$label[tempo.log], collapse = "\n"), "\n\ntrees$trees[[i3]]$tip.label:\n", paste(trees$trees[[i3]]$tip.label, collapse = "\n"), "\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
                     }
                     # end adding new tip labels into tempo.added.trees (because they are lost with ggtree::"%<+%")
                     # 
@@ -888,7 +888,6 @@ if(length(tempo.list) == 0){
                     assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_treescale(width = 0.01, offset = 0.05))
                 }
                 assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::theme(plot.margin = ggplot2::margin(t = 0.25, l = 0.1, b = 0.1, r = tree_right_margin, unit = "in")))
-
                 # legend
                 if( ( ! is.null(tree_meta_path)) & ! is.null(tree_meta_legend)){
                     bef.final.plot <- ggplot2::ggplot_build(eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + "))))
@@ -903,26 +902,18 @@ if(length(tempo.list) == 0){
             }else{
                 # no need to use pdf(NULL) with fun_gg_empty_graph()
                 final.plot <- fun_gg_empty_graph(text = paste0("NO GRAPH PLOTTED FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\nNOT ENOUGH SEQUENCES DETECTED"), text.size = 3)
-                if( ( ! is.null(tree_meta_path)) & ! is.null(tree_meta_legend)){
-                    tempo.log <- clones$data[[i3]]@data$sequence_id %in% meta.df$Name
-                    if(any(tempo.log)){
-                        tempo.cat <- paste0("Annotated sequences in this clonal group: ", paste(clones$data[[i3]]@data$sequence_id[tempo.log], collapse = ", "))
-                        add.text <- paste0(ifelse(is.null(add.text), tempo.cat, paste0(add.text, "\n", tempo.cat)))
-                    }
-                }
             }
         }else{
             # no need to use pdf(NULL) with fun_gg_empty_graph()
             final.plot <- fun_gg_empty_graph(text = paste0("NO GRAPH PLOTTED FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\nNOT ENOUGH SEQUENCES DETECTED"), text.size = 3)
-            if( ( ! is.null(tree_meta_path)) & ! is.null(tree_meta_legend)){
-                tempo.log <- clones$data[[i3]]@data$sequence_id %in% meta.df$Name
-                if(any(tempo.log)){
-                    tempo.cat <- paste0("Annotated sequences in this clonal group: ", paste(clones$data[[i3]]@data$sequence_id[tempo.log], collapse = ", "))
-                    add.text <- paste0(ifelse(is.null(add.text), tempo.cat, paste0(add.text, "\n", tempo.cat)))
-                }
+        }
+        if( ( ! is.null(tree_meta_path)) & ! is.null(tree_meta_legend)){
+            tempo.log <- clones$data[[i3]]@data$sequence_id %in% meta.df$Name
+            if(any(tempo.log)){
+                tempo.cat <- paste0("Annotated sequences in this clonal group: ", paste(clones$data[[i3]]@data$sequence_id[tempo.log], collapse = ", "))
+                add.text <- paste0(ifelse(is.null(add.text), tempo.cat, paste0(add.text, "\n", tempo.cat)))
             }
         }
-
         if(is.null(tree_meta_path)){
             legend.width = 0
         }else{
