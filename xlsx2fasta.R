@@ -65,7 +65,7 @@ path <- "X://Alice//Human_serum//Repertoire analysis human roc//ELISA SN Reperto
 Ig_name <- "Ab_name" # single character string indicating the column name of the xlsx file for the Ig names
 VH <- "VH_NN" # single character string indicating the column name of the xlsx file for the VH sequences
 VL <- "VL_NN" # single character string indicating the column name of the xlsx file for the VL sequences
-categ <- "NULL" # vector of character strings indicating additional column names of the xlsx file. A specific folder will be generated for each of these column with the fasta sequence in it when non NA or empty cells are present in this column. Write "NULL" if not required
+categ <- "Patient" # vector of character strings indicating additional names of qualitative columns of the xlsx file. A specific folder will be generated for each class of these column with the fasta sequence in it when non NA or empty cells are present in this column. Write "NULL" if not required
 out.path <- "C://Users//Gael//Desktop" # single character string indicating the path of the output folder
 cute <- "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v11.4.0/cute_little_R_functions.R" # single character string indicating the path of the cute_little_R_functions.R file required for this script
 log <- "xlsx2tsv.log" # single character string indicating the name of the log file
@@ -414,16 +414,18 @@ for(i0 in 1:length(chain)){
 
 if( ! is.null(categ)){
     for(i1 in categ){
-        tempo.path <- paste0(out.path, "/", i1)
-        dir.create(tempo.path)
-        chain <- c("VH", "VL")
-        for(i2 in 1:length(chain)){
-            dir.create(paste0(tempo.path, "/", chain[i2]))
-            for(i3 in 1:nrow(obs)){
-                tempo.log <- ( ! (is.na(obs[i3, i1]) | obs[i3, i1] == "")) & ( ! (is.na(obs[i3, get(chain[i2])]) | obs[i3, get(chain[i2])] == ""))
-                if(tempo.log == TRUE){
-                    tempo.cat <- paste0(">", obs[i3, Ig_name], "_", chain[i2], "\n", obs[i3, get(chain[i2])])
-                    cat(tempo.cat, file = paste0(tempo.path,  "/", chain[i2], "/", obs[i3, Ig_name], "_", chain[i2], ".fasta"))
+        for(i2 in unique(obs[ , i1])){
+            tempo.path <- paste0(out.path, "/", i1, "_", i2)
+            dir.create(tempo.path)
+            chain <- c("VH", "VL")
+            for(i3 in 1:length(chain)){
+                dir.create(paste0(tempo.path, "/", chain[i3]))
+                for(i4 in which(obs[ , i1] == i2)){
+                    tempo.log <- ( ! (is.na(obs[i4, i1]) | obs[i4, i1] == "")) & ( ! (is.na(obs[i4, get(chain[i3])]) | obs[i4, get(chain[i3])] == ""))
+                    if(tempo.log == TRUE){
+                        tempo.cat <- paste0(">", obs[i4, Ig_name], "_", chain[i3], "\n", obs[i4, get(chain[i3])])
+                        cat(tempo.cat, file = paste0(tempo.path,  "/", chain[i3], "/", obs[i4, Ig_name], "_", chain[i3], ".fasta"))
+                    }
                 }
             }
         }
