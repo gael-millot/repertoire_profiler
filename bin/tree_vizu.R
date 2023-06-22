@@ -492,7 +492,7 @@ if(length(tempo.list) == 0){
     ggplot2::ggsave(filename = paste0("tree.svg"), plot = final.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
     ggplot2::ggsave(filename = paste0("tree.pdf"), plot = final.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
     tempo.df <- matrix(c("sequence_id", "clone_id", "clone_name", "chain", "identical_to"), nrow = 1)
-    write.table(tempo.df, file = paste0("./tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = FALSE, sep = "\t")
+    write.table(tempo.df, file = paste0("./tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = FALSE, sep = "\t", quote = FALSE)
 }else{
     clone.id <- sapply(tempo.list, FUN = function(x){strsplit(x, split = "_")[[1]][1]})
 
@@ -670,7 +670,7 @@ if(length(tempo.list) == 0){
                         }
                         suppressWarnings(rm(tempo.df))
                         tempo.df <- data.frame(sequence_id = removed.seq, clone_id = clone.id[[i3]], clone_name = clone.name, chain = chain, identical_to = identical.seq)
-                        write.table(tempo.df, file = paste0("./", clone.id[[i3]], "_tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = TRUE, sep = "\t")
+                        write.table(tempo.df, file = paste0("./", clone.id[[i3]], "_tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = TRUE, sep = "\t", quote = FALSE)
                         empty.tsv <- FALSE
                         # end get removed sequences info
                         # modif of the tree tip labeling
@@ -943,7 +943,7 @@ if(length(tempo.list) == 0){
 
         if(empty.tsv == TRUE){
             tempo.df <- matrix(c("sequence_id", "clone_id", "clone_name", "chain", "identical_to"), nrow = 1)
-            write.table(tempo.df, file = paste0("./", clone.id[[i3]], "_tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = FALSE, sep = "\t")
+            write.table(tempo.df, file = paste0("./", clone.id[[i3]], "_tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = FALSE, sep = "\t", quote = FALSE)
         }
 
 ################ end save empty tsv

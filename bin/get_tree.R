@@ -380,7 +380,7 @@ if(nrow(clones$data[[1]]@data) < clone_nb_seq){
     file.copy(from = paste0("./", seq_name_remplacement_ch), to = "./tree_dismissed_seq.tsv")
     write.table(matrix(names(db), nrow = 1), file = "./seq_for_tree.tsv", row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t") # empty file
     file.create("./tree_clone_id.tsv") # empty file
-    write.table(clone.id, file = "./tree_dismissed_clone_id.tsv", row.names = FALSE, col.names = FALSE)
+    write.table(clone.id, file = "./tree_dismissed_clone_id.tsv", row.names = FALSE, col.names = FALSE, quote = FALSE)
     save(list = c("db", "clones"), file = paste0("./", clones$clone_id, "_get_tree_cloneID.RData"))
 }else{
     file.copy(from = paste0("./", seq_name_remplacement_ch), to = "./seq_for_tree.tsv")
@@ -403,7 +403,7 @@ if(nrow(clones$data[[1]]@data) < clone_nb_seq){
     trees <- dowser::getTrees(clones, build = "igphyml", exec = igphylm_exe_path, nproc = 10)
     # assign(paste0("c", trees$clone_id, "_trees"), trees)
     save(list = c("trees", "db", "clones"), file = paste0("./", trees$clone_id, "_get_tree_cloneID.RData"))
-    write.table(trees$clone_id, file = "./tree_clone_id.tsv", row.names = FALSE, col.names = FALSE)
+    write.table(trees$clone_id, file = "./tree_clone_id.tsv", row.names = FALSE, col.names = FALSE, quote = FALSE)
 }
 
 ################ Pdf window closing

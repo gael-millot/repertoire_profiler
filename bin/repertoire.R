@@ -537,7 +537,7 @@ for(i0 in 1:length(var1)){
                 tempo.table.gg <- tempo.table[tempo.table > 0]
             }else{
                 tempo.table <- table(df[ , names(df) == var1[i0]])
-                write.table(tempo.table, file = paste0("./rep_", names(alleles)[tempo.pos], ".tsv"), row.names = FALSE, col.names = FALSE, sep = "\t") # separate repertoires
+                write.table(tempo.table, file = paste0("./rep_", names(alleles)[tempo.pos], ".tsv"), row.names = FALSE, col.names = FALSE, sep = "\t", quote = FALSE) # separate repertoires
                 tempo.table.gg <- tempo.table
             }
             if(sum(tempo.table.gg, na.rm = TRUE) > 0){
@@ -611,7 +611,7 @@ for(i0 in 1:(length(var1) - 1)){
                     tempo.table3 <- tempo.table3[tempo.log]
                 }else{
                     tempo.table2 <- as.data.frame.matrix(table(df[names(df) %in% c(var1[i0], var1[i1])]))
-                    write.table(tempo.table2, file = paste0("./rep_", output.name, ".tsv"), row.names = TRUE, col.names = NA, sep = "\t") # separate repertoires
+                    write.table(tempo.table2, file = paste0("./rep_", output.name, ".tsv"), row.names = TRUE, col.names = NA, sep = "\t", quote = FALSE) # separate repertoires
                     tempo.table3 <- tempo.table2
                 }
                 # end here the work is using data frames because it keeps the structure even if one cell

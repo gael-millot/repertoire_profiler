@@ -288,6 +288,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 ## WHAT'S NEW IN
 
 
+#### v8.8
+
+quote removed from all output files
+
+
 #### v8.7
 
 xlsx2fasta.R file modified so that it now split data according to each class of the categ parameter

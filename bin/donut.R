@@ -545,7 +545,7 @@ ggplot2::ggsave(filename = paste0(kind, "_donutchart.pdf"), plot = final.plot, d
 
 ################ data saving
 
-write.table(obs3, file = paste0("./", kind, "_donut_stats.tsv"), row.names = FALSE, sep = "\t")
+write.table(obs3, file = paste0("./", kind, "_donut_stats.tsv"), row.names = FALSE, sep = "\t", quote = FALSE)
 
 ################ End data saving
 
