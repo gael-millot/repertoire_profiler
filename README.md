@@ -290,7 +290,7 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 
 #### v8.8
 
-quote removed from all output files
+Quotes removed from all output files
 
 
 #### v8.7

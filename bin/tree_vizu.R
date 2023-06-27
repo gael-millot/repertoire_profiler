@@ -122,7 +122,7 @@ rm(tempo.cat)
 # tree_label_outside = "TRUE"
 # tree_right_margin = "1.5" 
 # tree_legend = "TRUE" 
-# tree_meta_path = "./metadata2.tsv"
+# tree_meta_path = "./metadata2.tsv" # do not write "./NULL" but "NULL"
 # tree_meta_legend = "inverted_KD"
 # cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.2.0/cute_little_R_functions.R"
 # log = "tree_vizu.log"
@@ -648,13 +648,13 @@ if(length(tempo.list) == 0){
                     add.text <- paste0(ifelse(is.null(add.text), tempo.cat, paste0(add.text, "\n", tempo.cat)))
                 }else if(tree_duplicate_seq == "FALSE" & nrow(trees$data[[i3]]@data) != nrow(db.list[[i3]])){
                     # get removed sequences info
-                    no.duplic.seq.log <- db.list[[i3]][[1]] %in% trees$data[[i3]]@data[[1]]
-                    duplic.seq.log <- ! no.duplic.seq.log
-                    if( ! any(duplic.seq.log)){
-                        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 14 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"FALSE\"\nBUT NO SEQ NAMES REMOVED FROM THE TREE IN trees$data[[i3]]@data[[1]] IS DIFFERENT FROM THE NUMBER OF ROWS IN db (n=", nrow(db.list[[i3]]), ")\ntrees$data[[i3]]@data[[1]]: ", paste(trees$data[[i3]]@data[[1]], collapse = " "), "\ndb.list[[i3]][[1]]: ", paste(db.list[[i3]][[1]], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                    no.removed.seq.log <- db.list[[i3]][[1]] %in% trees$data[[i3]]@data[[1]] # of note, the trees$data[[i3]]@data$collapsed report also the names in the first column trees$data[[i3]]@data[[1]] = trees$data[[i3]]@data$sequence_id. It is not the sequences that are not in the tree anymore !
+                    removed.seq.log <- ! no.removed.seq.log
+                    if( ! any(removed.seq.log)){
+                        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 14 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"FALSE\"\nBUT NO SEQ NAMES COLLAPSED IN THE TREE IN trees$data[[i3]]@data[[1]] COMPARED TO db.list[[i3]][[1]]\ntrees$data[[i3]]@data[[1]]: ", paste(trees$data[[i3]]@data[[1]], collapse = " "), "\ndb.list[[i3]][[1]]: ", paste(db.list[[i3]][[1]], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
                     }else{
-                        not.removed.seq <- db.list[[i3]][[1]][no.duplic.seq.log]
-                        removed.seq <- db.list[[i3]][[1]][duplic.seq.log]
+                        not.removed.seq <- db.list[[i3]][[1]][no.removed.seq.log]
+                        removed.seq <- db.list[[i3]][[1]][removed.seq.log]
                         tempo.warn <- paste0(length(removed.seq), " sequences removed from the display (Parameter tree_duplicate_seq == \"FALSE\". See tree_seq_not_displayed.tsv)")
                         tempo.warn2 <- paste0("FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\n", tempo.warn)
                         warn <- paste0(ifelse(is.null(warn), tempo.warn2, paste0(warn, "\n\n", tempo.warn2)))
@@ -665,8 +665,11 @@ if(length(tempo.list) == 0){
                             tempo.log <- grepl(trees$data[[i3]]@data$collapsed, pattern = removed.seq[i4]) # collapsed names are separated by comma during dowser::formatClones()
                             identical.seq <- c(identical.seq, trees$data[[i3]]@data[[1]][tempo.log])
                         }
+                        if(any( ! removed.seq %in% unlist(strsplit(trees$data[[1]]@data$collapsed, split = ",")))){
+                            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 15 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nTHESE SEQUENCES NAMES, PRESENT IN db.list[[i3]][[1]]: ", paste(db.list[[i3]][[1]], collapse = " "), "\nDOES NOT APPEAR ANYMORE IN removed.seq ", paste(removed.seq, collapse = " "), "\nTHE PROBLEM COMES FROM THE COLLAPSE IN clones$data[[1]]@data$collapsed: ", paste(clones$data[[1]]@data$collapsed, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                        }
                         if(length(removed.seq) != length(identical.seq)){
-                            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 15 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nidentical.seq SHOULD HAVE ", length(removed.seq), " SEQUENCES NAMES\nREMOVED SEQUENCES: ", paste(removed.seq, collapse = " "), "\nIDENTICAL TO: ", paste(identical.seq, collapse = " "), "\nCOLLAPSED NAMES: ", paste(clones$data[[1]]@data$collapsed, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 16 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nidentical.seq SHOULD HAVE ", length(removed.seq), " SEQUENCES NAMES\nLENGTH OF removed.seq: ", paste(removed.seq, collapse = " "), "\nSHOULD BE IDENTICAL TO LENGTH OF identical.seq: ", paste(identical.seq, collapse = " "), "\ntrees$data[[1]]@data$collapsed: ", paste(trees$data[[1]]@data$collapsed, collapse = " "), "\nclones$data[[1]]@data$collapsed: ", paste(clones$data[[1]]@data$collapsed, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
                         }
                         suppressWarnings(rm(tempo.df))
                         tempo.df <- data.frame(sequence_id = removed.seq, clone_id = clone.id[[i3]], clone_name = clone.name, chain = chain, identical_to = identical.seq)
@@ -675,11 +678,11 @@ if(length(tempo.list) == 0){
                         # end get removed sequences info
                         # modif of the tree tip labeling
                         if(length(trees$trees[[i3]]$new.tip.label) - 1 != length(trees$data[[i3]]@data$sequence_id)){ # - 1 because "Germline" label removed
-                            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 16 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nLENGTH OF trees$trees[[i3]]$new.tip.label SHOULD BE -1 OF LENGTH OF trees$data[[i3]]@data$sequence_id. HERE IT IS:\n\nLENGTH - 1 OF trees$trees[[i3]]$new.tip.label: ", length(trees$trees[[i3]]$new.tip.label) - 1, " \nLENGTH OF trees$data[[i3]]@data$sequence_id: ", length(trees$data[[i3]]@data$sequence_id), "\n\ntrees$trees[[i3]]$new.tip.label:\n", paste(trees$trees[[i3]]$new.tip.label, collapse = "\n"), "\n\ntrees$data[[i3]]@data$sequence_id:\n", paste(trees$data[[i3]]@data$sequence_id, collapse = "\n"), "\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 17 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nLENGTH OF trees$trees[[i3]]$new.tip.label SHOULD BE -1 OF LENGTH OF trees$data[[i3]]@data$sequence_id. HERE IT IS:\n\nLENGTH - 1 OF trees$trees[[i3]]$new.tip.label: ", length(trees$trees[[i3]]$new.tip.label) - 1, " \nLENGTH OF trees$data[[i3]]@data$sequence_id: ", length(trees$data[[i3]]@data$sequence_id), "\n\ntrees$trees[[i3]]$new.tip.label:\n", paste(trees$trees[[i3]]$new.tip.label, collapse = "\n"), "\n\ntrees$data[[i3]]@data$sequence_id:\n", paste(trees$data[[i3]]@data$sequence_id, collapse = "\n"), "\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
                         }else{
                             tempo.pos <- match(trees$trees[[i3]]$new.tip.label[-length(trees$trees[[i3]]$new.tip.label)], trees$data[[i3]]@data$sequence_id) # [-length(trees$trees[[i3]]$new.tip.label)] to remove the "Germline" label from the elements
                             if( ! all(trees$data[[i3]]@data$sequence_id[tempo.pos] == trees$trees[[i3]]$new.tip.label[-length(trees$trees[[i3]]$new.tip.label)])){
-                                stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 17 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nELEMENTS SHOULD BE THE SAME. HERE IT IS:\n\ntrees$data[[i3]]@data$sequence_id[tempo.pos]:\n", paste(trees$data[[i3]]@data$sequence_id[tempo.pos], collapse = "\n"), "\n\ntrees$trees[[i3]]$new.tip.label[-length(trees$trees[[i3]]$new.tip.label)]:\n", paste(trees$trees[[i3]]$new.tip.label[-length(trees$trees[[i3]]$new.tip.label)], collapse = "\n"), "\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                                stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 18 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nELEMENTS SHOULD BE THE SAME. HERE IT IS:\n\ntrees$data[[i3]]@data$sequence_id[tempo.pos]:\n", paste(trees$data[[i3]]@data$sequence_id[tempo.pos], collapse = "\n"), "\n\ntrees$trees[[i3]]$new.tip.label[-length(trees$trees[[i3]]$new.tip.label)]:\n", paste(trees$trees[[i3]]$new.tip.label[-length(trees$trees[[i3]]$new.tip.label)], collapse = "\n"), "\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
                             }else{
                                 trees$trees[[i3]]$new.tip.label[-length(trees$trees[[i3]]$new.tip.label)] <- paste0("(", trees$data[[i3]]@data$collapse_count[tempo.pos], ") ", trees$data[[i3]]@data$sequence_id[tempo.pos]) # -1 because it is the number of "removed" sequences, not "total" number of sequences
                             }
@@ -706,7 +709,7 @@ if(length(tempo.list) == 0){
                     if(all(tempo.added.trees$data$label[tempo.log] == trees$trees[[i3]]$tip.label)){
                         tempo.added.trees$data$label[tempo.log] <- trees$trees[[i3]]$new.tip.label
                     }else{
-                        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 18 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nELEMENTS SHOULD BE THE SAME. HERE IT IS:\n\ntempo.added.trees$data$label[tempo.log]:\n", paste(tempo.added.trees$data$label[tempo.log], collapse = "\n"), "\n\ntrees$trees[[i3]]$tip.label:\n", paste(trees$trees[[i3]]$tip.label, collapse = "\n"), "\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 19 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nELEMENTS SHOULD BE THE SAME. HERE IT IS:\n\ntempo.added.trees$data$label[tempo.log]:\n", paste(tempo.added.trees$data$label[tempo.log], collapse = "\n"), "\n\ntrees$trees[[i3]]$tip.label:\n", paste(trees$trees[[i3]]$tip.label, collapse = "\n"), "\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
                     }
                     # end adding new tip labels into tempo.added.trees (because they are lost with ggtree::"%<+%")
                     # 
