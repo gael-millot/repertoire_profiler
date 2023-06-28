@@ -110,7 +110,7 @@ rm(tempo.cat)
 
 ################################ Test
 
-# setwd("C:/Users/gael/Documents/Git_projects/ig_clustering/dev/test")
+# setwd("C:/Users/gael/Documents/Git_projects/repertoire_profiler/dev/test")
 # file_name = "./caca.tsv"
 # kind = "all"
 # donut_palette = "NULL" 
@@ -165,12 +165,12 @@ param.list <- c(
     "log"
 )
 if(any(duplicated(param.list))){
-    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 1 IN donut.R\n\nTHE param.list OBJECT CONTAINS DUPLICATED ELEMENTS:\n", paste(param.list[duplicated(param.list)], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) # message for developers
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 1 IN donut.R\n\nTHE param.list OBJECT CONTAINS DUPLICATED ELEMENTS:\n", paste(param.list[duplicated(param.list)], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) # message for developers
 }
 if(erase.objects == TRUE){
     created.object.control <- ls()[ ! ls() %in% "param.list"]
     if( ! (all(created.object.control %in% param.list) & all(param.list %in% created.object.control))){
-        stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 2 IN donut.R\n\nINCONSISTENCIES BETWEEN THE ARGUMENTS USED AND THE PARAMETERS REQUIRED IN THE EXECUTABLE CODE FILE\nTHE ARGUMENTS NOT PRESENT IN THE EXECUTABLE FILE (donut.R) ARE:\n", paste(created.object.control[ ! created.object.control %in% param.list], collapse = " "), "\nTHE PARAMETERS OF THE EXECUTABLE FILE (donut.R) NOT PRESENT IN THE ARGUMENTS ARE:\n", paste(param.list[ ! param.list %in% created.object.control], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) # message for developers
+        stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 2 IN donut.R\n\nINCONSISTENCIES BETWEEN THE ARGUMENTS USED AND THE PARAMETERS REQUIRED IN THE EXECUTABLE CODE FILE\nTHE ARGUMENTS NOT PRESENT IN THE EXECUTABLE FILE (donut.R) ARE:\n", paste(created.object.control[ ! created.object.control %in% param.list], collapse = " "), "\nTHE PARAMETERS OF THE EXECUTABLE FILE (donut.R) NOT PRESENT IN THE ARGUMENTS ARE:\n", paste(param.list[ ! param.list %in% created.object.control], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) # message for developers
     }
 }
 char.length <- nchar(param.list)
@@ -212,7 +212,7 @@ if(length(cute) != 1){
         source(cute, local = .GlobalEnv) # source the fun_ functions used below
     }
 }else{
-    tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 3 IN donut.R: CODE HAS TO BE MODIFIED\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n")
+    tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 3 IN donut.R: CODE HAS TO BE MODIFIED\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n")
     stop(tempo.cat, call. = FALSE)
 }
 
@@ -421,9 +421,9 @@ if(nrow(obs) > 0){
     tempo.j <- obs$germline_j_call
     chain <- unique(substr(tempo.j, 1, 3)) # extract the IGH or IGK name
     if(length(chain) != 1){
-        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 4 IN donut.R for kind ", kind, ": chain MUST BE A SINGLE VALUE.\nHERE IT IS: ", paste(chain, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) 
+        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 4 IN donut.R for kind ", kind, ": chain MUST BE A SINGLE VALUE.\nHERE IT IS: ", paste(chain, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) 
     }else if(chain != unique(substr(tempo.v, 1, 3))){
-        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN donut.R for kind ", kind, ": CHAIN OF J DIFFERENT FROM CHAIN OF V.\nCHAIN OF V: ", paste(chain, collapse = " "), "\nCHAIN OF J: ", paste(unique(substr(tempo.v, 1, 3)), collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) 
+        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN donut.R for kind ", kind, ": CHAIN OF J DIFFERENT FROM CHAIN OF V.\nCHAIN OF V: ", paste(chain, collapse = " "), "\nCHAIN OF J: ", paste(unique(substr(tempo.v, 1, 3)), collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) 
     }
     tempo.v <- substring(tempo.v, 4)
     tempo.j <- substring(tempo.j, 4)

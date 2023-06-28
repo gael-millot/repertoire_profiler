@@ -39,10 +39,10 @@ Right now, only dedicated to the analysis of VDJ repertoires (corresponding to t
 <br /><br />
 ## CONTENT
 
-| Ig_clustering folder | Description |
+| repertoire_profiler folder | Description |
 | --- | --- |
-| **ig_clustering.nf** | File that can be executed using a linux terminal, a MacOS terminal or Windows 10 WSL2. |
-| **ig_clustering.config** | Parameter settings for the ig_clustering.nf file. Users have to open this file, set the desired settings and save these modifications before execution. |
+| **repertoire_profiler.nf** | File that can be executed using a linux terminal, a MacOS terminal or Windows 10 WSL2. |
+| **repertoire_profiler.config** | Parameter settings for the repertoire_profiler.nf file. Users have to open this file, set the desired settings and save these modifications before execution. |
 | **xlsx2fasta.R** | Accessory file that creates all the fasta files from a .xlsx file. To use it, 1) open the file, 2) complete the "Parameters that need to be set by the user" section, 3) save the modifications and 4) run the file in R. |
 | **dataset** | Folder containing some datasets (batch of fasta files) than can be used as examples. |
 | **example_of_results** | Folder containing examples of result obtained with the dataset. See the OUTPUT section for the description of the folder and files. |
@@ -76,7 +76,7 @@ Installation of:<br />
 ### 2. Local running (personal computer)
 
 
-#### 2.1. ig_clustering.nf file in the personal computer
+#### 2.1. repertoire_profiler.nf file in the personal computer
 
 - Mount a server if required:
 
@@ -88,25 +88,25 @@ sudo mount -t drvfs $DRIVE: /mnt/z
 
 Warning: if no mounting, it is possible that nextflow does nothing, or displays a message like:
 <pre>
-Launching `ig_clustering.nf` [loving_morse] - revision: d5aabe528b
+Launching `repertoire_profiler.nf` [loving_morse] - revision: d5aabe528b
 /mnt/share/Users
 </pre>
 
-- Run the following command from where the ig_clustering.nf and ig_clustering.config files are (example: \\wsl$\Ubuntu-20.04\home\gael):
+- Run the following command from where the repertoire_profiler.nf and repertoire_profiler.config files are (example: \\wsl$\Ubuntu-20.04\home\gael):
 
 <pre>
-nextflow run ig_clustering.nf -c ig_clustering.config
+nextflow run repertoire_profiler.nf -c repertoire_profiler.config
 </pre>
 
 with -c to specify the name of the config file used.
 
 <br /><br />
-#### 2.3. ig_clustering.nf file in the public gitlab repository
+#### 2.3. repertoire_profiler.nf file in the public gitlab repository
 
 Run the following command from where you want the results:
 
 <pre>
-nextflow run -hub pasteur gmillot/ig_clustering -r v1.0.0
+nextflow run -hub pasteur gmillot/repertoire_profiler -r v1.0.0
 </pre>
 
 <br /><br />
@@ -117,7 +117,7 @@ nextflow run -hub pasteur gmillot/ig_clustering -r v1.0.0
 Copy-paste this after having modified the EXEC_PATH variable:
 
 <pre>
-EXEC_PATH="/pasteur/zeus/projets/p01/BioIT/gmillot/ig_clustering" # where the bin folder of the ig_clustering.nf script is located
+EXEC_PATH="/pasteur/zeus/projets/p01/BioIT/gmillot/repertoire_profiler" # where the bin folder of the repertoire_profiler.nf script is located
 export CONF_BEFORE=/opt/gensoft/exe # on maestro
 
 export JAVA_CONF=java/13.0.2
@@ -136,30 +136,30 @@ module load ${JAVA_CONF} ${SINGU_CONF} ${GIT_CONF} ${GRAPHVIZ_CONF}
 </pre>
 
 <br /><br />
-#### 3.2. ig_clustering.nf file in a cluster folder
+#### 3.2. repertoire_profiler.nf file in a cluster folder
 
-Modify the second line of the code below, and run from where the ig_clustering.nf and ig_clustering.config files are (which has been set thanks to the EXEC_PATH variable above):
+Modify the second line of the code below, and run from where the repertoire_profiler.nf and repertoire_profiler.config files are (which has been set thanks to the EXEC_PATH variable above):
 
 <pre>
 HOME_INI=$HOME
-HOME="${ZEUSHOME}/ig_clustering/" # $HOME changed to allow the creation of .nextflow into /$ZEUSHOME/ig_clustering/, for instance. See NFX_HOME in the nextflow software script
+HOME="${ZEUSHOME}/repertoire_profiler/" # $HOME changed to allow the creation of .nextflow into /$ZEUSHOME/repertoire_profiler/, for instance. See NFX_HOME in the nextflow software script
 trap '' SIGINT
-nextflow run --modules ${MODULES} ig_clustering.nf -c ig_clustering.config
+nextflow run --modules ${MODULES} repertoire_profiler.nf -c repertoire_profiler.config
 HOME=$HOME_INI
 trap SIGINT
 </pre>
 
 <br /><br />
-#### 3.3. ig_clustering.nf file in the public gitlab repository
+#### 3.3. repertoire_profiler.nf file in the public gitlab repository
 
 Modify the first and third lines of the code below, and run (results will be where the EXEC_PATH variable has been set above):
 
 <pre>
 VERSION="v1.0"
 HOME_INI=$HOME
-HOME="${ZEUSHOME}/ig_clustering/" # $HOME changed to allow the creation of .nextflow into /$ZEUSHOME/ig_clustering/, for instance. See NFX_HOME in the nextflow software script
+HOME="${ZEUSHOME}/repertoire_profiler/" # $HOME changed to allow the creation of .nextflow into /$ZEUSHOME/repertoire_profiler/, for instance. See NFX_HOME in the nextflow software script
 trap '' SIGINT
-nextflow run --modules ${MODULES} -hub pasteur gmillot/ig_clustering -r $VERSION -c $HOME/ig_clustering.config
+nextflow run --modules ${MODULES} -hub pasteur gmillot/repertoire_profiler -r $VERSION -c $HOME/repertoire_profiler.config
 HOME=$HOME_INI
 trap SIGINT
 </pre>
@@ -169,7 +169,7 @@ trap SIGINT
 
 #### Message 1
 ```
-Unknown error accessing project `gmillot/ig_clustering` -- Repository may be corrupted: /pasteur/sonic/homes/gmillot/.nextflow/assets/gmillot/ig_clustering
+Unknown error accessing project `gmillot/repertoire_profiler` -- Repository may be corrupted: /pasteur/sonic/homes/gmillot/.nextflow/assets/gmillot/repertoire_profiler
 ```
 
 Purge using:
@@ -179,7 +179,7 @@ rm -rf /pasteur/sonic/homes/gmillot/.nextflow/assets/gmillot*
 
 #### Message 2
 ```
-WARN: Cannot read project manifest -- Cause: Remote resource not found: https://gitlab.pasteur.fr/api/v4/projects/gmillot%2Fig_clustering
+WARN: Cannot read project manifest -- Cause: Remote resource not found: https://gitlab.pasteur.fr/api/v4/projects/gmillot%2Frepertoire_profiler
 ```
 
 Contact Gael Millot (distant repository is not public).
@@ -197,7 +197,7 @@ Use chmod to change the user rights.
 ## OUTPUT
 
 
-Results are present in a *Ig_clustering_xxxxx* folder, inside the nextflow *result* folder.
+Results are present in a *repertoire_profiler_xxxxx* folder, inside the nextflow *result* folder.
 <br /><br />
 Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.docx (contact Gael Millot).
 <br /><br />
@@ -205,9 +205,9 @@ Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.
 
 Mandatory elements:
 <br /><br />
-| Ig_clustering_xxxxx folder | Description |
+| repertoire_profiler_xxxxx folder | Description |
 | --- | --- |
-| **reports** | Folder containing all the reports of the different processes, including the *ig_clustering.config* file used. |
+| **reports** | Folder containing all the reports of the different processes, including the *repertoire_profiler.config* file used. |
 | **repertoires** | Folder containing the repertoires (i.e., contingency tables of the VDJ allele usage of the productive annotation by Igblast (see below). |
 | **png** | Folder containing the graphs in png format. |
 | **svg** | Folder containing the graphs in svg vectorial format. |
@@ -221,17 +221,17 @@ Mandatory elements:
 | **all_passed_seq.tsv** | Sequences from the *productive_seq.tsv* file, with germline clustering (clone ID), mutation load, distance and sequence nickname (annotation from the metadata file) added. Warning: the number of sequences can be lower than in the *productive_seq.tsv* file due to sequences that failed to be clone assigned (see the *non_clone_assigned_sequence.tsv* file).<br />Column description: <br /><ul><li>sequence_id: Unique query sequence identifier for the Rearrangement. Most often this will be the input sequence header or a substring thereof, but may also be a custom identifier defined by the tool in cases where query sequences have been combined in some fashion prior to alignment. When downloaded from an AIRR Data Commons repository, this will usually be a universally unique record locator for linking with other objects in the AIRR Data Model.<br /></li><li>sequence: The query nucleotide sequence. Usually, this is the unmodified input sequence, which may be reverse complemented if necessary. In some cases, this field may contain consensus sequences or other types of collapsed input sequences if these steps are performed prior to alignment.<br /></li><li>rev_comp: True if the alignment is on the opposite strand (reverse complemented) with respect to the query sequence. If True then all output data, such as alignment coordinates and sequences, are based on the reverse complement of 'sequence'.<br /></li><li>productive: True if the V(D)J sequence is predicted to be productive.<br /></li><li>v_call: V gene with allele. If referring to a known reference sequence in a database the relevant gene/allele nomenclature should be followed (e.g., IGHV4-59\*01 if using IMGT/GENE-DB).<br /></li><li>d_call: First or only D gene with allele. If referring to a known reference sequence in a database the relevant gene/allele nomenclature should be followed (e.g., IGHD3-10\*01 if using IMGT/GENE-DB).<br /></li><li>j_call: J gene with allele. If referring to a known reference sequence in a database the relevant gene/allele nomenclature should be followed (e.g., IGHJ4\*02 if using IMGT/GENE-DB).<br /></li><li>sequence_alignment: Aligned portion of query sequence, including any indel corrections or numbering spacers, such as IMGT-gaps. Typically, this will include only the V(D)J region, but that is not a requirement.<br /></li><li>germline_alignment: Assembled, aligned, full-length inferred germline sequence spanning the same region as the sequence_alignment field (typically the V(D)J region) and including the same set of corrections and spacers (if any).<br /></li><li>junction: Junction region nucleotide sequence, where the junction is defined as the CDR3 plus the two flanking conserved codons.<br /></li><li>junction_aa: Amino acid translation of the junction.<br /></li><li>v_cigar: CIGAR string for the V gene alignment. See protocol 50<br /></li><li>d_cigar: CIGAR string for the first or only D gene alignment. See protocol 50<br /></li><li>j_cigar: CIGAR string for the J gene alignment. See protocol 50<br /></li><li>stop_codon: True if the aligned sequence contains a stop codon.<br /></li><li>vj_in_frame: True if the V and J gene alignments are in-frame.<br /></li><li>locus: Gene locus (chain type). Note that this field uses a controlled vocabulary that is meant to provide a generic classification of the locus, not necessarily the correct designation according to a specific nomenclature.<br /></li><li>junction_length: Number of nucleotides in the junction sequence.<br /></li><li>np1_length: Number of nucleotides between the V gene and first D gene alignments or between the V gene and J gene alignments.<br /></li><li>np2_length: Number of nucleotides between either the first D gene and J gene alignments or the first D gene and second D gene alignments.<br /></li><li>v_sequence_start: Start position of the V gene in the query sequence (1-based closed interval).<br /></li><li>v_sequence_end: End position of the V gene in the query sequence (1-based closed interval).<br /></li><li>v_germline_start: Alignment start position in the V gene reference sequence (1-based closed interval).<br /></li><li>v_germline_end: Alignment end position in the V gene reference sequence (1-based closed interval).<br /></li><li>d_sequence_start: Start position of the first or only D gene in the query sequence. (1-based closed interval).<br /></li><li>d_sequence_end: End position of the first or only D gene in the query sequence. (1-based closed interval).<br /></li><li>d_germline_start: Alignment start position in the D gene reference sequence for the first or only D gene (1-based closed interval).<br /></li><li>d_germline_end: Alignment end position in the D gene reference sequence for the first or only D gene (1-based closed interval).<br /></li><li>j_sequence_start: Start position of the J gene in the query sequence (1-based closed interval).<br /></li><li>j_sequence_end: End position of the J gene in the query sequence (1-based closed interval).<br /></li><li>j_germline_start: Alignment start position in the J gene reference sequence (1-based closed interval).<br /></li><li>j_germline_end: Alignment end position in the J gene reference sequence (1-based closed interval).<br /></li><li>v_score: Alignment score for the V gene. See raw score<br /></li><li>v_identity: Fractional identity for the V gene alignment (proportion)<br /></li><li>v_support: V gene alignment E-value, p-value, likelihood, probability or other similar measure of support for the V gene assignment as defined by the alignment tool.<br /></li><li>d_score: Alignment score for the first or only D gene alignment.<br /></li><li>d_identity: Fractional identity for the first or only D gene alignment.<br /></li><li>d_support: D gene alignment E-value, p-value, likelihood, probability or other similar measure of support for the first or only D gene as defined by the alignment tool.<br /></li><li>j_score: Alignment score for the J gene alignment.<br /></li><li>j_identity: Fractional identity for the J gene alignment.<br /></li><li>j_support: J gene alignment E-value, p-value, likelihood, probability or other similar measure of support for the J gene assignment as defined by the alignment tool.<br /></li><li>fwr1: Nucleotide sequence of the aligned FWR1 region.<br /></li><li>fwr2: Nucleotide sequence of the aligned FWR2 region.<br /></li><li>fwr3: Nucleotide sequence of the aligned FWR3 region.<br /></li><li>fwr4: Nucleotide sequence of the aligned FWR4 region.<br /></li><li>cdr1: Nucleotide sequence of the aligned CDR1 region.<br /></li><li>cdr2: Nucleotide sequence of the aligned CDR2 region.<br /></li><li>cdr3: Nucleotide sequence of the aligned CDR3 region.<br /></li><li>sequence_alignment_aa: Translation in aa of the sequence_alignment column<br /></li><li>clone_id: Clone number. A same clone_id gathers all the sequences that putatively come from a same germline cell.<br /></li><li>germline_alignment_d_mask: Because the D-segment call for B cell receptor alignments is often low confidence, the default germline format (-g dmask) places Ns in the N/P and D-segments of the junction region rather than using the D-segment assigned during reference alignment; this can be modified to generate a complete germline (-g full) or a V-segment only germline (-g vonly)<br /></li><li>germline_v_call: V germline cassette<br /></li><li>germline_d_call: D germline cassette (usually NA)<br /></li><li>germline_j_call: J germline cassette<br /></li><li>mu_count_cdr_r: number of replacement mutations in CDR1 and CDR2 of the V-segment.<br /></li><li>mu_count_cdr_s: number of silent mutations in CDR1 and CDR2 of the V-segment.<br /></li><li>mu_count_fwr_r: number of replacement mutations in FWR1, FWR2 and FWR3 of the V-segment.<br /></li><li>mu_count_fwr_s: number of silent mutations in FWR1, FWR2 and FWR3 of the V-segment.<br /></li><li>mu_count: number of replacement and silent mutations in the specified region (If frequency=TRUE and combine=TRUE)<br /></li><li>mu_freq_cdr_r: frequency of replacement mutations in CDR1 and CDR2 of the V-segment (if frequency=TRUE, R and S mutation frequencies are calculated over the number of non-N positions in the specified regions).<br /></li><li>mu_freq_cdr_s: frequency of silent mutations in CDR1 and CDR2 of the V-segment (idem).<br /></li><li>mu_freq_fwr_r: frequency of replacement mutations in FWR1, FWR2 and FWR3 of the V-segment (idem).<br /></li><li>mu_freq_fwr_s: frequency of silent mutations in FWR1, FWR2 and FWR3 of the V-segment (idem).<br /></li><li>mu_freq: frequency of replacement and silent mutations in the specified region (idem, if frequency=TRUE and combine=TRUE)<br /></li><li>dist_nearest: minimal distance from the nearest sequence using the model from the clone_model parameter (Haming by default). NA if no other sequences have same V, J and junction length or if another sequence is strictly identical (should be 0 but NA is returned)</li> |
 | **unproductive_seq.tsv** | Sequences that failed productive annotations by igblast (empty file if all the sequences are productively annotated). |
 | **non_clone_assigned_sequence.tsv** | Productive sequences that failed to be assigned to a clone ID by the DefineClones.py function (empty file if all the sequences are assigned). |
-| **tree_clone_id.tsv** | Clonal group IDs used in the tree analysis (clonal group with at least n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file). |
-| **tree_dismissed_clone_id.tsv** | Clonal group IDs not used in the tree analysis (clonal group with less than n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file). |
-| **tree_seq.tsv** | Sequences of the *all_passed_seq.tsv* file used in the tree analysis (clonal group with at least n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file). |
-| **tree_dismissed_seq.tsv** | Sequences of the *all_passed_seq.tsv* file not used in the tree analysis (clonal group with less than n sequences, n being set by the nb_seq_per_clone parameter in the ig_clustering.config file). |
-| **tree_seq_not_displayed.tsv** | Sequences file used in the tree analysis but not displayed in the graph, (1) because strictly identical to another sequence already in the tree and (2) because the tree_duplicate_seq parameter of the ig_clustering.config file has been set to "FALSE". |
+| **tree_clone_id.tsv** | Clonal group IDs used in the tree analysis (clonal group with at least n sequences, n being set by the nb_seq_per_clone parameter in the repertoire_profiler.config file). |
+| **tree_dismissed_clone_id.tsv** | Clonal group IDs not used in the tree analysis (clonal group with less than n sequences, n being set by the nb_seq_per_clone parameter in the repertoire_profiler.config file). |
+| **tree_seq.tsv** | Sequences of the *all_passed_seq.tsv* file used in the tree analysis (clonal group with at least n sequences, n being set by the nb_seq_per_clone parameter in the repertoire_profiler.config file). |
+| **tree_dismissed_seq.tsv** | Sequences of the *all_passed_seq.tsv* file not used in the tree analysis (clonal group with less than n sequences, n being set by the nb_seq_per_clone parameter in the repertoire_profiler.config file). |
+| **tree_seq_not_displayed.tsv** | Sequences file used in the tree analysis but not displayed in the graph, (1) because strictly identical to another sequence already in the tree and (2) because the tree_duplicate_seq parameter of the repertoire_profiler.config file has been set to "FALSE". |
 
 
 <br /><br />
 Optional elements only returned if the igblast_aa parameter is 'false' and if the input fasta are nucleotide sequences:
 <br /><br />
-| Ig_clustering_xxxxx folder | Description |
+| repertoire_profiler_xxxxx folder | Description |
 | --- | --- |
 | **aa** | Folder containing the translation of the alignment_sequence column of the *productive_seq.tsv* file in fasta files. |
 | **aligned_seq** | Folder containing the alignment_sequence column of the *productive_seq.tsv* file in fasta files. |
@@ -242,7 +242,7 @@ Optional elements only returned if the igblast_aa parameter is 'false' and if th
 ## VERSIONS
 
 
-The different releases are tagged [here](https://gitlab.pasteur.fr/gmillot/ig_clustering/-/tags)
+The different releases are tagged [here](https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/tags)
 
 <br /><br />
 ## LICENCE
@@ -286,6 +286,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 
 <br /><br />
 ## WHAT'S NEW IN
+
+
+#### v8.9
+
+ig_clustering name replaced everywhere by repertoire_profiler
 
 
 #### v8.8

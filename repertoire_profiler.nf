@@ -2,7 +2,7 @@ nextflow.enable.dsl=2
 /*
 #########################################################################
 ##                                                                     ##
-##     ig_clustering.nf                                                ##
+##     repertoire_profiler.nf                                          ##
 ##                                                                     ##
 ##     Gael A. Millot                                                  ##
 ##     Bioinformatics and Biostatistics Hub                            ##
@@ -118,14 +118,14 @@ process igblast {
 
     # checks
     if [[ ! "\${FILE_EXTENSION}" =~ fasta|fa|fna|txt|seq ]] ; then
-        echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID FILE EXTENSION IN THE sample_path PARAMETER OF THE ig_clustering.config FILE:\\n${fs_ch}\\n\${FILENAME}\\nMUST BE fasta|fs_ch|txt|seq\\n\\n========\\n\\n"
+        echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID FILE EXTENSION IN THE sample_path PARAMETER OF THE repertoire_profiler.config FILE:\\n${fs_ch}\\n\${FILENAME}\\nMUST BE fasta|fs_ch|txt|seq\\n\\n========\\n\\n"
         exit 1
     fi
     sed 's/\\r\$//' ${fs_ch} > tempo_file.fasta # remove carriage returns
     awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' tempo_file.fasta > \${FILE}.fa # remove \\n in the middle of the sequence # \${FILENAME}.fa is a trick to do not use ${fs_ch} and modify the initial file due to the link in the nextflow work folder
     TEMPO=\$(wc -l \${FILE}.fa | cut -f1 -d' ')
     if read -n 1 char <"\${FILE}.fa"; [[ \$char != ">" || \$TEMPO != 2 ]]; then
-        echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID FASTA FILE IN THE sample_path OF THE ig_clustering.config FILE:\\n${fs_ch}\\nMUST BE A FASTA FILE (\'>\' AS FIRST CHARATER) MADE OF A SINGLE SEQUENCE\\n\\n========\\n\\n"
+        echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID FASTA FILE IN THE sample_path OF THE repertoire_profiler.config FILE:\\n${fs_ch}\\nMUST BE A FASTA FILE (\'>\' AS FIRST CHARATER) MADE OF A SINGLE SEQUENCE\\n\\n========\\n\\n"
         exit 1
     fi
     # end checks
@@ -928,7 +928,7 @@ workflow {
     //////// Variables
 
     modules = params.modules // remove the dot -> can be used in bash scripts
-    config_file = workflow.configFiles[0] // better to use this than config_file = file("${projectDir}/ig_clustering.config") because the latter is not good if -c option of nextflow run is used
+    config_file = workflow.configFiles[0] // better to use this than config_file = file("${projectDir}/repertoire_profiler.config") because the latter is not good if -c option of nextflow run is used
     log_file = file("${launchDir}/.nextflow.log")
 
     //////// end Variables
@@ -939,195 +939,195 @@ workflow {
     // tbi = file("${sample_path}.tbi") does not need .tbi 
 
     if( ! (sample_path in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID sample_path PARAMETER IN ig_clustering.config FILE:\n${sample_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID sample_path PARAMETER IN repertoire_profiler.config FILE:\n${sample_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (file(sample_path).exists()) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID sample_path PARAMETER IN ig_clustering.config FILE (DOES NOT EXIST): ${sample_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID sample_path PARAMETER IN repertoire_profiler.config FILE (DOES NOT EXIST): ${sample_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
     }
     if( ! (igblast_database_path in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_database_path PARAMETER IN ig_clustering.config FILE:\n${igblast_database_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_database_path PARAMETER IN repertoire_profiler.config FILE:\n${igblast_database_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
     if( ! (igblast_organism in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_organism PARAMETER IN ig_clustering.config FILE:\n${igblast_organism}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_organism PARAMETER IN repertoire_profiler.config FILE:\n${igblast_organism}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (igblast_organism == "mouse" || igblast_organism == "human" || igblast_organism == "rabbit" || igblast_organism == "rat" || igblast_organism == "rhesus_monkey") ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_organism PARAMETER IN ig_clustering.config FILE:\n${igblast_organism}\nMUST BE EITHER \"mouse\", \"human\", \"rabbit\", \"rat\" OR \"rhesus_monkey\"\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_organism PARAMETER IN repertoire_profiler.config FILE:\n${igblast_organism}\nMUST BE EITHER \"mouse\", \"human\", \"rabbit\", \"rat\" OR \"rhesus_monkey\"\n\n========\n\n"
     }
     if( ! (igblast_loci in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_loci PARAMETER IN ig_clustering.config FILE:\n${igblast_loci}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_loci PARAMETER IN repertoire_profiler.config FILE:\n${igblast_loci}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (igblast_loci == "ig" || igblast_loci == "tr") ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_loci PARAMETER IN ig_clustering.config FILE:\n${igblast_loci}\nMUST BE EITHER \"ig\" OR \"tr\"\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_loci PARAMETER IN repertoire_profiler.config FILE:\n${igblast_loci}\nMUST BE EITHER \"ig\" OR \"tr\"\n\n========\n\n"
     }
     if( ! (igblast_aa in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_aa PARAMETER IN ig_clustering.config FILE:\n${igblast_aa}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_aa PARAMETER IN repertoire_profiler.config FILE:\n${igblast_aa}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (igblast_aa == "false" || igblast_aa == "true") ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_aa PARAMETER IN ig_clustering.config FILE:\n${igblast_aa}\nMUST BE EITHER \"true\" OR \"false\"\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_aa PARAMETER IN repertoire_profiler.config FILE:\n${igblast_aa}\nMUST BE EITHER \"true\" OR \"false\"\n\n========\n\n"
     }
     if( ! (igblast_files in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_files PARAMETER IN ig_clustering.config FILE:\n${igblast_files}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_files PARAMETER IN repertoire_profiler.config FILE:\n${igblast_files}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
     if( ! (clone_nb_seq in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_nb_seq PARAMETER IN ig_clustering.config FILE:\n${clone_nb_seq}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_nb_seq PARAMETER IN repertoire_profiler.config FILE:\n${clone_nb_seq}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ( ! (clone_nb_seq =~/^\d+$/)) || clone_nb_seq.toInteger() < 3 ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_nb_seq PARAMETER IN ig_clustering.config FILE:\n${clone_nb_seq}\nMUST BE A POSITIVE INTEGER VALUE EQUAL OR GREATER TO 3\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_nb_seq PARAMETER IN repertoire_profiler.config FILE:\n${clone_nb_seq}\nMUST BE A POSITIVE INTEGER VALUE EQUAL OR GREATER TO 3\n\n========\n\n"
     }
     if( ! (clone_model in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_model PARAMETER IN ig_clustering.config FILE:\n${clone_model}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_model PARAMETER IN repertoire_profiler.config FILE:\n${clone_model}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (clone_model == "ham" || clone_model == "aa" || clone_model == "hh_s1f" || clone_model == "hh_s5f" || clone_model == "mk_rs1nf" || clone_model == "mk_rs5nf" || clone_model == "m1n_compat" || clone_model == "hs1f_compat") ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_model PARAMETER IN ig_clustering.config FILE:\n${clone_model}\nMUST BE EITHER \"ham\", \"aa\", \"hh_s1f\", \"hh_s5f\", \"mk_rs1nf\", \"mk_rs5nf\", \"m1n_compat\", \"hs1f_compat\"\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_model PARAMETER IN repertoire_profiler.config FILE:\n${clone_model}\nMUST BE EITHER \"ham\", \"aa\", \"hh_s1f\", \"hh_s5f\", \"mk_rs1nf\", \"mk_rs5nf\", \"m1n_compat\", \"hs1f_compat\"\n\n========\n\n"
     }
     if( ! (clone_normalize in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_normalize PARAMETER IN ig_clustering.config FILE:\n${clone_normalize}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_normalize PARAMETER IN repertoire_profiler.config FILE:\n${clone_normalize}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (clone_normalize == "len" || clone_normalize == "none") ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_normalize PARAMETER IN ig_clustering.config FILE:\n${clone_normalize}\nMUST BE EITHER \"len\" OR \"none\"\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_normalize PARAMETER IN repertoire_profiler.config FILE:\n${clone_normalize}\nMUST BE EITHER \"len\" OR \"none\"\n\n========\n\n"
     }
     if( ! (clone_distance in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_distance PARAMETER IN ig_clustering.config FILE:\n${clone_distance}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_distance PARAMETER IN repertoire_profiler.config FILE:\n${clone_distance}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (clone_distance =~ /^((1)|(0)|(0\.[0-9]*))$/) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_distance PARAMETER IN ig_clustering.config FILE:\n${clone_distance}\nMUST BE A POSITIVE PROPORTION VALUE\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_distance PARAMETER IN repertoire_profiler.config FILE:\n${clone_distance}\nMUST BE A POSITIVE PROPORTION VALUE\n\n========\n\n"
     }
     if( ! (meta_path in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_path PARAMETER IN ig_clustering.config FILE:\n${meta_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_path PARAMETER IN repertoire_profiler.config FILE:\n${meta_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if(meta_path != "NULL"){
         if( ! (file(meta_path).exists()) ){
-            error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_path PARAMETER IN ig_clustering.config FILE (DOES NOT EXIST): ${meta_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
+            error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_path PARAMETER IN repertoire_profiler.config FILE (DOES NOT EXIST): ${meta_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
         }
     }
     if( ! (meta_name_replacement in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_name_replacement PARAMETER IN ig_clustering.config FILE:\n${meta_name_replacement}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_name_replacement PARAMETER IN repertoire_profiler.config FILE:\n${meta_name_replacement}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
     if( ! (meta_legend in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_legend PARAMETER IN ig_clustering.config FILE:\n${meta_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_legend PARAMETER IN repertoire_profiler.config FILE:\n${meta_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
     if( ! (tree_kind in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_kind PARAMETER IN ig_clustering.config FILE:\n${tree_kind}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_kind PARAMETER IN repertoire_profiler.config FILE:\n${tree_kind}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
     if( ! (tree_duplicate_seq in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_duplicate_seq PARAMETER IN ig_clustering.config FILE:\n${tree_duplicate_seq}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_duplicate_seq PARAMETER IN repertoire_profiler.config FILE:\n${tree_duplicate_seq}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (tree_duplicate_seq == "TRUE" || tree_duplicate_seq == "FALSE") ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_duplicate_seq PARAMETER IN ig_clustering.config FILE:\n${tree_duplicate_seq}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_duplicate_seq PARAMETER IN repertoire_profiler.config FILE:\n${tree_duplicate_seq}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
     if( ! (tree_leaf_color in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_color PARAMETER IN ig_clustering.config FILE:\n${tree_leaf_color}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_color PARAMETER IN repertoire_profiler.config FILE:\n${tree_leaf_color}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
     if( ! (tree_leaf_shape in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_shape PARAMETER IN ig_clustering.config FILE:\n${tree_leaf_shape}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_shape PARAMETER IN repertoire_profiler.config FILE:\n${tree_leaf_shape}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (tree_leaf_shape =~  /^[0-9]*$/) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_shape PARAMETER IN ig_clustering.config FILE:\n${tree_leaf_shape}\nMUST BE A POSITIVE INTEGER VALUE\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_shape PARAMETER IN repertoire_profiler.config FILE:\n${tree_leaf_shape}\nMUST BE A POSITIVE INTEGER VALUE\n\n========\n\n"
     }
     if( ! (tree_leaf_size in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_size PARAMETER IN ig_clustering.config FILE:\n${tree_leaf_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_size PARAMETER IN repertoire_profiler.config FILE:\n${tree_leaf_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (tree_leaf_size =~  /^[0-9]+\.*[0-9]*$/) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_size PARAMETER IN ig_clustering.config FILE:\n${tree_leaf_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_size PARAMETER IN repertoire_profiler.config FILE:\n${tree_leaf_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
     if( ! (tree_label_size in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_size PARAMETER IN ig_clustering.config FILE:\n${tree_label_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_size PARAMETER IN repertoire_profiler.config FILE:\n${tree_label_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (tree_label_size =~  /^[0-9]+\.*[0-9]*$/) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_size PARAMETER IN ig_clustering.config FILE:\n${tree_label_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_size PARAMETER IN repertoire_profiler.config FILE:\n${tree_label_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
     if( ! (tree_label_hjust in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_hjust PARAMETER IN ig_clustering.config FILE:\n${tree_label_hjust}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_hjust PARAMETER IN repertoire_profiler.config FILE:\n${tree_label_hjust}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (tree_label_hjust =~  /^\-{0,1}[0-9]+\.*[0-9]*$/) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_hjust PARAMETER IN ig_clustering.config FILE:\n${tree_label_hjust}\nMUST BE A NUMERIC VALUE\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_hjust PARAMETER IN repertoire_profiler.config FILE:\n${tree_label_hjust}\nMUST BE A NUMERIC VALUE\n\n========\n\n"
     }
     if( ! (tree_label_rigth in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_rigth PARAMETER IN ig_clustering.config FILE:\n${tree_label_rigth}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_rigth PARAMETER IN repertoire_profiler.config FILE:\n${tree_label_rigth}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (tree_label_rigth == "TRUE" || tree_label_rigth == "FALSE") ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_rigth PARAMETER IN ig_clustering.config FILE:\n${tree_label_rigth}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_rigth PARAMETER IN repertoire_profiler.config FILE:\n${tree_label_rigth}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
     if( ! (tree_label_outside in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_outside PARAMETER IN ig_clustering.config FILE:\n${tree_label_outside}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_outside PARAMETER IN repertoire_profiler.config FILE:\n${tree_label_outside}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (tree_label_outside == "TRUE" || tree_label_outside == "FALSE") ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_outside PARAMETER IN ig_clustering.config FILE:\n${tree_label_outside}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_outside PARAMETER IN repertoire_profiler.config FILE:\n${tree_label_outside}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
     if( ! (tree_right_margin in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_right_margin PARAMETER IN ig_clustering.config FILE:\n${tree_right_margin}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_right_margin PARAMETER IN repertoire_profiler.config FILE:\n${tree_right_margin}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (tree_right_margin =~  /^[0-9]+\.*[0-9]*$/) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_right_margin PARAMETER IN ig_clustering.config FILE:\n${tree_right_margin}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_right_margin PARAMETER IN repertoire_profiler.config FILE:\n${tree_right_margin}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
     if( ! (tree_legend in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_legend PARAMETER IN ig_clustering.config FILE:\n${tree_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_legend PARAMETER IN repertoire_profiler.config FILE:\n${tree_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (tree_legend == "TRUE" || tree_legend == "FALSE") ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_legend PARAMETER IN ig_clustering.config FILE:\n${tree_legend}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_legend PARAMETER IN repertoire_profiler.config FILE:\n${tree_legend}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
 
     if( ! (donut_palette in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_palette PARAMETER IN ig_clustering.config FILE:\n${donut_palette}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_palette PARAMETER IN repertoire_profiler.config FILE:\n${donut_palette}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
     if( ! (donut_hole_size in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_size PARAMETER IN ig_clustering.config FILE:\n${donut_hole_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_size PARAMETER IN repertoire_profiler.config FILE:\n${donut_hole_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (donut_hole_size =~  /^((1)|(0)|(0\.[0-9]*))$/) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_size PARAMETER IN ig_clustering.config FILE:\n${donut_hole_size}\nMUST BE A POSITIVE PROPORTION VALUE\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_size PARAMETER IN repertoire_profiler.config FILE:\n${donut_hole_size}\nMUST BE A POSITIVE PROPORTION VALUE\n\n========\n\n"
     }
     if( ! (donut_hole_text in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_text PARAMETER IN ig_clustering.config FILE:\n${tree_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_text PARAMETER IN repertoire_profiler.config FILE:\n${tree_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (donut_hole_text == "TRUE" || donut_hole_text == "FALSE") ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_text PARAMETER IN ig_clustering.config FILE:\n${donut_hole_text}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_text PARAMETER IN repertoire_profiler.config FILE:\n${donut_hole_text}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
     if( ! (donut_hole_text_size in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_text_size PARAMETER IN ig_clustering.config FILE:\n${donut_hole_text_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_text_size PARAMETER IN repertoire_profiler.config FILE:\n${donut_hole_text_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (donut_hole_text_size =~  /^[0-9]+\.*[0-9]*$/) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_text_size PARAMETER IN ig_clustering.config FILE:\n${donut_hole_text_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_text_size PARAMETER IN repertoire_profiler.config FILE:\n${donut_hole_text_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
     if( ! (donut_border_color in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_border_color PARAMETER IN ig_clustering.config FILE:\n${donut_border_color}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_border_color PARAMETER IN repertoire_profiler.config FILE:\n${donut_border_color}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
     if( ! (donut_border_size in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_border_size PARAMETER IN ig_clustering.config FILE:\n${donut_border_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_border_size PARAMETER IN repertoire_profiler.config FILE:\n${donut_border_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
     if( ! (donut_annotation_distance in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_distance PARAMETER IN ig_clustering.config FILE:\n${donut_annotation_distance}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_distance PARAMETER IN repertoire_profiler.config FILE:\n${donut_annotation_distance}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (donut_annotation_distance =~  /^[0-9]+\.*[0-9]*$/) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_distance PARAMETER IN ig_clustering.config FILE:\n${donut_annotation_distance}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_distance PARAMETER IN repertoire_profiler.config FILE:\n${donut_annotation_distance}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
     if( ! (donut_annotation_size in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_size PARAMETER IN ig_clustering.config FILE:\n${donut_annotation_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_size PARAMETER IN repertoire_profiler.config FILE:\n${donut_annotation_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (donut_annotation_size =~  /^[0-9]+\.*[0-9]*$/) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_size PARAMETER IN ig_clustering.config FILE:\n${donut_annotation_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_size PARAMETER IN repertoire_profiler.config FILE:\n${donut_annotation_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
     if( ! (donut_annotation_force in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_force PARAMETER IN ig_clustering.config FILE:\n${donut_annotation_force}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_force PARAMETER IN repertoire_profiler.config FILE:\n${donut_annotation_force}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (donut_annotation_force =~  /^[0-9]+\.*[0-9]*$/) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_force PARAMETER IN ig_clustering.config FILE:\n${donut_annotation_force}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_force PARAMETER IN repertoire_profiler.config FILE:\n${donut_annotation_force}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
     if( ! (donut_annotation_force_pull in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_force_pull PARAMETER IN ig_clustering.config FILE:\n${donut_annotation_force_pull}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_force_pull PARAMETER IN repertoire_profiler.config FILE:\n${donut_annotation_force_pull}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (donut_annotation_force_pull =~  /^[0-9]+\.*[0-9]*$/) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_force_pull PARAMETER IN ig_clustering.config FILE:\n${donut_annotation_force_pull}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_annotation_force_pull PARAMETER IN repertoire_profiler.config FILE:\n${donut_annotation_force_pull}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
     if( ! (donut_legend_width in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_width PARAMETER IN ig_clustering.config FILE:\n${donut_legend_width}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_width PARAMETER IN repertoire_profiler.config FILE:\n${donut_legend_width}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (donut_legend_width =~  /^((1)|(0)|(0\.[0-9]*))$/) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_width PARAMETER IN ig_clustering.config FILE:\n${donut_legend_width}\nMUST BE A POSITIVE PROPORTION VALUE\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_width PARAMETER IN repertoire_profiler.config FILE:\n${donut_legend_width}\nMUST BE A POSITIVE PROPORTION VALUE\n\n========\n\n"
     }
     if( ! (donut_legend_text_size in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_text_size PARAMETER IN ig_clustering.config FILE:\n${donut_legend_text_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_text_size PARAMETER IN repertoire_profiler.config FILE:\n${donut_legend_text_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (donut_legend_text_size =~  /^[0-9]+\.*[0-9]*$/) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_text_size PARAMETER IN ig_clustering.config FILE:\n${donut_legend_text_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_text_size PARAMETER IN repertoire_profiler.config FILE:\n${donut_legend_text_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
     if( ! (donut_legend_box_size in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_box_size PARAMETER IN ig_clustering.config FILE:\n${donut_legend_box_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_box_size PARAMETER IN repertoire_profiler.config FILE:\n${donut_legend_box_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (donut_legend_box_size =~  /^[0-9]+\.*[0-9]*$/) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_box_size PARAMETER IN ig_clustering.config FILE:\n${donut_legend_box_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_box_size PARAMETER IN repertoire_profiler.config FILE:\n${donut_legend_box_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
     if( ! (donut_legend_box_space in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_box_space PARAMETER IN ig_clustering.config FILE:\n${donut_legend_box_space}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_box_space PARAMETER IN repertoire_profiler.config FILE:\n${donut_legend_box_space}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (donut_legend_box_space =~  /^[0-9]+\.*[0-9]*$/) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_box_space PARAMETER IN ig_clustering.config FILE:\n${donut_legend_box_space}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_box_space PARAMETER IN repertoire_profiler.config FILE:\n${donut_legend_box_space}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
     if( ! (donut_legend_limit in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_limit PARAMETER IN ig_clustering.config FILE:\n${donut_legend_limit}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_limit PARAMETER IN repertoire_profiler.config FILE:\n${donut_legend_limit}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (donut_legend_width ==  "NULL") ){
         if( ! (donut_legend_width =~  /^((1)|(0)|(0\.[0-9]*))$/) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_limit PARAMETER IN ig_clustering.config FILE:\n${donut_legend_limit}\nMUST BE A POSITIVE PROPORTION VALUE IF NOT \"NULL\"\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_limit PARAMETER IN repertoire_profiler.config FILE:\n${donut_legend_limit}\nMUST BE A POSITIVE PROPORTION VALUE IF NOT \"NULL\"\n\n========\n\n"
         }
     }
     if( ! (cute_path in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID cute_path PARAMETER IN ig_clustering.config FILE:\n${cute_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID cute_path PARAMETER IN repertoire_profiler.config FILE:\n${cute_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (file(cute_path).exists()) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID cute_path PARAMETER IN ig_clustering.config FILE (DOES NOT EXIST): ${cute_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID cute_path PARAMETER IN repertoire_profiler.config FILE (DOES NOT EXIST): ${cute_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
     }
 
     if( ! (igphylm_exe_path in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igphylm_exe_path PARAMETER IN ig_clustering.config FILE:\n${igphylm_exe_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igphylm_exe_path PARAMETER IN repertoire_profiler.config FILE:\n${igphylm_exe_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
 
 
@@ -1191,7 +1191,7 @@ workflow {
         igblast_loci, 
         igblast_aa
     )
-    igblast.out.tsv_ch1.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE igblast PROCESS\n\nCHECK THAT THE igblast_organism, igblast_loci AND igblast_files ARE CORRECTLY SET IN THE ig_clustering.config FILE\n\n========\n\n"}}
+    igblast.out.tsv_ch1.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE igblast PROCESS\n\nCHECK THAT THE igblast_organism, igblast_loci AND igblast_files ARE CORRECTLY SET IN THE repertoire_profiler.config FILE\n\n========\n\n"}}
     tsv_ch2 = igblast.out.tsv_ch1.collectFile(name: "all_igblast_seq.tsv", skip: 1, keepHeader: true)
     igblast.out.log_ch.collectFile(name: "igblast_report.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 

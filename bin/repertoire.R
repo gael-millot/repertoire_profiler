@@ -1,7 +1,7 @@
 #!/usr/bin/Rscript
 #########################################################################
 ##                                                                     ##
-##     repertoire.R                                                     ##
+##     repertoire.R                                                    ##
 ##                                                                     ##
 ##     Gael A. Millot                                                  ##
 ##     Bioinformatics and Biostatistics Hub                            ##
@@ -96,7 +96,7 @@ rm(tempo.cat)
 
 ################################ Test
 
-# setwd("C:/Users/gael/Documents/Git_projects/ig_clustering/work/c0/15b238a2ee5928549fc971d797bf57")
+# setwd("C:/Users/gael/Documents/Git_projects/repertoire_profiler/work/c0/15b238a2ee5928549fc971d797bf57")
 # igblast_database_path = "germlines/imgt/mouse/vdj"
 # file_assembly_ch <- "productive_seq.tsv"
 # repertoire_names_ch <- "imgt_mouse_IGHD.tsv imgt_mouse_IGHJ.tsv imgt_mouse_IGHV.tsv"
@@ -122,12 +122,12 @@ param.list <- c(
     "log"
 )
 if(any(duplicated(param.list))){
-    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 1 IN repertoire.R\nTHE param.list OBJECT CONTAINS DUPLICATED ELEMENTS:\n", paste(param.list[duplicated(param.list)], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) # message for developers
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 1 IN repertoire.R\nTHE param.list OBJECT CONTAINS DUPLICATED ELEMENTS:\n", paste(param.list[duplicated(param.list)], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) # message for developers
 }
 if(erase.objects == TRUE){
     created.object.control <- ls()[ ! ls() %in% "param.list"]
     if( ! (all(created.object.control %in% param.list) & all(param.list %in% created.object.control))){
-        stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 2 IN repertoire.R\nINCONSISTENCIES BETWEEN THE ARGUMENTS USED AND THE PARAMETERS REQUIRED IN THE EXECUTABLE CODE FILE\nTHE ARGUMENTS NOT PRESENT IN THE EXECUTABLE FILE (repertoire.R) ARE:\n", paste(created.object.control[ ! created.object.control %in% param.list], collapse = " "), "\nTHE PARAMETERS OF THE EXECUTABLE FILE (repertoire.R) NOT PRESENT IN THE ARGUMENTS ARE:\n", paste(param.list[ ! param.list %in% created.object.control], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) # message for developers
+        stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 2 IN repertoire.R\nINCONSISTENCIES BETWEEN THE ARGUMENTS USED AND THE PARAMETERS REQUIRED IN THE EXECUTABLE CODE FILE\nTHE ARGUMENTS NOT PRESENT IN THE EXECUTABLE FILE (repertoire.R) ARE:\n", paste(created.object.control[ ! created.object.control %in% param.list], collapse = " "), "\nTHE PARAMETERS OF THE EXECUTABLE FILE (repertoire.R) NOT PRESENT IN THE ARGUMENTS ARE:\n", paste(param.list[ ! param.list %in% created.object.control], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) # message for developers
     }
 }
 char.length <- nchar(param.list)
@@ -321,7 +321,7 @@ if(length(cute) != 1){
         source(cute, local = .GlobalEnv) # source the fun_ functions used below
     }
 }else{
-    tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 3 IN repertoire.R:\nCODE HAS TO BE MODIFIED\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n")
+    tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 3 IN repertoire.R:\nCODE HAS TO BE MODIFIED\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n")
     stop(tempo.cat, call. = FALSE)
 }
 
@@ -417,7 +417,7 @@ if( ! grepl(igblast_database_path, pattern = "^.+vdj$")){ # positive prop
 
 rep_file_names <- strsplit(repertoire_names_ch, split = " ")[[1]]
 if(length(rep_file_names) == 0){
-    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 4 IN repertoire.R:\nPROBLEM WITH repertoire_names_ch: ", paste(repertoire_names_ch, collapse = " "), "PLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 4 IN repertoire.R:\nPROBLEM WITH repertoire_names_ch: ", paste(repertoire_names_ch, collapse = " "), "PLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
 }
 
 if(any(arg.check2) == TRUE){ # normally no NA
@@ -486,17 +486,17 @@ for(i1 in 1:length(alleles)){
 
 
 if( ! all(var1 %in% c("v_call", "j_call"))){
-    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 5 IN repertoire.R:\nPROBLEM WITH THE var1 INTERNAL VARIABLE THAT MUST BE \"v_call\" AND \"j_call\"\nHERE IT IS:\n", paste(var1, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 5 IN repertoire.R:\nPROBLEM WITH THE var1 INTERNAL VARIABLE THAT MUST BE \"v_call\" AND \"j_call\"\nHERE IT IS:\n", paste(var1, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
 }
 
 
 if( ! all(var1 %in% names(df))){
-    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 6 IN repertoire.R:\nPROBLEM WITH THE NAMES OF file_assembly_ch THAT MUST CONTAIN \"v_call\" AND \"j_call\"\nHERE IT IS:\n", paste(names(df), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 6 IN repertoire.R:\nPROBLEM WITH THE NAMES OF file_assembly_ch THAT MUST CONTAIN \"v_call\" AND \"j_call\"\nHERE IT IS:\n", paste(names(df), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
 }
 
 for(i1 in 1:length(alleles)){
     if(is.null(names(alleles)[i1])){
-        stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 7 IN repertoire.R:\nPROBLEM WITH rep_file_names:\n", paste(rep_file_names, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+        stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 7 IN repertoire.R:\nPROBLEM WITH rep_file_names:\n", paste(rep_file_names, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
     }
 }
 
@@ -522,7 +522,7 @@ for(i0 in 1:length(var1)){
     tempo2 <- tolower(substr(var1[i0], 1, 1))
     tempo.log <- allele.kind == tempo2
     if(any(is.na(tempo.log)) | sum(tempo.log, na.rm = TRUE) != 1){
-        stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 8 IN repertoire.R:\nPROBLEM WITH tempo.log:\n", paste(tempo.log, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+        stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 8 IN repertoire.R:\nPROBLEM WITH tempo.log:\n", paste(tempo.log, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
     }else{
         tempo.pos <- which(tempo.log)
         output.name <- names(alleles)[tempo.pos]
@@ -589,7 +589,7 @@ for(i0 in 1:(length(var1) - 1)){
         tempo.log1 <- allele.kind == tempo1
         tempo.log2 <- allele.kind == tempo2
         if(any(is.na(tempo.log1)) | sum(tempo.log1, na.rm = TRUE) != 1 | any(is.na(tempo.log2)) | sum(tempo.log2, na.rm = TRUE) != 1){
-            stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 9 IN repertoire.R:\nPROBLEM WITH tempo.log1:\n", paste(tempo.log1, collapse = "\n"), " OR tempo.log2:\n", paste(tempo.log2, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+            stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 9 IN repertoire.R:\nPROBLEM WITH tempo.log1:\n", paste(tempo.log1, collapse = "\n"), " OR tempo.log2:\n", paste(tempo.log2, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
         }else{
             tempo.pos1 <- which(tempo.log1)
             tempo.pos2 <- which(tempo.log2)

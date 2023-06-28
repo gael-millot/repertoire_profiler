@@ -143,12 +143,12 @@ param.list <- c(
     "log"
 )
 if(any(duplicated(param.list))){
-    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 1 IN get_tree.R\nTHE param.list OBJECT CONTAINS DUPLICATED ELEMENTS:\n", paste(param.list[duplicated(param.list)], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) # message for developers
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 1 IN get_tree.R\nTHE param.list OBJECT CONTAINS DUPLICATED ELEMENTS:\n", paste(param.list[duplicated(param.list)], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) # message for developers
 }
 if(erase.objects == TRUE){
     created.object.control <- ls()[ ! ls() %in% "param.list"]
     if( ! (all(created.object.control %in% param.list) & all(param.list %in% created.object.control))){
-        stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 2 IN get_tree.R\nINCONSISTENCIES BETWEEN THE ARGUMENTS USED AND THE PARAMETERS REQUIRED IN THE EXECUTABLE CODE FILE\nTHE ARGUMENTS NOT PRESENT IN THE EXECUTABLE FILE (get_tree.R) ARE:\n", paste(created.object.control[ ! created.object.control %in% param.list], collapse = " "), "\nTHE PARAMETERS OF THE EXECUTABLE FILE (get_tree.R) NOT PRESENT IN THE ARGUMENTS ARE:\n", paste(param.list[ ! param.list %in% created.object.control], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) # message for developers
+        stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 2 IN get_tree.R\nINCONSISTENCIES BETWEEN THE ARGUMENTS USED AND THE PARAMETERS REQUIRED IN THE EXECUTABLE CODE FILE\nTHE ARGUMENTS NOT PRESENT IN THE EXECUTABLE FILE (get_tree.R) ARE:\n", paste(created.object.control[ ! created.object.control %in% param.list], collapse = " "), "\nTHE PARAMETERS OF THE EXECUTABLE FILE (get_tree.R) NOT PRESENT IN THE ARGUMENTS ARE:\n", paste(param.list[ ! param.list %in% created.object.control], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) # message for developers
     }
 }
 char.length <- nchar(param.list)
@@ -190,7 +190,7 @@ if(length(cute) != 1){
         source(cute, local = .GlobalEnv) # source the fun_ functions used below
     }
 }else{
-    tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 3 IN get_tree.R: CODE HAS TO BE MODIFIED\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/ig_clustering OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n")
+    tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 3 IN get_tree.R: CODE HAS TO BE MODIFIED\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n")
     stop(tempo.cat, call. = FALSE)
 }
 
@@ -376,7 +376,7 @@ clones <- dowser::formatClones(
     # max_mask: maximum number of characters to mask at the leading and trailing sequence ends. If NULL then the upper masking bound will be automatically determined from the maximum number of observed leading or trailing Ns amongst all sequences. If set to 0 (default) then masking will not be performed
 )
 if(nrow(clones$data[[1]]@data) < clone_nb_seq){
-    cat(paste0("\nLESS THAN ", clone_nb_seq, " DIFFERENT SEQUENCES SET BY THE clone_nb_seq PARAMETER OF THE ig_clustering.config FILE: NO TREE COMPUTED\n"))
+    cat(paste0("\nLESS THAN ", clone_nb_seq, " DIFFERENT SEQUENCES SET BY THE clone_nb_seq PARAMETER OF THE repertoire_profiler.config FILE: NO TREE COMPUTED\n"))
     file.copy(from = paste0("./", seq_name_remplacement_ch), to = "./tree_dismissed_seq.tsv")
     write.table(matrix(names(db), nrow = 1), file = "./seq_for_tree.tsv", row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t") # empty file
     file.create("./tree_clone_id.tsv") # empty file
