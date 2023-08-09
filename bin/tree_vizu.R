@@ -110,6 +110,7 @@ rm(tempo.cat)
 # setwd("C:/Users/gael/Documents/Git_projects/repertoire_profiler/dev/test")
 # setwd("C:/Users/gael/Documents/Git_projects/repertoire_profiler/work/39/7f3246fe992a263d507019c825a683")
 # setwd("Z:/Alice/sort1_VH/repertoire_profiler-v8.1/work/6a/5804f66785412c808f6f7d9ca46cca")
+# setwd("Z:/Alice/human_Patient_B9_886_VH/ig_clustering-v8.8/work/ea/d1287c99e6a36d2790910c98fffcc0")
 # tree_kind = "rectangular"
 # clone_nb_seq = "3"
 # tree_duplicate_seq = "FALSE" 

@@ -288,6 +288,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 ## WHAT'S NEW IN
 
 
+#### v8.10
+
+bugs fixed
+
+
 #### v8.9
 
 ig_clustering name replaced everywhere by repertoire_profiler

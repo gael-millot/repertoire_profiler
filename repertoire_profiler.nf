@@ -114,6 +114,7 @@ process igblast {
     FILE=\${FILENAME%.*} # file name without extension
     FILE_EXTENSION="\${FILENAME##*.}" #  ## means "delete the longest regex starting at the beginning of the tested string". If nothing, delete nothing. Thus ##*. means delete the longest string finishing by a dot. Use # instead of ## for "delete the shortest regex starting at the beginning of the tested string"
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a igblast_report.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a igblast_report.log
     # end variables
 
     # checks
@@ -418,7 +419,9 @@ process closest_germline {
     cp -rp TEMPO.tsv "\$FILENAME" # -p for preserve permissions
     rm TEMPO.tsv
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a closest_germline.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a closest_germline.log
     # variables
+
     REPO_PATH="/usr/local/share/${igblast_database_path}" # path where the imgt_human_IGHV.fasta, imgt_human_IGHD.fasta and imgt_human_IGHJ.fasta files are in the docker container
     VDJ_FILES=\$(awk -v var1="${igblast_files}" -v var2="\${REPO_PATH}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}')
     # end variables
@@ -451,6 +454,7 @@ process mutation_load {
     cp -rp TEMPO.tsv "\$FILENAME" # -p for preserve permissions
     rm TEMPO.tsv
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a mutation_load.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a mutation_load.log
     Rscript -e '
         # Clonal assignment and germline sequences reconstruction should have been performed 
         # using the DefineClone.py and CreateGerlines.py in ChangeO
@@ -525,6 +529,9 @@ process seq_name_remplacement {
     script:
     """
     #!/bin/bash -ue
+    FILENAME=\$(basename -- ${mutation_load_ch}) # recover a file name without path
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a seq_name_remplacement.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a seq_name_remplacement.log
     # check first that the data file does not have the second column name starting by "initial_". Otherwise, with create unproper behavior in donut
     if [[ "${meta_file}" == "NULL" ]] ; then
         rm NULL # remove the initial file to avoid to send it into the channel
@@ -564,7 +571,6 @@ process seq_name_remplacement {
             # end modification of the metadata file for the correct use of ggtree::"%<+%" in tree_vizu.R that uses the column name "label" for that 
         ' |& tee -a seq_name_remplacement.log
     else
-        FILENAME=\$(basename -- ${mutation_load_ch}) # recover a file name without path
         IFS='_' read -r -a TEMPO <<< "\${FILENAME}" # string split into array
         cat ${mutation_load_ch} > ./\${TEMPO[0]}_renamed_seq.tsv |& tee -a seq_name_remplacement.log
     fi
@@ -720,6 +726,9 @@ process get_tree {
         echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nEMPTY ${seq_name_remplacement_ch} FILE AS INPUT OF THE mutation_load PROCESS\\nCHECK THE mutation_load.log IN THE report FOLDER\\n\\n========\\n\\n"
         exit 1
     fi
+    FILENAME=\$(basename -- ${seq_name_remplacement_ch}) # recover a file name without path
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a get_tree.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a get_tree.log
     get_tree.R \
 "${seq_name_remplacement_ch}" \
 "${meta_file}" \
@@ -831,6 +840,9 @@ process donut {
     script:
     """
     #!/bin/bash -ue
+    FILENAME=\$(basename -- ${data}) # recover a file name without path
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a ${kind}_donut.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a ${kind}_donut.log
     donut.R \
 "${data}" \
 "${kind}" \
@@ -1141,6 +1153,9 @@ workflow {
         print("    queue: ${queue}")
         print("    qos: ${qos}")
         print("    add_options: ${add_options}")
+    }
+    if(igblast_files =~ /^.*IGKV.*$/){
+        print("\n\nWARNING:\nLIGHT CHAIN DETECTED IN THE igblast_files parameter.\nBUY CLONAL GROUPING IS GENERALLY RESTRICTED TO HEAVY CHAIN SEQUENCES, AS THE DIVERSITY OF LIGHT CHAINS IS NOT SUFFICIENT TO DISTINGUISH CLONES WITH REASONABLE CERTAINTY")
     }
     print("\n\n")
 
