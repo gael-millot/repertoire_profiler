@@ -573,6 +573,9 @@ process seq_name_remplacement {
     else
         IFS='_' read -r -a TEMPO <<< "\${FILENAME}" # string split into array
         cat ${mutation_load_ch} > ./\${TEMPO[0]}_renamed_seq.tsv |& tee -a seq_name_remplacement.log
+        if [[ "${meta_file}" != "NULL" && "${meta_name_replacement}" == "NULL" ]] ; then
+            cat ${meta_file} > ./metadata2.tsv |& tee -a seq_name_remplacement.log
+        fi
     fi
     """
 }

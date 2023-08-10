@@ -82,8 +82,8 @@ Installation of:<br />
 
 <pre>
 DRIVE="Z"
-sudo mkdir /mnt/z
-sudo mount -t drvfs $DRIVE: /mnt/z
+sudo mkdir /mnt/share
+sudo mount -t drvfs $DRIVE: /mnt/share
 </pre>
 
 Warning: if no mounting, it is possible that nextflow does nothing, or displays a message like:
@@ -286,6 +286,10 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 
 <br /><br />
 ## WHAT'S NEW IN
+
+#### v8.11
+
+bugs fixed
 
 
 #### v8.10

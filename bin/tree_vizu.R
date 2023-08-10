@@ -425,19 +425,13 @@ if( ! (length(tree_legend) == 1 & any(tree_legend %in% c("TRUE", "FALSE")))){ # 
 if(tree_meta_path == "NULL"){
     tree_meta_path <- NULL
 }else if( ! file.exists(tree_meta_path)){
-    tempo.cat <- paste0("ERROR IN tree_vizu.R:\nTHE tree_meta_path PARAMETER MUST BE A VALID PATH OF A FILE IF NOT \"NULL\"\nHERE IT IS: \n", paste0(tree_meta_path, collapse = " "))
+    tempo.cat <- paste0("ERROR IN tree_vizu.R:\nTHE meta_path PARAMETER MUST BE A VALID PATH OF A FILE IF NOT \"NULL\"\nHERE IT IS: \n", paste0(tree_meta_path, collapse = " "))
     text.check2 <- c(text.check2, tempo.cat)
     arg.check2 <- c(arg.check2, TRUE)
 }
 
 if(tree_meta_legend == "NULL"){
-    if( ! is.null(tree_meta_path)){
-        tempo.cat <- paste0("ERROR IN tree_vizu.R:\nTHE tree_meta_legend PARAMETER CANNOT BE \"NULL\" IF THE tree_meta_path PARAMETER IS NOT \"NULL\"")
-        text.check2 <- c(text.check2, tempo.cat)
-        arg.check2 <- c(arg.check2, TRUE)
-    }else{
-        tree_meta_legend <- NULL
-    }
+    tree_meta_legend <- NULL
 }
 
 if(any(arg.check2) == TRUE){ # normally no NA
@@ -699,7 +693,7 @@ if(length(tempo.list) == 0){
                 if( ( ! is.null(tree_meta_path)) & ! is.null(tree_meta_legend)){
                     # merge of the meta data into the ggtree object. See https://yulab-smu.top/treedata-book/chapter7.html#attach-operator
                     if( ! tree_meta_legend %in% names(meta.df)){
-                        stop(paste0("\n\n============\n\nERROR IN tree_vizu.R for clone ID ", paste(unique(db.list[[i3]]$clone_id)), "\nIF NOT \"NULL\", THE tree_meta_legend PARAMETER MUST BE A COLUMN NAME OF THE tree_meta_path PARAMETER. HERE IT IS:\ntree_meta_legend: ", tree_meta_legend, "\nCOLUMN NAMES OF tree_meta_path: ", paste(names(meta.df), collapse = " "), "\n\n============\n\n"), call. = FALSE)
+                        stop(paste0("\n\n============\n\nERROR IN tree_vizu.R for clone ID ", paste(unique(db.list[[i3]]$clone_id)), "\nIF NOT \"NULL\", THE meta_legend PARAMETER MUST BE A COLUMN NAME OF THE meta_path PARAMETER. HERE IT IS:\ntree_meta_legend: ", tree_meta_legend, "\nCOLUMN NAMES OF tree_meta_path: ", paste(names(meta.df), collapse = " "), "\n\n============\n\n"), call. = FALSE)
                     }
                     tempo.added.trees <- ggtree::"%<+%"( # it seems that this command uses the tip.label compartment to merge meta.df into ggtree::ggtree(trees$trees[[i3]], layout = tree_kind)
                         ggtree::ggtree(trees$trees[[i3]], layout = tree_kind),
@@ -849,7 +843,7 @@ if(length(tempo.list) == 0){
                 # tree with no metadata
                 }else{ # tree with no metadata
                     if(is.null(tree_meta_path) & ! is.null(tree_meta_legend)){
-                        tempo.warn <- paste0("FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\nTHE tree_meta_legend PARAMETER IS NOT \"NULL\" BUT THE tree_meta_path PARAMETER IS \"NULL\"")
+                        tempo.warn <- paste0("FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\nTHE meta_legend PARAMETER IS NOT \"NULL\" BUT THE meta_path PARAMETER IS \"NULL\"")
                         warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
                     }
                     assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::ggtree(trees$trees[[i3]], layout = tree_kind))
