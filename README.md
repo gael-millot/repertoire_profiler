@@ -287,6 +287,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 <br /><br />
 ## WHAT'S NEW IN
 
+#### v8.12
+
+Check added for the metadata file of the meta_path parameter. But check the content of the first column of this file remains to be added
+
+
 #### v8.11
 
 bugs fixed

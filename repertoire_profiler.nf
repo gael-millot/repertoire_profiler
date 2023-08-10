@@ -50,8 +50,10 @@ process workflowParam { // create a file with the workflow parameters in out_pat
 //Note that variables like ${out_path} are interpreted in the script block
 
 
+
+
 // next process is for repertoire
-process repertoire_names { // cannot be repertoire_names outside of process because the files are present in the docker
+process igblast_data_check { // cannot be igblast_data_check outside of process because the files are present in the docker
     label 'immcantation'
     //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
     cache 'true'
@@ -61,7 +63,7 @@ process repertoire_names { // cannot be repertoire_names outside of process beca
     val igblast_files
 
     output:
-    path "*.tsv", emit: repertoire_names_ch
+    path "*.tsv", emit: igblast_data_check_ch
 
     script:
     """
@@ -543,6 +545,13 @@ process seq_name_remplacement {
                 stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS \\"NULL\\", THEN THE SECOND COLUMN OF THE DATA IN THE sample_path PARAMETER CANNOT HAVE THE NAME OF THE SECOND COLUNM STARTING BY \\"initial_\\"\\n\\n============\\n\\n"), call. = FALSE)
             }
         ' |& tee -a seq_name_remplacement.log
+    else
+        Rscript -e '
+            meta <- read.table("./${meta_file}", sep = "\\t", header = TRUE)
+            if(names(meta)[1] != "Label"){
+                stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\", THEN THE FIRST COLUMN OF THE METADATA FILE MUST BE NAMED \\"Label\\" AND BE MADE OF THE NAMES OF THE FASTA SEQUENCES\\n\\n============\\n\\n"), call. = FALSE)
+            }
+        ' |& tee -a seq_name_remplacement.log
     fi
     if [[ "${meta_file}" != "NULL" && "${meta_name_replacement}" != "NULL" ]] ; then # or [[ "${meta_file}" -ne "NULL" && "${meta_name_replacement}" -ne "NULL" ]], but not !=
         Rscript -e '
@@ -676,7 +685,7 @@ process repertoire {
     input:
     val igblast_database_path
     path file_assembly_ch
-    path repertoire_names_ch
+    path igblast_data_check_ch
     path cute_file
 
     output:
@@ -692,7 +701,7 @@ process repertoire {
     repertoire.R \
 "${igblast_database_path}" \
 "${file_assembly_ch}" \
-"${repertoire_names_ch}" \
+"${igblast_data_check_ch}" \
 "${cute_file}" \
 "repertoire.log"
     """
@@ -1005,6 +1014,7 @@ workflow {
         if( ! (file(meta_path).exists()) ){
             error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_path PARAMETER IN repertoire_profiler.config FILE (DOES NOT EXIST): ${meta_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
         }
+        print("\n\nWARNING: THE 1st COLUMN OF THE METADATA FILE MUST BE NAMED \"Label\" AND MUST CONTAIN NAMES OF THE FILES IN THE FOLDER OF THE sample_path PARAMETER")
     }
     if( ! (meta_name_replacement in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_name_replacement PARAMETER IN repertoire_profiler.config FILE:\n${meta_name_replacement}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
@@ -1149,9 +1159,9 @@ workflow {
     // below : those variable are already used in the config file. Thus, to late to check them. And not possible to check inside the config file
     // out_ini
     print("\n\nRESULT DIRECTORY: ${out_path}")
-    print("\n\nWARNING: PARAMETERS ALREADY INTERPRETED IN THE .config FILE:")
-    print("    system_exec: ${system_exec}")
-    print("    out_path: ${out_path_ini}")
+    //print("\n\nWARNING: PARAMETERS ALREADY INTERPRETED IN THE .config FILE:")
+    //print("    system_exec: ${system_exec}")
+    //print("    out_path: ${out_path_ini}")
     if("${system_exec}" != "local"){
         print("    queue: ${queue}")
         print("    qos: ${qos}")
@@ -1193,13 +1203,10 @@ workflow {
     )
 
 
-
-    repertoire_names(
+    igblast_data_check(
         igblast_database_path, 
         igblast_files
     )
-
-
 
     igblast(
         fs_ch, 
@@ -1319,7 +1326,7 @@ workflow {
     repertoire(
         igblast_database_path,
         file_assembly.out.file_assembly_ch,
-        repertoire_names.out.repertoire_names_ch,
+        igblast_data_check.out.igblast_data_check_ch,
         cute_file
     )
 
