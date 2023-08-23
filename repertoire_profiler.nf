@@ -1389,7 +1389,7 @@ workflow {
 
 
 
-    tempo1_ch = Channel.of("all", "annotated", "tree") // 1 channel with 2 values (not list)
+    tempo1_ch = Channel.of("all", "annotated", "tree") // 1 channel with 3 values (not list)
     tempo2_ch = seq_name_remplacement_ch2.mix(seq_name_remplacement_ch2.mix(tree_ch2)) // 1 channel with 3 paths (do not use flatten() -> not list)
     tempo3_ch = tempo1_ch.merge(tempo2_ch) // 3 lists
 

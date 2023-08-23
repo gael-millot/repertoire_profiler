@@ -398,17 +398,17 @@ obs <- read.table(file_name, sep = "\t", header = TRUE)
 
 
 tempo.title <- paste0(
-    "Donut plot of the productive sequences grouped by same V and J alleles\nWarning: this is different from clonal groups since the latter must have also the same CDR3 length\n\n",
+    "Donut plot of the all-passed sequences grouped by same V and J alleles\nWarning: this is different from clonal groups since the latter must have also the same CDR3 length\n\n",
     "Kind of sequences: ", 
     ifelse(
         kind == "all", 
-        "all the productive ones (see the corresponding productive_seq.tsv", 
+        "all the all-passed ones (see the corresponding all-passed_seq.tsv", 
         ifelse(
             kind == "tree", 
             "all the sequences in trees (see the corresponding seq_for_trees.tsv", 
             ifelse(
                 kind == "annotated", 
-                "all the productive ones for which at least one annotation in the group of same V and J alleles\n        (nb_seq_per_clone threshold not used, see the corresponding productive_seq.tsv", 
+                "all the all-passed ones for which at least one annotation in the group of same V and J alleles\n        (nb_seq_per_clone threshold not used, see the corresponding all-passed_seq.tsv", 
                 "=====ERROR====="
             )
         )
