@@ -201,8 +201,6 @@ Results are present in a *repertoire_profiler_xxxxx* folder, inside the nextflow
 <br /><br />
 Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.docx (contact Gael Millot).
 <br /><br />
-
-
 Mandatory elements:
 <br /><br />
 | repertoire_profiler_xxxxx folder | Description |
@@ -286,6 +284,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 
 <br /><br />
 ## WHAT'S NEW IN
+
+#### v9.0
+
+repertoire_profiler.nf and .config name changed so that now can be run from gitlab
+
 
 #### v8.14
 
