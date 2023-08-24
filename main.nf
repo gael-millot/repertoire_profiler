@@ -567,7 +567,9 @@ process seq_name_remplacement {
                 if(sum(seq2[ , 2] %in% meta[i2, 1]) > 1){
                     stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIN THE METADATA FILE, A SEQUENCE NAME CANNOT BELONG TO SEVERAL VALUES OF THE meta_name_replacement PARAMETER COLUMN NAME OF THE meta_path PARAMETER\\nTHE METAFILE IS: ${meta_file}\\nTHE COLUM NAME IS: ", col_name, "\\nTHE PROBLEMATIC REPLACEMENT NAME IN THE METAFILE IS: ", paste(meta[i2, 1], collapse = " "), "\\n\\n============\\n\\n"), call. = FALSE)
                 }else if(any(seq2[ , 2] == meta[i2, 1])){
-                    seq2[seq2[ , 2] == meta[i2, 1], 1] <- meta[i2, col_name] # remplacement of the name in column 1
+                    if( ! (meta[i2, col_name] == "" | is.na(meta[i2, col_name]))){
+                        seq2[seq2[ , 2] == meta[i2, 1], 1] <- meta[i2, col_name] # remplacement of the name in column 1
+                    }
                 }
             }
             names(seq2)[2] <- paste0("initial_", names(seq)[1])
