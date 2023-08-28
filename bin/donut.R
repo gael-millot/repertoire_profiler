@@ -420,10 +420,16 @@ if(nrow(obs) > 0){
     tempo.v <- obs$germline_v_call
     tempo.j <- obs$germline_j_call
     chain <- unique(substr(tempo.j, 1, 3)) # extract the IGH or IGK name
-    if(length(chain) != 1){
-        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 4 IN donut.R for kind ", kind, ": chain MUST BE A SINGLE VALUE.\nHERE IT IS: ", paste(chain, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) 
-    }else if(chain != unique(substr(tempo.v, 1, 3))){
-        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN donut.R for kind ", kind, ": CHAIN OF J DIFFERENT FROM CHAIN OF V.\nCHAIN OF V: ", paste(chain, collapse = " "), "\nCHAIN OF J: ", paste(unique(substr(tempo.v, 1, 3)), collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) 
+    #inactivated because now chain can be both IGL and IGK
+    # if(length(chain) != 1){
+        # stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 4 IN donut.R for kind ", kind, ": chain MUST BE A SINGLE VALUE.\nHERE IT IS: ", paste(chain, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) 
+    # }else if(chain != unique(substr(tempo.v, 1, 3))){
+        # stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN donut.R for kind ", kind, ": CHAIN OF J DIFFERENT FROM CHAIN OF V.\nCHAIN OF V: ", paste(chain, collapse = " "), "\nCHAIN OF J: ", paste(unique(substr(tempo.v, 1, 3)), collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) 
+    # }
+    check1 <- substr(tempo.v, 1, 3)
+    check2 <- substr(tempo.j, 1, 3)
+    if( ! all(check1 == check2)){
+        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN donut.R for kind ", kind, ": CHAIN OF J DIFFERENT FROM CHAIN OF V.\nCHAIN OF V: ", paste(tempo.v[check1 != check2], collapse = " "), "\nCHAIN OF J: ", paste(tempo.j[check1 != check2], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) 
     }
     tempo.v <- substring(tempo.v, 4)
     tempo.j <- substring(tempo.j, 4)
@@ -457,7 +463,7 @@ if(nrow(obs) > 0){
 
     tempo.title <- paste0(
         tempo.title,
-        "\nChain: ", chain, "\n",
+        "\nChain: ", paste(chain, collapse = " "), "\n",
         "Proportions are indicated in the legend, after the labels.\n", 
         "The total number of sequences of the donut is indicated in the center.\nSee the donut_stats.tsv file for the complete stats."
     )

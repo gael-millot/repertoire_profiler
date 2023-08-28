@@ -517,6 +517,7 @@ if(length(tempo.list) == 0){
         if( ! exists("clones", where = ".GlobalEnv", inherit = FALSE)){
             stop("\n\n========\n\nINTERNAL CODE ERROR 4 IN tree_vizu.R:\nclones OBJECT CANNOT BE ABSENT FROM ", tempo.list[i1], "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
         }
+        # Warning : here [[1]] is ok
         if( ! exists("trees", where = ".GlobalEnv", inherit = FALSE)){ # creation of an empty tibble but with the clone id added
             if( ! is.null(fun_get_message("clones$data[[1]]@clone"))){
                 stop("\n\n========\n\nINTERNAL CODE ERROR 5 IN tree_vizu.R:\nclones$data[[1]]@clone OBJECT CANNOT BE ABSENT FROM ", tempo.list[i1], "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
@@ -613,7 +614,7 @@ if(length(tempo.list) == 0){
                 }
                 leaf.node.germline <- leaf.nodes[tempo.log]
                 leaf.node.not.germline <- leaf.nodes[ ! tempo.log]
-                nodes <- tempo.graph.info$data[[1]]$node
+                nodes <- tempo.graph.info$data[[1]]$node # here [[1]] is ok
                 tempo.log.germline <- nodes == leaf.node.germline
                 tempo.log.leaf <- nodes %in% leaf.nodes
                 tip.kind <- rep("Seq", length(nodes)) # kind of tip: either germline or seq
@@ -646,7 +647,7 @@ if(length(tempo.list) == 0){
                     no.removed.seq.log <- db.list[[i3]][[1]] %in% trees$data[[i3]]@data[[1]] # of note, the trees$data[[i3]]@data$collapsed report also the names in the first column trees$data[[i3]]@data[[1]] = trees$data[[i3]]@data$sequence_id. It is not the sequences that are not in the tree anymore !
                     removed.seq.log <- ! no.removed.seq.log
                     if( ! any(removed.seq.log)){
-                        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 14 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"FALSE\"\nBUT NO SEQ NAMES COLLAPSED IN THE TREE IN trees$data[[i3]]@data[[1]] COMPARED TO db.list[[i3]][[1]]\ntrees$data[[i3]]@data[[1]]: ", paste(trees$data[[i3]]@data[[1]], collapse = " "), "\ndb.list[[i3]][[1]]: ", paste(db.list[[i3]][[1]], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 14 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"FALSE\"\nBUT NO SEQ NAMES COLLAPSED IN THE TREE IN trees$data[[", i3, "]]@data[[1]] COMPARED TO db.list[[", i3, "]][[1]]\ntrees$data[[i3]]@data[[1]]: ", paste(trees$data[[i3]]@data[[1]], collapse = " "), "\ndb.list[[", i3, "]][[1]]: ", paste(db.list[[i3]][[1]], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
                     }else{
                         not.removed.seq <- db.list[[i3]][[1]][no.removed.seq.log]
                         removed.seq <- db.list[[i3]][[1]][removed.seq.log]
@@ -660,11 +661,11 @@ if(length(tempo.list) == 0){
                             tempo.log <- grepl(trees$data[[i3]]@data$collapsed, pattern = removed.seq[i4]) # collapsed names are separated by comma during dowser::formatClones()
                             identical.seq <- c(identical.seq, trees$data[[i3]]@data[[1]][tempo.log])
                         }
-                        if(any( ! removed.seq %in% unlist(strsplit(trees$data[[1]]@data$collapsed, split = ",")))){
-                            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 15 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nTHESE SEQUENCES NAMES, PRESENT IN db.list[[i3]][[1]]: ", paste(db.list[[i3]][[1]], collapse = " "), "\nDOES NOT APPEAR ANYMORE IN removed.seq ", paste(removed.seq, collapse = " "), "\nTHE PROBLEM COMES FROM THE COLLAPSE IN clones$data[[1]]@data$collapsed: ", paste(clones$data[[1]]@data$collapsed, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                        if(any( ! removed.seq %in% unlist(strsplit(trees$data[[i3]]@data$collapsed, split = ",")))){
+                            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 15 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nTHESE SEQUENCES NAMES, PRESENT IN db.list[[", i3, "]][[1]]: ", paste(db.list[[i3]][[1]], collapse = " "), "\nDOES NOT APPEAR ANYMORE IN removed.seq ", paste(removed.seq, collapse = " "), "\nTHE PROBLEM COMES FROM THE COLLAPSE IN clones$data[[", i3, "]]@data$collapsed: ", paste(clones$data[[", i3, "]]@data$collapsed, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
                         }
                         if(length(removed.seq) != length(identical.seq)){
-                            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 16 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nidentical.seq SHOULD HAVE ", length(removed.seq), " SEQUENCES NAMES\nLENGTH OF removed.seq: ", paste(removed.seq, collapse = " "), "\nSHOULD BE IDENTICAL TO LENGTH OF identical.seq: ", paste(identical.seq, collapse = " "), "\ntrees$data[[1]]@data$collapsed: ", paste(trees$data[[1]]@data$collapsed, collapse = " "), "\nclones$data[[1]]@data$collapsed: ", paste(clones$data[[1]]@data$collapsed, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 16 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nidentical.seq SHOULD HAVE ", length(removed.seq), " SEQUENCES NAMES\nLENGTH OF removed.seq: ", paste(removed.seq, collapse = " "), "\nSHOULD BE IDENTICAL TO LENGTH OF identical.seq: ", paste(identical.seq, collapse = " "), "\ntrees$data[[i3]]@data$collapsed: ", paste(trees$data[[i3]]@data$collapsed, collapse = " "), "\nclones$data[[", i3, "]]@data$collapsed: ", paste(clones$data[[i3]]@data$collapsed, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
                         }
                         suppressWarnings(rm(tempo.df))
                         tempo.df <- data.frame(sequence_id = removed.seq, clone_id = clone.id[[i3]], clone_name = clone.name, chain = chain, identical_to = identical.seq)

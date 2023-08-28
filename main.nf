@@ -102,7 +102,9 @@ process igblast {
     val igblast_aa
 
     output:
-    path "*.tsv", emit: tsv_ch1, optional: true
+    path "*_igblast_db-pass.tsv", emit: tsv_ch1, optional: true
+    path "igblast_unaligned_seq.tsv", emit: unaligned_seq_ch
+    path "igblast_aligned_seq.tsv", emit: aligned_seq_ch
     path "*.log", emit: log_ch, optional: true
 
     script:
@@ -151,9 +153,11 @@ process igblast {
     fi
     # printing if no tsv file made
     if [[ ! -f ./\${FILE}_igblast_db-pass.tsv ]] ; then
-        echo -e "MakeDb.py igblast FAIL FOR \${FILENAME}" |& tee -a igblast_report.log
-    # else
-        # echo -e "" |& tee -a igblast_report.log
+        echo "\${FILENAME}" | cat > igblast_unaligned_seq.tsv
+        echo -n "" | cat > igblast_aligned_seq.tsv
+    else
+        echo "\${FILENAME}" | cat > igblast_aligned_seq.tsv
+        echo -n "" | cat > igblast_unaligned_seq.tsv
     fi
     """
     // write ${} between "" to make a single argument when the variable is made of several values separated by a space. Otherwise, several arguments will be considered
@@ -1220,7 +1224,16 @@ workflow {
     )
     igblast.out.tsv_ch1.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE igblast PROCESS\n\nCHECK THAT THE igblast_organism, igblast_loci AND igblast_files ARE CORRECTLY SET IN THE repertoire_profiler.config FILE\n\n========\n\n"}}
     tsv_ch2 = igblast.out.tsv_ch1.collectFile(name: "all_igblast_seq.tsv", skip: 1, keepHeader: true)
+    igblast.out.aligned_seq_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ALIGNED SEQ FILES RETURNED BY THE igblast PROCESS\n\n========\n\n"}}
+    igblast.out.aligned_seq_ch.collectFile(name: "igblast_aligned_seq.tsv").subscribe{it -> it.copyTo("${out_path}")}
+    igblast.out.unaligned_seq_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 UNALIGNED SEQ FILES RETURNED BY THE igblast PROCESS\n\n========\n\n"}}
+    igblast.out.unaligned_seq_ch.collectFile(name: "igblast_unaligned_seq.tsv").subscribe{it -> it.copyTo("${out_path}")}
     igblast.out.log_ch.collectFile(name: "igblast_report.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+
+
+    //if( igblast.out.aligned_seq_ch.collectFile().countLines() + igblast.out.unaligned_seq_ch.collectFile().countLines() != fs_ch.count() ){
+     //   error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE igblast_aligned_seq.tsv AND igblast_unaligned_seq.tsv IS NOT EQUAL TO THE NUMBER OF SUBMITTED FASTA FILES\n========\n\n"
+    //}
 
 
 
