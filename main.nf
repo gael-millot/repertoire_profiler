@@ -1176,7 +1176,10 @@ workflow {
     if(igblast_files =~ /^.*IGKV.*$/){
         print("\n\nWARNING:\nLIGHT CHAIN DETECTED IN THE igblast_files parameter.\nBUY CLONAL GROUPING IS GENERALLY RESTRICTED TO HEAVY CHAIN SEQUENCES, AS THE DIVERSITY OF LIGHT CHAINS IS NOT SUFFICIENT TO DISTINGUISH CLONES WITH REASONABLE CERTAINTY")
     }
+    print("\n\nWARNING:\nTO MAKE THE REPERTOIRES, THE SCRIPT CURRENTLY TAKES THE FIRST ANNOTATION OF THE IMGT ANNOTATION IF SEVERAL ARE PRESENTS IN THE v_call OR j_call COLUMN OF THE all_passed_seq.tsv FILE")
     print("\n\n")
+
+
 
     //////// end Checks
 
@@ -1229,12 +1232,6 @@ workflow {
     igblast.out.unaligned_seq_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 UNALIGNED SEQ FILES RETURNED BY THE igblast PROCESS\n\n========\n\n"}}
     igblast.out.unaligned_seq_ch.collectFile(name: "igblast_unaligned_seq.tsv").subscribe{it -> it.copyTo("${out_path}")}
     igblast.out.log_ch.collectFile(name: "igblast_report.log").subscribe{it -> it.copyTo("${out_path}/reports")}
-
-
-    if( igblast.out.aligned_seq_ch.collectFile().countLines() + igblast.out.unaligned_seq_ch.collectFile().countLines() != fs_ch.count() ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE igblast_aligned_seq.tsv AND igblast_unaligned_seq.tsv IS NOT EQUAL TO THE NUMBER OF SUBMITTED FASTA FILES\n========\n\n"
-    }
-
 
 
     parseDb_filtering(
