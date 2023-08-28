@@ -1231,9 +1231,9 @@ workflow {
     igblast.out.log_ch.collectFile(name: "igblast_report.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
 
-    //if( igblast.out.aligned_seq_ch.collectFile().countLines() + igblast.out.unaligned_seq_ch.collectFile().countLines() != fs_ch.count() ){
-     //   error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE igblast_aligned_seq.tsv AND igblast_unaligned_seq.tsv IS NOT EQUAL TO THE NUMBER OF SUBMITTED FASTA FILES\n========\n\n"
-    //}
+    if( igblast.out.aligned_seq_ch.collectFile().countLines() + igblast.out.unaligned_seq_ch.collectFile().countLines() != fs_ch.count() ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE igblast_aligned_seq.tsv AND igblast_unaligned_seq.tsv IS NOT EQUAL TO THE NUMBER OF SUBMITTED FASTA FILES\n========\n\n"
+    }
 
 
 
