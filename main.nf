@@ -677,6 +677,31 @@ process file_assembly {
     """
 }
 
+process metadata_check { // cannot be in tree_vizu because I have to use the all_passed_seq.tsv file for the check
+    label 'immcantation'
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{metadata_check.log}", overwrite: false
+    cache 'true'
+
+    input:
+    path file_assembly_ch
+    path meta_file
+
+    script:
+    """
+    if [[ "${meta_file}" != "NULL" && "${meta_legend}" != "NULL" ]] ; then
+        Rscript -e '
+            df <- read.table("${file_assembly_ch}", header = TRUE, sep = "\\t")
+            meta <- read.table("${meta_file}", header = TRUE, sep = "\\t")
+            if(names(meta)[1] != "Label"){
+                stop(paste0("\\n\\n============\\n\\nERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\", THEN THE FIRST COLUMN OF THE METADATA FILE MUST BE NAMED \\"Label\\" AND BE MADE OF THE NAMES OF THE FASTA SEQUENCES\\n\\n============\\n\\n"), call. = FALSE)
+            }
+            if( ! any(meta\$Label %in% df[ , 1])){
+                stop(paste0("\\n\\n============\\n\\nERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nTHE \\"Label\\" COLUMN OF THE FILE INDICATED IN THE meta_path PARAMETER IS NOT MADE OF NAMES OF FASTA FILES INDICATED IN THE sample_path PARAMETER\\nLABEL COLUMN OF THE META DATA FILE IS:", paste(meta\$Label, collapse = "\\n"), "FASTA FILES NAMES ARE:", paste(df[ , 1], collapse = "\\n"), "\\n\\n\\n============\\n\\n"), call. = FALSE)
+            }
+        ' |& tee -a metadata_check.log
+    fi
+    """
+}
 
 
 process repertoire {
@@ -1225,12 +1250,15 @@ workflow {
         igblast_loci, 
         igblast_aa
     )
-    igblast.out.tsv_ch1.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE igblast PROCESS\n\nCHECK THAT THE igblast_organism, igblast_loci AND igblast_files ARE CORRECTLY SET IN THE repertoire_profiler.config FILE\n\n========\n\n"}}
+    igblast.out.tsv_ch1.count().subscribe{ n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE igblast PROCESS\n\nCHECK THAT THE igblast_organism, igblast_loci AND igblast_files ARE CORRECTLY SET IN THE repertoire_profiler.config FILE\n\n========\n\n"}}
     tsv_ch2 = igblast.out.tsv_ch1.collectFile(name: "all_igblast_seq.tsv", skip: 1, keepHeader: true)
     igblast.out.aligned_seq_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ALIGNED SEQ FILES RETURNED BY THE igblast PROCESS\n\n========\n\n"}}
     igblast.out.aligned_seq_ch.collectFile(name: "igblast_aligned_seq.tsv").subscribe{it -> it.copyTo("${out_path}")}
     igblast.out.unaligned_seq_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 UNALIGNED SEQ FILES RETURNED BY THE igblast PROCESS\n\n========\n\n"}}
     igblast.out.unaligned_seq_ch.collectFile(name: "igblast_unaligned_seq.tsv").subscribe{it -> it.copyTo("${out_path}")}
+    nb1 = igblast.out.aligned_seq_ch.collectFile().countLines()
+    nb2 = igblast.out.unaligned_seq_ch.collectFile().countLines()
+    fs_ch.count().combine(nb1).combine(nb2).subscribe{n,n1,n2 -> if(n != n1 + n2){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE igblast_aligned_seq.tsv AND igblast_unaligned_seq.tsv IS NOT EQUAL TO THE NUMBER OF SUBMITTED FASTA FILES\n========\n\n"}}
     igblast.out.log_ch.collectFile(name: "igblast_report.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
 
@@ -1333,6 +1361,11 @@ workflow {
     )
     file_assembly.out.file_assembly_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE file_assembly PROCESS\n\n========\n\n"}}
 
+
+    metadata_check(
+        file_assembly.out.file_assembly_ch,
+        meta_file
+    )
 
 
     repertoire(

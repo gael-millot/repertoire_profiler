@@ -291,6 +291,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 <br /><br />
 ## WHAT'S NEW IN
 
+#### v9.3
+
+important check added for the metadata file
+
+
 #### v9.2
 
 - repertoires now ok with a mix of IGK and IGL sequences
