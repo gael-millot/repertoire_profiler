@@ -291,6 +291,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 <br /><br />
 ## WHAT'S NEW IN
 
+#### v9.4
+
+bug fixed
+
+
 #### v9.3
 
 important check added for the metadata file

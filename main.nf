@@ -579,11 +579,11 @@ process seq_name_remplacement {
             names(seq2)[2] <- paste0("initial_", names(seq)[1])
             names(seq2)[1] <- names(seq)[1]
             write.table(seq2, file = paste0("./", clone_id, "_renamed_seq.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
-            # modification of the metadata file for the correct use of ggtree::"%<+%" in tree_vizu.R that uses the column name "label" for that 
+            # modification of the metadata file for the correct use of ggtree::"%<+%" in tree_vizu.R that uses the column name "Label" for that 
             meta <- data.frame(meta, initial_label = meta[ , 1])
             meta[ , 1] <- meta[ , col_name]
             write.table(meta, file = "./metadata2.tsv", row.names = FALSE, col.names = TRUE, sep = "\\t")
-            # end modification of the metadata file for the correct use of ggtree::"%<+%" in tree_vizu.R that uses the column name "label" for that 
+            # end modification of the metadata file for the correct use of ggtree::"%<+%" in tree_vizu.R that uses the column name "Label" for that 
         ' |& tee -a seq_name_remplacement.log
     else
         IFS='_' read -r -a TEMPO <<< "\${FILENAME}" # string split into array
@@ -679,7 +679,6 @@ process file_assembly {
 
 process metadata_check { // cannot be in tree_vizu because I have to use the all_passed_seq.tsv file for the check
     label 'immcantation'
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{metadata_check.log}", overwrite: false
     cache 'true'
 
     input:
@@ -698,7 +697,7 @@ process metadata_check { // cannot be in tree_vizu because I have to use the all
             if( ! any(meta\$Label %in% df[ , 1])){
                 stop(paste0("\\n\\n============\\n\\nERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nTHE \\"Label\\" COLUMN OF THE FILE INDICATED IN THE meta_path PARAMETER IS NOT MADE OF NAMES OF FASTA FILES INDICATED IN THE sample_path PARAMETER\\nLABEL COLUMN OF THE META DATA FILE IS:", paste(meta\$Label, collapse = "\\n"), "FASTA FILES NAMES ARE:", paste(df[ , 1], collapse = "\\n"), "\\n\\n\\n============\\n\\n"), call. = FALSE)
             }
-        ' |& tee -a metadata_check.log
+        '
     fi
     """
 }
@@ -1199,7 +1198,7 @@ workflow {
         print("    add_options: ${add_options}")
     }
     if(igblast_files =~ /^.*IGKV.*$/){
-        print("\n\nWARNING:\nLIGHT CHAIN DETECTED IN THE igblast_files parameter.\nBUY CLONAL GROUPING IS GENERALLY RESTRICTED TO HEAVY CHAIN SEQUENCES, AS THE DIVERSITY OF LIGHT CHAINS IS NOT SUFFICIENT TO DISTINGUISH CLONES WITH REASONABLE CERTAINTY")
+        print("\n\nWARNING:\nLIGHT CHAIN DETECTED IN THE igblast_files parameter.\nBUT CLONAL GROUPING IS GENERALLY RESTRICTED TO HEAVY CHAIN SEQUENCES, AS THE DIVERSITY OF LIGHT CHAINS IS NOT SUFFICIENT TO DISTINGUISH CLONES WITH REASONABLE CERTAINTY")
     }
     print("\n\nWARNING:\nTO MAKE THE REPERTOIRES, THE SCRIPT CURRENTLY TAKES THE FIRST ANNOTATION OF THE IMGT ANNOTATION IF SEVERAL ARE PRESENTS IN THE v_call OR j_call COLUMN OF THE all_passed_seq.tsv FILE")
     print("\n\n")
