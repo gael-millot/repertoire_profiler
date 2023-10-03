@@ -2,16 +2,16 @@ nextflow.enable.dsl=2
 /*
 #########################################################################
 ##                                                                     ##
-##     repertoire_profiler.nf                                          ##
+##     main.nf                                                         ##
 ##                                                                     ##
+##     repertoire_profiler                                             ##
 ##     Gael A. Millot                                                  ##
 ##     Bioinformatics and Biostatistics Hub                            ##
+##     Computational Biology Department                                ##
 ##     Institut Pasteur Paris                                          ##
 ##                                                                     ##
 #########################################################################
 */
-
-
 
 //////// Processes
 

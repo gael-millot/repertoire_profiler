@@ -253,7 +253,7 @@ fun_gg_heatmap2 <- function(
     }
     assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::geom_tile())
     if(cell.value){
-        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::geom_text(aes_string(label = z), size = cell.value.size))
+        assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::geom_text(ggplot2::aes_string(label = z), size = cell.value.size))
     }
     assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_fill_gradient2(
         low = color.low, 
@@ -276,8 +276,8 @@ fun_gg_heatmap2 <- function(
         axis.text.y = if(is.null(y)){ggplot2::element_blank()}else{ggplot2::element_text(size = label.size)},
         axis.title.y =  ggplot2::element_blank(),
         axis.ticks.y = if(is.null(y)){ggplot2::element_line(size = NA)}else{ggplot2::element_line(size = 0.1)},
-        panel.border = element_rect(linetype = "solid", fill = NA, size = 0.1),
-        panel.background = element_rect(fill = "white", colour = "white"),
+        panel.border = ggplot2::element_rect(linetype = "solid", fill = NA, size = 0.1),
+        panel.background = ggplot2::element_rect(fill = "white", colour = "white"),
         legend.title = ggplot2::element_text(size = 12), 
         legend.text = ggplot2::element_text(size = 8)
     ))

@@ -3,8 +3,8 @@
 
 | usage | dependencies |
 | --- | --- |
-| [![Nextflow](https://img.shields.io/badge/code-Nextflow-blue?style=plastic)](https://www.nextflow.io/) | [![Dependencies: Nextflow Version](https://img.shields.io/badge/Nextflow-v22.10.3-blue?style=plastic)](https://github.com/nextflow-io/nextflow) |
-| [![License: GPL-3.0](https://img.shields.io/badge/licence-GPL%20(%3E%3D3)-green?style=plastic)](https://www.gnu.org/licenses) | [![Dependencies: Singularity Version](https://img.shields.io/badge/Singularity-v3.8.0-blue?style=plastic)](https://github.com/apptainer/apptainer) |
+| [![Nextflow](https://img.shields.io/badge/code-Nextflow-blue?style=plastic)](https://www.nextflow.io/) | [![Dependencies: Nextflow Version](https://img.shields.io/badge/Nextflow-v23.04.4.5881-blue?style=plastic)](https://github.com/nextflow-io/nextflow) |
+| [![License: GPL-3.0](https://img.shields.io/badge/licence-GPL%20(%3E%3D3)-green?style=plastic)](https://www.gnu.org/licenses) | [![Dependencies: Apptainer Version](https://img.shields.io/badge/Apptainer-v1.2.3-blue?style=plastic)](https://github.com/apptainer/apptainer) |
 
 <br /><br />
 ## TABLE OF CONTENTS
@@ -53,7 +53,9 @@
 
 A folder made of fasta files, each containing a single sequence.
 
-Use the xlsx2fasta.R script if sequences are in a .xlsx file (see the sequences.xlsx file in the dataset folder as an example).
+The dataset used in the *nextflow.config* file, as example, is available at https://zenodo.org/record/8403994/files/repertoire_profiler.zip
+
+Use the xlsx2fasta.R script if sequences are in a .xlsx file (see the sequences.xlsx file dataset, as well as the xlsx_to_fasta results folder in https://zenodo.org/record/8403994/files/repertoire_profiler.zip).
 
 Use this code to split a multi sequence fasta file into fasta files made of a single sequence:
 
@@ -70,7 +72,7 @@ awk -v slice_size=1 -v prefix="cut" '$1 ~ /^>/{nbSeq++; currSlice=int((nbSeq-1)/
 Installation of:<br />
 [nextflow DSL2](https://github.com/nextflow-io/nextflow)<br />
 [Graphviz](https://www.graphviz.org/download/), `sudo apt install graphviz` for Linux ubuntu<br />
-[Singularity/apptainer](https://github.com/apptainer/apptainer)<br />
+[Apptainer](https://github.com/apptainer/apptainer)<br />
 
 <br /><br />
 ### 2. Local running (personal computer)
@@ -122,17 +124,17 @@ export CONF_BEFORE=/opt/gensoft/exe # on maestro
 
 export JAVA_CONF=java/13.0.2
 export JAVA_CONF_AFTER=bin/java # on maestro
-export SINGU_CONF=apptainer/1.1.5
-export SINGU_CONF_AFTER=bin/singularity # on maestro
+export APP_CONF=apptainer/1.2.3
+export APP_CONF_AFTER=bin/apptainer # on maestro
 export GIT_CONF=git/2.39.1
 export GIT_CONF_AFTER=bin/git # on maestro
 export GRAPHVIZ_CONF=graphviz/2.42.3
 export GRAPHVIZ_CONF_AFTER=bin/graphviz # on maestro
 
-MODULES="${CONF_BEFORE}/${JAVA_CONF}/${JAVA_CONF_AFTER},${CONF_BEFORE}/${SINGU_CONF}/${SINGU_CONF_AFTER},${CONF_BEFORE}/${GIT_CONF}/${GIT_CONF_AFTER}/${GRAPHVIZ_CONF}/${GRAPHVIZ_CONF_AFTER}"
+MODULES="${CONF_BEFORE}/${JAVA_CONF}/${JAVA_CONF_AFTER},${CONF_BEFORE}/${APP_CONF}/${APP_CONF_AFTER},${CONF_BEFORE}/${GIT_CONF}/${GIT_CONF_AFTER}/${GRAPHVIZ_CONF}/${GRAPHVIZ_CONF_AFTER}"
 cd ${EXEC_PATH}
-# chmod 755 ${EXEC_PATH}/bin/*.* # not required if no bin folder
-module load ${JAVA_CONF} ${SINGU_CONF} ${GIT_CONF} ${GRAPHVIZ_CONF}
+chmod 755 ${EXEC_PATH}/bin/*.* # not required if no bin folder
+module load ${JAVA_CONF} ${APP_CONF} ${GIT_CONF} ${GRAPHVIZ_CONF}
 </pre>
 
 <br /><br />
@@ -200,7 +202,7 @@ chmod 755 bin/*.*
 ## OUTPUT
 
 
-Results are present in a *repertoire_profiler_xxxxx* folder, inside the nextflow *result* folder.
+An example of results is present at this address: https://zenodo.org/record/8403994/files/repertoire_profiler.zip
 <br /><br />
 Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.docx (contact Gael Millot).
 <br /><br />
@@ -276,20 +278,25 @@ Not yet published
 
 The developers & maintainers of the mentioned softwares and packages, including:
 
-- [The R immcantation solution](https://immcantation.readthedocs.io/en/stable/)
-- [Bash](https://www.gnu.org/software/bash/)
 - [R](https://www.r-project.org/)
 - [ggplot2](https://ggplot2.tidyverse.org/)
 - [ggtree](https://yulab-smu.top/treedata-book/)
 - [Nextflow](https://www.nextflow.io/)
-- [Singularity/Apptainer](https://apptainer.org/)
+- [Apptainer](https://apptainer.org/)
 - [Docker](https://www.docker.com/)
 - [Gitlab](https://about.gitlab.com/)
+- [Bash](https://www.gnu.org/software/bash/)
+- [Ubuntu](https://ubuntu.com/)
 
 Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/kenneth-hoehn/), Yale School of Medicine, New Haven, CT, USA
 
 <br /><br />
 ## WHAT'S NEW IN
+
+#### v9.5
+
+README improved so that now dataset and results are in zenodo
+
 
 #### v9.4
 
