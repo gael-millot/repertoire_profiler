@@ -31,7 +31,7 @@
 - Tree visualization of the clonal groups.
 
 <br /><br />
-## WARNING
+## WARNINGS
 
 - Right now, only dedicated to the analysis of VDJ repertoires (corresponding to the germlines/imgt/*<SPECIES>*/vdj folder of the [IMGT database](https://www.imgt.org/IMGTrepertoire/Proteins/index.php#C).
 - To make the repertoires contingency tables and heatmaps, the script currently takes the first annotation of the imgt annotation if several are presents in the v_call or j_call column of the all_passed_seq.tsv file.
@@ -44,8 +44,6 @@
 | **main.nf** | File that can be executed using a linux terminal, a MacOS terminal or Windows 10 WSL2. |
 | **nextflow.config** | Parameter settings for the *main.nf* file. Users have to open this file, set the desired settings and save these modifications before execution. |
 | **xlsx2fasta.R** | Accessory file that creates all the fasta files from a .xlsx file. To use it, 1) open the file, 2) complete the "Parameters that need to be set by the user" section, 3) save the modifications and 4) run the file in R. |
-| **dataset** | Folder containing some datasets (batch of fasta files) than can be used as examples. |
-| **example_of_results** | Folder containing examples of result obtained with the dataset. See the OUTPUT section for the description of the folder and files. |
 
 
 <br /><br />
@@ -83,7 +81,7 @@ Installation of:<br />
 - Mount a server if required:
 
 <pre>
-DRIVE="Z"
+DRIVE="Z" # change the letter to fit the correct drive
 sudo mkdir /mnt/share
 sudo mount -t drvfs $DRIVE: /mnt/share
 </pre>
@@ -202,7 +200,7 @@ chmod 755 bin/*.*
 ## OUTPUT
 
 
-An example of results is present at this address: https://zenodo.org/record/8403994/files/repertoire_profiler.zip
+An example of results obtained with the dataset is present at this address: https://zenodo.org/record/8403994/files/repertoire_profiler.zip
 <br /><br />
 Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.docx (contact Gael Millot).
 <br /><br />
@@ -292,6 +290,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 
 <br /><br />
 ## WHAT'S NEW IN
+
+#### v9.6
+
+Bug in the metadata_check process fixed
+
 
 #### v9.5
 

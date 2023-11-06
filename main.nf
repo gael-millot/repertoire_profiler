@@ -684,18 +684,19 @@ process metadata_check { // cannot be in tree_vizu because I have to use the all
     input:
     path file_assembly_ch
     path meta_file
+    val meta_name_replacement
 
     script:
     """
-    if [[ "${meta_file}" != "NULL" && "${meta_legend}" != "NULL" ]] ; then
+    if [[ "${meta_file}" != "NULL" && "${meta_name_replacement}" != "NULL" ]] ; then
         Rscript -e '
             df <- read.table("${file_assembly_ch}", header = TRUE, sep = "\\t")
             meta <- read.table("${meta_file}", header = TRUE, sep = "\\t")
             if(names(meta)[1] != "Label"){
                 stop(paste0("\\n\\n============\\n\\nERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\", THEN THE FIRST COLUMN OF THE METADATA FILE MUST BE NAMED \\"Label\\" AND BE MADE OF THE NAMES OF THE FASTA SEQUENCES\\n\\n============\\n\\n"), call. = FALSE)
             }
-            if( ! any(meta\$Label %in% df[ , 1])){
-                stop(paste0("\\n\\n============\\n\\nERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nTHE \\"Label\\" COLUMN OF THE FILE INDICATED IN THE meta_path PARAMETER IS NOT MADE OF NAMES OF FASTA FILES INDICATED IN THE sample_path PARAMETER\\nLABEL COLUMN OF THE META DATA FILE IS:", paste(meta\$Label, collapse = "\\n"), "FASTA FILES NAMES ARE:", paste(df[ , 1], collapse = "\\n"), "\\n\\n\\n============\\n\\n"), call. = FALSE)
+            if( ! any(meta\$${meta_name_replacement} %in% df[ , 1])){
+                stop(paste0("\\n\\n============\\n\\nERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nTHE meta_file AND meta_name_replacement PARAMETERS OF THE nextflow.config FILE ARE NOT NULL BUT NO NAME REPLACEMENT PERFORMED\\nPROBABLY THAT THE \\"Label\\" COLUMN OF THE FILE INDICATED IN THE meta_path PARAMETER IS NOT MADE OF NAMES OF FASTA FILES INDICATED IN THE sample_path PARAMETER\\nFIRST ELEMENTS OF THE LABEL COLUMN OF THE META DATA FILE ARE:\\n", paste(head(meta\$Label, 20), collapse = "\\n"), "\\nFIRST FASTA FILES NAMES ARE:\\n", paste(head(df[ , 1], 20), collapse = "\\n"), "\\n\\n\\n============\\n\\n"), call. = FALSE)
             }
         '
     fi
@@ -1363,7 +1364,8 @@ workflow {
 
     metadata_check(
         file_assembly.out.file_assembly_ch,
-        meta_file
+        meta_file,
+        meta_name_replacement
     )
 
 
