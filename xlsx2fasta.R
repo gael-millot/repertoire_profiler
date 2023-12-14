@@ -39,7 +39,7 @@
 
 
 # R version checking
-if(version$version.string != "R version 4.1.2 (2021-11-01)"){
+if(version$version.string != "R version 4.3.1 (2023-06-16 ucrt)"){
     stop(paste0("\n\n================\n\nERROR IN xlsx2tsv.R\n", version$version.string, " IS NOT THE 4.1.2 RECOMMANDED\n\n================\n\n"))
 }
 # other initializations
@@ -66,7 +66,7 @@ Ig_name <- "Ab_name" # single character string indicating the column name of the
 VH <- "VH_NN" # single character string indicating the column name of the xlsx file for the VH sequences
 VL <- "VL_NN" # single character string indicating the column name of the xlsx file for the VL sequences
 categ <- "Patient" # vector of character strings indicating additional names of qualitative columns of the xlsx file. A specific folder will be generated for each class of these column with the fasta sequence in it when non NA or empty cells are present in this column. Write "NULL" if not required
-out.path <- "C://Users//Gael//Desktop" # single character string indicating the path of the output folder
+out.path <- "C://Users//gmillot//Desktop" # single character string indicating the path of the output folder
 cute <- "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v11.4.0/cute_little_R_functions.R" # single character string indicating the path of the cute_little_R_functions.R file required for this script
 log <- "xlsx2tsv.log" # single character string indicating the name of the log file
 
