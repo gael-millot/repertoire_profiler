@@ -291,6 +291,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 <br /><br />
 ## WHAT'S NEW IN
 
+#### v9.8
+
+Error fixed in the nextflow.config file about cute path
+
+
 #### v9.7
 
 Cute folder updated to 12.8 to fix the palette bug in fun_gg_donut()
