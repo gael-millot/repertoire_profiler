@@ -291,6 +291,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 <br /><br />
 ## WHAT'S NEW IN
 
+#### v9.9
+
+Bug fixed in xlsx2fasta.R
+
+
 #### v9.8
 
 Error fixed in the nextflow.config file about cute path

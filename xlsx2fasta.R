@@ -401,7 +401,7 @@ for(i0 in 1:length(chain)){
     for(i1 in 1:nrow(obs)){
         tempo.log <- is.na(obs[i1, get(chain[i0])]) | obs[i1, get(chain[i0])] == ""
         if(any(tempo.log)){
-            tempo.warn <- paste0("IMPORTED FILE:\n", path, "\nHAS EMPTY SEQUENCES IN THE ", get(chain[i0]), " COLUMN IN LINES:\n", paste(which(tempo.log), collapse = "\n"))
+            tempo.warn <- paste0("IMPORTED FILE:\n", path, "\nHAS EMPTY SEQUENCES IN THE ", get(chain[i0]), " COLUMN IN LINES:\n", i1)
             cat(paste0("\n\nWARNING: ", tempo.warn, "\n\n"))
             fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = out.path, overwrite = FALSE)
             warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
