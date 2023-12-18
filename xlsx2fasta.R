@@ -383,9 +383,13 @@ if(any(tempo.log)){
     stop(paste0("\n\n============\n\nERROR IN xlsx2tsv.R\nIMPORTED FILE:\n", path, "\nHAS AN EMPTY CELL IN THE ", Ig_name, " COLUMN IN LINES:\n", paste(which(tempo.log), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
 }
 
-
-
-
+chain <- c("VH", "VL")
+for(i0 in chain){ # NA in xlsx file become "NA". Thus, has to be replaced by NA
+    tempo.log <- obs[ , get(i0)] == "NA" & ! is.na(obs[ , get(i0)])
+    if(any(tempo.log, na.rm = TRUE)){
+        obs[tempo.log, get(i0)] <- NA
+    }
+}
 
 
 ############ end check
