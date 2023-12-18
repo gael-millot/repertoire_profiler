@@ -40,7 +40,7 @@
 
 # R version checking
 if(version$version.string != "R version 4.3.1 (2023-06-16 ucrt)"){
-    stop(paste0("\n\n================\n\nERROR IN xlsx2tsv.R\n", version$version.string, " IS NOT THE 4.1.2 RECOMMANDED\n\n================\n\n"))
+    stop(paste0("\n\n================\n\nERROR IN xlsx2tsv.R\n", version$version.string, " IS NOT THE 4.3.1 (2023-06-16 ucrt) RECOMMANDED\n\n================\n\n"))
 }
 # other initializations
 erase.objects = TRUE # write TRUE to erase all the existing objects in R before starting the algorithm and FALSE otherwise. Beginners should use TRUE
@@ -61,7 +61,7 @@ script <- "xlsx2tsv"
 ################################ Parameters that need to be set by the user
 
 
-path <- "X://Alice//Human_serum//Repertoire analysis human roc//ELISA SN Repertoire analysis human Mab_GM.xlsx" # single character string indicating the full path of the xlsx file
+path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/dataset/xlsx2fasta_test_2/ig_sequences.xlsx" # single character string indicating the full path of the xlsx file. Example: path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/dataset/xlsx2fasta_test_2/ig_sequences.xlsx"
 Ig_name <- "Ab_name" # single character string indicating the column name of the xlsx file for the Ig names
 VH <- "VH_NN" # single character string indicating the column name of the xlsx file for the VH sequences
 VL <- "VL_NN" # single character string indicating the column name of the xlsx file for the VL sequences
@@ -378,12 +378,13 @@ if( ! all(categ %in% names(obs))){
     stop(paste0("\n\n============\n\nERROR IN xlsx2tsv.R\n\nTHE categ PARAMETER MUST BE COLUMN NAMES OF THE IMPORTED FILE:\n", path, "\n\nHERE IT IS categ:\n", paste(categ, collapse = "\n"), "\n\nCOLUMN NAMES:\n", paste(names(obs), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
 }
 
-for(i0 in Ig_name){
-    tempo.log <- is.na(obs[ , i0]) | obs[ , i0] == ""
-    if(any(tempo.log)){
-        stop(paste0("\n\n============\n\nERROR IN xlsx2tsv.R\nIMPORTED FILE:\n", path, "\nHAS AN EMPTY SEQUENCE IN THE ", Ig_name, " COLUMN IN LINES:\n", paste(which(tempo.log), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
-    }
+tempo.log <- is.na(obs[ , Ig_name]) | obs[ , Ig_name] == ""
+if(any(tempo.log)){
+    stop(paste0("\n\n============\n\nERROR IN xlsx2tsv.R\nIMPORTED FILE:\n", path, "\nHAS AN EMPTY CELL IN THE ", Ig_name, " COLUMN IN LINES:\n", paste(which(tempo.log), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
 }
+
+
+
 
 
 
@@ -396,36 +397,64 @@ for(i0 in Ig_name){
 path.all <- paste0(out.path, "/All")
 dir.create(path.all)
 chain <- c("VH", "VL")
-for(i0 in 1:length(chain)){
-    dir.create(paste0(path.all, "/", chain[i0]))
-    for(i1 in 1:nrow(obs)){
-        tempo.log <- is.na(obs[i1, get(chain[i0])]) | obs[i1, get(chain[i0])] == ""
-        if(any(tempo.log)){
-            tempo.warn <- paste0("IMPORTED FILE:\n", path, "\nHAS EMPTY SEQUENCES IN THE ", get(chain[i0]), " COLUMN IN LINES:\n", i1)
-            cat(paste0("\n\nWARNING: ", tempo.warn, "\n\n"))
-            fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = out.path, overwrite = FALSE)
-            warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
-        }else{
-            tempo.cat <- paste0(">", obs[i1, Ig_name], "_", chain[i0], "\n", obs[i1, get(chain[i0])])
-            cat(tempo.cat, file = paste0(path.all,  "/", chain[i0], "/", obs[i1, Ig_name], "_", chain[i0], ".fasta"))
+for(i0 in chain){
+    tempo.log <- is.na(obs[ , get(i0)]) | obs[ , get(i0)] == ""
+    if(any(tempo.log)){
+        tempo.warn <- paste0("IMPORTED FILE:\n", path, "\nHAS ", sum(tempo.log, na.rm = TRUE), " AMONG ", nrow(obs), " EMPTY SEQUENCES IN THE ", i0, " COLUMN IN LINES:\n", paste(which(tempo.log), collapse = "\n"))
+        cat(paste0("\nWARNING: ", tempo.warn, "\n\n"))
+        fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = out.path, overwrite = FALSE)
+        warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
+    }else{
+        tempo.cat <- paste0("\nIMPORTED FILE:\n", path, "\nHAS NO EMPTY SEQUENCES AMONG ", nrow(obs), " IN THE ", i0, " COLUMN\n")
+        fun_report(data = tempo.cat, output = log, path = out.path, overwrite = FALSE)
+        cat(tempo.cat)
+    }
+    dir.create(paste0(path.all, "/", i0))
+    if( ! all(tempo.log)){
+        tempo.df <- obs[ ! tempo.log, ]
+        for(i1 in 1:nrow(tempo.df)){
+            tempo.cat <- paste0(">", tempo.df[i1, Ig_name], "_", i0, "\n", tempo.df[i1, get(i0)])
+            cat(tempo.cat, file = paste0(path.all,  "/", i0, "/", tempo.df[i1, Ig_name], "_", i0, ".fasta"))
         }
+    }else{
+        tempo.warn <- paste0("EMPTY ", i0, " FOLDER CREATED BECAUSE THE IMPORTED FILE:\n", path, "\nHAS ONLY EMPTY SEQUENCES IN THE ", i0, " COLUMN")
+        cat(paste0("\nWARNING: ", tempo.warn, "\n\n"))
+        fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = out.path, overwrite = FALSE)
+        warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
     }
 }
 
 if( ! is.null(categ)){
-    for(i1 in categ){
-        for(i2 in unique(obs[ , i1])){
+    for(i1 in categ){ # if several column to use
+        for(i2 in unique(obs[ , i1])){ # names of each patient for instance
             tempo.path <- paste0(out.path, "/", i1, "_", i2)
             dir.create(tempo.path)
             chain <- c("VH", "VL")
-            for(i3 in 1:length(chain)){
-                dir.create(paste0(tempo.path, "/", chain[i3]))
-                for(i4 in which(obs[ , i1] == i2)){
-                    tempo.log <- ( ! (is.na(obs[i4, i1]) | obs[i4, i1] == "")) & ( ! (is.na(obs[i4, get(chain[i3])]) | obs[i4, get(chain[i3])] == ""))
-                    if(tempo.log == TRUE){
-                        tempo.cat <- paste0(">", obs[i4, Ig_name], "_", chain[i3], "\n", obs[i4, get(chain[i3])])
-                        cat(tempo.cat, file = paste0(tempo.path,  "/", chain[i3], "/", obs[i4, Ig_name], "_", chain[i3], ".fasta"))
+            for(i3 in chain){
+                tempo.df <- obs[obs[ , i1] == i2, ]
+                tempo.log <- is.na(tempo.df[ , get(i3)]) | tempo.df[ , get(i3)] == ""
+                if(any(tempo.log)){
+                    tempo.warn <- paste0("IMPORTED FILE:\n", path, "\nHAS ", sum(tempo.log, na.rm = TRUE), " AMONG ",  nrow(tempo.df), " EMPTY SEQUENCES IN THE ", i3, " COLUMN OF THE CLASS ", i2, " OF THE CATEG ", i1)
+                    cat(paste0("\nWARNING: ", tempo.warn, "\n\n"))
+                    fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = out.path, overwrite = FALSE)
+                    warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
+                }else{
+                    tempo.cat <- paste0("\nIMPORTED FILE:\n", path, "\nHAS NO EMPTY SEQUENCES AMONG ", nrow(tempo.df), " IN THE ", i3, " COLUMN OF THE CLASS ", i2, " OF THE CATEG ", i1, "\n")
+                    fun_report(data = tempo.cat, output = log, path = out.path, overwrite = FALSE)
+                    cat(tempo.cat)
+                }
+                dir.create(paste0(tempo.path, "/", i3))
+                if( ! all(tempo.log)){
+                    tempo.df2 <- tempo.df[ ! tempo.log, ]
+                    for(i5 in 1:nrow(tempo.df2)){
+                        tempo.cat <- paste0(">", obs[i5, Ig_name], "_", i3, "\n", obs[i5, get(i3)])
+                        cat(tempo.cat, file = paste0(tempo.path,  "/", i3, "/", obs[i5, Ig_name], "_", i3, ".fasta"))
                     }
+                }else{
+                    tempo.warn <- paste0("EMPTY ", i3, " FOLDER CREATED FOR THE CLASS ", i2, " OF THE CATEG ", i1, " BECAUSE THE IMPORTED FILE:\n", path, "\nHAS ONLY EMPTY SEQUENCES IN THE ", i3, " COLUMN")
+                    cat(paste0("\nWARNING: ", tempo.warn, "\n\n"))
+                    fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = out.path, overwrite = FALSE)
+                    warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
                 }
             }
         }

@@ -291,6 +291,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 <br /><br />
 ## WHAT'S NEW IN
 
+#### v10.0
+
+xlsx2fasta.R file strongly improved to deal with empty sequences
+
+
 #### v9.9
 
 Bug fixed in xlsx2fasta.R
