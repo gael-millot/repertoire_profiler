@@ -451,8 +451,8 @@ if( ! is.null(categ)){
                 if( ! all(tempo.log)){
                     tempo.df2 <- tempo.df[ ! tempo.log, ]
                     for(i5 in 1:nrow(tempo.df2)){
-                        tempo.cat <- paste0(">", obs[i5, Ig_name], "_", i3, "\n", obs[i5, get(i3)])
-                        cat(tempo.cat, file = paste0(tempo.path,  "/", i3, "/", obs[i5, Ig_name], "_", i3, ".fasta"))
+                        tempo.cat <- paste0(">", tempo.df2[i5, Ig_name], "_", i3, "\n", tempo.df2[i5, get(i3)])
+                        cat(tempo.cat, file = paste0(tempo.path,  "/", i3, "/", tempo.df2[i5, Ig_name], "_", i3, ".fasta"))
                     }
                 }else{
                     tempo.warn <- paste0("EMPTY ", i3, " FOLDER CREATED FOR THE CLASS ", i2, " OF THE CATEG ", i1, " BECAUSE THE IMPORTED FILE:\n", path, "\nHAS ONLY EMPTY SEQUENCES IN THE ", i3, " COLUMN")

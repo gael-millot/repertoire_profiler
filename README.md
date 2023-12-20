@@ -291,6 +291,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 <br /><br />
 ## WHAT'S NEW IN
 
+#### v10.2
+
+xlsx2fasta.R file: error fixed for the fasta by categ
+
+
 #### v10.1
 
 xlsx2fasta.R file imporved to take into account the problem of NA
