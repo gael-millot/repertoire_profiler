@@ -579,11 +579,11 @@ process seq_name_remplacement {
             names(seq2)[2] <- paste0("initial_", names(seq)[1])
             names(seq2)[1] <- names(seq)[1]
             write.table(seq2, file = paste0("./", clone_id, "_renamed_seq.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
-            # modification of the metadata file for the correct use of ggtree::"%<+%" in tree_vizu.R that uses the column name "Label" for that 
+            # modification of the metadata file for the correct use of ggtree::"%<+%" in germ_tree_vizu.R that uses the column name "Label" for that 
             meta <- data.frame(meta, initial_label = meta[ , 1])
             meta[ , 1] <- meta[ , col_name]
             write.table(meta, file = "./metadata2.tsv", row.names = FALSE, col.names = TRUE, sep = "\\t")
-            # end modification of the metadata file for the correct use of ggtree::"%<+%" in tree_vizu.R that uses the column name "Label" for that 
+            # end modification of the metadata file for the correct use of ggtree::"%<+%" in germ_tree_vizu.R that uses the column name "Label" for that 
         ' |& tee -a seq_name_remplacement.log
     else
         IFS='_' read -r -a TEMPO <<< "\${FILENAME}" # string split into array
@@ -677,7 +677,7 @@ process file_assembly {
     """
 }
 
-process metadata_check { // cannot be in tree_vizu because I have to use the all_passed_seq.tsv file for the check
+process metadata_check { // cannot be in germ_tree_vizu because I have to use the all_passed_seq.tsv file for the check
     label 'immcantation'
     cache 'true'
 
@@ -742,7 +742,7 @@ process repertoire {
 
 process get_tree {
     label 'immcantation_10cpu'
-    publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{*_get_tree_cloneID.RData}", overwrite: false
+    publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{*_get_germ_tree_cloneID.RData}", overwrite: false
     cache 'true'
 
     input:
@@ -750,17 +750,17 @@ process get_tree {
     path meta_file // just to determine if metadata have been provided (TRUE means NULL) meta_file_ch not required here
     path cute_file
     val clone_nb_seq
-    val tree_duplicate_seq
+    val germ_tree_duplicate_seq
     val igphylm_exe_path // warning : here val and not path because we do not want the igphyml file to be imported in the work dir
 
     output:
-    path "*_get_tree_cloneID.RData", emit: rdata_tree_ch, optional: true
-    path "tree_dismissed_seq.tsv", emit: no_tree_ch
-    path "seq_for_tree.tsv", emit: tree_ch
-    path "tree_dismissed_clone_id.tsv", emit: no_cloneID_ch
-    path "tree_clone_id.tsv", emit: cloneID_ch
-    path "get_tree.log", emit: get_tree_log_ch
-    //path "HLP10_tree_parameters.tsv"
+    path "*_get_germ_tree_cloneID.RData", emit: rdata_germ_tree_ch, optional: true
+    path "germ_tree_dismissed_seq.tsv", emit: no_germ_tree_ch
+    path "seq_for_tree.tsv", emit: germ_tree_ch
+    path "germ_tree_dismissed_clone_id.tsv", emit: no_cloneID_ch
+    path "germ_tree_clone_id.tsv", emit: cloneID_ch
+    path "get_tree.log", emit: get_germ_tree_log_ch
+    //path "HLP10_germ_tree_parameters.tsv"
 
     script:
     """
@@ -776,7 +776,7 @@ process get_tree {
 "${seq_name_remplacement_ch}" \
 "${meta_file}" \
 "${clone_nb_seq}" \
-"${tree_duplicate_seq}" \
+"${germ_tree_duplicate_seq}" \
 "${igphylm_exe_path}" \
 "${cute_file}" \
 "get_tree.log"
@@ -784,29 +784,29 @@ process get_tree {
 }
 
 
-process tree_vizu {
+process germ_tree_vizu {
     label 'r_ext'
     publishDir path: "${out_path}", mode: 'copy', pattern: "{trees.pdf}", overwrite: false
     publishDir path: "${out_path}/png", mode: 'copy', pattern: "{*.png}", overwrite: false
     publishDir path: "${out_path}/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
     publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{all_trees.RData}", overwrite: false
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{tree_vizu.log}", overwrite: false
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{germ_tree_vizu.log}", overwrite: false
     cache 'true'
 
     input:
-    path rdata_tree_ch2 // no more parallelization
-    val tree_kind
+    path rdata_germ_tree_ch2 // no more parallelization
+    val germ_tree_kind
     val clone_nb_seq
-    val tree_duplicate_seq
-    val tree_leaf_color
-    val tree_leaf_shape
-    val tree_leaf_size
-    val tree_label_size
-    val tree_label_hjust
-    val tree_label_rigth
-    val tree_label_outside
-    val tree_right_margin
-    val tree_legend
+    val germ_tree_duplicate_seq
+    val germ_tree_leaf_color
+    val germ_tree_leaf_shape
+    val germ_tree_leaf_size
+    val germ_tree_label_size
+    val germ_tree_label_hjust
+    val germ_tree_label_rigth
+    val germ_tree_label_outside
+    val germ_tree_right_margin
+    val germ_tree_legend
     path meta_file_ch
     val meta_legend
     path cute_file
@@ -814,32 +814,32 @@ process tree_vizu {
     output:
     path "*.RData", optional: true
     path "*.pdf"
-    path "*.png", emit: tree_vizu_ch // png plot (but sometimes empty) sustematically returned
+    path "*.png", emit: germ_tree_vizu_ch // png plot (but sometimes empty) sustematically returned
     path "*.svg"
-    path "*tree_seq_not_displayed.tsv", emit: tree_seq_not_displayed_ch
-    path "tree_vizu.log"
-    //path "HLP10_tree_parameters.tsv"
+    path "*germ_tree_seq_not_displayed.tsv", emit: germ_tree_seq_not_displayed_ch
+    path "germ_tree_vizu.log"
+    //path "HLP10_germ_tree_parameters.tsv"
 
     script:
     """
     #!/bin/bash -ue
-    tree_vizu.R \
-"${tree_kind}" \
+    germ_tree_vizu.R \
+"${germ_tree_kind}" \
 "${clone_nb_seq}" \
-"${tree_duplicate_seq}" \
-"${tree_leaf_color}" \
-"${tree_leaf_shape}" \
-"${tree_leaf_size}" \
-"${tree_label_size}" \
-"${tree_label_hjust}" \
-"${tree_label_rigth}" \
-"${tree_label_outside}" \
-"${tree_right_margin}" \
-"${tree_legend}" \
+"${germ_tree_duplicate_seq}" \
+"${germ_tree_leaf_color}" \
+"${germ_tree_leaf_shape}" \
+"${germ_tree_leaf_size}" \
+"${germ_tree_label_size}" \
+"${germ_tree_label_hjust}" \
+"${germ_tree_label_rigth}" \
+"${germ_tree_label_outside}" \
+"${germ_tree_right_margin}" \
+"${germ_tree_legend}" \
 "${meta_file_ch}" \
 "${meta_legend}" \
 "${cute_file}" \
-"tree_vizu.log"
+"germ_tree_vizu.log"
     """
 }
 
@@ -1053,56 +1053,56 @@ workflow {
     if( ! (meta_legend in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_legend PARAMETER IN repertoire_profiler.config FILE:\n${meta_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
-    if( ! (tree_kind in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_kind PARAMETER IN repertoire_profiler.config FILE:\n${tree_kind}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    if( ! (germ_tree_kind in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID germ_tree_kind PARAMETER IN repertoire_profiler.config FILE:\n${germ_tree_kind}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
-    if( ! (tree_duplicate_seq in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_duplicate_seq PARAMETER IN repertoire_profiler.config FILE:\n${tree_duplicate_seq}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! (tree_duplicate_seq == "TRUE" || tree_duplicate_seq == "FALSE") ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_duplicate_seq PARAMETER IN repertoire_profiler.config FILE:\n${tree_duplicate_seq}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
+    if( ! (germ_tree_duplicate_seq in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID germ_tree_duplicate_seq PARAMETER IN repertoire_profiler.config FILE:\n${germ_tree_duplicate_seq}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (germ_tree_duplicate_seq == "TRUE" || germ_tree_duplicate_seq == "FALSE") ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID germ_tree_duplicate_seq PARAMETER IN repertoire_profiler.config FILE:\n${germ_tree_duplicate_seq}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
-    if( ! (tree_leaf_color in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_color PARAMETER IN repertoire_profiler.config FILE:\n${tree_leaf_color}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    if( ! (germ_tree_leaf_color in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID germ_tree_leaf_color PARAMETER IN repertoire_profiler.config FILE:\n${germ_tree_leaf_color}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
-    if( ! (tree_leaf_shape in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_shape PARAMETER IN repertoire_profiler.config FILE:\n${tree_leaf_shape}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! (tree_leaf_shape =~  /^[0-9]*$/) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_shape PARAMETER IN repertoire_profiler.config FILE:\n${tree_leaf_shape}\nMUST BE A POSITIVE INTEGER VALUE\n\n========\n\n"
+    if( ! (germ_tree_leaf_shape in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID germ_tree_leaf_shape PARAMETER IN repertoire_profiler.config FILE:\n${germ_tree_leaf_shape}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (germ_tree_leaf_shape =~  /^[0-9]*$/) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID germ_tree_leaf_shape PARAMETER IN repertoire_profiler.config FILE:\n${germ_tree_leaf_shape}\nMUST BE A POSITIVE INTEGER VALUE\n\n========\n\n"
     }
-    if( ! (tree_leaf_size in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_size PARAMETER IN repertoire_profiler.config FILE:\n${tree_leaf_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! (tree_leaf_size =~  /^[0-9]+\.*[0-9]*$/) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_leaf_size PARAMETER IN repertoire_profiler.config FILE:\n${tree_leaf_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
+    if( ! (germ_tree_leaf_size in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID germ_tree_leaf_size PARAMETER IN repertoire_profiler.config FILE:\n${germ_tree_leaf_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (germ_tree_leaf_size =~  /^[0-9]+\.*[0-9]*$/) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID germ_tree_leaf_size PARAMETER IN repertoire_profiler.config FILE:\n${germ_tree_leaf_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
-    if( ! (tree_label_size in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_size PARAMETER IN repertoire_profiler.config FILE:\n${tree_label_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! (tree_label_size =~  /^[0-9]+\.*[0-9]*$/) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_size PARAMETER IN repertoire_profiler.config FILE:\n${tree_label_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
+    if( ! (germ_tree_label_size in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID germ_tree_label_size PARAMETER IN repertoire_profiler.config FILE:\n${germ_tree_label_size}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (germ_tree_label_size =~  /^[0-9]+\.*[0-9]*$/) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID germ_tree_label_size PARAMETER IN repertoire_profiler.config FILE:\n${germ_tree_label_size}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
-    if( ! (tree_label_hjust in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_hjust PARAMETER IN repertoire_profiler.config FILE:\n${tree_label_hjust}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! (tree_label_hjust =~  /^\-{0,1}[0-9]+\.*[0-9]*$/) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_hjust PARAMETER IN repertoire_profiler.config FILE:\n${tree_label_hjust}\nMUST BE A NUMERIC VALUE\n\n========\n\n"
+    if( ! (germ_tree_label_hjust in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID germ_tree_label_hjust PARAMETER IN repertoire_profiler.config FILE:\n${germ_tree_label_hjust}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (germ_tree_label_hjust =~  /^\-{0,1}[0-9]+\.*[0-9]*$/) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID germ_tree_label_hjust PARAMETER IN repertoire_profiler.config FILE:\n${germ_tree_label_hjust}\nMUST BE A NUMERIC VALUE\n\n========\n\n"
     }
-    if( ! (tree_label_rigth in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_rigth PARAMETER IN repertoire_profiler.config FILE:\n${tree_label_rigth}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! (tree_label_rigth == "TRUE" || tree_label_rigth == "FALSE") ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_rigth PARAMETER IN repertoire_profiler.config FILE:\n${tree_label_rigth}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
+    if( ! (germ_tree_label_rigth in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID germ_tree_label_rigth PARAMETER IN repertoire_profiler.config FILE:\n${germ_tree_label_rigth}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (germ_tree_label_rigth == "TRUE" || germ_tree_label_rigth == "FALSE") ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID germ_tree_label_rigth PARAMETER IN repertoire_profiler.config FILE:\n${germ_tree_label_rigth}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
-    if( ! (tree_label_outside in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_outside PARAMETER IN repertoire_profiler.config FILE:\n${tree_label_outside}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! (tree_label_outside == "TRUE" || tree_label_outside == "FALSE") ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_label_outside PARAMETER IN repertoire_profiler.config FILE:\n${tree_label_outside}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
+    if( ! (germ_tree_label_outside in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID germ_tree_label_outside PARAMETER IN repertoire_profiler.config FILE:\n${germ_tree_label_outside}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (germ_tree_label_outside == "TRUE" || germ_tree_label_outside == "FALSE") ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID germ_tree_label_outside PARAMETER IN repertoire_profiler.config FILE:\n${germ_tree_label_outside}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
-    if( ! (tree_right_margin in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_right_margin PARAMETER IN repertoire_profiler.config FILE:\n${tree_right_margin}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! (tree_right_margin =~  /^[0-9]+\.*[0-9]*$/) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_right_margin PARAMETER IN repertoire_profiler.config FILE:\n${tree_right_margin}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
+    if( ! (germ_tree_right_margin in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID germ_tree_right_margin PARAMETER IN repertoire_profiler.config FILE:\n${germ_tree_right_margin}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (germ_tree_right_margin =~  /^[0-9]+\.*[0-9]*$/) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID germ_tree_right_margin PARAMETER IN repertoire_profiler.config FILE:\n${germ_tree_right_margin}\nMUST BE A POSITIVE NUMERIC VALUE\n\n========\n\n"
     }
-    if( ! (tree_legend in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_legend PARAMETER IN repertoire_profiler.config FILE:\n${tree_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! (tree_legend == "TRUE" || tree_legend == "FALSE") ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID tree_legend PARAMETER IN repertoire_profiler.config FILE:\n${tree_legend}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
+    if( ! (germ_tree_legend in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID germ_tree_legend PARAMETER IN repertoire_profiler.config FILE:\n${germ_tree_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (germ_tree_legend == "TRUE" || germ_tree_legend == "FALSE") ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID germ_tree_legend PARAMETER IN repertoire_profiler.config FILE:\n${germ_tree_legend}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
 
     if( ! (donut_palette in String) ){
@@ -1114,7 +1114,7 @@ workflow {
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_size PARAMETER IN repertoire_profiler.config FILE:\n${donut_hole_size}\nMUST BE A POSITIVE PROPORTION VALUE\n\n========\n\n"
     }
     if( ! (donut_hole_text in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_text PARAMETER IN repertoire_profiler.config FILE:\n${tree_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_text PARAMETER IN repertoire_profiler.config FILE:\n${germ_tree_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (donut_hole_text == "TRUE" || donut_hole_text == "FALSE") ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_hole_text PARAMETER IN repertoire_profiler.config FILE:\n${donut_hole_text}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
@@ -1383,60 +1383,60 @@ workflow {
         meta_file, // first() because get_tree process is a parallele one and because meta_file is single
         cute_file, 
         clone_nb_seq,
-        tree_duplicate_seq,
+        germ_tree_duplicate_seq,
         igphylm_exe_path
     )
-    get_tree.out.rdata_tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: EMPTY OUTPUT FOLLOWING THE get_tree PROCESS -> NO TREE RETURNED\n\n")}}
-    rdata_tree_ch2 = get_tree.out.rdata_tree_ch.collect()
-    //rdata_tree_ch2.view()
+    get_tree.out.rdata_germ_tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: EMPTY OUTPUT FOLLOWING THE get_tree PROCESS -> NO TREE RETURNED\n\n")}}
+    rdata_germ_tree_ch2 = get_tree.out.rdata_germ_tree_ch.collect()
+    //rdata_germ_tree_ch2.view()
 
-    get_tree.out.no_tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: ALL SEQUENCES IN TREES FOLLOWING THE get_tree PROCESS -> EMPTY tree_dismissed_seq.tsv FILE RETURNED\n\n")}}
-    no_tree_ch2 = get_tree.out.no_tree_ch.collectFile(name: "tree_dismissed_seq.tsv", skip: 1, keepHeader: true)
-    no_tree_ch2.subscribe{it -> it.copyTo("${out_path}")}
+    get_tree.out.no_germ_tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: ALL SEQUENCES IN TREES FOLLOWING THE get_tree PROCESS -> EMPTY germ_tree_dismissed_seq.tsv FILE RETURNED\n\n")}}
+    no_germ_tree_ch2 = get_tree.out.no_germ_tree_ch.collectFile(name: "germ_tree_dismissed_seq.tsv", skip: 1, keepHeader: true)
+    no_germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
-    get_tree.out.tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: NO SEQUENCES IN TREES FOLLOWING THE get_tree PROCESS -> EMPTY tree_seq.tsv FILE RETURNED\n\n")}}
-    tree_ch2 = get_tree.out.tree_ch.collectFile(name: "tree_seq.tsv", skip: 1, keepHeader: true)
-    tree_ch2.subscribe{it -> it.copyTo("${out_path}")}
+    get_tree.out.germ_tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: NO SEQUENCES IN TREES FOLLOWING THE get_tree PROCESS -> EMPTY germ_tree_seq.tsv FILE RETURNED\n\n")}}
+    germ_tree_ch2 = get_tree.out.germ_tree_ch.collectFile(name: "germ_tree_seq.tsv", skip: 1, keepHeader: true)
+    germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
-    get_tree.out.no_cloneID_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: ALL SEQUENCES IN CLONAL GROUP FOLLOWING THE get_tree PROCESS -> EMPTY tree_dismissed_clone_id.tsv FILE RETURNED\n\n")}}
-    no_cloneID_ch2 = get_tree.out.no_cloneID_ch.collectFile(name: "tree_dismissed_clone_id.tsv")
+    get_tree.out.no_cloneID_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: ALL SEQUENCES IN CLONAL GROUP FOLLOWING THE get_tree PROCESS -> EMPTY germ_tree_dismissed_clone_id.tsv FILE RETURNED\n\n")}}
+    no_cloneID_ch2 = get_tree.out.no_cloneID_ch.collectFile(name: "germ_tree_dismissed_clone_id.tsv")
     no_cloneID_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
-    get_tree.out.cloneID_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: NO CLONAL GROUP FOLLOWING THE get_tree PROCESS -> EMPTY tree_clone_id.tsv and trees.pdf FILES RETURNED\n\n")}}
-    cloneID_ch2 = get_tree.out.cloneID_ch.collectFile(name: "tree_clone_id.tsv")
+    get_tree.out.cloneID_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: NO CLONAL GROUP FOLLOWING THE get_tree PROCESS -> EMPTY germ_tree_clone_id.tsv and trees.pdf FILES RETURNED\n\n")}}
+    cloneID_ch2 = get_tree.out.cloneID_ch.collectFile(name: "germ_tree_clone_id.tsv")
     cloneID_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
-    get_tree.out.get_tree_log_ch.collectFile(name: "get_tree.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
+    get_tree.out.get_germ_tree_log_ch.collectFile(name: "get_tree.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
 
 
 
-    tree_vizu(
-        rdata_tree_ch2,
-        tree_kind,
+    germ_tree_vizu(
+        rdata_germ_tree_ch2,
+        germ_tree_kind,
         clone_nb_seq,
-        tree_duplicate_seq,
-        tree_leaf_color,
-        tree_leaf_shape,
-        tree_leaf_size,
-        tree_label_size,
-        tree_label_hjust,
-        tree_label_rigth,
-        tree_label_outside,
-        tree_right_margin,
-        tree_legend,
+        germ_tree_duplicate_seq,
+        germ_tree_leaf_color,
+        germ_tree_leaf_shape,
+        germ_tree_leaf_size,
+        germ_tree_label_size,
+        germ_tree_label_hjust,
+        germ_tree_label_rigth,
+        germ_tree_label_outside,
+        germ_tree_right_margin,
+        germ_tree_legend,
         seq_name_remplacement.out.meta_file_ch.first(), // first() because seq_name_remplacement process is a parallele one. Possible that it prevent the cache to work, depending on the order in 
         meta_legend,
         cute_file
     )
-   tree_vizu.out.tree_vizu_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}}
-    tree_vizu.out.tree_seq_not_displayed_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: -> NO tree_seq_not_displayed.tsv FILE RETURNED\n\n")}}
-    tree_seq_not_displayed_ch2 = tree_vizu.out.tree_seq_not_displayed_ch.flatten().collectFile(name: "tree_seq_not_displayed.tsv", skip: 1, keepHeader: true) // flatten split the list into several objects which is required by collectFile()
-    tree_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}")}
+   germ_tree_vizu.out.germ_tree_vizu_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}}
+    germ_tree_vizu.out.germ_tree_seq_not_displayed_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: -> NO germ_tree_seq_not_displayed.tsv FILE RETURNED\n\n")}}
+    germ_tree_seq_not_displayed_ch2 = germ_tree_vizu.out.germ_tree_seq_not_displayed_ch.flatten().collectFile(name: "germ_tree_seq_not_displayed.tsv", skip: 1, keepHeader: true) // flatten split the list into several objects which is required by collectFile()
+    germ_tree_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
 
 
     tempo1_ch = Channel.of("all", "annotated", "tree") // 1 channel with 3 values (not list)
-    tempo2_ch = seq_name_remplacement_ch2.mix(seq_name_remplacement_ch2.mix(tree_ch2)) // 1 channel with 3 paths (do not use flatten() -> not list)
+    tempo2_ch = seq_name_remplacement_ch2.mix(seq_name_remplacement_ch2.mix(germ_tree_ch2)) // 1 channel with 3 paths (do not use flatten() -> not list)
     tempo3_ch = tempo1_ch.merge(tempo2_ch) // 3 lists
 
 
