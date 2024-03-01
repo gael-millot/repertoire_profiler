@@ -1,10 +1,8 @@
-[//]: # "#to make links in gitlab: example with racon https://github.com/isovic/racon"
-[//]: # "tricks in markdown: https://openclassrooms.com/fr/courses/1304236-redigez-en-markdown"
-
-| usage | dependencies |
+| Usage | Requirement |
 | --- | --- |
 | [![Nextflow](https://img.shields.io/badge/code-Nextflow-blue?style=plastic)](https://www.nextflow.io/) | [![Dependencies: Nextflow Version](https://img.shields.io/badge/Nextflow-v23.04.4.5881-blue?style=plastic)](https://github.com/nextflow-io/nextflow) |
 | [![License: GPL-3.0](https://img.shields.io/badge/licence-GPL%20(%3E%3D3)-green?style=plastic)](https://www.gnu.org/licenses) | [![Dependencies: Apptainer Version](https://img.shields.io/badge/Apptainer-v1.2.3-blue?style=plastic)](https://github.com/apptainer/apptainer) |
+| | [![Dependencies: Graphviz Version](https://img.shields.io/badge/Graphviz-v2.42.2-blue?style=plastic)](https://www.graphviz.org/download/) |
 
 <br /><br />
 ## TABLE OF CONTENTS
@@ -33,34 +31,55 @@
 <br /><br />
 ## WARNINGS
 
-- Right now, only dedicated to the analysis of VDJ repertoires (corresponding to the germlines/imgt/*<SPECIES>*/vdj folder of the [IMGT database](https://www.imgt.org/IMGTrepertoire/Proteins/index.php#C).
-- To make the repertoires contingency tables and heatmaps, the script currently takes the first annotation of the imgt annotation if several are presents in the v_call or j_call column of the *all_passed_seq.tsv* file.
+- Right now, only dedicated to the analysis of VDJ repertoires (corresponding to the germlines/imgt/*\<SPECIES\>*/vdj folder of the [IMGT database](https://www.imgt.org/IMGTrepertoire/Proteins/index.php#C).
+- To make the repertoires contingency tables and heatmaps, the script currently takes the first annotation of the imgt annotation if several are presents in the *v_call* or *j_call* column of the *all_passed_seq.tsv* file.
 
 <br /><br />
 ## CONTENT
 
-| repertoire_profiler folder | Description |
+| Files and folder | Description |
 | --- | --- |
 | **main.nf** | File that can be executed using a linux terminal, a MacOS terminal or Windows 10 WSL2. |
 | **nextflow.config** | Parameter settings for the *main.nf* file. Users have to open this file, set the desired settings and save these modifications before execution. |
-| **xlsx2fasta.R** | Accessory file that creates all the fasta files from a .xlsx file. To use it, 1) open the file, 2) complete the "Parameters that need to be set by the user" section, 3) save the modifications and 4) run the file in R. |
+| **bin folder** | Contains files required by the *main.nf* file. |
+| **xlsx2fasta.R** | Accessory file that creates all the fasta files required from a .xlsx file. To use it, 1) open the file, 2) complete the "Parameters that need to be set by the user" section, 3) save the modifications and 4) run the file in R. |
 
 
 <br /><br />
 ## INPUT
 
-A folder made of fasta files, each containing a single sequence.
+| Required files |
+| --- |
+| A folder (zipped or not) containing nucleotide fasta files, each containing a single sequence. |
+| A metadata file (optional) for adding informations in the results. |
+
+<br />
+
+The dataset used in the *nextflow.config* file, as example, is available at https://zenodo.org/records/8403994.
+
+<br />
+
+| File name | Description |
+| --- | --- |
+| **example.vcf.gz** | VCF file compressed using `bgzip <vcf_name>`. Available [here](https://zenodo.org/records/10684445/files/example.vcf.gz.zip). |
+| **example.vcf.gz.tbi** | Index file associated to the VCF file, obtained using `tabix <vcf_name>.gz`. Available [here](https://zenodo.org/records/10684445/files/example.vcf.gz.zip). |
+| **pedigree.txt** | Pedigree file. Available [here](https://zenodo.org/records/10684445/files/pedigree.txt). |
+| **hg19_grch37p5_chr_size_cumul.txt** | Coordinates of the hg19_grch37p5 Human Genome for the Miami plot. Available [here](https://zenodo.org/records/10684445/files/hg19_grch37p5_chr_size_cumul.txt). |
+
+
+
 
 The dataset used in the *nextflow.config* file, as example, is available at https://zenodo.org/record/8403994/files/repertoire_profiler.zip
+
 
 Use the xlsx2fasta.R script if sequences are in a .xlsx file (see the sequences.xlsx file dataset, as well as the xlsx_to_fasta results folder in https://zenodo.org/record/8403994/files/repertoire_profiler.zip).
 
 Use this code to split a multi sequence fasta file into fasta files made of a single sequence:
 
-<pre>
+```
 FASTA_FILE="./test.fasta" # add path and name of the fasta file here
 awk -v slice_size=1 -v prefix="cut" '$1 ~ /^>/{nbSeq++; currSlice=int((nbSeq-1)/slice_size)+1; myOutFile=prefix"_"currSlice".fasta"}{print $0 > myOutFile}' ${FASTA_FILE}
-</pre>
+```
 
 <br /><br />
 ## HOW TO RUN
@@ -206,7 +225,7 @@ Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.
 <br /><br />
 Mandatory elements:
 <br /><br />
-| repertoire_profiler_xxxxx folder | Description |
+| repertoire_profiler_<UNIQUE_ID> folder | Description |
 | --- | --- |
 | **reports** | Folder containing all the reports of the different processes, including the *nextflow.config* file used. |
 | **repertoires** | Folder containing the repertoires, i.e., contingency tables of the VDJ allele usage from the *all_passed_seq.tsv* file (see below). Warning: the script currently takes the first annotation of the imgt annotation if several are presents in the v_call or j_call column of the *all_passed_seq.tsv* file. (e.g., v_call with IGKV1-39\*01,IGKV1D-39\*01), so that contingencies are identical to those from the donut frequencies, that use germline_v_call and germline_j_call columns (allele reassignment by the CreateGermlines.py tool of immcantation) |
@@ -298,7 +317,7 @@ xlsx2fasta.R file: error fixed for the fasta by categ
 
 #### v10.1
 
-xlsx2fasta.R file imporved to take into account the problem of NA
+xlsx2fasta.R file improved to take into account the problem of NA
 
 
 #### v10.0
