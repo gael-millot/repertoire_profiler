@@ -260,7 +260,7 @@ process distToNearest {
     """
     #!/bin/bash -ue
     Rscript -e '
-         # WEIRD stuf: if db alone is returned, and if distToNearest_ch is used for the clone_assignment process and followings, everything is fine. But if db3 is returned with db3 <- data.frame(db, dist_nearest = db2\$dist_nearest) or db3 <- data.frame(db, caca = db2\$dist_nearest) or data.frame(db, caca = db\$sequence_id) or db3 <- data.frame(db, caca = as.numeric(db2\$dist_nearest)) or db3 <- data.frame(db[1:3], caca = db\$sequence_id, db[4:length(db)]), the get_tree process cannot make trees, while the productive.tsv seem identical at the end, between the use of db or db3, except that the clone_id order is not the same
+         # WEIRD stuf: if db alone is returned, and if distToNearest_ch is used for the clone_assignment process and followings, everything is fine. But if db3 is returned with db3 <- data.frame(db, dist_nearest = db2\$dist_nearest) or db3 <- data.frame(db, caca = db2\$dist_nearest) or data.frame(db, caca = db\$sequence_id) or db3 <- data.frame(db, caca = as.numeric(db2\$dist_nearest)) or db3 <- data.frame(db[1:3], caca = db\$sequence_id, db[4:length(db)]), the get_germ_tree process cannot make trees, while the productive.tsv seem identical at the end, between the use of db or db3, except that the clone_id order is not the same
         db <- read.table("${translation_ch}", header = TRUE, sep = "\\t")
         if("${clone_model}" != "aa" & "${igblast_aa}" == "true"){
           tempo.cat <- paste0("\\n\\n========\\n\\nERROR IN THE NEXTFLOW EXECUTION OF THE distToNearest PROCESS\\nclone_model PARAMETER SHOULD BE \\"aa\\" IF AA FASTA FILES ARE USED (igblast_aa PARAMETER SET TO \\"true\\"). HERE:\\nclone_model: ${clone_model}\\n\\n========\\n\\n")
@@ -740,7 +740,7 @@ process repertoire {
 
 
 
-process get_tree {
+process get_germ_tree {
     label 'immcantation_10cpu'
     publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{*_get_germ_tree_cloneID.RData}", overwrite: false
     cache 'true'
@@ -756,10 +756,10 @@ process get_tree {
     output:
     path "*_get_germ_tree_cloneID.RData", emit: rdata_germ_tree_ch, optional: true
     path "germ_tree_dismissed_seq.tsv", emit: no_germ_tree_ch
-    path "seq_for_tree.tsv", emit: germ_tree_ch
+    path "seq_for_germ_tree.tsv", emit: germ_tree_ch
     path "germ_tree_dismissed_clone_id.tsv", emit: no_cloneID_ch
     path "germ_tree_clone_id.tsv", emit: cloneID_ch
-    path "get_tree.log", emit: get_germ_tree_log_ch
+    path "get_germ_tree.log", emit: get_germ_tree_log_ch
     //path "HLP10_germ_tree_parameters.tsv"
 
     script:
@@ -770,23 +770,23 @@ process get_tree {
         exit 1
     fi
     FILENAME=\$(basename -- ${seq_name_remplacement_ch}) # recover a file name without path
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a get_tree.log
-    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a get_tree.log
-    get_tree.R \
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a get_germ_tree.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a get_germ_tree.log
+    get_germ_tree.R \
 "${seq_name_remplacement_ch}" \
 "${meta_file}" \
 "${clone_nb_seq}" \
 "${germ_tree_duplicate_seq}" \
 "${igphylm_exe_path}" \
 "${cute_file}" \
-"get_tree.log"
+"get_germ_tree.log"
     """
 }
 
 
 process germ_tree_vizu {
     label 'r_ext'
-    publishDir path: "${out_path}", mode: 'copy', pattern: "{trees.pdf}", overwrite: false
+    publishDir path: "${out_path}", mode: 'copy', pattern: "{germ_trees.pdf}", overwrite: false
     publishDir path: "${out_path}/png", mode: 'copy', pattern: "{*.png}", overwrite: false
     publishDir path: "${out_path}/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
     publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{all_trees.RData}", overwrite: false
@@ -1378,35 +1378,35 @@ workflow {
 
 
 
-    get_tree(
+    get_germ_tree(
         seq_name_remplacement.out.seq_name_remplacement_ch,
-        meta_file, // first() because get_tree process is a parallele one and because meta_file is single
+        meta_file, // first() because get_germ_tree process is a parallele one and because meta_file is single
         cute_file, 
         clone_nb_seq,
         germ_tree_duplicate_seq,
         igphylm_exe_path
     )
-    get_tree.out.rdata_germ_tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: EMPTY OUTPUT FOLLOWING THE get_tree PROCESS -> NO TREE RETURNED\n\n")}}
-    rdata_germ_tree_ch2 = get_tree.out.rdata_germ_tree_ch.collect()
+    get_germ_tree.out.rdata_germ_tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: EMPTY OUTPUT FOLLOWING THE get_germ_tree PROCESS -> NO TREE RETURNED\n\n")}}
+    rdata_germ_tree_ch2 = get_germ_tree.out.rdata_germ_tree_ch.collect()
     //rdata_germ_tree_ch2.view()
 
-    get_tree.out.no_germ_tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: ALL SEQUENCES IN TREES FOLLOWING THE get_tree PROCESS -> EMPTY germ_tree_dismissed_seq.tsv FILE RETURNED\n\n")}}
-    no_germ_tree_ch2 = get_tree.out.no_germ_tree_ch.collectFile(name: "germ_tree_dismissed_seq.tsv", skip: 1, keepHeader: true)
+    get_germ_tree.out.no_germ_tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: ALL SEQUENCES IN TREES FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_dismissed_seq.tsv FILE RETURNED\n\n")}}
+    no_germ_tree_ch2 = get_germ_tree.out.no_germ_tree_ch.collectFile(name: "germ_tree_dismissed_seq.tsv", skip: 1, keepHeader: true)
     no_germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
-    get_tree.out.germ_tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: NO SEQUENCES IN TREES FOLLOWING THE get_tree PROCESS -> EMPTY germ_tree_seq.tsv FILE RETURNED\n\n")}}
-    germ_tree_ch2 = get_tree.out.germ_tree_ch.collectFile(name: "germ_tree_seq.tsv", skip: 1, keepHeader: true)
+    get_germ_tree.out.germ_tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: NO SEQUENCES IN TREES FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_seq.tsv FILE RETURNED\n\n")}}
+    germ_tree_ch2 = get_germ_tree.out.germ_tree_ch.collectFile(name: "germ_tree_seq.tsv", skip: 1, keepHeader: true)
     germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
-    get_tree.out.no_cloneID_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: ALL SEQUENCES IN CLONAL GROUP FOLLOWING THE get_tree PROCESS -> EMPTY germ_tree_dismissed_clone_id.tsv FILE RETURNED\n\n")}}
-    no_cloneID_ch2 = get_tree.out.no_cloneID_ch.collectFile(name: "germ_tree_dismissed_clone_id.tsv")
+    get_germ_tree.out.no_cloneID_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: ALL SEQUENCES IN CLONAL GROUP FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_dismissed_clone_id.tsv FILE RETURNED\n\n")}}
+    no_cloneID_ch2 = get_germ_tree.out.no_cloneID_ch.collectFile(name: "germ_tree_dismissed_clone_id.tsv")
     no_cloneID_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
-    get_tree.out.cloneID_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: NO CLONAL GROUP FOLLOWING THE get_tree PROCESS -> EMPTY germ_tree_clone_id.tsv and trees.pdf FILES RETURNED\n\n")}}
-    cloneID_ch2 = get_tree.out.cloneID_ch.collectFile(name: "germ_tree_clone_id.tsv")
+    get_germ_tree.out.cloneID_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: NO CLONAL GROUP FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_clone_id.tsv and germ_trees.pdf FILES RETURNED\n\n")}}
+    cloneID_ch2 = get_germ_tree.out.cloneID_ch.collectFile(name: "germ_tree_clone_id.tsv")
     cloneID_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
-    get_tree.out.get_germ_tree_log_ch.collectFile(name: "get_tree.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
+    get_germ_tree.out.get_germ_tree_log_ch.collectFile(name: "get_germ_tree.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
 
 
 

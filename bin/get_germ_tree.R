@@ -1,7 +1,7 @@
 #!/usr/bin/Rscript
 #########################################################################
 ##                                                                     ##
-##     get_tree.R                                                      ##
+##     get_germ_tree.R                                                 ##
 ##                                                                     ##
 ##     Gael A. Millot                                                  ##
 ##     Bioinformatics and Biostatistics Hub                            ##
@@ -35,7 +35,7 @@
 
 # R version checking
 if(version$version.string != "R version 4.0.5 (2021-03-31)"){
-    stop(paste0("\n\n================\n\nERROR IN get_tree.R\n", version$version.string, " IS NOT THE 4.0.5 RECOMMANDED\n\n================\n\n"))
+    stop(paste0("\n\n================\n\nERROR IN get_germ_tree.R\n", version$version.string, " IS NOT THE 4.0.5 RECOMMANDED\n\n================\n\n"))
 }
 # other initializations
 erase.objects = TRUE # write TRUE to erase all the existing objects in R before starting the algorithm and FALSE otherwise. Beginners should use TRUE
@@ -44,7 +44,7 @@ if(erase.objects == TRUE){
     erase.objects = TRUE
 }
 erase.graphs = TRUE # write TRUE to erase all the graphic windows in R before starting the algorithm and FALSE otherwise
-script <- "get_tree"
+script <- "get_germ_tree"
 
 
 ################################ End Initialization
@@ -66,19 +66,19 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
     command <- paste0(commandArgs(trailingOnly = FALSE), collapse = ",") # recover the full command
     args <- commandArgs(trailingOnly = TRUE) # recover arguments written after the call of the R script
     if(any(is.na(args))){
-        stop(paste0("\n\n================\n\nERROR IN get_tree.R\nTHE args OBJECT HAS NA\n\n================\n\n"), call. = FALSE)
+        stop(paste0("\n\n================\n\nERROR IN get_germ_tree.R\nTHE args OBJECT HAS NA\n\n================\n\n"), call. = FALSE)
     }
     tempo.arg.names <- c(
         "seq_name_remplacement_ch", 
         "meta_file", 
         "clone_nb_seq", 
-        "tree_duplicate_seq", 
+        "germ_tree_duplicate_seq", 
         "igphylm_exe_path", 
         "cute", 
         "log"
-    ) # objects names exactly in the same order as in the bash code and recovered in args. Here only one, because only the path of the config file to indicate after the get_tree.R script execution
+    ) # objects names exactly in the same order as in the bash code and recovered in args. Here only one, because only the path of the config file to indicate after the get_germ_tree.R script execution
     if(length(args) != length(tempo.arg.names)){
-        stop(paste0("\n\n================\n\nERROR IN get_tree.R\nTHE NUMBER OF ELEMENTS IN args (", length(args),") IS DIFFERENT FROM THE NUMBER OF ELEMENTS IN tempo.arg.names (", length(tempo.arg.names),")\nargs:", paste0(args, collapse = ","), "\ntempo.arg.names:", paste0(tempo.arg.names, collapse = ","), "\n\n================\n\n"), call. = FALSE)
+        stop(paste0("\n\n================\n\nERROR IN get_germ_tree.R\nTHE NUMBER OF ELEMENTS IN args (", length(args),") IS DIFFERENT FROM THE NUMBER OF ELEMENTS IN tempo.arg.names (", length(tempo.arg.names),")\nargs:", paste0(args, collapse = ","), "\ntempo.arg.names:", paste0(tempo.arg.names, collapse = ","), "\n\n================\n\n"), call. = FALSE)
     }
     for(i1 in 1:length(tempo.arg.names)){
         assign(tempo.arg.names[i1], args[i1])
@@ -112,12 +112,12 @@ rm(tempo.cat)
 # copy-paste this code:
 
 # seq_name_remplacement_ch = "17_renamed_seq.tsv"
-# tree_duplicate_seq = "FALSE" 
+# germ_tree_duplicate_seq = "FALSE" 
 # meta_file = "metadata_sort1.tsv"
 # clone_nb_seq = "3"
 # igphylm_exe_path = "/usr/local/share/igphyml/src/igphyml"
 # cute = "cute_little_R_functions.R"
-# log = "get_tree.log"
+# log = "get_germ_tree.log"
 
 
 
@@ -137,18 +137,18 @@ param.list <- c(
     "seq_name_remplacement_ch", 
     "meta_file", 
     "clone_nb_seq", 
-    "tree_duplicate_seq", 
+    "germ_tree_duplicate_seq", 
     "igphylm_exe_path", 
     "cute", 
     "log"
 )
 if(any(duplicated(param.list))){
-    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 1 IN get_tree.R\nTHE param.list OBJECT CONTAINS DUPLICATED ELEMENTS:\n", paste(param.list[duplicated(param.list)], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) # message for developers
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 1 IN get_germ_tree.R\nTHE param.list OBJECT CONTAINS DUPLICATED ELEMENTS:\n", paste(param.list[duplicated(param.list)], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) # message for developers
 }
 if(erase.objects == TRUE){
     created.object.control <- ls()[ ! ls() %in% "param.list"]
     if( ! (all(created.object.control %in% param.list) & all(param.list %in% created.object.control))){
-        stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 2 IN get_tree.R\nINCONSISTENCIES BETWEEN THE ARGUMENTS USED AND THE PARAMETERS REQUIRED IN THE EXECUTABLE CODE FILE\nTHE ARGUMENTS NOT PRESENT IN THE EXECUTABLE FILE (get_tree.R) ARE:\n", paste(created.object.control[ ! created.object.control %in% param.list], collapse = " "), "\nTHE PARAMETERS OF THE EXECUTABLE FILE (get_tree.R) NOT PRESENT IN THE ARGUMENTS ARE:\n", paste(param.list[ ! param.list %in% created.object.control], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) # message for developers
+        stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 2 IN get_germ_tree.R\nINCONSISTENCIES BETWEEN THE ARGUMENTS USED AND THE PARAMETERS REQUIRED IN THE EXECUTABLE CODE FILE\nTHE ARGUMENTS NOT PRESENT IN THE EXECUTABLE FILE (get_germ_tree.R) ARE:\n", paste(created.object.control[ ! created.object.control %in% param.list], collapse = " "), "\nTHE PARAMETERS OF THE EXECUTABLE FILE (get_germ_tree.R) NOT PRESENT IN THE ARGUMENTS ARE:\n", paste(param.list[ ! param.list %in% created.object.control], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) # message for developers
     }
 }
 char.length <- nchar(param.list)
@@ -175,22 +175,22 @@ for(i in 1:length(param.list)){
 
 
 if(length(cute) != 1){
-    stop(paste0("\n\n============\n\nERROR IN get_tree.R\ncute PARAMETER MUST BE LENGTH 1: ", paste(cute, collapse = " "), "\n\n============\n\n"), call. = FALSE)
+    stop(paste0("\n\n============\n\nERROR IN get_germ_tree.R\ncute PARAMETER MUST BE LENGTH 1: ", paste(cute, collapse = " "), "\n\n============\n\n"), call. = FALSE)
 }else if(grepl(x = cute, pattern = "^http")){
     tempo.try <- try(suppressWarnings(suppressMessages(source(cute, local = .GlobalEnv))), silent = TRUE)
     if(any(grepl(x = tempo.try, pattern = "^[Ee]rror"))){
-        stop(paste0("\n\n============\n\nERROR IN get_tree.R\nHTTP INDICATED IN THE cute PARAMETER DOES NOT EXISTS: ", cute, "\n\n============\n\n"), call. = FALSE)
+        stop(paste0("\n\n============\n\nERROR IN get_germ_tree.R\nHTTP INDICATED IN THE cute PARAMETER DOES NOT EXISTS: ", cute, "\n\n============\n\n"), call. = FALSE)
     }else{
         source(cute, local = .GlobalEnv) # source the fun_ functions used below
     }
 }else if( ! grepl(x = cute, pattern = "^http")){
     if( ! file.exists(cute)){
-        stop(paste0("\n\n============\n\nERROR IN get_tree.R\nFILE INDICATED IN THE cute PARAMETER DOES NOT EXISTS: ", cute, "\n\n============\n\n"), call. = FALSE)
+        stop(paste0("\n\n============\n\nERROR IN get_germ_tree.R\nFILE INDICATED IN THE cute PARAMETER DOES NOT EXISTS: ", cute, "\n\n============\n\n"), call. = FALSE)
     }else{
         source(cute, local = .GlobalEnv) # source the fun_ functions used below
     }
 }else{
-    tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 3 IN get_tree.R: CODE HAS TO BE MODIFIED\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n")
+    tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 3 IN get_germ_tree.R: CODE HAS TO BE MODIFIED\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n")
     stop(tempo.cat, call. = FALSE)
 }
 
@@ -208,7 +208,7 @@ for(i1 in req.function){
     }
 }
 if( ! is.null(tempo)){
-    tempo.cat <- paste0("ERROR IN get_tree.R\nREQUIRED cute FUNCTION", ifelse(length(tempo) > 1, "S ARE", " IS"), " MISSING IN THE R ENVIRONMENT:\n", paste0(tempo, collapse = "()\n"))
+    tempo.cat <- paste0("ERROR IN get_germ_tree.R\nREQUIRED cute FUNCTION", ifelse(length(tempo) > 1, "S ARE", " IS"), " MISSING IN THE R ENVIRONMENT:\n", paste0(tempo, collapse = "()\n"))
     stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between ==
 }
 # end required function checking
@@ -251,21 +251,21 @@ if(any(arg.check) == TRUE){ # normally no NA
 # second round of checking and data preparation
 # management of NA arguments
 # end management of NA arguments
-# management of NULL arguments, WARNING: only for get_tree.R because NULL is "NULL" in the nextflow.config file
+# management of NULL arguments, WARNING: only for get_germ_tree.R because NULL is "NULL" in the nextflow.config file
 tempo.arg <-c(
     "seq_name_remplacement_ch", 
     "meta_file", 
     "clone_nb_seq", 
-    "tree_duplicate_seq", 
+    "germ_tree_duplicate_seq", 
     "igphylm_exe_path", 
     "log"
 )
 tempo.log <- sapply(lapply(tempo.arg, FUN = get, env = sys.nframe(), inherit = FALSE), FUN = is.null)
 if(any(tempo.log) == TRUE){# normally no NA with is.null()
-    tempo.cat <- paste0("ERROR IN get_tree.R:\n", ifelse(sum(tempo.log, na.rm = TRUE) > 1, "THESE ARGUMENTS\n", "THIS ARGUMENT\n"), paste0(tempo.arg[tempo.log], collapse = "\n"),"\nCANNOT BE NULL")
+    tempo.cat <- paste0("ERROR IN get_germ_tree.R:\n", ifelse(sum(tempo.log, na.rm = TRUE) > 1, "THESE ARGUMENTS\n", "THIS ARGUMENT\n"), paste0(tempo.arg[tempo.log], collapse = "\n"),"\nCANNOT BE NULL")
     stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between ==
 }
-# end management of NULL arguments, WARNING: only for get_tree.R because NULL is "NULL" in the nextflow.config file
+# end management of NULL arguments, WARNING: only for get_germ_tree.R because NULL is "NULL" in the nextflow.config file
 # seed
 set.seed(1)
 # end seed
@@ -284,7 +284,7 @@ ee <- expression(arg.check2 <- c(arg.check2, tempo$problem) , text.check2 <- c(t
 
 
 if( ! file.exists(seq_name_remplacement_ch)){
-    tempo.cat <- paste0("ERROR IN get_tree.R:\nTHE seq_name_remplacement_ch PARAMETER MUST BE A VALID PATH OF A FILE IF NOT \"NULL\"\nHERE IT IS: \n", paste0(seq_name_remplacement_ch, collapse = " "))
+    tempo.cat <- paste0("ERROR IN get_germ_tree.R:\nTHE seq_name_remplacement_ch PARAMETER MUST BE A VALID PATH OF A FILE IF NOT \"NULL\"\nHERE IT IS: \n", paste0(seq_name_remplacement_ch, collapse = " "))
     text.check2 <- c(text.check2, tempo.cat)
     arg.check2 <- c(arg.check2, TRUE)
 }
@@ -292,13 +292,13 @@ if( ! file.exists(seq_name_remplacement_ch)){
 if(meta_file == "NULL"){
     meta_file <- NULL
 }else if( ! file.exists(meta_file)){
-    tempo.cat <- paste0("ERROR IN get_tree.R:\nTHE meta_file PARAMETER MUST BE A VALID PATH OF A FILE IF NOT \"NULL\"\nHERE IT IS: \n", paste0(meta_file, collapse = " "))
+    tempo.cat <- paste0("ERROR IN get_germ_tree.R:\nTHE meta_file PARAMETER MUST BE A VALID PATH OF A FILE IF NOT \"NULL\"\nHERE IT IS: \n", paste0(meta_file, collapse = " "))
     text.check2 <- c(text.check2, tempo.cat)
     arg.check2 <- c(arg.check2, TRUE)
 }
 
 if(length(clone_nb_seq) != 1 & any(grepl(clone_nb_seq, pattern = "\\D"))){# normally no NA with is.null()
-    tempo.cat <- paste0("ERROR IN get_tree.R:\nTHE clone_nb_seq PARAMETER MUST BE A SINGLE INTEGER\nHERE IT IS: \n", paste0(clone_nb_seq, collapse = " "))
+    tempo.cat <- paste0("ERROR IN get_germ_tree.R:\nTHE clone_nb_seq PARAMETER MUST BE A SINGLE INTEGER\nHERE IT IS: \n", paste0(clone_nb_seq, collapse = " "))
     text.check2 <- c(text.check2, tempo.cat)
     arg.check2 <- c(arg.check2, TRUE)
 }else{
@@ -306,19 +306,19 @@ if(length(clone_nb_seq) != 1 & any(grepl(clone_nb_seq, pattern = "\\D"))){# norm
     tempo <- fun_check(data = clone_nb_seq, class = "vector", typeof = "integer", length = 1) ; eval(ee)
 }
 
-if( ! (length(tree_duplicate_seq) == 1 & any(tree_duplicate_seq %in% c("TRUE", "FALSE")))){ # positive numeric
-    tempo.cat <- paste0("ERROR IN get_tree.R:\nTHE tree_label_size PARAMETER MUST BE \"TRUE\" OR \"FALSE\"\nHERE IT IS: \n", paste0(tree_duplicate_seq, collapse = " "))
+if( ! (length(germ_tree_duplicate_seq) == 1 & any(germ_tree_duplicate_seq %in% c("TRUE", "FALSE")))){ # positive numeric
+    tempo.cat <- paste0("ERROR IN get_germ_tree.R:\nTHE germ_tree_label_size PARAMETER MUST BE \"TRUE\" OR \"FALSE\"\nHERE IT IS: \n", paste0(germ_tree_duplicate_seq, collapse = " "))
     text.check2 <- c(text.check2, tempo.cat)
     arg.check2 <- c(arg.check2, TRUE)
-}else if(tree_duplicate_seq == "TRUE"){
-    tree_duplicate_seq <- TRUE
+}else if(germ_tree_duplicate_seq == "TRUE"){
+    germ_tree_duplicate_seq <- TRUE
 }else{
-    tree_duplicate_seq <- FALSE
+    germ_tree_duplicate_seq <- FALSE
 }
 
 
 if( ! file.exists(igphylm_exe_path)){
-    tempo.cat <- paste0("ERROR IN get_tree.R:\nTHE igphylm FILE IS NOT CORRECTLY IMPORTED INTO THE NEXTFLOW work DIRECTORY BECAUSE igphylm_exe_path PARAMETER MUST BE A VALID PATH\nHERE IT IS: \n", paste0(igphylm_exe_path, collapse = " "))
+    tempo.cat <- paste0("ERROR IN get_germ_tree.R:\nTHE igphylm FILE IS NOT CORRECTLY IMPORTED INTO THE NEXTFLOW work DIRECTORY BECAUSE igphylm_exe_path PARAMETER MUST BE A VALID PATH\nHERE IT IS: \n", paste0(igphylm_exe_path, collapse = " "))
     text.check2 <- c(text.check2, tempo.cat)
     arg.check2 <- c(arg.check2, TRUE)
 }
@@ -344,7 +344,7 @@ if(any(arg.check2) == TRUE){ # normally no NA
 ################ Ignition
 
 
-fun_report(data = paste0("\n\n################################################################ get_tree PROCESS\n\n"), output = log, path = "./", overwrite = FALSE)
+fun_report(data = paste0("\n\n################################################################ get_germ_tree PROCESS\n\n"), output = log, path = "./", overwrite = FALSE)
 ini.date <- Sys.time()
 ini.time <- as.numeric(ini.date) # time of process begin, converted into seconds
 fun_report(data = paste0("\n\n################################ RUNNING DATE AND STARTING TIME\n\n"), output = log, path = "./", overwrite = FALSE)
@@ -372,22 +372,22 @@ clones <- dowser::formatClones(
     heavy = NULL, # name of heavy chain locus (default = "IGH")
     text_fields = "collapsed", # column of db named "collapsed" (columns to retain during duplicate removal, that will be present in the clones tibble but collapsed depending on the line removal) 
     dup_singles = FALSE, # Duplicate sequences in singleton clones to include them as trees? Always use FALSE. Otherwise, it will create an artificial duplicated sequences in thr tree building so that we will have two instead of one sequence in the tree, after identical seq removal. See https://rdrr.io/cran/dowser/src/R/Clones.R
-    trait = if(tree_duplicate_seq){names(db2)[1]}else{NULL} # control the removal of identical sequences but different sequence name
+    trait = if(germ_tree_duplicate_seq){names(db2)[1]}else{NULL} # control the removal of identical sequences but different sequence name
     # max_mask: maximum number of characters to mask at the leading and trailing sequence ends. If NULL then the upper masking bound will be automatically determined from the maximum number of observed leading or trailing Ns amongst all sequences. If set to 0 (default) then masking will not be performed
 )
 if(nrow(clones$data[[1]]@data) < clone_nb_seq){
     cat(paste0("\nLESS THAN ", clone_nb_seq, " DIFFERENT SEQUENCES SET BY THE clone_nb_seq PARAMETER OF THE repertoire_profiler.config FILE: NO TREE COMPUTED\n"))
-    file.copy(from = paste0("./", seq_name_remplacement_ch), to = "./tree_dismissed_seq.tsv")
-    write.table(matrix(names(db), nrow = 1), file = "./seq_for_tree.tsv", row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t") # empty file
-    file.create("./tree_clone_id.tsv") # empty file
-    write.table(clone.id, file = "./tree_dismissed_clone_id.tsv", row.names = FALSE, col.names = FALSE, quote = FALSE)
-    save(list = c("db", "clones"), file = paste0("./", clones$clone_id, "_get_tree_cloneID.RData"))
+    file.copy(from = paste0("./", seq_name_remplacement_ch), to = "./germ_tree_dismissed_seq.tsv")
+    write.table(matrix(names(db), nrow = 1), file = "./seq_for_germ_tree.tsv", row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t") # empty file
+    file.create("./germ_tree_clone_id.tsv") # empty file
+    write.table(clone.id, file = "./germ_tree_dismissed_clone_id.tsv", row.names = FALSE, col.names = FALSE, quote = FALSE)
+    save(list = c("db", "clones"), file = paste0("./", clones$clone_id, "_get_germ_tree_cloneID.RData"))
 }else{
-    file.copy(from = paste0("./", seq_name_remplacement_ch), to = "./seq_for_tree.tsv")
-    file.create("./tree_dismissed_clone_id.tsv") # empty file
-    write.table(matrix(names(db), nrow = 1), file = "./tree_dismissed_seq.tsv", row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t") # empty file
+    file.copy(from = paste0("./", seq_name_remplacement_ch), to = "./seq_for_germ_tree.tsv")
+    file.create("./germ_tree_dismissed_clone_id.tsv") # empty file
+    write.table(matrix(names(db), nrow = 1), file = "./germ_tree_dismissed_seq.tsv", row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t") # empty file
     # add the metadata names in the first column of clones$data[[1]]@data to have them in final trees
-    if(( ! is.null(meta_file)) & ( ! tree_duplicate_seq)){
+    if(( ! is.null(meta_file)) & ( ! germ_tree_duplicate_seq)){
         meta <- read.table(meta_file, header = TRUE, sep = "\t")
         tempo.df <- clones$data[[1]]@data # it is "class data.frame"
         for(i4 in 1:nrow(tempo.df)){
@@ -402,8 +402,8 @@ if(nrow(clones$data[[1]]@data) < clone_nb_seq){
     # end add the metadata names in the first column of clones$data[[1]]@data to have them in final trees
     trees <- dowser::getTrees(clones, build = "igphyml", exec = igphylm_exe_path, nproc = 10)
     # assign(paste0("c", trees$clone_id, "_trees"), trees)
-    save(list = c("trees", "db", "clones"), file = paste0("./", trees$clone_id, "_get_tree_cloneID.RData"))
-    write.table(trees$clone_id, file = "./tree_clone_id.tsv", row.names = FALSE, col.names = FALSE, quote = FALSE)
+    save(list = c("trees", "db", "clones"), file = paste0("./", trees$clone_id, "_get_germ_tree_cloneID.RData"))
+    write.table(trees$clone_id, file = "./germ_tree_clone_id.tsv", row.names = FALSE, col.names = FALSE, quote = FALSE)
 }
 
 ################ Pdf window closing
@@ -445,7 +445,7 @@ fun_report(data = paste0("\n\nALL DATA SAVED IN all_objects.RData"), output = lo
 
 fun_report(data = paste0("\n\n################################ RECAPITULATION OF WARNING MESSAGES"), output = log, path = "./", overwrite = FALSE)
 if( ! is.null(warn)){
-    tempo.cat <- paste0("IN get_tree.R OF THE NEXFLOW EXECUTION:\n\n", warn)
+    tempo.cat <- paste0("IN get_germ_tree.R OF THE NEXFLOW EXECUTION:\n\n", warn)
     fun_report(data = tempo.cat, output = log, path = "./", overwrite = FALSE)
     cat(tempo.cat)
 }else{

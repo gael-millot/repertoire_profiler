@@ -1,7 +1,7 @@
 #!/usr/bin/Rscript
 #########################################################################
 ##                                                                     ##
-##     tree_vizu.R                                                     ##
+##     germ_tree_vizu.R                                                ##
 ##                                                                     ##
 ##     Gael A. Millot                                                  ##
 ##     Bioinformatics and Biostatistics Hub                            ##
@@ -35,7 +35,7 @@
 
 # R version checking
 if(version$version.string != "R version 4.1.2 (2021-11-01)"){
-    stop(paste0("\n\n================\n\nERROR IN tree_vizu.R\n", version$version.string, " IS NOT THE 4.1.2 RECOMMANDED\n\n================\n\n"))
+    stop(paste0("\n\n================\n\nERROR IN germ_tree_vizu.R\n", version$version.string, " IS NOT THE 4.1.2 RECOMMANDED\n\n================\n\n"))
 }
 # other initializations
 erase.objects = TRUE # write TRUE to erase all the existing objects in R before starting the algorithm and FALSE otherwise. Beginners should use TRUE
@@ -44,7 +44,7 @@ if(erase.objects == TRUE){
     erase.objects = TRUE
 }
 erase.graphs = TRUE # write TRUE to erase all the graphic windows in R before starting the algorithm and FALSE otherwise
-script <- "tree_vizu"
+script <- "germ_tree_vizu"
 
 
 ################################ End Initialization
@@ -66,28 +66,28 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
     command <- paste0(commandArgs(trailingOnly = FALSE), collapse = ",") # recover the full command
     args <- commandArgs(trailingOnly = TRUE) # recover arguments written after the call of the R script
     if(any(is.na(args))){
-        stop(paste0("\n\n================\n\nERROR IN tree_vizu.R\nTHE args OBJECT HAS NA\n\n================\n\n"), call. = FALSE)
+        stop(paste0("\n\n================\n\nERROR IN germ_tree_vizu.R\nTHE args OBJECT HAS NA\n\n================\n\n"), call. = FALSE)
     }
     tempo.arg.names <- c(
-        "tree_kind", 
+        "germ_tree_kind", 
         "clone_nb_seq", 
-        "tree_duplicate_seq", 
-        "tree_leaf_color", 
-        "tree_leaf_shape", 
-        "tree_leaf_size", 
-        "tree_label_size", 
-        "tree_label_hjust", 
-        "tree_label_rigth", 
-        "tree_label_outside", 
-        "tree_right_margin", 
-        "tree_legend", 
-        "tree_meta_path", 
-        "tree_meta_legend", 
+        "germ_tree_duplicate_seq", 
+        "germ_tree_leaf_color", 
+        "germ_tree_leaf_shape", 
+        "germ_tree_leaf_size", 
+        "germ_tree_label_size", 
+        "germ_tree_label_hjust", 
+        "germ_tree_label_rigth", 
+        "germ_tree_label_outside", 
+        "germ_tree_right_margin", 
+        "germ_tree_legend", 
+        "germ_tree_meta_path", 
+        "germ_tree_meta_legend", 
         "cute", 
         "log"
-    ) # objects names exactly in the same order as in the bash code and recovered in args. Here only one, because only the path of the config file to indicate after the tree_vizu.R script execution
+    ) # objects names exactly in the same order as in the bash code and recovered in args. Here only one, because only the path of the config file to indicate after the germ_tree_vizu.R script execution
     if(length(args) != length(tempo.arg.names)){
-        stop(paste0("\n\n================\n\nERROR IN tree_vizu.R\nTHE NUMBER OF ELEMENTS IN args (", length(args),") IS DIFFERENT FROM THE NUMBER OF ELEMENTS IN tempo.arg.names (", length(tempo.arg.names),")\nargs:", paste0(args, collapse = ","), "\ntempo.arg.names:", paste0(tempo.arg.names, collapse = ","), "\n\n================\n\n"), call. = FALSE)
+        stop(paste0("\n\n================\n\nERROR IN germ_tree_vizu.R\nTHE NUMBER OF ELEMENTS IN args (", length(args),") IS DIFFERENT FROM THE NUMBER OF ELEMENTS IN tempo.arg.names (", length(tempo.arg.names),")\nargs:", paste0(args, collapse = ","), "\ntempo.arg.names:", paste0(tempo.arg.names, collapse = ","), "\n\n================\n\n"), call. = FALSE)
     }
     for(i1 in 1:length(tempo.arg.names)){
         assign(tempo.arg.names[i1], args[i1])
@@ -111,23 +111,23 @@ rm(tempo.cat)
 # setwd("C:/Users/gael/Documents/Git_projects/repertoire_profiler/work/39/7f3246fe992a263d507019c825a683")
 # setwd("Z:/Alice/sort1_VH/repertoire_profiler-v8.1/work/6a/5804f66785412c808f6f7d9ca46cca")
 # setwd("Z:/Alice/human_Patient_B9_886_VH/ig_clustering-v8.8/work/ea/d1287c99e6a36d2790910c98fffcc0")
-# tree_kind = "rectangular"
+# germ_tree_kind = "rectangular"
 # clone_nb_seq = "3"
-# tree_duplicate_seq = "FALSE" 
-# tree_leaf_color = "NULL" 
-# tree_leaf_shape = "23" 
-# tree_leaf_size = "3" 
-# tree_label_size = "2" 
-# tree_label_hjust = "-0.25" 
-# tree_label_rigth = "FALSE" 
-# tree_label_outside = "TRUE"
-# tree_right_margin = "1.5" 
-# tree_legend = "TRUE" 
-# tree_meta_path = "./metadata2.tsv" # do not write "./NULL" but "NULL"
-# tree_meta_legend = "inverted_KD"
+# germ_tree_duplicate_seq = "FALSE" 
+# germ_tree_leaf_color = "NULL" 
+# germ_tree_leaf_shape = "23" 
+# germ_tree_leaf_size = "3" 
+# germ_tree_label_size = "2" 
+# germ_tree_label_hjust = "-0.25" 
+# germ_tree_label_rigth = "FALSE" 
+# germ_tree_label_outside = "TRUE"
+# germ_tree_right_margin = "1.5" 
+# germ_tree_legend = "TRUE" 
+# germ_tree_meta_path = "./metadata2.tsv" # do not write "./NULL" but "NULL"
+# germ_tree_meta_legend = "inverted_KD"
 # cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.2.0/cute_little_R_functions.R"
-# log = "tree_vizu.log"
-# file.remove(c("./all_objects.RData", "./all_trees.RData", "./trees.pdf", "./tree_vizu.log"))
+# log = "germ_tree_vizu.log"
+# file.remove(c("./all_objects.RData", "./all_germ_trees.RData", "./germ_trees.pdf", "./germ_tree_vizu.log"))
 
 
 
@@ -144,30 +144,30 @@ param.list <- c(
     "run.way",
     "tempo.arg.names", 
     if(run.way == "SCRIPT"){"command"}, 
-    "tree_kind", 
+    "germ_tree_kind", 
     "clone_nb_seq", 
-    "tree_duplicate_seq", 
-    "tree_leaf_color", 
-    "tree_leaf_shape", 
-    "tree_leaf_size", 
-    "tree_label_size", 
-    "tree_label_hjust", 
-    "tree_label_rigth", 
-    "tree_label_outside", 
-    "tree_right_margin", 
-    "tree_legend", 
-    "tree_meta_path", 
-    "tree_meta_legend", 
+    "germ_tree_duplicate_seq", 
+    "germ_tree_leaf_color", 
+    "germ_tree_leaf_shape", 
+    "germ_tree_leaf_size", 
+    "germ_tree_label_size", 
+    "germ_tree_label_hjust", 
+    "germ_tree_label_rigth", 
+    "germ_tree_label_outside", 
+    "germ_tree_right_margin", 
+    "germ_tree_legend", 
+    "germ_tree_meta_path", 
+    "germ_tree_meta_legend", 
     "cute", 
     "log"
 )
 if(any(duplicated(param.list))){
-    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 1 IN tree_vizu.R\nTHE param.list OBJECT CONTAINS DUPLICATED ELEMENTS:\n", paste(param.list[duplicated(param.list)], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) # message for developers
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 1 IN germ_tree_vizu.R\nTHE param.list OBJECT CONTAINS DUPLICATED ELEMENTS:\n", paste(param.list[duplicated(param.list)], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) # message for developers
 }
 if(erase.objects == TRUE){
     created.object.control <- ls()[ ! ls() %in% "param.list"]
     if( ! (all(created.object.control %in% param.list) & all(param.list %in% created.object.control))){
-        stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 2 IN tree_vizu.R\nINCONSISTENCIES BETWEEN THE ARGUMENTS USED AND THE PARAMETERS REQUIRED IN THE EXECUTABLE CODE FILE\nTHE ARGUMENTS NOT PRESENT IN THE EXECUTABLE FILE (tree_vizu.R) ARE:\n", paste(created.object.control[ ! created.object.control %in% param.list], collapse = " "), "\nTHE PARAMETERS OF THE EXECUTABLE FILE (tree_vizu.R) NOT PRESENT IN THE ARGUMENTS ARE:\n", paste(param.list[ ! param.list %in% created.object.control], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) # message for developers
+        stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 2 IN germ_tree_vizu.R\nINCONSISTENCIES BETWEEN THE ARGUMENTS USED AND THE PARAMETERS REQUIRED IN THE EXECUTABLE CODE FILE\nTHE ARGUMENTS NOT PRESENT IN THE EXECUTABLE FILE (germ_tree_vizu.R) ARE:\n", paste(created.object.control[ ! created.object.control %in% param.list], collapse = " "), "\nTHE PARAMETERS OF THE EXECUTABLE FILE (germ_tree_vizu.R) NOT PRESENT IN THE ARGUMENTS ARE:\n", paste(param.list[ ! param.list %in% created.object.control], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) # message for developers
     }
 }
 char.length <- nchar(param.list)
@@ -194,22 +194,22 @@ for(i in 1:length(param.list)){
 
 
 if(length(cute) != 1){
-    stop(paste0("\n\n============\n\nERROR IN tree_vizu.R\ncute PARAMETER MUST BE LENGTH 1: ", paste(cute, collapse = " "), "\n\n============\n\n"), call. = FALSE)
+    stop(paste0("\n\n============\n\nERROR IN germ_tree_vizu.R\ncute PARAMETER MUST BE LENGTH 1: ", paste(cute, collapse = " "), "\n\n============\n\n"), call. = FALSE)
 }else if(grepl(x = cute, pattern = "^http")){
     tempo.try <- try(suppressWarnings(suppressMessages(source(cute, local = .GlobalEnv))), silent = TRUE)
     if(any(grepl(x = tempo.try, pattern = "^[Ee]rror"))){
-        stop(paste0("\n\n============\n\nERROR IN tree_vizu.R\nHTTP INDICATED IN THE cute PARAMETER DOES NOT EXISTS: ", cute, "\n\n============\n\n"), call. = FALSE)
+        stop(paste0("\n\n============\n\nERROR IN germ_tree_vizu.R\nHTTP INDICATED IN THE cute PARAMETER DOES NOT EXISTS: ", cute, "\n\n============\n\n"), call. = FALSE)
     }else{
         source(cute, local = .GlobalEnv) # source the fun_ functions used below
     }
 }else if( ! grepl(x = cute, pattern = "^http")){
     if( ! file.exists(cute)){
-        stop(paste0("\n\n============\n\nERROR IN tree_vizu.R\nFILE INDICATED IN THE cute PARAMETER DOES NOT EXISTS: ", cute, "\n\n============\n\n"), call. = FALSE)
+        stop(paste0("\n\n============\n\nERROR IN germ_tree_vizu.R\nFILE INDICATED IN THE cute PARAMETER DOES NOT EXISTS: ", cute, "\n\n============\n\n"), call. = FALSE)
     }else{
         source(cute, local = .GlobalEnv) # source the fun_ functions used below
     }
 }else{
-    tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 3 IN tree_vizu.R: CODE HAS TO BE MODIFIED\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n")
+    tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 3 IN germ_tree_vizu.R: CODE HAS TO BE MODIFIED\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n")
     stop(tempo.cat, call. = FALSE)
 }
 
@@ -227,7 +227,7 @@ for(i1 in req.function){
     }
 }
 if( ! is.null(tempo)){
-    tempo.cat <- paste0("ERROR IN tree_vizu.R\nREQUIRED cute FUNCTION", ifelse(length(tempo) > 1, "S ARE", " IS"), " MISSING IN THE R ENVIRONMENT:\n", paste0(tempo, collapse = "()\n"))
+    tempo.cat <- paste0("ERROR IN germ_tree_vizu.R\nREQUIRED cute FUNCTION", ifelse(length(tempo) > 1, "S ARE", " IS"), " MISSING IN THE R ENVIRONMENT:\n", paste0(tempo, collapse = "()\n"))
     stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between ==
 }
 # end required function checking
@@ -274,30 +274,30 @@ if(any(arg.check) == TRUE){ # normally no NA
 # second round of checking and data preparation
 # management of NA arguments
 # end management of NA arguments
-# management of NULL arguments, WARNING: only for tree_vizu.R because NULL is "NULL" in the nextflow.config file
+# management of NULL arguments, WARNING: only for germ_tree_vizu.R because NULL is "NULL" in the nextflow.config file
 tempo.arg <-c(
-    "tree_kind", 
+    "germ_tree_kind", 
     "clone_nb_seq", 
-    "tree_duplicate_seq", 
-    "tree_leaf_color", 
-    "tree_leaf_shape", 
-    "tree_leaf_size", 
-    "tree_label_size", 
-    "tree_label_hjust", 
-    "tree_label_rigth", 
-    "tree_label_outside", 
-    "tree_right_margin", 
-    "tree_legend", 
-    "tree_meta_path", 
-    "tree_meta_legend", 
+    "germ_tree_duplicate_seq", 
+    "germ_tree_leaf_color", 
+    "germ_tree_leaf_shape", 
+    "germ_tree_leaf_size", 
+    "germ_tree_label_size", 
+    "germ_tree_label_hjust", 
+    "germ_tree_label_rigth", 
+    "germ_tree_label_outside", 
+    "germ_tree_right_margin", 
+    "germ_tree_legend", 
+    "germ_tree_meta_path", 
+    "germ_tree_meta_legend", 
     "log"
 )
 tempo.log <- sapply(lapply(tempo.arg, FUN = get, env = sys.nframe(), inherit = FALSE), FUN = is.null)
 if(any(tempo.log) == TRUE){# normally no NA with is.null()
-    tempo.cat <- paste0("ERROR IN tree_vizu.R:\n", ifelse(sum(tempo.log, na.rm = TRUE) > 1, "THESE ARGUMENTS\n", "THIS ARGUMENT\n"), paste0(tempo.arg[tempo.log], collapse = "\n"),"\nCANNOT BE NULL")
+    tempo.cat <- paste0("ERROR IN germ_tree_vizu.R:\n", ifelse(sum(tempo.log, na.rm = TRUE) > 1, "THESE ARGUMENTS\n", "THIS ARGUMENT\n"), paste0(tempo.arg[tempo.log], collapse = "\n"),"\nCANNOT BE NULL")
     stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between ==
 }
-# end management of NULL arguments, WARNING: only for tree_vizu.R because NULL is "NULL" in the nextflow.config file
+# end management of NULL arguments, WARNING: only for germ_tree_vizu.R because NULL is "NULL" in the nextflow.config file
 # seed
 set.seed(1)
 # end seed
@@ -313,10 +313,10 @@ arg.check2 <- NULL #
 text.check2 <- NULL #
 checked.arg.names2 <- NULL # for function debbuging: used by r_debugging_tools
 ee <- expression(arg.check2 <- c(arg.check2, tempo$problem) , text.check2 <- c(text.check2, tempo$text) , checked.arg.names2 <- c(checked.arg.names2, tempo$object.name))
-tempo <- fun_check(data = tree_kind, options = c("rectangular", "roundrect", "slanted", "ellipse", "circular", "fan", "equal_angle", "daylight"), length = 1) ; eval(ee)
+tempo <- fun_check(data = germ_tree_kind, options = c("rectangular", "roundrect", "slanted", "ellipse", "circular", "fan", "equal_angle", "daylight"), length = 1) ; eval(ee)
 
 if(length(clone_nb_seq) != 1 & any(grepl(clone_nb_seq, pattern = "\\D"))){# normally no NA with is.null()
-    tempo.cat <- paste0("ERROR IN get_tree.R:\nTHE clone_nb_seq PARAMETER MUST BE A SINGLE INTEGER\nHERE IT IS: \n", paste0(clone_nb_seq, collapse = " "))
+    tempo.cat <- paste0("ERROR IN germ_tree_vizu.R:\nTHE clone_nb_seq PARAMETER MUST BE A SINGLE INTEGER\nHERE IT IS: \n", paste0(clone_nb_seq, collapse = " "))
     text.check2 <- c(text.check2, tempo.cat)
     arg.check2 <- c(arg.check2, TRUE)
 }else{
@@ -324,114 +324,114 @@ if(length(clone_nb_seq) != 1 & any(grepl(clone_nb_seq, pattern = "\\D"))){# norm
     tempo <- fun_check(data = clone_nb_seq, class = "vector", typeof = "integer", length = 1) ; eval(ee)
 }
 
-if( ! (length(tree_duplicate_seq) == 1 & any(tree_duplicate_seq %in% c("TRUE", "FALSE")))){ # positive numeric
-    tempo.cat <- paste0("ERROR IN tree_vizu.R:\nTHE tree_label_size PARAMETER MUST BE \"TRUE\" OR \"FALSE\"\nHERE IT IS: \n", paste0(tree_duplicate_seq, collapse = " "))
+if( ! (length(germ_tree_duplicate_seq) == 1 & any(germ_tree_duplicate_seq %in% c("TRUE", "FALSE")))){ # positive numeric
+    tempo.cat <- paste0("ERROR IN germ_tree_vizu.R:\nTHE germ_tree_label_size PARAMETER MUST BE \"TRUE\" OR \"FALSE\"\nHERE IT IS: \n", paste0(germ_tree_duplicate_seq, collapse = " "))
     text.check2 <- c(text.check2, tempo.cat)
     arg.check2 <- c(arg.check2, TRUE)
 }
 
-if(tree_leaf_color == "NULL"){
-    tree_leaf_color <- NULL
+if(germ_tree_leaf_color == "NULL"){
+    germ_tree_leaf_color <- NULL
 }else{
-    tempo1 <- fun_check(data = tree_leaf_color, class = "vector", mode = "character", length = 1)
-    tempo2 <- fun_check(data = tree_leaf_color, class = "vector", typeof = "integer", double.as.integer.allowed = TRUE, length = 1)
+    tempo1 <- fun_check(data = germ_tree_leaf_color, class = "vector", mode = "character", length = 1)
+    tempo2 <- fun_check(data = germ_tree_leaf_color, class = "vector", typeof = "integer", double.as.integer.allowed = TRUE, length = 1)
     checked.arg.names <- c(checked.arg.names, tempo2$object.name)
     if(tempo1$problem == TRUE & tempo2$problem == TRUE){
-        tempo.cat <- paste0("ERROR IN tree_vizu.R\ntree_leaf_color ARGUMENT MUST BE (1) A HEXADECIMAL COLOR STRING STARTING BY #, OR (2) A COLOR NAME GIVEN BY colors(), OR (3) AN INTEGER VALUE")
+        tempo.cat <- paste0("ERROR IN germ_tree_vizu.R\ngerm_tree_leaf_color ARGUMENT MUST BE (1) A HEXADECIMAL COLOR STRING STARTING BY #, OR (2) A COLOR NAME GIVEN BY colors(), OR (3) AN INTEGER VALUE")
         text.check2 <- c(text.check2, tempo.cat)
         arg.check2 <- c(arg.check2, TRUE)
     }else if(tempo1$problem == FALSE & tempo2$problem == TRUE){
-        if( ! all(tree_leaf_color %in% colors() | grepl(pattern = "^#", tree_leaf_color), na.rm = TRUE)){
-            tempo.cat <- paste0("ERROR IN tree_vizu.R\ntree_leaf_color ARGUMENT MUST BE (1) A HEXADECIMAL COLOR STRING STARTING BY #, OR (2) A COLOR NAME GIVEN BY colors(), OR (3) AN INTEGER VALUE")
+        if( ! all(germ_tree_leaf_color %in% colors() | grepl(pattern = "^#", germ_tree_leaf_color), na.rm = TRUE)){
+            tempo.cat <- paste0("ERROR IN germ_tree_vizu.R\ngerm_tree_leaf_color ARGUMENT MUST BE (1) A HEXADECIMAL COLOR STRING STARTING BY #, OR (2) A COLOR NAME GIVEN BY colors(), OR (3) AN INTEGER VALUE")
             text.check2 <- c(text.check2, tempo.cat)
             arg.check2 <- c(arg.check2, TRUE)
         }
     }else{
         # no fun_check test here, it is just for checked.arg.names
-        tempo <- fun_check(data = tree_leaf_color, class = "vector")
+        tempo <- fun_check(data = germ_tree_leaf_color, class = "vector")
         checked.arg.names <- c(checked.arg.names, tempo$object.name)
     }
 }
 
 
-if(length(tree_leaf_shape) != 1 & any(grepl(tree_leaf_shape, pattern = "\\D"))){# normally no NA with is.null()
-    tempo.cat <- paste0("ERROR IN tree_vizu.R:\nTHE tree_leaf_shape PARAMETER MUST BE A SINGLE INTEGER BETWEEN 0 AND 25\nHERE IT IS: \n", paste0(tree_leaf_shape, collapse = " "))
+if(length(germ_tree_leaf_shape) != 1 & any(grepl(germ_tree_leaf_shape, pattern = "\\D"))){# normally no NA with is.null()
+    tempo.cat <- paste0("ERROR IN germ_tree_vizu.R:\nTHE germ_tree_leaf_shape PARAMETER MUST BE A SINGLE INTEGER BETWEEN 0 AND 25\nHERE IT IS: \n", paste0(germ_tree_leaf_shape, collapse = " "))
     text.check2 <- c(text.check2, tempo.cat)
     arg.check2 <- c(arg.check2, TRUE)
 }else{
-    tree_leaf_shape <- as.integer(tree_leaf_shape)
-    tempo <- fun_check(data = tree_leaf_shape, class = "vector", typeof = "integer", length = 1) ; eval(ee)
-    if( ! tree_leaf_shape %in% 0:25){
-        tempo.cat <- paste0("ERROR IN tree_vizu.R:\nTHE tree_leaf_shape PARAMETER MUST BE A SINGLE INTEGER BETWEEN 0 AND 25\nHERE IT IS:\n", paste0(tree_leaf_shape, collapse = " "))
+    germ_tree_leaf_shape <- as.integer(germ_tree_leaf_shape)
+    tempo <- fun_check(data = germ_tree_leaf_shape, class = "vector", typeof = "integer", length = 1) ; eval(ee)
+    if( ! germ_tree_leaf_shape %in% 0:25){
+        tempo.cat <- paste0("ERROR IN germ_tree_vizu.R:\nTHE germ_tree_leaf_shape PARAMETER MUST BE A SINGLE INTEGER BETWEEN 0 AND 25\nHERE IT IS:\n", paste0(germ_tree_leaf_shape, collapse = " "))
         text.check2 <- c(text.check2, tempo.cat)
         arg.check2 <- c(arg.check2, TRUE)
     }
 }
 
-if(length(tree_leaf_size) != 1 & any(grepl(tree_leaf_size, pattern = "^[0-9]+\\.{0,1}[0-9]*$"))){ # positive numeric
-    tempo.cat <- paste0("ERROR IN tree_vizu.R:\nTHE tree_leaf_size PARAMETER MUST BE A SINGLE POSITIVE NUMBER\nHERE IT IS: \n", paste0(tree_leaf_size, collapse = " "))
+if(length(germ_tree_leaf_size) != 1 & any(grepl(germ_tree_leaf_size, pattern = "^[0-9]+\\.{0,1}[0-9]*$"))){ # positive numeric
+    tempo.cat <- paste0("ERROR IN germ_tree_vizu.R:\nTHE germ_tree_leaf_size PARAMETER MUST BE A SINGLE POSITIVE NUMBER\nHERE IT IS: \n", paste0(germ_tree_leaf_size, collapse = " "))
     text.check2 <- c(text.check2, tempo.cat)
     arg.check2 <- c(arg.check2, TRUE)
 }else{
-    tree_leaf_size <- as.numeric(tree_leaf_size)
-    tempo <- fun_check(data = tree_leaf_size, class = "vector", mode = "numeric", neg.values = FALSE, length = 1) ; eval(ee)
+    germ_tree_leaf_size <- as.numeric(germ_tree_leaf_size)
+    tempo <- fun_check(data = germ_tree_leaf_size, class = "vector", mode = "numeric", neg.values = FALSE, length = 1) ; eval(ee)
 }
 
-if(length(tree_label_size) != 1 & any(grepl(tree_label_size, pattern = "^[0-9]+\\.{0,1}[0-9]*$"))){ # positive numeric
-    tempo.cat <- paste0("ERROR IN tree_vizu.R:\nTHE tree_label_size PARAMETER MUST BE A SINGLE POSITIVE NUMBER\nHERE IT IS: \n", paste0(tree_label_size, collapse = " "))
+if(length(germ_tree_label_size) != 1 & any(grepl(germ_tree_label_size, pattern = "^[0-9]+\\.{0,1}[0-9]*$"))){ # positive numeric
+    tempo.cat <- paste0("ERROR IN germ_tree_vizu.R:\nTHE germ_tree_label_size PARAMETER MUST BE A SINGLE POSITIVE NUMBER\nHERE IT IS: \n", paste0(germ_tree_label_size, collapse = " "))
     text.check2 <- c(text.check2, tempo.cat)
     arg.check2 <- c(arg.check2, TRUE)
 }else{
-    tree_label_size <- as.numeric(tree_label_size)
-    tempo <- fun_check(data = tree_label_size, class = "vector", mode = "numeric", neg.values = FALSE, length = 1) ; eval(ee)
+    germ_tree_label_size <- as.numeric(germ_tree_label_size)
+    tempo <- fun_check(data = germ_tree_label_size, class = "vector", mode = "numeric", neg.values = FALSE, length = 1) ; eval(ee)
 }
 
-if(length(tree_label_hjust) != 1 & any(grepl(tree_label_hjust, pattern = "^\\-{0,1}[0-9]+\\.{0,1}[0-9]*$"))){ # positive numeric
-    tempo.cat <- paste0("ERROR IN tree_vizu.R:\nTHE tree_label_hjust PARAMETER MUST BE A SINGLE NUMBER\nHERE IT IS: \n", paste0(tree_label_hjust, collapse = " "))
+if(length(germ_tree_label_hjust) != 1 & any(grepl(germ_tree_label_hjust, pattern = "^\\-{0,1}[0-9]+\\.{0,1}[0-9]*$"))){ # positive numeric
+    tempo.cat <- paste0("ERROR IN germ_tree_vizu.R:\nTHE germ_tree_label_hjust PARAMETER MUST BE A SINGLE NUMBER\nHERE IT IS: \n", paste0(germ_tree_label_hjust, collapse = " "))
     text.check2 <- c(text.check2, tempo.cat)
     arg.check2 <- c(arg.check2, TRUE)
 }else{
-    tree_label_hjust <- as.numeric(tree_label_hjust)
-    tempo <- fun_check(data = tree_label_hjust, class = "vector", mode = "numeric", length = 1) ; eval(ee)
+    germ_tree_label_hjust <- as.numeric(germ_tree_label_hjust)
+    tempo <- fun_check(data = germ_tree_label_hjust, class = "vector", mode = "numeric", length = 1) ; eval(ee)
 }
 
-if( ! (length(tree_label_rigth) == 1 & any(tree_label_rigth %in% c("TRUE", "FALSE")))){ # positive numeric
-    tempo.cat <- paste0("ERROR IN tree_vizu.R:\nTHE tree_label_size PARAMETER MUST BE \"TRUE\" OR \"FALSE\"\nHERE IT IS: \n", paste0(tree_label_rigth, collapse = " "))
+if( ! (length(germ_tree_label_rigth) == 1 & any(germ_tree_label_rigth %in% c("TRUE", "FALSE")))){ # positive numeric
+    tempo.cat <- paste0("ERROR IN germ_tree_vizu.R:\nTHE germ_tree_label_size PARAMETER MUST BE \"TRUE\" OR \"FALSE\"\nHERE IT IS: \n", paste0(germ_tree_label_rigth, collapse = " "))
     text.check2 <- c(text.check2, tempo.cat)
     arg.check2 <- c(arg.check2, TRUE)
 }
 
-if( ! (length(tree_label_outside) == 1 & any(tree_label_outside %in% c("TRUE", "FALSE")))){ # positive numeric
-    tempo.cat <- paste0("ERROR IN tree_vizu.R:\nTHE tree_label_outside PARAMETER MUST BE \"TRUE\" OR \"FALSE\"\nHERE IT IS: \n", paste0(tree_label_outside, collapse = " "))
+if( ! (length(germ_tree_label_outside) == 1 & any(germ_tree_label_outside %in% c("TRUE", "FALSE")))){ # positive numeric
+    tempo.cat <- paste0("ERROR IN germ_tree_vizu.R:\nTHE germ_tree_label_outside PARAMETER MUST BE \"TRUE\" OR \"FALSE\"\nHERE IT IS: \n", paste0(germ_tree_label_outside, collapse = " "))
     text.check2 <- c(text.check2, tempo.cat)
     arg.check2 <- c(arg.check2, TRUE)
 }
 
-if(length(tree_right_margin) != 1 & any(grepl(tree_right_margin, pattern = "^[0-9]+\\.{0,1}[0-9]*$"))){ # positive numeric
-    tempo.cat <- paste0("ERROR IN tree_vizu.R:\nTHE tree_right_margin PARAMETER MUST BE A SINGLE POSITIVE NUMBER\nHERE IT IS: \n", paste0(tree_right_margin, collapse = " "))
+if(length(germ_tree_right_margin) != 1 & any(grepl(germ_tree_right_margin, pattern = "^[0-9]+\\.{0,1}[0-9]*$"))){ # positive numeric
+    tempo.cat <- paste0("ERROR IN germ_tree_vizu.R:\nTHE germ_tree_right_margin PARAMETER MUST BE A SINGLE POSITIVE NUMBER\nHERE IT IS: \n", paste0(germ_tree_right_margin, collapse = " "))
     text.check2 <- c(text.check2, tempo.cat)
     arg.check2 <- c(arg.check2, TRUE)
 }else{
-    tree_right_margin <- as.numeric(tree_right_margin)
-    tempo <- fun_check(data = tree_right_margin, class = "vector", mode = "numeric", neg.values = FALSE, length = 1) ; eval(ee)
+    germ_tree_right_margin <- as.numeric(germ_tree_right_margin)
+    tempo <- fun_check(data = germ_tree_right_margin, class = "vector", mode = "numeric", neg.values = FALSE, length = 1) ; eval(ee)
 }
 
-if( ! (length(tree_legend) == 1 & any(tree_legend %in% c("TRUE", "FALSE")))){ # positive numeric
-    tempo.cat <- paste0("ERROR IN tree_vizu.R:\nTHE tree_legend PARAMETER MUST BE \"TRUE\" OR \"FALSE\"\nHERE IT IS: \n", paste0(tree_legend, collapse = " "))
+if( ! (length(germ_tree_legend) == 1 & any(germ_tree_legend %in% c("TRUE", "FALSE")))){ # positive numeric
+    tempo.cat <- paste0("ERROR IN germ_tree_vizu.R:\nTHE germ_tree_legend PARAMETER MUST BE \"TRUE\" OR \"FALSE\"\nHERE IT IS: \n", paste0(germ_tree_legend, collapse = " "))
     text.check2 <- c(text.check2, tempo.cat)
     arg.check2 <- c(arg.check2, TRUE)
 }
 
-if(tree_meta_path == "NULL"){
-    tree_meta_path <- NULL
-}else if( ! file.exists(tree_meta_path)){
-    tempo.cat <- paste0("ERROR IN tree_vizu.R:\nTHE meta_path PARAMETER MUST BE A VALID PATH OF A FILE IF NOT \"NULL\"\nHERE IT IS: \n", paste0(tree_meta_path, collapse = " "))
+if(germ_tree_meta_path == "NULL"){
+    germ_tree_meta_path <- NULL
+}else if( ! file.exists(germ_tree_meta_path)){
+    tempo.cat <- paste0("ERROR IN germ_tree_vizu.R:\nTHE meta_path PARAMETER MUST BE A VALID PATH OF A FILE IF NOT \"NULL\"\nHERE IT IS: \n", paste0(germ_tree_meta_path, collapse = " "))
     text.check2 <- c(text.check2, tempo.cat)
     arg.check2 <- c(arg.check2, TRUE)
 }
 
-if(tree_meta_legend == "NULL"){
-    tree_meta_legend <- NULL
+if(germ_tree_meta_legend == "NULL"){
+    germ_tree_meta_legend <- NULL
 }
 
 if(any(arg.check2) == TRUE){ # normally no NA
@@ -456,7 +456,7 @@ if(any(arg.check2) == TRUE){ # normally no NA
 ################ Ignition
 
 
-fun_report(data = paste0("\n\n################################################################ tree_vizu PROCESS\n\n"), output = log, path = "./", overwrite = FALSE)
+fun_report(data = paste0("\n\n################################################################ germ_tree_vizu PROCESS\n\n"), output = log, path = "./", overwrite = FALSE)
 ini.date <- Sys.time()
 ini.time <- as.numeric(ini.date) # time of process begin, converted into seconds
 fun_report(data = paste0("\n\n################################ RUNNING DATE AND STARTING TIME\n\n"), output = log, path = "./", overwrite = FALSE)
@@ -483,11 +483,11 @@ if(length(tempo.list) == 0){
     fun_report(data = tempo.cat, output = log, path = "./", overwrite = FALSE)
     # no need to use pdf(NULL) with fun_gg_empty_graph()
     final.plot <- fun_gg_empty_graph(text = "NO GRAPH PLOTTED\nNO .RData FILE DETECTED", text.size = 3)
-    ggplot2::ggsave(filename = paste0("tree.png"), plot = final.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-    ggplot2::ggsave(filename = paste0("tree.svg"), plot = final.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-    ggplot2::ggsave(filename = paste0("tree.pdf"), plot = final.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+    ggplot2::ggsave(filename = paste0("germ_tree.png"), plot = final.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+    ggplot2::ggsave(filename = paste0("germ_tree.svg"), plot = final.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+    ggplot2::ggsave(filename = paste0("germ_tree.pdf"), plot = final.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
     tempo.df <- matrix(c("sequence_id", "clone_id", "clone_name", "chain", "identical_to"), nrow = 1)
-    write.table(tempo.df, file = paste0("./tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = FALSE, sep = "\t", quote = FALSE)
+    write.table(tempo.df, file = paste0("./germ_tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = FALSE, sep = "\t", quote = FALSE)
 }else{
     clone.id <- sapply(tempo.list, FUN = function(x){strsplit(x, split = "_")[[1]][1]})
 
@@ -515,12 +515,12 @@ if(length(tempo.list) == 0){
         suppressWarnings(rm(db))
         load(tempo.list[i1])
         if( ! exists("clones", where = ".GlobalEnv", inherit = FALSE)){
-            stop("\n\n========\n\nINTERNAL CODE ERROR 4 IN tree_vizu.R:\nclones OBJECT CANNOT BE ABSENT FROM ", tempo.list[i1], "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
+            stop("\n\n========\n\nINTERNAL CODE ERROR 4 IN germ_tree_vizu.R:\nclones OBJECT CANNOT BE ABSENT FROM ", tempo.list[i1], "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
         }
         # Warning : here [[1]] is ok
         if( ! exists("trees", where = ".GlobalEnv", inherit = FALSE)){ # creation of an empty tibble but with the clone id added
             if( ! is.null(fun_get_message("clones$data[[1]]@clone"))){
-                stop("\n\n========\n\nINTERNAL CODE ERROR 5 IN tree_vizu.R:\nclones$data[[1]]@clone OBJECT CANNOT BE ABSENT FROM ", tempo.list[i1], "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
+                stop("\n\n========\n\nINTERNAL CODE ERROR 5 IN germ_tree_vizu.R:\nclones$data[[1]]@clone OBJECT CANNOT BE ABSENT FROM ", tempo.list[i1], "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
             }
             trees <- dplyr::bind_rows(tempo.trees.ini, data.frame(clone_id = as.double(clones$data[[1]]@clone), data = NA, locus = as.character(NA), seqs = as.integer(NA), parameters = NA, trees = NA))
         }
@@ -539,13 +539,13 @@ if(length(tempo.list) == 0){
         plots <- suppressMessages(dowser::plotTrees( # creation of the plots list object, using the trees tibble object
             # option in https://dowser.readthedocs.io/en/latest/topics/plotTrees/
             trees[ ! sapply(trees$trees, FUN = is.null),], 
-            layout = tree_kind, 
+            layout = germ_tree_kind, 
             title = TRUE
         ))
     }
     clones <- tempo.clones
     db.list <- tempo.db # creation of the db.list tibble object, made of all the db
-    save(list = c("trees", "plots", "clones", "db.list", "clone.id"), file = "./all_trees.RData")
+    save(list = c("trees", "plots", "clones", "db.list", "clone.id"), file = "./all_germ_trees.RData")
 
 
 ################ end concatenation of all tibble trees into a same tibble and plot
@@ -554,8 +554,8 @@ if(length(tempo.list) == 0){
 ################ Data import
 
 
-    if( ! is.null(tree_meta_path)){
-        meta.df <- read.table(tree_meta_path, sep = "\t", header = TRUE)
+    if( ! is.null(germ_tree_meta_path)){
+        meta.df <- read.table(germ_tree_meta_path, sep = "\t", header = TRUE)
     }
 
 
@@ -582,25 +582,25 @@ if(length(tempo.list) == 0){
         if( ! (is.null(trees$trees[[i3]]) | length(trees$trees[[i3]]$parameters$nseq) == 0)){
             if(trees$trees[[i3]]$parameters$nseq != 0 | is.na(trees$trees[[i3]]$parameters$nseq)){
                 if(any(trees$data[[i3]]@clone != clones$data[[i3]]@clone)){
-                    stop("\n\n========\n\nINTERNAL CODE ERROR 6 IN tree_vizu.R FOR CLONE ID ", clone.id[[i3]], ":\ntrees$data[[i3]]@clone AND clones$data[[i3]]@clone SHOULD BE iDENTICAL\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
+                    stop("\n\n========\n\nINTERNAL CODE ERROR 6 IN germ_tree_vizu.R FOR CLONE ID ", clone.id[[i3]], ":\ntrees$data[[i3]]@clone AND clones$data[[i3]]@clone SHOULD BE iDENTICAL\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
                 }
                 if(any(trees$data[[i3]]@v_gene != clones$data[[i3]]@v_gene)){
-                    stop("\n\n========\n\nINTERNAL CODE ERROR 7 IN tree_vizu.R FOR CLONE ID ", clone.id[[i3]], ":\ntrees$data[[i3]]@v_gene AND clones$data[[i3]]@v_gene SHOULD BE iDENTICAL\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
+                    stop("\n\n========\n\nINTERNAL CODE ERROR 7 IN germ_tree_vizu.R FOR CLONE ID ", clone.id[[i3]], ":\ntrees$data[[i3]]@v_gene AND clones$data[[i3]]@v_gene SHOULD BE iDENTICAL\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
                 }
                 if(any(trees$data[[i3]]@j_gene != clones$data[[i3]]@j_gene)){
-                    stop("\n\n========\n\nINTERNAL CODE ERROR 8 IN tree_vizu.R FOR CLONE ID ", clone.id[[i3]], ":\ntrees$data[[i3]]@j_gene AND clones$data[[i3]]@j_gene SHOULD BE iDENTICAL\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
+                    stop("\n\n========\n\nINTERNAL CODE ERROR 8 IN germ_tree_vizu.R FOR CLONE ID ", clone.id[[i3]], ":\ntrees$data[[i3]]@j_gene AND clones$data[[i3]]@j_gene SHOULD BE iDENTICAL\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
                 }
                 if(any(trees$data[[i3]]@junc_len != clones$data[[i3]]@junc_len)){
-                    stop("\n\n========\n\nINTERNAL CODE ERROR 9 IN tree_vizu.R FOR CLONE ID ", clone.id[[i3]], ":\ntrees$data[[i3]]@junc_len AND clones$data[[i3]]@junc_len SHOULD BE iDENTICAL\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
+                    stop("\n\n========\n\nINTERNAL CODE ERROR 9 IN germ_tree_vizu.R FOR CLONE ID ", clone.id[[i3]], ":\ntrees$data[[i3]]@junc_len AND clones$data[[i3]]@junc_len SHOULD BE iDENTICAL\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
                 }
                 if(nrow(trees$data[[i3]]@data) != nrow(clones$data[[i3]]@data)){
-                    stop("\n\n========\n\nINTERNAL CODE ERROR 10 IN tree_vizu.R FOR CLONE ID ", clone.id[[i3]], ":\nnrow(trees$data[[i3]]@data) AND nrow(clones$data[[i3]]@data) SHOULD BE iDENTICAL\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
+                    stop("\n\n========\n\nINTERNAL CODE ERROR 10 IN germ_tree_vizu.R FOR CLONE ID ", clone.id[[i3]], ":\nnrow(trees$data[[i3]]@data) AND nrow(clones$data[[i3]]@data) SHOULD BE iDENTICAL\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
                 }
                 if(any(clone.id[[i3]] != trees$data[[i3]]@clone)){
-                    stop("\n\n========\n\nINTERNAL CODE ERROR 11 IN tree_vizu.R FOR CLONE ID ", clone.id[[i3]], ":\nclone.id[[i3]] AND trees$data[[i3]]@clone SHOULD BE iDENTICAL\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
+                    stop("\n\n========\n\nINTERNAL CODE ERROR 11 IN germ_tree_vizu.R FOR CLONE ID ", clone.id[[i3]], ":\nclone.id[[i3]] AND trees$data[[i3]]@clone SHOULD BE iDENTICAL\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
                 }
                 # color of leafs and germline
-                tempo.graph.info <- ggplot2::ggplot_build(ggtree::ggtree(trees$trees[[i3]], layout = if(tree_kind %in% c("roundrect", "ellipse")){"rectangular"}else{tree_kind}) +  ggtree::geom_tippoint() + ggtree::geom_tiplab()) # plots[[i3]] is equivalent to ggtree::ggtree(trees$trees[[i3]])
+                tempo.graph.info <- ggplot2::ggplot_build(ggtree::ggtree(trees$trees[[i3]], layout = if(germ_tree_kind %in% c("roundrect", "ellipse")){"rectangular"}else{germ_tree_kind}) +  ggtree::geom_tippoint() + ggtree::geom_tiplab()) # plots[[i3]] is equivalent to ggtree::ggtree(trees$trees[[i3]])
                 leaf.nodes <- NULL
                 tempo.log <- NULL
                 for(i4 in 1:length(tempo.graph.info$data)){
@@ -610,7 +610,7 @@ if(length(tempo.list) == 0){
                     }
                 }
                 if(is.null(leaf.nodes)){
-                    stop("\n\n========\n\nINTERNAL CODE ERROR 12 IN tree_vizu.R FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), ":\nEMPTY leaf.nodes OBJECT GENERATED\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
+                    stop("\n\n========\n\nINTERNAL CODE ERROR 12 IN germ_tree_vizu.R FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), ":\nEMPTY leaf.nodes OBJECT GENERATED\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
                 }
                 leaf.node.germline <- leaf.nodes[tempo.log]
                 leaf.node.not.germline <- leaf.nodes[ ! tempo.log]
@@ -626,7 +626,7 @@ if(length(tempo.list) == 0){
                 tempo.j <- trees$data[[i3]]@j_gene
                 chain <- substr(tempo.j, 1, 3) # extract the IGH or IGK name
                 if(chain != substr(tempo.v, 1, 3)){
-                    stop(paste0("\n\n============\n\nERROR IN tree_vizu.R\nTHE CHAIN OF THE clone_id ", trees$data[[i3]]@clone, " IS NOT THE SAME BETWEEN V (", tempo.v, ") AND J (", tempo.j, ")\n\n============\n\n"), call. = FALSE)
+                    stop(paste0("\n\n============\n\nERROR IN germ_tree_vizu.R\nTHE CHAIN OF THE clone_id ", trees$data[[i3]]@clone, " IS NOT THE SAME BETWEEN V (", tempo.v, ") AND J (", tempo.j, ")\n\n============\n\n"), call. = FALSE)
                 }
                 tempo.v <- substring(tempo.v, 4)
                 tempo.j <- substring(tempo.j, 4)
@@ -634,24 +634,24 @@ if(length(tempo.list) == 0){
                 removed.seq <- NULL
                 trees$trees[[i3]]$old.tip.label <- trees$trees[[i3]]$tip.label # backup the initial tip.label into a new 13th compartment of the trees$trees[[i3]] list
                 trees$trees[[i3]]$new.tip.label <- trees$trees[[i3]]$tip.label # make a new 14th compartment of the trees$trees[[i3]] list for the tip labels with seq removed added
-                if(tree_duplicate_seq == "TRUE" & nrow(trees$data[[i3]]@data) != nrow(db.list[[i3]])){
-                    stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 13 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"TRUE\"\nBUT THE NUMBER OF ROWS IN trees$data[[i3]]@data (n=", nrow(trees$data[[i3]]@data), ")\nIS DIFFERENT FROM THE NUMBER OF ROWS IN db (n=", nrow(db.list[[i3]]), ")\nAS IF SOME SEQUENCES WHERE REMOVED\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
-                }else if(tree_duplicate_seq == "TRUE"){
+                if(germ_tree_duplicate_seq == "TRUE" & nrow(trees$data[[i3]]@data) != nrow(db.list[[i3]])){
+                    stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 13 IN germ_tree_vizu.R for clone ID ", clone.id[[i3]], "\nTHE germ_tree_duplicate_seq PARAMETER IS SET TO \"TRUE\"\nBUT THE NUMBER OF ROWS IN trees$data[[i3]]@data (n=", nrow(trees$data[[i3]]@data), ")\nIS DIFFERENT FROM THE NUMBER OF ROWS IN db (n=", nrow(db.list[[i3]]), ")\nAS IF SOME SEQUENCES WHERE REMOVED\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                }else if(germ_tree_duplicate_seq == "TRUE"){
                     tempo.cat <- "All sequences of the tree are displayed"
                     add.text <- paste0(ifelse(is.null(add.text), tempo.cat, paste0(add.text, "\n", tempo.cat)))
-                }else if(tree_duplicate_seq == "FALSE" & nrow(trees$data[[i3]]@data) == nrow(db.list[[i3]])){
+                }else if(germ_tree_duplicate_seq == "FALSE" & nrow(trees$data[[i3]]@data) == nrow(db.list[[i3]])){
                     tempo.cat <- "All sequences of the tree are displayed"
                     add.text <- paste0(ifelse(is.null(add.text), tempo.cat, paste0(add.text, "\n", tempo.cat)))
-                }else if(tree_duplicate_seq == "FALSE" & nrow(trees$data[[i3]]@data) != nrow(db.list[[i3]])){
+                }else if(germ_tree_duplicate_seq == "FALSE" & nrow(trees$data[[i3]]@data) != nrow(db.list[[i3]])){
                     # get removed sequences info
                     no.removed.seq.log <- db.list[[i3]][[1]] %in% trees$data[[i3]]@data[[1]] # of note, the trees$data[[i3]]@data$collapsed report also the names in the first column trees$data[[i3]]@data[[1]] = trees$data[[i3]]@data$sequence_id. It is not the sequences that are not in the tree anymore !
                     removed.seq.log <- ! no.removed.seq.log
                     if( ! any(removed.seq.log)){
-                        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 14 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nTHE tree_duplicate_seq PARAMETER IS SET TO \"FALSE\"\nBUT NO SEQ NAMES COLLAPSED IN THE TREE IN trees$data[[", i3, "]]@data[[1]] COMPARED TO db.list[[", i3, "]][[1]]\ntrees$data[[i3]]@data[[1]]: ", paste(trees$data[[i3]]@data[[1]], collapse = " "), "\ndb.list[[", i3, "]][[1]]: ", paste(db.list[[i3]][[1]], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 14 IN germ_tree_vizu.R for clone ID ", clone.id[[i3]], "\nTHE germ_tree_duplicate_seq PARAMETER IS SET TO \"FALSE\"\nBUT NO SEQ NAMES COLLAPSED IN THE TREE IN trees$data[[", i3, "]]@data[[1]] COMPARED TO db.list[[", i3, "]][[1]]\ntrees$data[[i3]]@data[[1]]: ", paste(trees$data[[i3]]@data[[1]], collapse = " "), "\ndb.list[[", i3, "]][[1]]: ", paste(db.list[[i3]][[1]], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
                     }else{
                         not.removed.seq <- db.list[[i3]][[1]][no.removed.seq.log]
                         removed.seq <- db.list[[i3]][[1]][removed.seq.log]
-                        tempo.warn <- paste0(length(removed.seq), " sequences removed from the display (Parameter tree_duplicate_seq == \"FALSE\". See tree_seq_not_displayed.tsv)")
+                        tempo.warn <- paste0(length(removed.seq), " sequences removed from the display (Parameter germ_tree_duplicate_seq == \"FALSE\". See germ_tree_seq_not_displayed.tsv)")
                         tempo.warn2 <- paste0("FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\n", tempo.warn)
                         warn <- paste0(ifelse(is.null(warn), tempo.warn2, paste0(warn, "\n\n", tempo.warn2)))
                         tempo.cat <- paste0("Warning: ", tempo.warn, "\nNumber of total sequences are indicated between brackets in leaf labelings (removed = total - 1)")
@@ -662,23 +662,23 @@ if(length(tempo.list) == 0){
                             identical.seq <- c(identical.seq, trees$data[[i3]]@data[[1]][tempo.log])
                         }
                         if(any( ! removed.seq %in% unlist(strsplit(trees$data[[i3]]@data$collapsed, split = ",")))){
-                            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 15 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nTHESE SEQUENCES NAMES, PRESENT IN db.list[[", i3, "]][[1]]: ", paste(db.list[[i3]][[1]], collapse = " "), "\nDOES NOT APPEAR ANYMORE IN removed.seq ", paste(removed.seq, collapse = " "), "\nTHE PROBLEM COMES FROM THE COLLAPSE IN clones$data[[", i3, "]]@data$collapsed: ", paste(clones$data[[", i3, "]]@data$collapsed, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 15 IN germ_tree_vizu.R for clone ID ", clone.id[[i3]], "\nTHESE SEQUENCES NAMES, PRESENT IN db.list[[", i3, "]][[1]]: ", paste(db.list[[i3]][[1]], collapse = " "), "\nDOES NOT APPEAR ANYMORE IN removed.seq ", paste(removed.seq, collapse = " "), "\nTHE PROBLEM COMES FROM THE COLLAPSE IN clones$data[[", i3, "]]@data$collapsed: ", paste(clones$data[[", i3, "]]@data$collapsed, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
                         }
                         if(length(removed.seq) != length(identical.seq)){
-                            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 16 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nidentical.seq SHOULD HAVE ", length(removed.seq), " SEQUENCES NAMES\nLENGTH OF removed.seq: ", paste(removed.seq, collapse = " "), "\nSHOULD BE IDENTICAL TO LENGTH OF identical.seq: ", paste(identical.seq, collapse = " "), "\ntrees$data[[i3]]@data$collapsed: ", paste(trees$data[[i3]]@data$collapsed, collapse = " "), "\nclones$data[[", i3, "]]@data$collapsed: ", paste(clones$data[[i3]]@data$collapsed, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 16 IN germ_tree_vizu.R for clone ID ", clone.id[[i3]], "\nidentical.seq SHOULD HAVE ", length(removed.seq), " SEQUENCES NAMES\nLENGTH OF removed.seq: ", paste(removed.seq, collapse = " "), "\nSHOULD BE IDENTICAL TO LENGTH OF identical.seq: ", paste(identical.seq, collapse = " "), "\ntrees$data[[i3]]@data$collapsed: ", paste(trees$data[[i3]]@data$collapsed, collapse = " "), "\nclones$data[[", i3, "]]@data$collapsed: ", paste(clones$data[[i3]]@data$collapsed, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
                         }
                         suppressWarnings(rm(tempo.df))
                         tempo.df <- data.frame(sequence_id = removed.seq, clone_id = clone.id[[i3]], clone_name = clone.name, chain = chain, identical_to = identical.seq)
-                        write.table(tempo.df, file = paste0("./", clone.id[[i3]], "_tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = TRUE, sep = "\t", quote = FALSE)
+                        write.table(tempo.df, file = paste0("./", clone.id[[i3]], "_germ_tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = TRUE, sep = "\t", quote = FALSE)
                         empty.tsv <- FALSE
                         # end get removed sequences info
                         # modif of the tree tip labeling
                         if(length(trees$trees[[i3]]$new.tip.label) - 1 != length(trees$data[[i3]]@data$sequence_id)){ # - 1 because "Germline" label removed
-                            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 17 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nLENGTH OF trees$trees[[i3]]$new.tip.label SHOULD BE -1 OF LENGTH OF trees$data[[i3]]@data$sequence_id. HERE IT IS:\n\nLENGTH - 1 OF trees$trees[[i3]]$new.tip.label: ", length(trees$trees[[i3]]$new.tip.label) - 1, " \nLENGTH OF trees$data[[i3]]@data$sequence_id: ", length(trees$data[[i3]]@data$sequence_id), "\n\ntrees$trees[[i3]]$new.tip.label:\n", paste(trees$trees[[i3]]$new.tip.label, collapse = "\n"), "\n\ntrees$data[[i3]]@data$sequence_id:\n", paste(trees$data[[i3]]@data$sequence_id, collapse = "\n"), "\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 17 IN germ_tree_vizu.R for clone ID ", clone.id[[i3]], "\nLENGTH OF trees$trees[[i3]]$new.tip.label SHOULD BE -1 OF LENGTH OF trees$data[[i3]]@data$sequence_id. HERE IT IS:\n\nLENGTH - 1 OF trees$trees[[i3]]$new.tip.label: ", length(trees$trees[[i3]]$new.tip.label) - 1, " \nLENGTH OF trees$data[[i3]]@data$sequence_id: ", length(trees$data[[i3]]@data$sequence_id), "\n\ntrees$trees[[i3]]$new.tip.label:\n", paste(trees$trees[[i3]]$new.tip.label, collapse = "\n"), "\n\ntrees$data[[i3]]@data$sequence_id:\n", paste(trees$data[[i3]]@data$sequence_id, collapse = "\n"), "\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
                         }else{
                             tempo.pos <- match(trees$trees[[i3]]$new.tip.label[-length(trees$trees[[i3]]$new.tip.label)], trees$data[[i3]]@data$sequence_id) # [-length(trees$trees[[i3]]$new.tip.label)] to remove the "Germline" label from the elements
                             if( ! all(trees$data[[i3]]@data$sequence_id[tempo.pos] == trees$trees[[i3]]$new.tip.label[-length(trees$trees[[i3]]$new.tip.label)])){
-                                stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 18 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nELEMENTS SHOULD BE THE SAME. HERE IT IS:\n\ntrees$data[[i3]]@data$sequence_id[tempo.pos]:\n", paste(trees$data[[i3]]@data$sequence_id[tempo.pos], collapse = "\n"), "\n\ntrees$trees[[i3]]$new.tip.label[-length(trees$trees[[i3]]$new.tip.label)]:\n", paste(trees$trees[[i3]]$new.tip.label[-length(trees$trees[[i3]]$new.tip.label)], collapse = "\n"), "\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                                stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 18 IN germ_tree_vizu.R for clone ID ", clone.id[[i3]], "\nELEMENTS SHOULD BE THE SAME. HERE IT IS:\n\ntrees$data[[i3]]@data$sequence_id[tempo.pos]:\n", paste(trees$data[[i3]]@data$sequence_id[tempo.pos], collapse = "\n"), "\n\ntrees$trees[[i3]]$new.tip.label[-length(trees$trees[[i3]]$new.tip.label)]:\n", paste(trees$trees[[i3]]$new.tip.label[-length(trees$trees[[i3]]$new.tip.label)], collapse = "\n"), "\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
                             }else{
                                 trees$trees[[i3]]$new.tip.label[-length(trees$trees[[i3]]$new.tip.label)] <- paste0("(", trees$data[[i3]]@data$collapse_count[tempo.pos], ") ", trees$data[[i3]]@data$sequence_id[tempo.pos]) # -1 because it is the number of "removed" sequences, not "total" number of sequences
                             }
@@ -691,18 +691,18 @@ if(length(tempo.list) == 0){
                 tempo.gg.name <- "gg.indiv.plot."
                 tempo.gg.count <- 0
                 # tree with metadata
-                if( ( ! is.null(tree_meta_path)) & ! is.null(tree_meta_legend)){
+                if( ( ! is.null(germ_tree_meta_path)) & ! is.null(germ_tree_meta_legend)){
                     # merge of the meta data into the ggtree object. See https://yulab-smu.top/treedata-book/chapter7.html#attach-operator
-                    if( ! tree_meta_legend %in% names(meta.df)){
-                        stop(paste0("\n\n============\n\nERROR IN tree_vizu.R for clone ID ", paste(unique(db.list[[i3]]$clone_id)), "\nIF NOT \"NULL\", THE meta_legend PARAMETER MUST BE A COLUMN NAME OF THE meta_path PARAMETER. HERE IT IS:\ntree_meta_legend: ", tree_meta_legend, "\nCOLUMN NAMES OF tree_meta_path: ", paste(names(meta.df), collapse = " "), "\n\n============\n\n"), call. = FALSE)
+                    if( ! germ_tree_meta_legend %in% names(meta.df)){
+                        stop(paste0("\n\n============\n\nERROR IN germ_tree_vizu.R for clone ID ", paste(unique(db.list[[i3]]$clone_id)), "\nIF NOT \"NULL\", THE meta_legend PARAMETER MUST BE A COLUMN NAME OF THE meta_path PARAMETER. HERE IT IS:\ngerm_tree_meta_legend: ", germ_tree_meta_legend, "\nCOLUMN NAMES OF germ_tree_meta_path: ", paste(names(meta.df), collapse = " "), "\n\n============\n\n"), call. = FALSE)
                     }
                     
                     if( ! any(trees$trees[[i3]]$tip.label %in% meta.df$Label)){
                         tempo.cat <- "Warning: meta_legend parameter indicated in the nextflow.config file but no metadata present in this tree (check the Label column of the metadata file?)."
                         paste0(ifelse(is.null(add.text), tempo.cat, paste0(add.text, "\n", tempo.cat)))
                     }
-                    tempo.added.trees <- ggtree::"%<+%"( # it seems that this command uses the tip.label compartment to merge meta.df into ggtree::ggtree(trees$trees[[i3]], layout = tree_kind)
-                        ggtree::ggtree(trees$trees[[i3]], layout = tree_kind),
+                    tempo.added.trees <- ggtree::"%<+%"( # it seems that this command uses the tip.label compartment to merge meta.df into ggtree::ggtree(trees$trees[[i3]], layout = germ_tree_kind)
+                        ggtree::ggtree(trees$trees[[i3]], layout = germ_tree_kind),
                         meta.df
                     )
                     # adding new tip labels into tempo.added.trees (because they are lost with ggtree::"%<+%")
@@ -710,7 +710,7 @@ if(length(tempo.list) == 0){
                     if(all(tempo.added.trees$data$label[tempo.log] == trees$trees[[i3]]$tip.label)){
                         tempo.added.trees$data$label[tempo.log] <- trees$trees[[i3]]$new.tip.label
                     }else{
-                        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 19 IN tree_vizu.R for clone ID ", clone.id[[i3]], "\nELEMENTS SHOULD BE THE SAME. HERE IT IS:\n\ntempo.added.trees$data$label[tempo.log]:\n", paste(tempo.added.trees$data$label[tempo.log], collapse = "\n"), "\n\ntrees$trees[[i3]]$tip.label:\n", paste(trees$trees[[i3]]$tip.label, collapse = "\n"), "\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
+                        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 19 IN germ_tree_vizu.R for clone ID ", clone.id[[i3]], "\nELEMENTS SHOULD BE THE SAME. HERE IT IS:\n\ntempo.added.trees$data$label[tempo.log]:\n", paste(tempo.added.trees$data$label[tempo.log], collapse = "\n"), "\n\ntrees$trees[[i3]]$tip.label:\n", paste(trees$trees[[i3]]$tip.label, collapse = "\n"), "\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n"), call. = FALSE)
                     }
                     # end adding new tip labels into tempo.added.trees (because they are lost with ggtree::"%<+%")
                     # 
@@ -723,37 +723,37 @@ if(length(tempo.list) == 0){
                     }
                     tempo.added.trees$data <- tibble::add_column(tempo.added.trees$data, Annotated)
                     assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), tempo.added.trees)
-                    tempo.col.values <- tree_meta_legend # name of the legend scale for the tippoints
-                    assign(tempo.col.values, tempo.added.trees$data[[tree_meta_legend]])
+                    tempo.col.values <- germ_tree_meta_legend # name of the legend scale for the tippoints
+                    assign(tempo.col.values, tempo.added.trees$data[[germ_tree_meta_legend]])
                     if(is.numeric(get(tempo.col.values))){
                         assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
                             ggplot2::aes_string(
                                 fill = "tip.kind", 
                                 size = if( ! is.null(get(tempo.col.values))){get(tempo.col.values)}else{NA},
                             ),
-                            pch = tree_leaf_shape
+                            pch = germ_tree_leaf_shape
                         ))
                         tempo.scale <- seq(
-                            from = min(meta.df[ , tree_meta_legend], na.rm = TRUE), 
-                            to = max(meta.df[ , tree_meta_legend], na.rm = TRUE), 
+                            from = min(meta.df[ , germ_tree_meta_legend], na.rm = TRUE), 
+                            to = max(meta.df[ , germ_tree_meta_legend], na.rm = TRUE), 
                             length.out = 5
                         )
                         assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_size(
-                            name = tree_meta_legend,
+                            name = germ_tree_meta_legend,
                             breaks = tempo.scale,
                             labels = formatC(tempo.scale),
-                            limits = range(c(meta.df[ , tree_meta_legend]), na.rm = TRUE),
+                            limits = range(c(meta.df[ , germ_tree_meta_legend]), na.rm = TRUE),
                             range = c(0, 5), 
                             guide = ggplot2::guide_legend(
                                 override.aes = list(
-                                    fill = ifelse(is.null(tree_leaf_color), "tomato", tree_leaf_color)
+                                    fill = ifelse(is.null(germ_tree_leaf_color), "tomato", germ_tree_leaf_color)
                                 )
                             )
                         ))
                         assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_discrete_manual(
                             aesthetics = "fill", 
                             name = NULL, 
-                            values = c("black", ifelse(is.null(tree_leaf_color), "tomato", tree_leaf_color)),
+                            values = c("black", ifelse(is.null(germ_tree_leaf_color), "tomato", germ_tree_leaf_color)),
                             labels = c("Germline", "Seq")
                         ))
                         assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(fill = "none")) # no legend for fill in this context
@@ -762,35 +762,35 @@ if(length(tempo.list) == 0){
                             if( ! all(is.na(get(tempo.col.values)))){
                                 assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
                                     ggplot2::aes_string(fill = tempo.col.values),
-                                    pch = tree_leaf_shape, 
-                                    size = tree_leaf_size
+                                    pch = germ_tree_leaf_shape, 
+                                    size = germ_tree_leaf_size
                                 ))
                             }else{
                                 assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
                                     fill = "grey50",
-                                    pch = tree_leaf_shape, 
-                                    size = tree_leaf_size
+                                    pch = germ_tree_leaf_shape, 
+                                    size = germ_tree_leaf_size
                                 ))
                             }
                         }else{
                             assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
                                 fill = "grey50",
-                                pch = tree_leaf_shape, 
-                                size = tree_leaf_size
+                                pch = germ_tree_leaf_shape, 
+                                size = germ_tree_leaf_size
                             ))
                         }
                     }
-                    if(any(tree_kind %in% c("rectangular", "roundrect", "slanted", "ellipse"))){
+                    if(any(germ_tree_kind %in% c("rectangular", "roundrect", "slanted", "ellipse"))){
                         if(any(names(tempo.added.trees$data) == "Annotated")){
                             assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
                                 ggplot2::aes(color = Annotated), 
-                                hjust = tree_label_hjust,
-                                size = tree_label_size,
-                                as_ylab = ifelse(tree_label_rigth == "TRUE" & tree_kind == "rectangular", TRUE, FALSE)
+                                hjust = germ_tree_label_hjust,
+                                size = germ_tree_label_size,
+                                as_ylab = ifelse(germ_tree_label_rigth == "TRUE" & germ_tree_kind == "rectangular", TRUE, FALSE)
                             ))
                             assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_color_manual(
                                 name = "Annotated", 
-                                values = c("black", ifelse(is.null(tree_leaf_color), "tomato", tree_leaf_color)),
+                                values = c("black", ifelse(is.null(germ_tree_leaf_color), "tomato", germ_tree_leaf_color)),
                                 labels = c("No", "Yes")
                             ))
                             assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(
@@ -798,21 +798,21 @@ if(length(tempo.list) == 0){
                             ))
                         }else{
                             assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
-                                hjust = tree_label_hjust,
-                                size = tree_label_size,
-                                as_ylab = ifelse(tree_label_rigth == "TRUE" & tree_kind == "rectangular", TRUE, FALSE)
+                                hjust = germ_tree_label_hjust,
+                                size = germ_tree_label_size,
+                                as_ylab = ifelse(germ_tree_label_rigth == "TRUE" & germ_tree_kind == "rectangular", TRUE, FALSE)
                             ))
                         }
-                    }else if(any(tree_kind %in% c("circular", "fan", "equal_angle", "daylight"))){
+                    }else if(any(germ_tree_kind %in% c("circular", "fan", "equal_angle", "daylight"))){
                         if(any(names(tempo.added.trees$data) == "Annotated")){
                             assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
                                 ggplot2::aes(angle = angle, color = Annotated), 
-                                hjust = tree_label_hjust,
-                                size = tree_label_size
+                                hjust = germ_tree_label_hjust,
+                                size = germ_tree_label_size
                             ))
                             assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_color_manual(
                                 name = "Annotated", 
-                                values = c("black", ifelse(is.null(tree_leaf_color), "tomato", tree_leaf_color)),
+                                values = c("black", ifelse(is.null(germ_tree_leaf_color), "tomato", germ_tree_leaf_color)),
                                 labels = c("No", "Yes")
                             ))
                             assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(
@@ -821,19 +821,19 @@ if(length(tempo.list) == 0){
                         }else{
                             assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
                                 ggplot2::aes(angle = angle), 
-                                hjust = tree_label_hjust,
-                                size = tree_label_size
+                                hjust = germ_tree_label_hjust,
+                                size = germ_tree_label_size
                             ))
                         }
                     }else{
                         if(any(names(tempo.added.trees$data) == "Annotated")){
                             assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
                                 ggplot2::aes(color = Annotated), 
-                                size = tree_label_size
+                                size = germ_tree_label_size
                             ))
                             assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_color_manual(
                                 name = "Annotated", 
-                                values = c("black", ifelse(is.null(tree_leaf_color), "tomato", tree_leaf_color)),
+                                values = c("black", ifelse(is.null(germ_tree_leaf_color), "tomato", germ_tree_leaf_color)),
                                 labels = c("No", "Yes")
                             ))
                             assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(
@@ -841,63 +841,63 @@ if(length(tempo.list) == 0){
                             ))
                         }else{
                             assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
-                                size = tree_label_size
+                                size = germ_tree_label_size
                             ))
                         }
                     }
                 # end tree with metadata
                 # tree with no metadata
                 }else{ # tree with no metadata
-                    if(is.null(tree_meta_path) & ! is.null(tree_meta_legend)){
+                    if(is.null(germ_tree_meta_path) & ! is.null(germ_tree_meta_legend)){
                         tempo.warn <- paste0("FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\nTHE meta_legend PARAMETER IS NOT \"NULL\" BUT THE meta_path PARAMETER IS \"NULL\"")
                         warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
                     }
-                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::ggtree(trees$trees[[i3]], layout = tree_kind))
+                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::ggtree(trees$trees[[i3]], layout = germ_tree_kind))
                     assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tippoint(
                         ggplot2::aes(fill = tip.kind),
-                        pch = tree_leaf_shape, 
-                        size = tree_leaf_size
+                        pch = germ_tree_leaf_shape, 
+                        size = germ_tree_leaf_size
                     ))
                     assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_discrete_manual(
                         aesthetics = "fill", 
                         name = NULL, 
-                        values = c("black", ifelse(is.null(tree_leaf_color), "tomato", tree_leaf_color)),
+                        values = c("black", ifelse(is.null(germ_tree_leaf_color), "tomato", germ_tree_leaf_color)),
                         labels = c("Germline", "Seq")
                     ))
                     assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(fill = "none")) # no legend for fill in this context
-                    if(any(tree_kind %in% c("rectangular", "roundrect", "slanted", "ellipse"))){
+                    if(any(germ_tree_kind %in% c("rectangular", "roundrect", "slanted", "ellipse"))){
                         assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
-                            hjust = tree_label_hjust,
-                            size = tree_label_size,
-                            as_ylab = ifelse(tree_label_rigth == "TRUE" & tree_kind == "rectangular", TRUE, FALSE)
+                            hjust = germ_tree_label_hjust,
+                            size = germ_tree_label_size,
+                            as_ylab = ifelse(germ_tree_label_rigth == "TRUE" & germ_tree_kind == "rectangular", TRUE, FALSE)
                         ))
-                    }else if(any(tree_kind %in% c("circular", "fan", "equal_angle", "daylight"))){
+                    }else if(any(germ_tree_kind %in% c("circular", "fan", "equal_angle", "daylight"))){
                         assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
                             ggplot2::aes(angle = angle), 
-                            hjust = tree_label_hjust,
-                            size = tree_label_size
+                            hjust = germ_tree_label_hjust,
+                            size = germ_tree_label_size
                         ))
                     }else{
                         assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_tiplab(
-                            size = tree_label_size
+                            size = germ_tree_label_size
                         ))
                     }
                 }
-                if( ! any(tree_kind %in% c("circular", "fan"))){
+                if( ! any(germ_tree_kind %in% c("circular", "fan"))){
                     assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::coord_cartesian( # to extend the text display outside of the plot region
-                        clip = ifelse(tree_label_outside == "TRUE", "off", "on")
+                        clip = ifelse(germ_tree_label_outside == "TRUE", "off", "on")
                     ))
                 }
-                if( ! any(tree_kind %in% c("circular", "fan", "equal_angle", "daylight"))){
+                if( ! any(germ_tree_kind %in% c("circular", "fan", "equal_angle", "daylight"))){
                     assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_treescale(width = 0.01, offset = 0.05))
                 }
-                assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::theme(plot.margin = ggplot2::margin(t = 0.25, l = 0.1, b = 0.1, r = tree_right_margin, unit = "in")))
+                assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::theme(plot.margin = ggplot2::margin(t = 0.25, l = 0.1, b = 0.1, r = germ_tree_right_margin, unit = "in")))
                 # legend
-                if( ( ! is.null(tree_meta_path)) & ! is.null(tree_meta_legend)){
+                if( ( ! is.null(germ_tree_meta_path)) & ! is.null(germ_tree_meta_legend)){
                     bef.final.plot <- ggplot2::ggplot_build(eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + "))))
                     legend.final <- fun_gg_get_legend(ggplot_built = bef.final.plot) # get legend
                     assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(fill = "none", color = "none", size = "none")) # inactivate the initial legend
-                    if(tree_legend == "FALSE"){ # even if any(unlist(legend.disp)) is TRUE
+                    if(germ_tree_legend == "FALSE"){ # even if any(unlist(legend.disp)) is TRUE
                         legend.final <- ggplot2::ggplot()+ggplot2::theme_void() # empty graph instead of legend
                     }
                 }
@@ -911,14 +911,14 @@ if(length(tempo.list) == 0){
             # no need to use pdf(NULL) with fun_gg_empty_graph()
             final.plot <- fun_gg_empty_graph(text = paste0("NO GRAPH PLOTTED FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\nNOT ENOUGH SEQUENCES DETECTED"), text.size = 3)
         }
-        if( ( ! is.null(tree_meta_path)) & ! is.null(tree_meta_legend)){
+        if( ( ! is.null(germ_tree_meta_path)) & ! is.null(germ_tree_meta_legend)){
             tempo.log <- clones$data[[i3]]@data$sequence_id %in% meta.df$Name
             if(any(tempo.log)){
                 tempo.cat <- paste0("Annotated sequences in this clonal group: ", paste(clones$data[[i3]]@data$sequence_id[tempo.log], collapse = ", "))
                 add.text <- paste0(ifelse(is.null(add.text), tempo.cat, paste0(add.text, "\n", tempo.cat)))
             }
         }
-        if(is.null(tree_meta_path)){
+        if(is.null(germ_tree_meta_path)){
             legend.width = 0
         }else{
             legend.width = 0.15 # single proportion (between 0 and 1) indicating the relative width of the legend sector (on the right of the plot) relative to the width of the plot. Value 1 means that the window device width is split in 2, half for the plot and half for the legend. Value 0 means no room for the legend, which will overlay the plot region. Write NULL to inactivate the legend sector. In such case, ggplot2 will manage the room required for the legend display, meaning that the width of the plotting region can vary between graphs, depending on the text in the legend
@@ -947,7 +947,7 @@ if(length(tempo.list) == 0){
 
         if(empty.tsv == TRUE){
             tempo.df <- matrix(c("sequence_id", "clone_id", "clone_name", "chain", "identical_to"), nrow = 1)
-            write.table(tempo.df, file = paste0("./", clone.id[[i3]], "_tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = FALSE, sep = "\t", quote = FALSE)
+            write.table(tempo.df, file = paste0("./", clone.id[[i3]], "_germ_tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = FALSE, sep = "\t", quote = FALSE)
         }
 
 ################ end save empty tsv
@@ -955,12 +955,12 @@ if(length(tempo.list) == 0){
 ################ saving plots
 
         plots[[i3]] <- final.plot
-        ggplot2::ggsave(filename = paste0("tree_cloneID_", trees$clone_id[i3], ".png"), plot = final.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        ggplot2::ggsave(filename = paste0("tree_cloneID_", trees$clone_id[i3], ".svg"), plot = final.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        ggplot2::ggsave(filename = paste0("tree_cloneID_", trees$clone_id[i3], ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = paste0("germ_tree_cloneID_", trees$clone_id[i3], ".png"), plot = final.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = paste0("germ_tree_cloneID_", trees$clone_id[i3], ".svg"), plot = final.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = paste0("germ_tree_cloneID_", trees$clone_id[i3], ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
     }
     # dowser::treesToPDF(plots, file = "trees.pdf", nrow=2, ncol=2)
-    tempo <- qpdf::pdf_combine(input = list.files(path = ".", pattern = ".pdf$"), output = "./trees.pdf") # assignation to prevent a returned element
+    tempo <- qpdf::pdf_combine(input = list.files(path = ".", pattern = ".pdf$"), output = "./germ_trees.pdf") # assignation to prevent a returned element
 }
 
 ################ end saving plots
@@ -1005,7 +1005,7 @@ fun_report(data = paste0("\n\nALL DATA SAVED IN all_objects.RData"), output = lo
 
 fun_report(data = paste0("\n\n################################ RECAPITULATION OF WARNING MESSAGES"), output = log, path = "./", overwrite = FALSE)
 if( ! is.null(warn)){
-    tempo.cat <- paste0("IN tree_vizu.R OF THE NEXFLOW EXECUTION:\n\n", warn)
+    tempo.cat <- paste0("IN germ_tree_vizu.R OF THE NEXFLOW EXECUTION:\n\n", warn)
     fun_report(data = tempo.cat, output = log, path = "./", overwrite = FALSE)
     cat(tempo.cat)
 }else{
