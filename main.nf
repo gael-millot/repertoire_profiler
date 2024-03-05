@@ -226,7 +226,7 @@ process translation {
 
     output:
     path "translation.tsv" , emit: translation_ch
-    path "aa.tsv" , optional: true
+    path "aa.tsv" , optional: true, emit: aa_ch
     path "aligned_seq/*.*"
     path "aa/*.*" , optional: true
     path "translation.log", emit: translation_log_ch
@@ -956,6 +956,136 @@ process backup {
 }
 
 
+
+process Reformat{
+    
+    input:
+    path aatsv
+    
+    output:
+    path "*.fasta"
+    
+    
+    script:
+    """
+    cat $aatsv | tail -n+2 | awk '{print ">"\$1; print \$2}' > ${aatsv.baseName}.fasta
+    """
+    
+}
+
+process Align {
+    label 'abalign'
+    
+    input:
+    path fasta
+    val phylo_tree_heavy
+    
+    output:
+    path "*_align.fasta"
+    
+    script:
+    parms="-al"
+    if(phylo_tree_heavy){parms="-ah"}
+    """
+    /bin/Abalign_V2_Linux_Term/Abalign -i $fasta ${parms} ${fasta.baseName}_align.fasta -sp MU || true
+    """
+}
+
+process DefineGroups {
+    publishDir path: "${out_path}", mode: 'copy'
+    
+    label 'goalign'
+    
+    input:
+    path fasta
+    path productivetsv
+    
+    output:
+    path "sequences_*.fasta"
+    
+    script:
+    """
+    # On prend toutes les combinaisons existantes de V|J
+    defineGroups.pl $productivetsv > groups.txt
+    # for each defined group
+    for vj in \$(cut -f 2 groups.txt | sort -u)
+    do
+	# we take from the fasta the sequences corresponding to that group
+        goalign subset --unaligned -i aa.fasta -f <(grep -e "\$vj" groups.txt | cut -f 1) > sequences_\${vj}.fasta
+    done
+    """
+}
+
+// Extract the number of sequences from the input file
+process NbSequences {
+    label 'goalign'
+
+    input:
+    path fasta
+
+    output:
+    tuple stdout, path(fasta)
+
+    script:
+    """
+    printf \$(goalign stats nseq --unaligned -i $fasta)
+    """
+}
+
+process Tree {
+    publishDir path: "${out_path}", mode: 'copy'
+
+    label 'iqtree'
+
+    input:
+    path msa
+    path phylo_tree_model_file
+
+    output:
+    path "*.treefile"
+    path "*.log"
+
+    script:
+    """
+    iqtree -nt ${task.cpus} -s ${msa} -m ${phylo_tree_model_file}+I+R6 --seed 123456789
+    """
+}
+
+process ProcessMeta {
+    label 'tabletoitol'
+
+    input:
+    path meta
+
+    output:
+    path "iTOL*"
+
+    script:
+    """
+    table2itol.R -i Label $meta
+    """
+}
+
+
+process ITOL{
+    publishDir path: "${out_path}", mode: 'copy'
+
+    label 'gotree'
+
+    input:
+    path tree
+    path meta
+    val phylo_tree_itolkey
+
+    output:
+    path "*itol_url.txt"
+
+    script:
+    """
+    gotree upload itol --project gotree_uploads --user-id $phylo_tree_itolkey -i $tree $meta > ${tree.baseName}_itol_url.txt 2>&1
+    """
+}
+
 //////// End Processes
 
 //////// Workflow
@@ -991,8 +1121,30 @@ workflow {
 
     //////// Checks
 
-    // tbi = file("${sample_path}.tbi") does not need .tbi 
-
+    //// check of the bin folder
+    if( ! (file("${projectDir}/bin/donut.R").exists()) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE donut.R FILE MUST BE PRESENT IN THE ./bin FOLDER, WHERE THE main.nf file IS PRESENT\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
+    }
+    // AB_model not trested because in parameters
+    if( ! (file("${projectDir}/bin/germ_tree_vizu.R").exists()) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE germ_tree_vizu.R FILE MUST BE PRESENT IN THE ./bin FOLDER, WHERE THE main.nf file IS PRESENT\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
+    }
+    if( ! (file("${projectDir}/bin/get_germ_tree.R").exists()) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE get_germ_tree.R FILE MUST BE PRESENT IN THE ./bin FOLDER, WHERE THE main.nf file IS PRESENT\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
+    }
+    if( ! (file("${projectDir}/bin/get_germ_tree.R").exists()) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE get_germ_tree.R FILE MUST BE PRESENT IN THE ./bin FOLDER, WHERE THE main.nf file IS PRESENT\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
+    }
+    if( ! (file("${projectDir}/bin/repertoire.R").exists()) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE repertoire.R FILE MUST BE PRESENT IN THE ./bin FOLDER, WHERE THE main.nf file IS PRESENT\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
+    }
+    if( ! (file("${projectDir}/bin/translation.sh").exists()) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE translation.sh FILE MUST BE PRESENT IN THE ./bin FOLDER, WHERE THE main.nf file IS PRESENT\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
+    }
+    if( ! (file("${projectDir}/bin/defineGroups.pl").exists()) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE defineGroups.pl FILE MUST BE PRESENT IN THE ./bin FOLDER, WHERE THE main.nf file IS PRESENT\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
+    }
+    //// end check of the bin folder
     if( ! (sample_path in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID sample_path PARAMETER IN repertoire_profiler.config FILE:\n${sample_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (file(sample_path).exists()) ){
@@ -1176,6 +1328,19 @@ workflow {
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_limit PARAMETER IN repertoire_profiler.config FILE:\n${donut_legend_limit}\nMUST BE A POSITIVE PROPORTION VALUE IF NOT \"NULL\"\n\n========\n\n"
         }
     }
+    if( ! (phylo_tree_heavy in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID phylo_tree_heavy PARAMETER IN repertoire_profiler.config FILE:\n${phylo_tree_heavy}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (phylo_tree_heavy == "true" || phylo_tree_heavy == "false") ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID phylo_tree_heavy PARAMETER IN repertoire_profiler.config FILE:\n${phylo_tree_heavy}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
+    }
+    if( ! (phylo_tree_model_path in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID phylo_tree_model_path PARAMETER IN repertoire_profiler.config FILE:\n${phylo_tree_model_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (file(phylo_tree_model_path).exists()) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID phylo_tree_model_path PARAMETER IN repertoire_profiler.config FILE (DOES NOT EXIST): ${phylo_tree_model_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
+    }
+    if( ! (phylo_tree_itolkey in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID phylo_tree_itolkey PARAMETER IN repertoire_profiler.config FILE:\n${phylo_tree_itolkey}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }
     if( ! (cute_path in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID cute_path PARAMETER IN repertoire_profiler.config FILE:\n${cute_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (file(cute_path).exists()) ){
@@ -1226,6 +1391,7 @@ workflow {
 
     meta_file = file(meta_path) // in variable because a single file. If "NULL", will create a empty file, present in work folders, but that cannot be correctly linked. Thus, if the file has to be redirected into a channel inside a process, it will not work. Thus, in the first process using meta_file, I hard copy the NULL file if required (see below)
     cute_file = file(cute_path) // in variable because a single file
+    phylo_tree_model_file  = file(phylo_tree_model_path)
 
     //////// end files import
 
@@ -1473,12 +1639,20 @@ workflow {
     )
    donut_assembly.out.donut_assembly_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}}
 
-
+    fasta=Reformat(translation.out.aa_ch)
+    fastagroups=DefineGroups(fasta,parseDb_filtering.out.select_ch).flatten()
+    align=Align(fastagroups,phylo_tree_heavy)
+    // Keeps only alignments with at least 3 sequences
+    filtered=NbSequences(align).filter{it[0].toInteger()>=3}.map{it->it[1]}
+    tree=Tree(filtered,phylo_tree_model_file)
+    itolmeta=ProcessMeta(meta_file)
+    ITOL(tree[0],itolmeta,phylo_tree_itolkey)
 
     backup(
         config_file, 
         log_file
     )
+
 }
 
     //////// end Main
