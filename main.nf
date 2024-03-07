@@ -166,31 +166,29 @@ process igblast {
 
 process parseDb_filtering {
     label 'immcantation'
-    publishDir path: "${out_path}", mode: 'copy', pattern: "unproductive_seq.tsv", overwrite: false
-    publishDir path: "${out_path}", mode: 'copy', pattern: "productive_seq.tsv", overwrite: false
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{ParseDb_filtering.log}", overwrite: false
     cache 'true'
 
     input:
-    path tsv_ch2 // no more parallelization
+    path tsv_ch1 // parallelization expected
     val igblast_aa
 
     output:
     path "productive_seq.tsv", emit: select_ch
-    path "unproductive_seq.tsv"
-    path "ParseDb_filtering.log"
+    path "unproductive_seq.tsv", emit: unselect_ch
+    path "ParseDb_filtering.log", emit: parseDb_filtering_log_ch
 
     script:
     """
     #!/bin/bash -ue
+    FILENAME=\$(basename -- "${tsv_ch1}") # recover a file name without path
+    FILE=\${FILENAME%.*} # file name without extension
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a ParseDb_filtering.log
     if [[ "${igblast_aa}" == "true" ]]; then # if igblast_aa is true, then the productive column is empty because aa sequences means productive ones
-        FILENAME=\$(basename -- "${tsv_ch2}") # recover a file name without path
-        FILE=\${FILENAME%.*} # file name without extension
-        ParseDb.py select -d ${tsv_ch2} -f v_call j_call -u ".+" --regex --logic any |& tee -a ParseDb_filtering.log #means look inside the -f v_call j_call fields of the input and return any lines that are non empty for at least one field(--logic any) # should be identical to cp ${tsv_ch2} "\${FILE}_parse-select.tsv" |& tee -a ParseDb_filtering.log
+        ParseDb.py select -d ${tsv_ch1} -f v_call j_call -u ".+" --regex --logic any |& tee -a ParseDb_filtering.log #means look inside the -f v_call j_call fields of the input and return any lines that are non empty for at least one field(--logic any) # should be identical to cp ${tsv_ch1} "\${FILE}_parse-select.tsv" |& tee -a ParseDb_filtering.log
         echo -n "" > unproductive_seq.tsv |& tee -a ParseDb_filtering.log
-    elif [[ -s ${tsv_ch2} ]]; then # -s means "exists and non empty". Thus, return FALSE is the file does not exists or is empty
-        ParseDb.py select -d ${tsv_ch2} -f productive -u T |& tee -a ParseDb_filtering.log
-        ParseDb.py split -d ${tsv_ch2} -f productive |& tee -a ParseDb_filtering.log
+    elif [[ -s ${tsv_ch1} ]]; then # -s means "exists and non empty". Thus, return FALSE is the file does not exists or is empty
+        ParseDb.py select -d ${tsv_ch1} -f productive -u T |& tee -a ParseDb_filtering.log
+        ParseDb.py split -d ${tsv_ch1} -f productive |& tee -a ParseDb_filtering.log
         if [ -f *_parse-select.tsv ]; then
             cp *_parse-select.tsv productive_seq.tsv |& tee -a ParseDb_filtering.log
         else
@@ -219,7 +217,7 @@ process aligned_fasta {
     cache 'true'
 
     input:
-    path select_ch // no more parallelization
+    path select_ch // parallelization expected
     val igblast_aa
 
     output:
@@ -229,30 +227,30 @@ process aligned_fasta {
     script:
     """
     #!/bin/bash -ue
-    aligned_fasta.sh ${select_ch} ${igblast_aa}
+    aligned_fasta.sh ${select_ch} ${igblast_aa} # |& tee -a aligned_fasta.log not used because in aligned_fasta.sh 
     """
 }
 
 
 process translation {
     label 'seqkit'
-    //publishDir path: "${out_path}", mode: 'copy', pattern: "aa/*.fasta", overwrite: false
     cache 'true'
 
     input:
+    path select_ch // parallelization expected
     path aligned_fasta // parallelization expected
     val igblast_aa
 
     output:
-    path "translation.tsv" , emit: translation_ch
-    path "aa.tsv" , optional: true, emit: aa_tsv_ch
-    path "aa/*.*" , optional: true, emit aa_file_ch
+    path "translation.tsv", optional: true,emit: translation_ch // productive file with column tsequence_alignment_aa added
+    path "aa.tsv", optional: true, emit: aa_tsv_ch
+    path "aa/*.*", optional: true, emit: aa_file_ch
     path "translation.log", emit: translation_log_ch
 
     script:
     """
     #!/bin/bash -ue
-    translation.sh ${aligned_fasta} ${igblast_aa}
+    translation.sh ${select_ch} ${aligned_fasta} ${igblast_aa} # |& tee -a translation.log not used because in translation.sh 
     """
 }
 
@@ -265,7 +263,7 @@ process distToNearest {
     cache 'true'
 
     input:
-    path translation_ch // no parallelization
+    path translation_ch2 // no parallelization
     val igblast_aa
     val clone_model
     val clone_normalize
@@ -279,7 +277,7 @@ process distToNearest {
     #!/bin/bash -ue
     Rscript -e '
          # WEIRD stuf: if db alone is returned, and if distToNearest_ch is used for the clone_assignment process and followings, everything is fine. But if db3 is returned with db3 <- data.frame(db, dist_nearest = db2\$dist_nearest) or db3 <- data.frame(db, caca = db2\$dist_nearest) or data.frame(db, caca = db\$sequence_id) or db3 <- data.frame(db, caca = as.numeric(db2\$dist_nearest)) or db3 <- data.frame(db[1:3], caca = db\$sequence_id, db[4:length(db)]), the get_germ_tree process cannot make trees, while the productive.tsv seem identical at the end, between the use of db or db3, except that the clone_id order is not the same
-        db <- read.table("${translation_ch}", header = TRUE, sep = "\\t")
+        db <- read.table("${translation_ch2}", header = TRUE, sep = "\\t")
         if("${clone_model}" != "aa" & "${igblast_aa}" == "true"){
           tempo.cat <- paste0("\\n\\n========\\n\\nERROR IN THE NEXTFLOW EXECUTION OF THE distToNearest PROCESS\\nclone_model PARAMETER SHOULD BE \\"aa\\" IF AA FASTA FILES ARE USED (igblast_aa PARAMETER SET TO \\"true\\"). HERE:\\nclone_model: ${clone_model}\\n\\n========\\n\\n")
           stop(tempo.cat)
@@ -354,7 +352,7 @@ process clone_assignment {
     cache 'true'
 
     input:
-    path translation_ch // no parallelization
+    path translation_ch2 // no parallelization
     val clone_model
     val clone_normalize
     val clone_distance
@@ -367,8 +365,8 @@ process clone_assignment {
     script:
     """
     #!/bin/bash -ue
-    if [[ -s ${translation_ch} ]]; then # see above for -s
-        DefineClones.py -d ${translation_ch} --act set --model ${clone_model} --norm ${clone_normalize} --dist ${clone_distance} --fail |& tee -a clone_assignment.log
+    if [[ -s ${translation_ch2} ]]; then # see above for -s
+        DefineClones.py -d ${translation_ch2} --act set --model ${clone_model} --norm ${clone_normalize} --dist ${clone_distance} --fail |& tee -a clone_assignment.log
         if [ -s *_clone-fail.tsv ]; then # see above for -s
             cp *_clone-fail.tsv non_clone_assigned_sequence.tsv |& tee -a clone_assignment.log
         else
@@ -1437,21 +1435,38 @@ workflow {
     igblast.out.tsv_ch1.count().subscribe{ n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE igblast PROCESS\n\nCHECK THAT THE igblast_organism, igblast_loci AND igblast_files ARE CORRECTLY SET IN THE repertoire_profiler.config FILE\n\n========\n\n"}}
     tsv_ch2 = igblast.out.tsv_ch1.collectFile(name: "all_igblast_seq.tsv", skip: 1, keepHeader: true)
     igblast.out.aligned_seq_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ALIGNED SEQ FILES RETURNED BY THE igblast PROCESS\n\n========\n\n"}}
-    igblast.out.aligned_seq_ch.collectFile(name: "igblast_aligned_seq.tsv").subscribe{it -> it.copyTo("${out_path}")}
+    aligned_seq_ch2 = igblast.out.aligned_seq_ch.collectFile(name: "igblast_aligned_seq.tsv")
+    aligned_seq_ch2.subscribe{it -> it.copyTo("${out_path}")}
     igblast.out.unaligned_seq_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 UNALIGNED SEQ FILES RETURNED BY THE igblast PROCESS\n\n========\n\n"}}
-    igblast.out.unaligned_seq_ch.collectFile(name: "igblast_unaligned_seq.tsv").subscribe{it -> it.copyTo("${out_path}")}
-    nb1 = igblast.out.aligned_seq_ch.collectFile().countLines()
-    nb2 = igblast.out.unaligned_seq_ch.collectFile().countLines()
-    fs_ch.count().combine(nb1).combine(nb2).subscribe{n,n1,n2 -> if(n != n1 + n2){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE igblast_aligned_seq.tsv AND igblast_unaligned_seq.tsv IS NOT EQUAL TO THE NUMBER OF SUBMITTED FASTA FILES\n========\n\n"}}
+    unaligned_seq_ch2 = igblast.out.unaligned_seq_ch.collectFile(name: "igblast_unaligned_seq.tsv") // because an empty file must be present
+    unaligned_seq_ch2.subscribe{it -> it.copyTo("${out_path}")}
+    nb1 = aligned_seq_ch2.countLines() 
+    nb2 =  unaligned_seq_ch2.countLines()
+    // nb1.view()
+    //nb1.view()
+    //fs_ch.count().view()
+    fs_ch.count().combine(nb1).combine(nb2).subscribe{n,n1,n2 -> if(n != n1 + n2){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE igblast_aligned_seq.tsv (${n1}) AND igblast_unaligned_seq.tsv (${n2}) IS NOT EQUAL TO THE NUMBER OF SUBMITTED FASTA FILES (${n})\n========\n\n"}}
     igblast.out.log_ch.collectFile(name: "igblast_report.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
 
     parseDb_filtering(
-        tsv_ch2,
+        igblast.out.tsv_ch1,
         igblast_aa
     )
     // parseDb_filtering.out.unproductive_ch.count().subscribe{n -> if ( n == 0 ){print "\n\nWARNING: EMPTY unproductive_seq.tsv FILE RETURNED FOLLOWING THE parseDb_filtering PROCESS\n\n"}else{it -> it.copyTo("${out_path}/unproductive_seq.tsv")}} // see https://www.nextflow.io/docs/latest/script.html?highlight=copyto#copy-files
-    parseDb_filtering.out.select_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE parseDb_filtering PROCESS\n\n========\n\n"}}
+    parseDb_filtering.out.select_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FILES FOLLOWING THE parseDb_filtering PROCESS\n\n========\n\n"}}
+    select_ch2 = parseDb_filtering.out.select_ch.collectFile(name: "productive_seq.tsv", skip: 1, keepHeader: true)
+    select_ch2.subscribe{it -> it.copyTo("${out_path}")}
+    parseDb_filtering.out.unselect_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nO UNPRODUCTIVE SEQUENCE FILES FOLLOWING THE parseDb_filtering PROCESS\n\n========\n\n"}} // because an empty file must be present
+    unselect_ch2 = parseDb_filtering.out.unselect_ch.collectFile(name: "unproductive_seq.tsv", skip: 1, keepHeader: true)
+    unselect_ch2.subscribe{it -> it.copyTo("${out_path}")}
+    nb1_b = select_ch2.countLines()
+    nb2_b = unselect_ch2.countLines()
+    //nb1_b.view()
+    //nb2_b.view()
+    //tsv_ch2.countLines().view()
+    tsv_ch2.countLines().combine(nb1_b).combine(nb2_b).subscribe{n,n1,n2 -> if(n != n1 + n2){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE productive_seq.tsv (${n1}) AND unproductive_seq.tsv (${n2}) IS NOT EQUAL TO THE NUMBER OF FILES IN all_igblast_seq.tsv (${n})\n========\n\n"}}
+    parseDb_filtering.out.parseDb_filtering_log_ch.collectFile(name: "ParseDb_filtering.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
 
     aligned_fasta(
@@ -1460,20 +1475,21 @@ workflow {
     )
     aligned_fasta.out.aligned_fasta_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE aligned_fasta PROCESS\n\n========\n\n"}}
 
-
     translation(
+        parseDb_filtering.out.select_ch,
         aligned_fasta.out.aligned_fasta_ch,
         igblast_aa
     )
     translation.out.translation_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE translation PROCESS\n\n========\n\n"}}
+    translation_ch2 = translation.out.translation_ch.collectFile(name: "translation.tsv", skip: 1, keepHeader: true) // productive file with column tsequence_alignment_aa added
     aa_tsv_ch2 = translation.out.aa_tsv_ch.collectFile(name: "aa.tsv", skip: 1, keepHeader: true).subscribe{it -> it.copyTo("${out_path}")}
-    translation.out.aa_file_ch.collect.subscribe{it -> it.copyTo("${out_path}/aa")}
+    translation.out.aa_file_ch.collect().subscribe{it -> it.copyTo("${out_path}/aa")}
     translation.out.translation_log_ch.collectFile(name: "translation.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
 
 
     distToNearest(
-        translation.out.translation_ch,
+        translation_ch2,
         igblast_aa,
         clone_model,
         clone_normalize
@@ -1500,7 +1516,7 @@ workflow {
 
 
     clone_assignment(
-        translation.out.translation_ch,
+        translation_ch2,
         clone_model,
         clone_normalize,
         clone_distance
@@ -1666,7 +1682,7 @@ workflow {
     )
    donut_assembly.out.donut_assembly_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}}
 
-    fasta=Reformat(translation.out.aa_tsv_ch2)
+    fasta=Reformat(aa_tsv_ch2)
     fastagroups=DefineGroups(fasta,parseDb_filtering.out.select_ch).flatten()
     align=Align(fastagroups,phylo_tree_heavy)
     // Keeps only alignments with at least 3 sequences

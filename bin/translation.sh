@@ -12,38 +12,34 @@
 
 
 
-
-aligned_seq=${1}
-igblast_aa=${2}
+select_ch=${1}
+aligned_seq=${2}
+igblast_aa=${3}
 
 
 if [[ "${igblast_aa}" == "false" ]] ; then
     # translation into aa (for a potential second round of analysis) since analysis is performed at the nuc level
     mkdir aa
     # translate fasta files
-    for i2 in $(ls aligned_seq) ; do
-        seqkit translate -T 1 -f 1 --allow-unknown-codon aligned_seq/$i2 > aa/${i2}_tempo |& tee -a translation.log
+        seqkit translate -T 1 -f 1 --allow-unknown-codon ${aligned_seq} > aa/${aligned_seq}_tempo |& tee -a translation.log
             # no trim, no translate unknown code to 'X'
             # -T 1 : human genetic code
             # -f 1 : only the first frame is translated
             # --allow-unknown-codon : convert unknown codon (for instance ...) to X
-        awk 'BEGIN{ORS=""}{if($0~/^>.*/){if(NR>1){print "\n"} ; print $0"\n"} else {print $0 ; next}}END{print "\n"}' aa/${i2}_tempo > aa/${i2} |& tee -a translation.log # remove \n
-        rm aa/${i2}_tempo |& tee -a translation.log
-    done
+        awk 'BEGIN{ORS=""}{if($0~/^>.*/){if(NR>1){print "\n"} ; print $0"\n"} else {print $0 ; next}}END{print "\n"}' aa/${aligned_seq}_tempo > aa/${i2} |& tee -a translation.log # remove \n
+        rm aa/${aligned_seq}_tempo |& tee -a translation.log
     # end translate fasta files
     # assemble name and aa seq
-    for i2 in $(ls aa) ; do
-        awk '{
-            lineKind=(NR-1)%2 ; 
-            if(lineKind==0){
-                gsub("> *", "", $0)
-                print $0 >> "name.txt"
-            }
-            if(lineKind==1){
-                print $0 >> "seq.txt"
-            }
-        }' aa/${i2} |& tee -a translation.log
-    done
+    awk '{
+        lineKind=(NR-1)%2 ; 
+        if(lineKind==0){
+            gsub("> *", "", $0)
+            print $0 >> "name.txt"
+        }
+        if(lineKind==1){
+            print $0 >> "seq.txt"
+        }
+    }' aa/${aligned_seq} |& tee -a translation.log
     paste --delimiters='\t' name.txt seq.txt > aa.tsv |& tee -a translation.log
     # end assemble name and aa seq
     # add the aa seq into the translation.tsv
