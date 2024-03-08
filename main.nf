@@ -210,49 +210,30 @@ process parseDb_filtering {
 
 
 
-process aligned_fasta {
-    label 'seqkit'
-    publishDir path: "${out_path}", mode: 'copy', pattern: "aligned_seq/*.fasta", overwrite: false
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{aligned_fasta.log}", overwrite: false
-    cache 'true'
-
-    input:
-    path select_ch // parallelization expected
-    val igblast_aa
-
-    output:
-    path "aligned_seq/*.*" , emit: aligned_fasta_ch
-    path "aligned_fasta.log"
-
-    script:
-    """
-    #!/bin/bash -ue
-    aligned_fasta.sh ${select_ch} ${igblast_aa} # |& tee -a aligned_fasta.log not used because in aligned_fasta.sh 
-    """
-}
-
-
 process translation {
     label 'seqkit'
+    publishDir path: "${out_path}", mode: 'copy', pattern: "aa/*.fasta", overwrite: false
+    publishDir path: "${out_path}", mode: 'copy', pattern: "aligned_seq/*.fasta", overwrite: false
     cache 'true'
 
     input:
     path select_ch // parallelization expected
-    path aligned_fasta // parallelization expected
     val igblast_aa
 
     output:
     path "translation.tsv", optional: true,emit: translation_ch // productive file with column tsequence_alignment_aa added
+    path "aligned_seq/*.*"
     path "aa.tsv", optional: true, emit: aa_tsv_ch
-    path "aa/*.*", optional: true, emit: aa_file_ch
+    path "aa/*.*"
     path "translation.log", emit: translation_log_ch
 
     script:
     """
     #!/bin/bash -ue
-    translation.sh ${select_ch} ${aligned_fasta} ${igblast_aa} # |& tee -a translation.log not used because in translation.sh 
+    translation.sh ${select_ch} ${igblast_aa} # |& tee -a translation.log not used because in translation.sh 
     """
 }
+
 
 
 
@@ -1469,21 +1450,14 @@ workflow {
     parseDb_filtering.out.parseDb_filtering_log_ch.collectFile(name: "ParseDb_filtering.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
 
-    aligned_fasta(
-        parseDb_filtering.out.select_ch,
-        igblast_aa
-    )
-    aligned_fasta.out.aligned_fasta_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE aligned_fasta PROCESS\n\n========\n\n"}}
-
     translation(
         parseDb_filtering.out.select_ch,
-        aligned_fasta.out.aligned_fasta_ch,
         igblast_aa
     )
     translation.out.translation_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE translation PROCESS\n\n========\n\n"}}
     translation_ch2 = translation.out.translation_ch.collectFile(name: "translation.tsv", skip: 1, keepHeader: true) // productive file with column tsequence_alignment_aa added
-    aa_tsv_ch2 = translation.out.aa_tsv_ch.collectFile(name: "aa.tsv", skip: 1, keepHeader: true).subscribe{it -> it.copyTo("${out_path}")}
-    translation.out.aa_file_ch.collect().subscribe{it -> it.copyTo("${out_path}/aa")}
+    aa_tsv_ch2 = translation.out.aa_tsv_ch.collectFile(name: "aa.tsv", skip: 1, keepHeader: true)
+    aa_tsv_ch2.subscribe{it -> it.copyTo("${out_path}")}
     translation.out.translation_log_ch.collectFile(name: "translation.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
 
