@@ -4,8 +4,8 @@ sheetName <- "mouse_1" # sheet number
 Name <- "Name" # column of the sequence names
 col1 <- "VH_VJ" # first column name
 col2 <- "VL_VJ" # second column name
-col1.selection <- "IGHV1-55_IGHJ2" # single vector of characters indicating the values to select inside col1 for the circos representation. Write NULL if not required
-col2.selection <- "IGKV4-68_IGKJ5" # single vector of characters indicating the values to select inside col2 for the circos representation. Write NULL if not required
+col1.selection <- c("IGHV1-7_IGHJ2", "IGHV1-55_IGHJ2", "IGHV1-81_IGHJ2") # single vector of characters indicating the values to select inside col1 for the circos representation. Write NULL if not required
+col2.selection <- c("IGKV4-68_IGKJ5", "IGKV2-112_IGKJ2") # single vector of characters indicating the values to select inside col2 for the circos representation. Write NULL if not required
 metadata <- c("mAb_name", "Kd_nM") # single vector of characters indicating the name of the column with metadata
 scale.size <- 0.7 # size of the numbers
 label.size <- 0.7 # size of the label text
