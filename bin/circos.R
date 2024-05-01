@@ -1,12 +1,12 @@
-tsv.path <- "C:\\Users\\gmillot\\Desktop\\mouse1_circos_data.tsv" # "C:\\Users\\gmillot\\Documents\\Hub projects\\20210914 Alice Dejoux 19463\\dataset\\24_03_18_circo plot VH-VL appariesv_meta_data.xlsx"
+tsv.path <- "C:\\Users\\gmillot\\Desktop\\mouse2_circos_data.tsv" # "C:\\Users\\gmillot\\Documents\\Hub projects\\20210914 Alice Dejoux 19463\\dataset\\24_03_18_circo plot VH-VL appariesv_meta_data.xlsx"
 out.path <- "C:\\Users\\gmillot\\Desktop"
-pdf.name <- "mouse1"
+pdf.name <- "20240502_unpaired_HL_mouse2"
 Name <- "Name" # column of the sequence names
 col1 <- "VJ_VH" # first column name
 col2 <- "VJ_VL" # second column name
-col1.selection <- c("IGHV1-55_IGHJ2", "IGHV1-7_IGHJ2", "IGHV1-81_IGHJ2", "IGHV1-81_IGHJ2") # single vector of characters indicating the values to select inside col1 for the circos representation. Write NULL if not required
-col2.selection <- c("IGKV4-68_IGKJ5", "IGKV2-112_IGKJ2", "IGKV2-112_IGKJ2", "IGKV4-68_IGKJ5") # single vector of characters indicating the values to select inside col2 for the circos representation. Write NULL if not required
-coupled.selection <- TRUE # single logical value. Couple col1.selection and col2.selection? If TRUE, col1.selection and col2.selection must be of same length: element 1 of col1.selection is parired with 1 col2.selection, etc. If FALSE, select the values without pairing.
+col1.selection <- c("IGHV1-55_IGHJ2", "IGHV3-6_IGHJ3") # single vector of characters indicating the values to select inside col1 for the circos representation. Write NULL if not required
+col2.selection <- c("IGKV4-68_IGKJ5", "IGKV12-89_IGKJ4") # single vector of characters indicating the values to select inside col2 for the circos representation. Write NULL if not required
+coupled.selection <- FALSE # single logical value. Couple col1.selection and col2.selection? If TRUE, col1.selection and col2.selection must be of same length: element 1 of col1.selection is parired with 1 col2.selection, etc. If FALSE, select the values without pairing. paired signifie que seuls les Ig qui ont le même couple H et L que les fonctionnels ont été gardés. Cela veut dire que si IP1 est H1 pour H et L1 pour L, j'ai récup tous les Ig H1-L1. Unpaired signifie que seuls les Ig qui ont un H des H fonctionnels avec l'un des L fonctionnels ont été gardés. Cela signifie que si IP1 est H1 pour H et L1 pour L, et IP2 est H2 et L2, j'ai récup tous les IG H1-L1, H1-L2, H2-L1 et H2, L2.
 metadata <- c("mAb_name", "Kd_nM") # single vector of characters indicating the name of the column with metadata
 scale.size <- 0.7 # size of the numbers
 label.size <- 0.7 # size of the label text
@@ -74,18 +74,27 @@ prior_plot(
 
 obs1 <- read.table(tsv.path, header = TRUE, sep = "\t")
 if(coupled.selection == FALSE){
-    if( ! is.null(col1.selection)){
+    if(( ! is.null(col1.selection)) & ! is.null(col2.selection)){
         if( ! all(col1.selection %in% obs1[ , col1]) ){
-            stop("ERROR 1")
-        }else{
-            obs1 <- obs1[obs1[ , col1] %in%  col1.selection, ]
+            stop("ERROR 4")
         }
-    }
-    if( ! is.null(col2.selection)){
         if( ! all(col2.selection %in% obs1[ , col2]) ){
-            stop("ERROR 2")
-        }else{
-            obs1 <- obs1[obs1[ , col2] %in%  col2.selection, ]
+            stop("ERROR 5")
+        }
+        obs1 <- obs1[obs1[ , col1] %in%  col1.selection & obs1[ , col2] %in%  col2.selection, ]
+    }else{
+        if( ! is.null(col1.selection)){
+            if( ! all(col1.selection %in% obs1[ , col1]) ){
+                stop("ERROR 1")
+            }else{
+                obs1 <- obs1[obs1[ , col1] %in%  col1.selection, ]
+            }
+        }else if( ! is.null(col2.selection)){
+            if( ! all(col2.selection %in% obs1[ , col2]) ){
+                stop("ERROR 2")
+            }else{
+                obs1 <- obs1[obs1[ , col2] %in%  col2.selection, ]
+            }
         }
     }
 }else if(coupled.selection == TRUE){

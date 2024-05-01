@@ -6,12 +6,12 @@ if(erase.objects == TRUE){
 erase.graphs = TRUE # write TRUE to erase all the graphic windows in R before starting the algorithm and FALSE otherwise
 script <- "circos_data_prep"
 
-VH.path <- "X:/ROCURONIUM PROJECT/01 Primary data/04.Repertoire analysis/SORT1/SORT1 Seq-original/RESULT/repertoire_profiler_1708127835/all_passed_seq.tsv" # Must be VH
-VL.path <- "X:/ROCURONIUM PROJECT/01 Primary data/04.Repertoire analysis/SORT1/SORT1 Seq-original/RESULT/repertoire_profiler_1708128192/all_passed_seq.tsv" # must be VL
+VH.path <- "X:/ROCURONIUM PROJECT/01 Primary data/04.Repertoire analysis/SORT2/SORT2 Seq-refiltered/RESULT/repertoire_profiler_1708128483/all_passed_seq.tsv" # Must be VH
+VL.path <- "X:/ROCURONIUM PROJECT/01 Primary data/04.Repertoire analysis/SORT2/SORT2 Seq-refiltered/RESULT/repertoire_profiler_1708128827/all_passed_seq.tsv" # must be VL
 merging_colums_names <- c("initial_sequence_id") # single vector of character strings of the names of the column used to merge the 2 files. Of note, if _VH or _VL in the columns names, they are removed.
 metadata_colums_names <- c("sequence_id") # single character string of the name of the metadata column in the two files. Write NULL if no metadata.
 kept_colums_names <- c("germline_v_call",	"germline_j_call") # single vector of character strings of the names of the column of VH.path file that correspond to V (first position) and J. Of note, Same names must be for VH and VL.
-output_file_name <- "mouse1_circos_data" # single character string of the name of the output file (tsv).
+output_file_name <- "mouse2_circos_data" # single character string of the name of the output file (tsv).
 # inactivated because done in the circos file
 # metadata_select <- TRUE # single logical value. Kept only the V and J values that are identical to those of the metadata values. If TRUE, kept only these rows. If FALSE, takes all the rows.
 # metadata_select_allele <- FALSE # single logical value. If metadata_select parameter is TRUE, kept the allele info ? IF TRUE, use the VJ_allele_VH and VJ_allele_VL columns. IF FALSE, use the VJ_VH and VJ_VL columns.
