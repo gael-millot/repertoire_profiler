@@ -11,7 +11,10 @@ VL.path <- "X:/ROCURONIUM PROJECT/01 Primary data/04.Repertoire analysis/SORT1/S
 merging_colums_names <- c("initial_sequence_id") # single vector of character strings of the names of the column used to merge the 2 files. Of note, if _VH or _VL in the columns names, they are removed.
 metadata_colums_names <- c("sequence_id") # single character string of the name of the metadata column in the two files. Write NULL if no metadata.
 kept_colums_names <- c("germline_v_call",	"germline_j_call") # single vector of character strings of the names of the column of VH.path file that correspond to V (first position) and J. Of note, Same names must be for VH and VL.
-
+output_file_name <- "mouse1_circos_data" # single character string of the name of the output file (tsv).
+# inactivated because done in the circos file
+# metadata_select <- TRUE # single logical value. Kept only the V and J values that are identical to those of the metadata values. If TRUE, kept only these rows. If FALSE, takes all the rows.
+# metadata_select_allele <- FALSE # single logical value. If metadata_select parameter is TRUE, kept the allele info ? IF TRUE, use the VJ_allele_VH and VJ_allele_VL columns. IF FALSE, use the VJ_VH and VJ_VL columns.
 
 
 df1 <- read.table(VH.path, sep = "\t", header = TRUE)
@@ -80,14 +83,22 @@ if(nrow(output_all_seq) != nrow(df1)){
 # new columns wo * in alleles
 output_all_seq <- data.frame(
     output_all_seq, 
-    V_VH = (output_all_seq$V_allele_VH)
+    V_VH = sub("\\*.*", "", output_all_seq$V_allele_VH), 
+    J_VH = sub("\\*.*", "", output_all_seq$J_allele_VH), 
+    V_VL = sub("\\*.*", "", output_all_seq$V_allele_VL), 
+    J_VL = sub("\\*.*", "", output_all_seq$J_allele_VL)
 )
 # end new columns wo * in alleles
 
 
 # new fusion columns
 output_all_seq <- data.frame(
-    output_all_seq, )
+    output_all_seq, 
+    VJ_allele_VH = paste0(output_all_seq$V_allele_VH, "_", output_all_seq$J_allele_VH), 
+    VJ_allele_VL = paste0(output_all_seq$V_allele_VL, "_", output_all_seq$J_allele_VL), 
+    VJ_VH = paste0(output_all_seq$V_VH, "_", output_all_seq$J_VH), 
+    VJ_VL = paste0(output_all_seq$V_VL, "_", output_all_seq$J_VL)
+)
 # end new fusion columns
 
 # metadata in output_all_seq
@@ -100,6 +111,24 @@ tempo.log <- is.na(match(output_all_seq[ , merging_colums_names], output_all_seq
 output_all_seq$Metadata[ ! tempo.log] <- NA # keep only the Metadata names in the Metadata column
 # end metadata in output_all_seq
 
-# export output_all_seq
+# selection of rows corresponding to metadata
+# inactivated because done in the circos file
+# if(metadata_select == TRUE){
+#     if(metadata_select_allele == TRUE){
+#         tempo_VJ_allele_VH <- output_all_seq$VJ_allele_VH[tempo.log]
+#         tempo_VJ_allele_VL <- output_all_seq$VJ_allele_VL[tempo.log]
+#         output_all_seq <- output_all_seq[output_all_seq$VJ_allele_VH %in% tempo_VJ_allele_VH & output_all_seq$VJ_allele_VL %in% tempo_VJ_allele_VL, ]
+#     }else{
+#         tempo_VJ_VH <- output_all_seq$VJ_VH[tempo.log]
+#         tempo_VJ_VL <- output_all_seq$VJ_VL[tempo.log]
+#         output_all_seq <- output_all_seq[output_all_seq$VJ_VH %in% tempo_VJ_VH & output_all_seq$VJ_VL %in% tempo_VJ_VL, ]
+#     }
+# }
+# end selection of rows corresponding to metadata
 
+
+# export output_all_seq
+names(output_all_seq)[names(output_all_seq) == merging_colums_names] <- "Name"
+write.table(output_all_seq, file = paste0("./", output_file_name, ".tsv"), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\t")
+save(list = c("output_all_seq"), file = paste0("./", output_file_name, ".RData"))
 # end export output_all_seq
