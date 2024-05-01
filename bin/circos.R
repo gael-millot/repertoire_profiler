@@ -4,8 +4,8 @@ pdf.name <- "mouse1"
 Name <- "Name" # column of the sequence names
 col1 <- "VJ_VH" # first column name
 col2 <- "VJ_VL" # second column name
-col1.selection <- c("IGHV1-7_IGHJ2", "IGHV1-55_IGHJ2", "IGHV1-81_IGHJ2") # single vector of characters indicating the values to select inside col1 for the circos representation. Write NULL if not required
-col2.selection <- c("IGKV4-68_IGKJ5", "IGKV2-112_IGKJ2") # single vector of characters indicating the values to select inside col2 for the circos representation. Write NULL if not required
+col1.selection <- c("IGHV1-55_IGHJ2", "IGHV1-7_IGHJ2", "IGHV1-81_IGHJ2", "IGHV1-81_IGHJ2") # single vector of characters indicating the values to select inside col1 for the circos representation. Write NULL if not required
+col2.selection <- c("IGKV4-68_IGKJ5", "IGKV2-112_IGKJ2", "IGKV2-112_IGKJ2", "IGKV4-68_IGKJ5") # single vector of characters indicating the values to select inside col2 for the circos representation. Write NULL if not required
 coupled.selection <- TRUE # single logical value. Couple col1.selection and col2.selection? If TRUE, col1.selection and col2.selection must be of same length: element 1 of col1.selection is parired with 1 col2.selection, etc. If FALSE, select the values without pairing.
 metadata <- c("mAb_name", "Kd_nM") # single vector of characters indicating the name of the column with metadata
 scale.size <- 0.7 # size of the numbers
@@ -90,15 +90,22 @@ if(coupled.selection == FALSE){
     }
 }else if(coupled.selection == TRUE){
     if(( ! is.null(col1.selection)) & ! is.null(col2.selection)){
+        if(length(col1.selection) != length(col2.selection)){
+            stop("ERROR 3")
+        }
         if( ! all(col1.selection %in% obs1[ , col1]) ){
-            stop("ERROR 1")
+            stop("ERROR 4")
         }
         if( ! all(col2.selection %in% obs1[ , col2]) ){
-            stop("ERROR 2")
+            stop("ERROR 5")
         }
-        obs1 <- obs1[obs1[ , col1] %in%  col1.selection & obs1[ , col2] %in%  col2.selection, ]
+        tempo_df <- data.frame()
+        for(i2 in 1:length(col1.selection)){
+                    tempo_df <- rbind(tempo_df, obs1[obs1[ , col1] ==  col1.selection[i2] & obs1[ , col2] ==  col2.selection[i2], ])
+        }
+        obs1 <- tempo_df
     }else{
-        stop("ERROR 3")
+        stop("ERROR 6")
     }
 }
 obs2 <- table(obs1[ , c(col1, col2)])
