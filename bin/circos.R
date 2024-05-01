@@ -1,11 +1,12 @@
-xlsx.path <- "C:\\Users\\gmillot\\Documents\\Hub projects\\20210914 Alice Dejoux 19463\\dataset\\24_03_18_circo plot VH-VL appariesv_meta_data.xlsx"
+tsv.path <- "C:\\Users\\gmillot\\Desktop\\mouse1_circos_data.tsv" # "C:\\Users\\gmillot\\Documents\\Hub projects\\20210914 Alice Dejoux 19463\\dataset\\24_03_18_circo plot VH-VL appariesv_meta_data.xlsx"
 out.path <- "C:\\Users\\gmillot\\Desktop"
-sheetName <- "mouse_1" # sheet number
+pdf.name <- "mouse1"
 Name <- "Name" # column of the sequence names
-col1 <- "VH_VJ" # first column name
-col2 <- "VL_VJ" # second column name
+col1 <- "VJ_VH" # first column name
+col2 <- "VJ_VL" # second column name
 col1.selection <- c("IGHV1-7_IGHJ2", "IGHV1-55_IGHJ2", "IGHV1-81_IGHJ2") # single vector of characters indicating the values to select inside col1 for the circos representation. Write NULL if not required
 col2.selection <- c("IGKV4-68_IGKJ5", "IGKV2-112_IGKJ2") # single vector of characters indicating the values to select inside col2 for the circos representation. Write NULL if not required
+coupled.selection <- TRUE # single logical value. Couple col1.selection and col2.selection? If TRUE, col1.selection and col2.selection must be of same length: element 1 of col1.selection is parired with 1 col2.selection, etc. If FALSE, select the values without pairing.
 metadata <- c("mAb_name", "Kd_nM") # single vector of characters indicating the name of the column with metadata
 scale.size <- 0.7 # size of the numbers
 label.size <- 0.7 # size of the label text
@@ -46,7 +47,7 @@ fun_gg_palette <- function(n, kind = kind, alpha = alpha){
 }
 
 
-open2(pdf = TRUE, pdf.path = out.path, pdf.name = sheetName, width = windows.size, height = windows.size)
+open2(pdf = TRUE, pdf.path = out.path, pdf.name = pdf.name, width = windows.size, height = windows.size)
 prior_plot(
     param.reinitial = TRUE,
     xlog.scale = FALSE,
@@ -71,19 +72,33 @@ prior_plot(
 )
 
 
-obs1 <- xlsx::read.xlsx(xlsx.path, sheetName = sheetName, header = TRUE)
-if( ! is.null(col1.selection)){
-    if( ! all(col1.selection %in% obs1[ , col1]) ){
-        stop("ERROR 1")
-    }else{
-        obs1 <- obs1[obs1[ , col1] %in%  col1.selection, ]
+obs1 <- read.table(tsv.path, header = TRUE, sep = "\t")
+if(coupled.selection == FALSE){
+    if( ! is.null(col1.selection)){
+        if( ! all(col1.selection %in% obs1[ , col1]) ){
+            stop("ERROR 1")
+        }else{
+            obs1 <- obs1[obs1[ , col1] %in%  col1.selection, ]
+        }
     }
-}
-if( ! is.null(col2.selection)){
-    if( ! all(col2.selection %in% obs1[ , col2]) ){
-        stop("ERROR 2")
+    if( ! is.null(col2.selection)){
+        if( ! all(col2.selection %in% obs1[ , col2]) ){
+            stop("ERROR 2")
+        }else{
+            obs1 <- obs1[obs1[ , col2] %in%  col2.selection, ]
+        }
+    }
+}else if(coupled.selection == TRUE){
+    if(( ! is.null(col1.selection)) & ! is.null(col2.selection)){
+        if( ! all(col1.selection %in% obs1[ , col1]) ){
+            stop("ERROR 1")
+        }
+        if( ! all(col2.selection %in% obs1[ , col2]) ){
+            stop("ERROR 2")
+        }
+        obs1 <- obs1[obs1[ , col1] %in%  col1.selection & obs1[ , col2] %in%  col2.selection, ]
     }else{
-        obs1 <- obs1[obs1[ , col2] %in%  col2.selection, ]
+        stop("ERROR 3")
     }
 }
 obs2 <- table(obs1[ , c(col1, col2)])

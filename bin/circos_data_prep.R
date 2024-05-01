@@ -118,7 +118,7 @@ output_all_seq$Metadata[ ! tempo.log] <- NA # keep only the Metadata names in th
 #         tempo_VJ_allele_VH <- output_all_seq$VJ_allele_VH[tempo.log]
 #         tempo_VJ_allele_VL <- output_all_seq$VJ_allele_VL[tempo.log]
 #         output_all_seq <- output_all_seq[output_all_seq$VJ_allele_VH %in% tempo_VJ_allele_VH & output_all_seq$VJ_allele_VL %in% tempo_VJ_allele_VL, ]
-#     }else{
+#     }else if(metadata_select == FALSE){
 #         tempo_VJ_VH <- output_all_seq$VJ_VH[tempo.log]
 #         tempo_VJ_VL <- output_all_seq$VJ_VL[tempo.log]
 #         output_all_seq <- output_all_seq[output_all_seq$VJ_VH %in% tempo_VJ_VH & output_all_seq$VJ_VL %in% tempo_VJ_VL, ]
