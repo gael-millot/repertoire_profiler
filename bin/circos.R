@@ -162,5 +162,5 @@ circos.trackPlotRegion( # deal with features inside a track
 )
 circos.clear()
 close2()
-
+cat(paste0("\n\nNumber of H-L sequences: ", nrow(obs1)), "\n\n")
 
