@@ -310,6 +310,13 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 <br /><br />
 ## WHAT'S NEW IN
 
+#### v10.3
+
+- Spaces removed in file names
+- Spaces removed in the first line of each fasta file
+- .fas fasta extension allowed
+
+
 #### v10.2
 
 xlsx2fasta.R file: error fixed for the fasta by categ
