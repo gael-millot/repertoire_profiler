@@ -50,7 +50,7 @@
 
 | Required files |
 | :--- |
-| A folder (zipped or not) containing nucleotide fasta files, each containing a single sequence. |
+| A folder (zipped or not) containing nucleotide fasta files, each containing a single sequence. Use xlsx2fasta.R ([https://github.com/gael-millot/xlsx2fasta](https://github.com/gael-millot/xlsx2fasta)) if sequences are in a .xlsx file. |
 | A metadata file (optional) for adding informations in the results. |
 
 <br />
@@ -67,12 +67,8 @@ The dataset used in the *nextflow.config* file, as example, is available at http
 | **hg19_grch37p5_chr_size_cumul.txt** | Coordinates of the hg19_grch37p5 Human Genome for the Miami plot. Available [here](https://zenodo.org/records/10684445/files/hg19_grch37p5_chr_size_cumul.txt). |
 
 
-
-
 The dataset used in the *nextflow.config* file, as example, is available at https://zenodo.org/record/8403994/files/repertoire_profiler.zip
 
-
-Use the xlsx2fasta.R script if sequences are in a .xlsx file (see the sequences.xlsx file dataset, as well as the xlsx_to_fasta results folder in https://zenodo.org/record/8403994/files/repertoire_profiler.zip).
 
 Use this code to split a multi sequence fasta file into fasta files made of a single sequence:
 
@@ -286,6 +282,8 @@ Not yet published.
 ## CREDITS
 
 [Pascal Chappert](https://www.institut-necker-enfants-malades.fr/index.php?menu=team&rubric=teamtabs&idfac=mahevas#chart), INSERM U1151 Institut Necker Enfants Malades, Paris, France
+
+[Frédéric Lemoine](), Bioinformatics and Biostatistics Hub, Institut Pasteur, Paris, France
 
 [Gael A. Millot](https://gitlab.pasteur.fr/gmillot), Bioinformatics and Biostatistics Hub, Institut Pasteur, Paris, France
 
