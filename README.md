@@ -36,7 +36,7 @@
 
 <br /><br />
 ## CONTENT
-<br />
+
 | Files and folder | Description |
 | :--- | :--- |
 | **main.nf** | File that can be executed using a linux terminal, a MacOS terminal or Windows 10 WSL2. |
