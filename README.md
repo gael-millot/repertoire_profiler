@@ -59,17 +59,6 @@ The dataset used in the *nextflow.config* file, as example, is available at http
 
 <br />
 
-| File name | Description |
-| :--- | :--- |
-| **example.vcf.gz** | VCF file compressed using `bgzip <vcf_name>`. Available [here](https://zenodo.org/records/10684445/files/example.vcf.gz.zip). |
-| **example.vcf.gz.tbi** | Index file associated to the VCF file, obtained using `tabix <vcf_name>.gz`. Available [here](https://zenodo.org/records/10684445/files/example.vcf.gz.zip). |
-| **pedigree.txt** | Pedigree file. Available [here](https://zenodo.org/records/10684445/files/pedigree.txt). |
-| **hg19_grch37p5_chr_size_cumul.txt** | Coordinates of the hg19_grch37p5 Human Genome for the Miami plot. Available [here](https://zenodo.org/records/10684445/files/hg19_grch37p5_chr_size_cumul.txt). |
-
-
-The dataset used in the *nextflow.config* file, as example, is available at https://zenodo.org/record/8403994/files/repertoire_profiler.zip
-
-
 Use this code to split a multi sequence fasta file into fasta files made of a single sequence:
 
 ```

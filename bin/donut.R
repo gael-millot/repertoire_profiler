@@ -110,7 +110,7 @@ rm(tempo.cat)
 
 ################################ Test
 
-# setwd("C:/Users/gael/Documents/Git_projects/repertoire_profiler/dev/test")
+# setwd("C:/Users/gael/Documents/Git_projects/19532_marbouty/dataset/test")
 # file_name = "./caca.tsv"
 # kind = "all"
 # donut_palette = "NULL" 
