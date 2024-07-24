@@ -43,6 +43,7 @@
 | **nextflow.config** | Parameter settings for the *main.nf* file. Users have to open this file, set the desired settings and save these modifications before execution. |
 | **bin folder** | Contains files required by the *main.nf* file. |
 | **xlsx2fasta.R** | Accessory file that creates all the fasta files required from a .xlsx file. To use it, 1) open the file, 2) complete the "Parameters that need to be set by the user" section, 3) save the modifications and 4) run the file in R. |
+| **Licence.txt** | Licence of the release. |
 
 
 <br /><br />
