@@ -266,7 +266,9 @@ See the GNU General Public License for more details at https://www.gnu.org/licen
 ## CITATION
 
 
-Not yet published.
+Version V10.3:
+
+[Dejoux A, Zhu Q, Ganneau C, Goff OR, Godon O, Lemaitre J, Relouzat F, Huetz F, Sokal A, Vandenberghe A, Pecalvel C, Hunault L, Derenne T, Gillis CM, Iannascoli B, Wang Y, Rose T, Mertens C, Nicaise-Roland P; NASA Study Group; England P, Mahévas M, de Chaisemartin L, Le Grand R, Letscher H, Saul F, Pissis C, Haouz A, Reber LL, Chappert P, Jönsson F, Ebo DG, Millot GA, Bay S, Chollet-Martin S, Gouel-Chéron A, Bruhns P. Rocuronium-specific antibodies drive perioperative anaphylaxis but can also function as reversal agents in preclinical models. Sci Transl Med. 2024 Sep 11;16(764):eado4463. doi: 10.1126/scitranslmed.ado4463. Epub 2024 Sep 11. PMID: 39259810.](https://www.science.org/doi/10.1126/scitranslmed.ado4463)
 
 
 <br /><br />
