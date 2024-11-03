@@ -1614,7 +1614,9 @@ workflow {
         cute_file
     )
    germ_tree_vizu.out.germ_tree_vizu_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}}
-    germ_tree_vizu.out.germ_tree_seq_not_displayed_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: -> NO germ_tree_seq_not_displayed.tsv FILE RETURNED\n\n")}}
+    germ_tree_vizu.out.germ_tree_seq_not_displayed_ch.count().subscribe { n -> if ( n == 0 ){
+        print("\n\nWARNING: -> NO germ_tree_seq_not_displayed.tsv FILE RETURNED\n\n")
+    }}
     germ_tree_seq_not_displayed_ch2 = germ_tree_vizu.out.germ_tree_seq_not_displayed_ch.flatten().collectFile(name: "germ_tree_seq_not_displayed.tsv", skip: 1, keepHeader: true) // flatten split the list into several objects which is required by collectFile()
     germ_tree_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
@@ -1623,7 +1625,6 @@ workflow {
     tempo1_ch = Channel.of("all", "annotated", "tree") // 1 channel with 3 values (not list)
     tempo2_ch = seq_name_remplacement_ch2.mix(seq_name_remplacement_ch2.mix(germ_tree_ch2)) // 1 channel with 3 paths (do not use flatten() -> not list)
     tempo3_ch = tempo1_ch.merge(tempo2_ch) // 3 lists
-
 
     donut(
         tempo3_ch,
@@ -1644,10 +1645,14 @@ workflow {
         donut_legend_limit,
         cute_file
     )
-    donut.out.donut_pdf_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: EMPTY OUTPUT FOLLOWING THE donut PROCESS -> NO DONUT RETURNED\n\n")}}
+    donut.out.donut_pdf_ch.count().subscribe { n -> if ( n == 0 ){
+        print("\n\nWARNING: EMPTY OUTPUT FOLLOWING THE donut PROCESS -> NO DONUT RETURNED\n\n")
+    }}
     donut_pdf_ch2 = donut.out.donut_pdf_ch.collect()
 
-    donut.out.donut_tsv_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: -> NO donut_stats.tsv FILE RETURNED\n\n")}}
+    donut.out.donut_tsv_ch.count().subscribe { n -> if ( n == 0 ){
+        print("\n\nWARNING: -> NO donut_stats.tsv FILE RETURNED\n\n")
+    }}
     donut_tsv_ch2 = donut.out.donut_tsv_ch.collectFile(name: "donut_stats.tsv", skip: 1, keepHeader: true)
     donut_tsv_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
@@ -1664,8 +1669,11 @@ workflow {
     // Keeps only alignments with at least 3 sequences
     filtered=NbSequences(align).filter{it[0].toInteger()>=3}.map{it->it[1]}
     tree=Tree(filtered,phylo_tree_model_file)
-    itolmeta=ProcessMeta(meta_file)
-    ITOL(tree[0],itolmeta,phylo_tree_itolkey)
+    if(meta_file != null){
+        itolmeta=ProcessMeta(meta_file)
+        ITOL(tree[0],itolmeta,phylo_tree_itolkey)
+    }
+
 
     backup(
         config_file, 
