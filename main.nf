@@ -1669,7 +1669,7 @@ workflow {
     // Keeps only alignments with at least 3 sequences
     filtered=NbSequences(align).filter{it[0].toInteger()>=3}.map{it->it[1]}
     tree=Tree(filtered,phylo_tree_model_file)
-    if(meta_file != null){
+    if(meta_file != NULL){
         itolmeta=ProcessMeta(meta_file)
         ITOL(tree[0],itolmeta,phylo_tree_itolkey)
     }

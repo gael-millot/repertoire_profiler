@@ -122,12 +122,12 @@ nextflow run -hub pasteur gmillot/repertoire_profiler -r v1.0.0
 Copy-paste this after having modified the EXEC_PATH variable:
 
 <pre>
-EXEC_PATH="/pasteur/zeus/projets/p01/BioIT/gmillot/repertoire_profiler" # where the bin folder of the main.nf script is located
+EXEC_PATH="/pasteur/helix/projects/BioIT/gmillot/repertoire_profiler" # where the bin folder of the main.nf script is located
 export CONF_BEFORE=/opt/gensoft/exe # on maestro
 
 export JAVA_CONF=java/13.0.2
 export JAVA_CONF_AFTER=bin/java # on maestro
-export APP_CONF=apptainer/1.2.3
+export APP_CONF=apptainer/1.3.5
 export APP_CONF_AFTER=bin/apptainer # on maestro
 export GIT_CONF=git/2.39.1
 export GIT_CONF_AFTER=bin/git # on maestro
@@ -147,7 +147,7 @@ Modify the second line of the code below, and run from where the *main.nf* and *
 
 <pre>
 HOME_INI=$HOME
-HOME="${ZEUSHOME}/repertoire_profiler/" # $HOME changed to allow the creation of .nextflow into /$ZEUSHOME/repertoire_profiler/, for instance. See NFX_HOME in the nextflow software script
+HOME="${HELIXHOME}/repertoire_profiler/" # $HOME changed to allow the creation of .nextflow into /$HELIXHOME/repertoire_profiler/, for instance. See NFX_HOME in the nextflow software script
 trap '' SIGINT
 nextflow run --modules ${MODULES} main.nf -c nextflow.config
 HOME=$HOME_INI
@@ -162,7 +162,7 @@ Modify the first and third lines of the code below, and run (results will be whe
 <pre>
 VERSION="v1.0"
 HOME_INI=$HOME
-HOME="${ZEUSHOME}/repertoire_profiler/" # $HOME changed to allow the creation of .nextflow into /$ZEUSHOME/repertoire_profiler/, for instance. See NFX_HOME in the nextflow software script
+HOME="${HELIXHOME}/repertoire_profiler/" # $HOME changed to allow the creation of .nextflow into /$HELIXHOME/repertoire_profiler/, for instance. See NFX_HOME in the nextflow software script
 trap '' SIGINT
 nextflow run --modules ${MODULES} -hub pasteur gmillot/repertoire_profiler -r $VERSION -c $HOME/nextflow.config
 HOME=$HOME_INI
