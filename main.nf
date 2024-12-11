@@ -1663,16 +1663,7 @@ workflow {
     )
    donut_assembly.out.donut_assembly_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}}
 
-    fasta=Reformat(aa_tsv_ch2)
-    fastagroups=DefineGroups(fasta,parseDb_filtering.out.select_ch).flatten()
-    align=Align(fastagroups,phylo_tree_heavy)
-    // Keeps only alignments with at least 3 sequences
-    filtered=NbSequences(align).filter{it[0].toInteger()>=3}.map{it->it[1]}
-    tree=Tree(filtered,phylo_tree_model_file)
-    if(meta_file != NULL){
-        itolmeta=ProcessMeta(meta_file)
-        ITOL(tree[0],itolmeta,phylo_tree_itolkey)
-    }
+
 
 
     backup(

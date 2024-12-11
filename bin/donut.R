@@ -398,18 +398,28 @@ obs <- read.table(file_name, sep = "\t", header = TRUE)
 
 
 tempo.title <- paste0(
-    "Donut plot of the all-passed sequences grouped by same V and J alleles\nWarning: this is different from clonal groups since the latter must have also the same CDR3 length\n\n",
-    "Kind of sequences: ", 
     ifelse(
         kind == "all", 
-        "all the all-passed ones (see the corresponding all-passed_seq.tsv", 
+        paste0(
+            "Donut plot of the all-passed sequences grouped by same V and J alleles\nWarning: this is different from clonal groups since the latter must have also the same CDR3 length\n\n",
+            "Kind of sequences: ", 
+            "all the all-passed ones (see the corresponding all-passed_seq.tsv"
+        ), 
         ifelse(
             kind == "tree", 
-            "all the sequences in trees (see the corresponding seq_for_trees.tsv", 
+            paste0(
+                "Donut plot of all the sequences in trees plotted in the germ_trees.pdf file\n\n\n",
+                "Kind of sequences: ", 
+                "all the sequences in trees (see the corresponding germ_tree_seq.tsv"
+            ), 
             ifelse(
                 kind == "annotated", 
-                "all the all-passed ones for which at least one annotation in the group of same V and J alleles\n        (nb_seq_per_clone threshold not used, see the corresponding all-passed_seq.tsv", 
-                "=====ERROR====="
+                paste0(
+                    "Donut plot of the all-passed sequences grouped by same V and J alleles, for which at least one annotation\nWarning: this is different from clonal groups since the latter must have also the same CDR3 length\n\n",
+                    "Kind of sequences: ", 
+                    "all the all-passed ones (see the corresponding all-passed_seq.tsv"
+                ), 
+                stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 4 IN donut.R for kind THAT CAN ONLY BE \"all\", \"annotated\" OR \"tree\".\nHER IT IS: ", kind, "\n\n================\n\n"))
             )
         )
     ), " file)"
@@ -464,7 +474,7 @@ if(nrow(obs) > 0){
     tempo.title <- paste0(
         tempo.title,
         "\nChain: ", paste(chain, collapse = " "), "\n",
-        "Proportions are indicated in the legend, after the labels.\n", 
+        "Proportions of sequences with the indicated V and J alleles are indicated in the legend, after the labels.\n", 
         "The total number of sequences of the donut is indicated in the center.\nSee the donut_stats.tsv file for the complete stats."
     )
     if( ! is.null(donut_legend_limit)){
@@ -502,7 +512,7 @@ if(nrow(obs) > 0){
                 annotation.force.pull = donut_annotation_force_pull,
                 legend.show = TRUE, 
                 legend.width = donut_legend_width, 
-                legend.name = "", 
+                legend.name = "V J alleles", 
                 legend.text.size = donut_legend_text_size, 
                 legend.box.size = donut_legend_box_size, 
                 legend.box.space = donut_legend_box_space, 
