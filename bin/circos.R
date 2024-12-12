@@ -72,7 +72,7 @@ prior_plot(
 )
 
 
-obs1 <- read.table(tsv.path, header = TRUE, sep = "\t")
+obs1 <- read.table(tsv.path, header = TRUE, sep = "\t", comment.char = "")
 if(coupled.selection == FALSE){
     if(( ! is.null(col1.selection)) & ! is.null(col2.selection)){
         if( ! all(col1.selection %in% obs1[ , col1]) ){

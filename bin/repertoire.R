@@ -470,7 +470,7 @@ fun_report(data = paste0("\n\n################################ RUNNING\n\n"), ou
 ################ Data import
 
 
-df <- read.table(file_assembly_ch, header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+df <- read.table(file_assembly_ch, header = TRUE, sep = "\t", stringsAsFactors = FALSE, comment.char = "")
 
 tempo <- strsplit(rep_file_names, split = "[_.]")
 tempo2 <- sapply(tempo, FUN = function(x){x[length(x) - 1]})

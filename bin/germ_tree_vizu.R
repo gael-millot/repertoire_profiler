@@ -558,7 +558,7 @@ if(length(tempo.list) == 0){
 
 
     if( ! is.null(germ_tree_meta_path)){
-        meta.df <- read.table(germ_tree_meta_path, sep = "\t", header = TRUE)
+        meta.df <- read.table(germ_tree_meta_path, sep = "\t", header = TRUE, comment.char = "")
     }
 
 

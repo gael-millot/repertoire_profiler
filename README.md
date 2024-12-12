@@ -298,6 +298,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 <br /><br />
 ## WHAT'S NEW IN
 
+#### v11.1
+
+- Option comment_char = '' of read.table() for all .R files with read.table() in bin
+
+
 #### v11.0
 
 - Tree plots improved
