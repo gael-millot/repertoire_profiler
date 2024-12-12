@@ -785,7 +785,8 @@ process get_germ_tree {
 
 process germ_tree_vizu {
     label 'r_ext'
-    publishDir path: "${out_path}", mode: 'copy', pattern: "{germ_trees.pdf}", overwrite: false
+    publishDir path: "${out_path}", mode: 'copy', pattern: "{germ_tree.pdf}", overwrite: false
+    publishDir path: "${out_path}", mode: 'copy', pattern: "{germ_no_tree.pdf}", overwrite: false
     publishDir path: "${out_path}/png", mode: 'copy', pattern: "{*.png}", overwrite: false
     publishDir path: "${out_path}/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
     publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{all_trees.RData}", overwrite: false
@@ -812,10 +813,11 @@ process germ_tree_vizu {
 
     output:
     path "*.RData", optional: true
-    path "*.pdf"
-    path "*.png", emit: germ_tree_vizu_ch // png plot (but sometimes empty) sustematically returned
+    path "germ_tree.pdf"
+    path "germ_no_tree.pdf"
+    path "*.png", emit: germ_tree_vizu_ch // png plot (but sometimes empty) systematically returned
     path "*.svg"
-    path "*germ_tree_seq_not_displayed.tsv", emit: germ_tree_seq_not_displayed_ch
+    path "*germ_tree_dup_seq_not_displayed.tsv", emit: germ_tree_dup_seq_not_displayed_ch
     path "germ_tree_vizu.log"
     //path "HLP10_germ_tree_parameters.tsv"
 
@@ -1587,7 +1589,7 @@ workflow {
     no_cloneID_ch2 = get_germ_tree.out.no_cloneID_ch.collectFile(name: "germ_tree_dismissed_clone_id.tsv")
     no_cloneID_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
-    get_germ_tree.out.cloneID_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: NO CLONAL GROUP FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_clone_id.tsv and germ_trees.pdf FILES RETURNED\n\n")}}
+    get_germ_tree.out.cloneID_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: NO CLONAL GROUP FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_clone_id.tsv and germ_tree.pdf FILES RETURNED\n\n")}}
     cloneID_ch2 = get_germ_tree.out.cloneID_ch.collectFile(name: "germ_tree_clone_id.tsv")
     cloneID_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
@@ -1613,12 +1615,12 @@ workflow {
         meta_legend,
         cute_file
     )
-   germ_tree_vizu.out.germ_tree_vizu_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}}
-    germ_tree_vizu.out.germ_tree_seq_not_displayed_ch.count().subscribe { n -> if ( n == 0 ){
-        print("\n\nWARNING: -> NO germ_tree_seq_not_displayed.tsv FILE RETURNED\n\n")
+   germ_tree_vizu.out.germ_tree_vizu_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE germ_tree_vizu PROCESS\n\n========\n\n"}}
+    germ_tree_vizu.out.germ_tree_dup_seq_not_displayed_ch.count().subscribe { n -> if ( n == 0 ){
+        print("\n\nWARNING: -> NO germ_tree_dup_seq_not_displayed.tsv FILE RETURNED\n\n")
     }}
-    germ_tree_seq_not_displayed_ch2 = germ_tree_vizu.out.germ_tree_seq_not_displayed_ch.flatten().collectFile(name: "germ_tree_seq_not_displayed.tsv", skip: 1, keepHeader: true) // flatten split the list into several objects which is required by collectFile()
-    germ_tree_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}")}
+    germ_tree_dup_seq_not_displayed_ch2 = germ_tree_vizu.out.germ_tree_dup_seq_not_displayed_ch.flatten().collectFile(name: "germ_tree_dup_seq_not_displayed.tsv", skip: 1, keepHeader: true) // flatten split the list into several objects which is required by collectFile()
+    germ_tree_dup_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
 
 

@@ -127,7 +127,7 @@ rm(tempo.cat)
 # germ_tree_meta_legend = "inverted_KD"
 # cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.2.0/cute_little_R_functions.R"
 # log = "germ_tree_vizu.log"
-# file.remove(c("./all_objects.RData", "./all_germ_trees.RData", "./germ_trees.pdf", "./germ_tree_vizu.log"))
+# file.remove(c("./all_objects.RData", "./all_germ_trees.RData", "./germ_tree.pdf", "./germ_tree_vizu.log"))
 
 
 
@@ -486,8 +486,11 @@ if(length(tempo.list) == 0){
     ggplot2::ggsave(filename = paste0("germ_tree.png"), plot = final.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
     ggplot2::ggsave(filename = paste0("germ_tree.svg"), plot = final.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
     ggplot2::ggsave(filename = paste0("germ_tree.pdf"), plot = final.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+    ggplot2::ggsave(filename = paste0("germ_no_tree.png"), plot = final.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+    ggplot2::ggsave(filename = paste0("germ_no_tree.svg"), plot = final.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+    ggplot2::ggsave(filename = paste0("germ_no_tree.pdf"), plot = final.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
     tempo.df <- matrix(c("sequence_id", "clone_id", "clone_name", "chain", "identical_to"), nrow = 1)
-    write.table(tempo.df, file = paste0("./germ_tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = FALSE, sep = "\t", quote = FALSE)
+    write.table(tempo.df, file = paste0("./germ_tree_dup_seq_not_displayed.tsv"), row.names = FALSE, col.name = FALSE, sep = "\t", quote = FALSE)
 }else{
     clone.id <- sapply(tempo.list, FUN = function(x){strsplit(x, split = "_")[[1]][1]})
 
@@ -545,7 +548,7 @@ if(length(tempo.list) == 0){
     }
     clones <- tempo.clones
     db.list <- tempo.db # creation of the db.list tibble object, made of all the db
-    save(list = c("trees", "plots", "clones", "db.list", "clone.id"), file = "./all_germ_trees.RData")
+    save(list = c("trees", "plots", "clones", "db.list", "clone.id"), file = "./all_trees.RData")
 
 
 ################ end concatenation of all tibble trees into a same tibble and plot
@@ -563,7 +566,11 @@ if(length(tempo.list) == 0){
 
 ################ Plotting tree
 
+    count.final.plot <- 0
+    count.final.no.plot <- 0
     for(i3 in 1:length(db.list)){
+        final.plot <- NULL
+        final.no.plot <- NULL
         empty.tsv <- TRUE
         tempo.title <- paste0(
             "Clonal Group: ", ifelse(is.null(fun_get_message("clones$data[[i3]]@clone")), clones$data[[i3]]@clone, ""), "\n",
@@ -651,7 +658,7 @@ if(length(tempo.list) == 0){
                     }else{
                         not.removed.seq <- db.list[[i3]][[1]][no.removed.seq.log]
                         removed.seq <- db.list[[i3]][[1]][removed.seq.log]
-                        tempo.warn <- paste0(length(removed.seq), " sequences removed from the display (Parameter germ_tree_duplicate_seq == \"FALSE\". See germ_tree_seq_not_displayed.tsv)")
+                        tempo.warn <- paste0(length(removed.seq), " sequences removed from the display (Parameter germ_tree_duplicate_seq == \"FALSE\". See germ_tree_dup_seq_not_displayed.tsv)")
                         tempo.warn2 <- paste0("FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\n", tempo.warn)
                         warn <- paste0(ifelse(is.null(warn), tempo.warn2, paste0(warn, "\n\n", tempo.warn2)))
                         tempo.cat <- paste0("Warning: ", tempo.warn, "\nNumber of total sequences are indicated between brackets in leaf labelings (removed = total - 1)")
@@ -669,7 +676,7 @@ if(length(tempo.list) == 0){
                         }
                         suppressWarnings(rm(tempo.df))
                         tempo.df <- data.frame(sequence_id = removed.seq, clone_id = clone.id[[i3]], clone_name = clone.name, chain = chain, identical_to = identical.seq)
-                        write.table(tempo.df, file = paste0("./", clone.id[[i3]], "_germ_tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = TRUE, sep = "\t", quote = FALSE)
+                        write.table(tempo.df, file = paste0("./", clone.id[[i3]], "_germ_tree_dup_seq_not_displayed.tsv"), row.names = FALSE, col.name = TRUE, sep = "\t", quote = FALSE)
                         empty.tsv <- FALSE
                         # end get removed sequences info
                         # modif of the tree tip labeling
@@ -902,14 +909,17 @@ if(length(tempo.list) == 0){
                     }
                 }
                 # end legend
+                count.final.plot <- count.final.plot + 1
                 final.plot <- suppressMessages(suppressWarnings(eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + ")))))
             }else{
                 # no need to use pdf(NULL) with fun_gg_empty_graph()
-                final.plot <- fun_gg_empty_graph(text = paste0("NO GRAPH PLOTTED FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\nNOT ENOUGH SEQUENCES DETECTED"), text.size = 3)
+                count.final.no.plot <- count.final.no.plot + 1
+                final.no.plot <- fun_gg_empty_graph(text = paste0("NO GRAPH PLOTTED FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\nNOT ENOUGH SEQUENCES DETECTED"), text.size = 3)
             }
         }else{
             # no need to use pdf(NULL) with fun_gg_empty_graph()
-            final.plot <- fun_gg_empty_graph(text = paste0("NO GRAPH PLOTTED FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\nNOT ENOUGH SEQUENCES DETECTED"), text.size = 3)
+            count.final.no.plot <- count.final.no.plot + 1
+            final.no.plot <- fun_gg_empty_graph(text = paste0("NO GRAPH PLOTTED FOR CLONE ID ", paste(unique(db.list[[i3]]$clone_id)), "\nNOT ENOUGH SEQUENCES DETECTED"), text.size = 3)
         }
         if( ( ! is.null(germ_tree_meta_path)) & ! is.null(germ_tree_meta_legend)){
             tempo.log <- clones$data[[i3]]@data$sequence_id %in% meta.df$Name
@@ -937,9 +947,26 @@ if(length(tempo.list) == 0){
             vjust = 0,
             gp = grid::gpar(fontsize = 6)
         )
-        pdf(NULL)
-        final.plot <- suppressMessages(suppressWarnings(gridExtra::arrangeGrob(grobs = list(final.plot, legend.final), ncol=2, widths=c(1, legend.width), top = title.grob, left = " ", right = " "))) # , left = " ", right = " " : trick to add margins in the plot. padding =  unit(0.5, "inch") is for top margin above the title
-        dev.off()
+        if( ! is.null(final.plot)){
+            pdf(NULL)
+            final.plot <- suppressMessages(suppressWarnings(gridExtra::arrangeGrob(grobs = list(final.plot, legend.final), ncol=2, widths=c(1, legend.width), top = title.grob, left = " ", right = " "))) # , left = " ", right = " " : trick to add margins in the plot. padding =  unit(0.5, "inch") is for top margin above the title
+            dev.off()
+            # saving plots
+            plots[[i3]] <- final.plot # just for all_objects.RData
+            ggplot2::ggsave(filename = paste0("germ_tree_cloneID_", trees$clone_id[i3], ".png"), plot = final.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+            ggplot2::ggsave(filename = paste0("germ_tree_cloneID_", trees$clone_id[i3], ".svg"), plot = final.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+            ggplot2::ggsave(filename = paste0("germ_tree_cloneID_", trees$clone_id[i3], ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        }else if( ! is.null(final.no.plot)){
+            pdf(NULL)
+            final.no.plot <- suppressMessages(suppressWarnings(gridExtra::arrangeGrob(grobs = list(final.no.plot, legend.final), ncol=2, widths=c(1, legend.width), top = title.grob, left = " ", right = " "))) # , left = " ", right = " " : trick to add margins in the plot. padding =  unit(0.5, "inch") is for top margin above the title
+            dev.off()
+            # saving plots
+            ggplot2::ggsave(filename = paste0("germ_no_tree_cloneID_", trees$clone_id[i3], ".png"), plot = final.no.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+            ggplot2::ggsave(filename = paste0("germ_no_tree_cloneID_", trees$clone_id[i3], ".svg"), plot = final.no.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+            ggplot2::ggsave(filename = paste0("germ_no_tree_cloneID_", trees$clone_id[i3], ".pdf"), plot = final.no.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        }else{
+            stop("\n\n========\n\nINTERNAL CODE ERROR 20 IN germ_tree_vizu.R FOR CLONE ID ", clone.id[[i3]], ":\n\nfinal.plot AND final.no.plot CANNOT BE BOTH NULL.\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
+        }
 
 ################ end Plotting tree
 
@@ -947,20 +974,32 @@ if(length(tempo.list) == 0){
 
         if(empty.tsv == TRUE){
             tempo.df <- matrix(c("sequence_id", "clone_id", "clone_name", "chain", "identical_to"), nrow = 1)
-            write.table(tempo.df, file = paste0("./", clone.id[[i3]], "_germ_tree_seq_not_displayed.tsv"), row.names = FALSE, col.name = FALSE, sep = "\t", quote = FALSE)
+            write.table(tempo.df, file = paste0("./", clone.id[[i3]], "_germ_tree_dup_seq_not_displayed.tsv"), row.names = FALSE, col.name = FALSE, sep = "\t", quote = FALSE)
         }
 
 ################ end save empty tsv
 
 ################ saving plots
 
-        plots[[i3]] <- final.plot
-        ggplot2::ggsave(filename = paste0("germ_tree_cloneID_", trees$clone_id[i3], ".png"), plot = final.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        ggplot2::ggsave(filename = paste0("germ_tree_cloneID_", trees$clone_id[i3], ".svg"), plot = final.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        ggplot2::ggsave(filename = paste0("germ_tree_cloneID_", trees$clone_id[i3], ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
     }
-    # dowser::treesToPDF(plots, file = "trees.pdf", nrow=2, ncol=2)
-    tempo <- qpdf::pdf_combine(input = list.files(path = ".", pattern = ".pdf$"), output = "./germ_trees.pdf") # assignation to prevent a returned element
+    if(length(list.files(path = ".", pattern = "^germ_tree_cloneID_.*pdf$")) > 0){
+        # dowser::treesToPDF(plots, file = "trees.pdf", nrow=2, ncol=2)
+        tempo <- qpdf::pdf_combine(input = list.files(path = ".", pattern = "^germ_tree_cloneID_.*pdf$"), output = "./germ_tree.pdf") # assignation to prevent a returned element
+    }else{
+        final.plot <- fun_gg_empty_graph(text = "NO GRAPH PLOTTED\nNO GRONAL GROUP WITH AT LEAST 3 SEQUENCES", text.size = 3)
+        ggplot2::ggsave(filename = paste0("germ_tree.png"), plot = final.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = paste0("germ_tree.svg"), plot = final.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = paste0("germ_tree.pdf"), plot = final.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+    }
+    if(length(list.files(path = ".", pattern = "^germ_no_tree_cloneID_.*pdf$")) > 0){
+        # dowser::treesToPDF(plots, file = "trees.pdf", nrow=2, ncol=2)
+        tempo <- qpdf::pdf_combine(input = list.files(path = ".", pattern = "^germ_no_tree_cloneID_.*pdf$"), output = "./germ_no_tree.pdf") # assignation to prevent a returned element
+    }else{
+        final.no.plot <- fun_gg_empty_graph(text = "NO GRAPH PLOTTED\nONLY GRONAL GROUPS WITH AT LEAST 3 SEQUENCES", text.size = 3)
+        ggplot2::ggsave(filename = paste0("germ_no_tree.png"), plot = final.no.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = paste0("germ_no_tree.svg"), plot = final.no.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = paste0("germ_no_tree.pdf"), plot = final.no.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+    }
 }
 
 ################ end saving plots
