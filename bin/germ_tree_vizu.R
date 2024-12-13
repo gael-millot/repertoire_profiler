@@ -896,7 +896,7 @@ if(length(tempo.list) == 0){
                     ))
                 }
                 if( ! any(germ_tree_kind %in% c("circular", "fan", "equal_angle", "daylight"))){
-                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_treescale(width = 0.01, offset = 0.05))
+                    assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggtree::geom_treescale(width = 0.01, offset = 0.05, fontsize = 1.5, linesize = 0.25))
                 }
                 assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::theme(plot.margin = ggplot2::margin(t = 0.25, l = 0.1, b = 0.1, r = germ_tree_right_margin, unit = "in")))
                 # legend

@@ -538,7 +538,7 @@ if(nrow(obs) > 0){
     }
     if(kind == "annotated" & all.annotation.log == TRUE){ # overwrite final.plot
         # no need to use pdf(NULL) with fun_gg_empty_graph()
-        final.plot <- fun_gg_empty_graph(text = "NO DONUT PLOTTED\nNO ANNOTATION DETECTED", text.size = 3, title = tempo.title, title.size = 4)
+        final.plot <- fun_gg_empty_graph(text = "NO DONUT PLOTTED\nNO SEQUENCE NAME REPLACEMENT DETECTED\n(meta_name_replacement PARAMETER OF THE nextflow.config FILE)", text.size = 3, title = tempo.title, title.size = 4)
     }
 }else{
     final.plot <- fun_gg_empty_graph(text = "NO DONUT PLOTTED\nNO SEQUENCE DETECTED", text.size = 3, title = tempo.title, title.size = 4)
