@@ -388,7 +388,7 @@ if(nrow(clones$data[[1]]@data) < clone_nb_seq){
     write.table(matrix(names(db), nrow = 1), file = "./germ_tree_dismissed_seq.tsv", row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t") # empty file
     # add the metadata names in the first column of clones$data[[1]]@data to have them in final trees
     if(( ! is.null(meta_file)) & ( ! germ_tree_duplicate_seq)){
-        meta <- read.table(meta_file, header = TRUE, sep = "\t")
+        meta <- read.table(meta_file, header = TRUE, sep = "\t", comment.char = "")
         tempo.df <- clones$data[[1]]@data # it is "class data.frame"
         for(i4 in 1:nrow(tempo.df)){
             tempo <- strsplit(tempo.df$collapsed[i4], split = ",")[[1]] # recover collapsed names

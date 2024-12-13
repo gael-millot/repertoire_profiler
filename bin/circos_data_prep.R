@@ -17,8 +17,8 @@ output_file_name <- "mouse2_circos_data" # single character string of the name o
 # metadata_select_allele <- FALSE # single logical value. If metadata_select parameter is TRUE, kept the allele info ? IF TRUE, use the VJ_allele_VH and VJ_allele_VL columns. IF FALSE, use the VJ_VH and VJ_VL columns.
 
 
-df1 <- read.table(VH.path, sep = "\t", header = TRUE)
-df2 <- read.table(VL.path, sep = "\t", header = TRUE)
+df1 <- read.table(VH.path, sep = "\t", header = TRUE, comment.char = "")
+df2 <- read.table(VL.path, sep = "\t", header = TRUE, comment.char = "")
 if( ! all(merging_colums_names %in% names(df1))){
     stop("ERROR 1")
 }

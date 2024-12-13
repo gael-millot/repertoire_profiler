@@ -316,7 +316,7 @@ fun_report(data = paste0("\n\n################################ RUNNING\n\n"), ou
 
 ################ Data import
 
-db <- read.table(file.name, header = TRUE, sep = "\t")
+db <- read.table(file.name, header = TRUE, sep = "\t", comment.char = "")
 
 
 ################ End Data import
