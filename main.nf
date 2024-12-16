@@ -51,7 +51,6 @@ process workflowParam { // create a file with the workflow parameters in out_pat
 
 
 
-
 // next process is for repertoire
 process igblast_data_check { // cannot be igblast_data_check outside of process because the files are present in the docker
     label 'immcantation'
@@ -1153,7 +1152,7 @@ workflow {
     }
     if( ! (igblast_database_path in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_database_path PARAMETER IN repertoire_profiler.config FILE:\n${igblast_database_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }
+    } // path not checked because inside a container
     if( ! (igblast_organism in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_organism PARAMETER IN repertoire_profiler.config FILE:\n${igblast_organism}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (igblast_organism =~ /^(mouse|human|rabbit|rat|rhesus_monkey)$/) ){
