@@ -51,6 +51,50 @@ process workflowParam { // create a file with the workflow parameters in out_pat
 
 
 
+process Unzip {
+    label 'unzip'
+    cache 'true'
+
+    input:
+    path zip
+    val sample_path
+
+    output:
+    path "*", emit: unzip_ch
+
+    script:
+    """
+    #!/bin/bash -ue
+    FILENAME_INI=\$(basename -- "${sample_path}")
+    FILE_EXTENSION="\${FILENAME_INI##*.}"
+    FILENAME="\${FILENAME_INI%.*}"
+    if [[ ! "\${FILE_EXTENSION}" =~ zip ]] ; then
+        echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nTHE FILE EXTENSION MUST BE \\".zip\\" AND NOT \${FILENAME_INI}\\n\\n========\\n\\n"
+        exit 1
+    else
+        unzip ${zip}
+    fi
+    rm \$FILENAME_INI
+    for file in "\$FILENAME"/*.* ; do
+        # Check if the file is a regular file and not a directory
+        if [ -f "\$file" ] ; then
+            # Check if the file does not match the extensions .fasta or .fa
+            if [[ ! "\$file" =~ \\.(fasta|fa|fna|faa)\$ ]] ; then
+                echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nALL THE UNZIPPED FILE EXTENSION MUST BE fasta, fa, fna OR faa.\\nHERE A FILE IS:\\n\$file.\\n\\n========\\n\\n"
+                exit 1
+            fi
+        else
+            echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nTHE UNZIPPED FOLDER MUST CONTAIN ONLY FILES WITH THE FOLLOWING EXTENSION: fasta, fa, fna OR faa\\n\\n========\\n\\n"
+            exit 1
+        fi
+    done
+    cp "\$FILENAME"/*.* .
+    rm -r \$FILENAME
+    """
+}
+
+
+
 // next process is for repertoire
 process igblast_data_check { // cannot be igblast_data_check outside of process because the files are present in the docker
     label 'immcantation'
@@ -1382,7 +1426,7 @@ workflow {
 
     //////// Channels
 
-    fs_ch = Channel.fromPath("${sample_path}/*.*", checkIfExists: false) // in channel because many files
+    // fs_ch define below because can be a .zip file
 
     //////// end Channels
 
@@ -1398,10 +1442,21 @@ workflow {
 
     //////// Main
 
+    if(sample_path =~ /.*\.zip$/){
+        Unzip( // warning: it is a process defined above
+            Channel.fromPath(sample_path),
+            sample_path
+        ) 
+        fs_ch = Unzip.out.unzip_ch.flatten()
+    }else{
+        fs_ch = Channel.fromPath("${sample_path}/*.*", checkIfExists: false) // in channel because many files 
+    }
+    //fs_ch.count().view()
+    //fs_ch.view()
+
     workflowParam(
         modules
     )
-
 
     igblast_data_check(
         igblast_database_path, 

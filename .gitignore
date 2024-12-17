@@ -1,4 +1,5 @@
 .nextflow/
+dataset/
 dev/
 example_of_results/
 results/

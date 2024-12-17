@@ -298,6 +298,12 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 <br /><br />
 ## WHAT'S NEW IN
 
+#### v11.3
+
+- Now a zip folder is accepted as input
+- Explanations in nextflow.config are improved
+
+
 #### v11.2
 
 - Donut and Tree plots slightly improved
