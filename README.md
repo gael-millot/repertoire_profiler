@@ -201,7 +201,7 @@ chmod 755 bin/*.*
 ## OUTPUT
 
 
-An example of results obtained with the dataset is present at this address: https://zenodo.org/records/14509864/files/repertoire_profiler_1734454432
+An example of results obtained with the dataset is present at this address: https://zenodo.org/records/14509864/files/repertoire_profiler_1734454432.zip
 <br /><br />
 Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.docx (contact Gael Millot).
 <br /><br />
