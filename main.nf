@@ -2,9 +2,8 @@ nextflow.enable.dsl=2
 /*
 #########################################################################
 ##                                                                     ##
-##     main.nf                                                         ##
+##     main.nf of repertoire profiler                                  ##
 ##                                                                     ##
-##     repertoire_profiler                                             ##
 ##     Gael A. Millot                                                  ##
 ##     Bioinformatics and Biostatistics Hub                            ##
 ##     Computational Biology Department                                ##
