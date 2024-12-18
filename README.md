@@ -200,7 +200,7 @@ chmod 755 bin/*.*
 <br /><br />
 ## OUTPUT
 
-By default, all the results are returned in a *result* folder where the *main.nf* executed file is located (created if does not exist). This can be changed using the *out_path_ini* parameter of the *nextflow.config* file. By default, each execution produces a new folder named *repertoire_profiler_<ID>*, created inside the *result* folder and containing all the outputs of the execution. The name of the folder can be changed using the *result_folder_name* parameter of the *nextflow.config* file. The new name file be followed by an <ID> in all cases.
+By default, all the results are returned in a *result* folder where the *main.nf* executed file is located (created if does not exist). This can be changed using the *out_path_ini* parameter of the *nextflow.config* file. By default, each execution produces a new folder named *repertoire_profiler_\<ID\>*, created inside the *result* folder and containing all the outputs of the execution. The name of the folder can be changed using the *result_folder_name* parameter of the *nextflow.config* file. The new name file be followed by an \<ID\> in all cases.
 <br /><br />
 An example of results obtained with the dataset is present at this address: https://zenodo.org/records/14514657/files/repertoire_profiler_1734527507.zip .
 <br /><br />
