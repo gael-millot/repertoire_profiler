@@ -415,7 +415,7 @@ tempo.title <- paste0(
             ifelse(
                 kind == "annotated", 
                 paste0(
-                    "Donut plot of the all-passed sequences grouped by same V and J alleles, for which at least one annotation\nWarning: this is different from clonal groups since the latter must have also the same CDR3 length\n\n",
+                    "Donut plot of the all-passed sequences grouped by same V and J alleles, for which at least one name replacement is present\n(according to the meta_name_replacement parameter of the nextflow.config file)\nWarning: this is different from clonal groups since the latter must have also the same CDR3 length\n\n",
                     "Kind of sequences: ", 
                     "all the all-passed ones (see the corresponding all-passed_seq.tsv"
                 ), 
