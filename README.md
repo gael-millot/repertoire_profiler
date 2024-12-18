@@ -56,7 +56,11 @@
 
 <br />
 
-The dataset used in the *nextflow.config* file, as example, is available at https://zenodo.org/records/14509916/files/ig_clustering_test_1_VH.zip.
+The dataset used in the *nextflow.config* file, as an example, is available at https://zenodo.org/records/14509916/files/ig_clustering_test_1_VH.zip.
+
+<br />
+
+The metadata file used in the *nextflow.config* file, as an example, is available at https://zenodo.org/records/14500245/files/metadata.tsv.
 
 <br />
 
