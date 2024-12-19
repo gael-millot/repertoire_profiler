@@ -40,7 +40,7 @@
 | Files and folder | Description |
 | :--- | :--- |
 | **main.nf** | File that can be executed using a linux terminal, a MacOS terminal or Windows 10 WSL2. |
-| **nextflow.config** | Parameter settings for the *main.nf* file. Users have to open this file, set the desired settings and save these modifications before execution. |
+| **nextflow.config** | Parameter settings for the *main.nf* file. Users have to open this file, set the desired settings and save these modifications before execution. Of note, this configuration file is systematically saved in the reports folder (see [below](#output)) during each execution, to save the parameter settings. |
 | **bin folder** | Contains files required by the *main.nf* file. |
 | **xlsx2fasta.R** | Accessory file that creates all the fasta files required from a .xlsx file. To use it, 1) open the file, 2) complete the "Parameters that need to be set by the user" section, 3) save the modifications and 4) run the file in R. |
 | **Licence.txt** | Licence of the release. |
@@ -214,7 +214,7 @@ Mandatory elements:
 <br /><br />
 | repertoire_profiler_<UNIQUE_ID> folder | Description |
 | :--- | :--- |
-| **reports** | Folder containing all the reports of the different processes, including the *nextflow.config* file used. |
+| **reports** | Folder containing all the reports of the different processes, as well as the *nextflow.config* file used and the map of the processes execution (*nf_dag.png* file). |
 | **repertoires** | Folder containing the repertoires, i.e., contingency tables of the VDJ allele usage from the *all_passed_seq.tsv* file (see below). Warning: the script currently takes the first annotation of the imgt annotation if several are presents in the v_call or j_call column of the *all_passed_seq.tsv* file. (e.g., v_call with IGKV1-39\*01,IGKV1D-39\*01), so that contingencies are identical to those from the donut frequencies, that use germline_v_call and germline_j_call columns (allele reassignment by the CreateGermlines.py tool of immcantation) |
 | **png** | Folder containing the graphs in png format. |
 | **svg** | Folder containing the graphs in svg vectorial format. |
