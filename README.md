@@ -303,6 +303,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 <br /><br />
 ## WHAT'S NEW IN
 
+#### v11.7
+
+- Bug solved in the translation process: now parallelization works even if empty input file
+
+
 #### v11.6
 
 - Fasta files can have tabs in the header
