@@ -85,9 +85,8 @@ Installation of:<br />
 Optional installation (to avoid reccurent message) of:<br />
 [Gocryptfs](https://github.com/rfjakob/gocryptfs), `sudo apt install gocryptfs` for Linux ubuntu<br /> 
 
-<br /><br />
+<br />
 ### 2. Local running (personal computer)
-
 
 #### 2.1. *main.nf* file in the personal computer
 
@@ -210,7 +209,7 @@ chmod 755 bin/*.*
 
 By default, all the results are returned in a *result* folder where the *main.nf* executed file is located (created if does not exist). This can be changed using the *out_path_ini* parameter of the *nextflow.config* file. By default, each execution produces a new folder named *repertoire_profiler_\<ID\>*, created inside the *result* folder and containing all the outputs of the execution. The name of the folder can be changed using the *result_folder_name* parameter of the *nextflow.config* file. The new name file be followed by an \<ID\> in all cases.
 <br /><br />
-An example of results obtained with the dataset is present at this address: https://zenodo.org/records/14514657/files/repertoire_profiler_1734527507.zip .
+An example of results obtained with the dataset is present at this address: https://zenodo.org/records/14537797/files/repertoire_profiler_1734720386.zip.
 <br /><br />
 Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.docx (contact Gael Millot).
 <br /><br />
