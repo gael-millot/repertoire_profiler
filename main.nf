@@ -1489,7 +1489,7 @@ workflow {
 
 
     parseDb_filtering(
-        igblast.out.tsv_ch1,
+        igblast.out.tsv_ch1.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE igblast PROCESS\n\n========\n\n"},
         igblast_aa
     )
     // parseDb_filtering.out.unproductive_ch.count().subscribe{n -> if ( n == 0 ){print "\n\nWARNING: EMPTY unproductive_seq.tsv FILE RETURNED FOLLOWING THE parseDb_filtering PROCESS\n\n"}else{it -> it.copyTo("${out_path}/unproductive_seq.tsv")}} // see https://www.nextflow.io/docs/latest/script.html?highlight=copyto#copy-files
@@ -1505,12 +1505,12 @@ workflow {
     //nb1_b.view()
     //nb2_b.view()
     //tsv_ch2.countLines().view()
-    tsv_ch2.countLines().combine(nb1_b).combine(nb2_b).subscribe{n,n1,n2 -> if(n != n1 + n2 - 1){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE productive_seq.tsv (${n1}) AND unproductive_seq.tsv (${n2}) IS NOT EQUAL TO THE NUMBER OF FILES IN all_igblast_seq.tsv (${n})\n========\n\n"}} // n1 + n2 - 1 because header counted in both n1 and n2 while only one header in n
+    tsv_ch2.countLines().combine(nb1_b).combine(nb2_b).subscribe{n,n1,n2 -> if(n != n1 + n2 - 1){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE productive_seq.tsv (${n1}) AND unproductive_seq.tsv (${n2} - 1) IS NOT EQUAL TO THE NUMBER OF FILES IN all_igblast_seq.tsv (${n})\n========\n\n"}} // n1 + n2 - 1 because header counted in both n1 and n2 while only one header in n
     parseDb_filtering.out.parseDb_filtering_log_ch.collectFile(name: "ParseDb_filtering.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
 
     translation(
-        parseDb_filtering.out.select_ch,
+        parseDb_filtering.out.select_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE parseDb_filtering PROCESS\n\n========\n\n"},
         igblast_aa
     )
     translation.out.translation_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE translation PROCESS\n\n========\n\n"}}
@@ -1522,28 +1522,28 @@ workflow {
 
 
     distToNearest(
-        translation_ch2,
+        translation_ch2.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE translation PROCESS\n\n========\n\n"},
         igblast_aa,
         clone_model,
         clone_normalize
     )
-    distToNearest.out.distToNearest_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE distToNearest PROCESS\n\n========\n\n"}}
+    //distToNearest.out.distToNearest_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE distToNearest PROCESS\n\n========\n\n"}}
 
 
 
     distance_hist(
-        distToNearest.out.distToNearest_ch,
+        distToNearest.out.distToNearest_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE distToNearest PROCESS\n\n========\n\n"},
         cute_file, 
         clone_model,
         clone_normalize,
         clone_distance
     )
-    distance_hist.out.distance_hist_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE distance_hist PROCESS\n\n========\n\n"}}
+    //distance_hist.out.distance_hist_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE distance_hist PROCESS\n\n========\n\n"}}
 
 
 
     histogram_assembly(
-        distance_hist.out.histogram_pdf_ch.collect()
+        distance_hist.out.histogram_pdf_ch.collect().ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE distance_hist PROCESS\n\n========\n\n"}
     )
 
 
@@ -1576,13 +1576,13 @@ workflow {
     mutation_load(
         closest_germline.out.closest_ch
     )
-    mutation_load.out.mutation_load_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE mutation_load PROCESS\n\n========\n\n"}}
+    //mutation_load.out.mutation_load_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE mutation_load PROCESS\n\n========\n\n"}}
     mutation_load.out.mutation_load_log_ch.collectFile(name: "mutation_load.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
 
 
 
     seq_name_remplacement(
-        mutation_load.out.mutation_load_ch,
+        mutation_load.out.mutation_load_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE mutation_load PROCESS\n\n========\n\n"},
         meta_file,
         meta_name_replacement
     )
@@ -1597,7 +1597,7 @@ workflow {
 
 
     file_assembly(
-        seq_name_remplacement_ch2, 
+        seq_name_remplacement_ch2.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE seq_name_remplacement PROCESS\n\n========\n\n"}, 
         distToNearest.out.distToNearest_ch, 
         clone_assignment.out.failed_clone_ch
     )
@@ -1605,7 +1605,7 @@ workflow {
 
 
     metadata_check(
-        file_assembly.out.file_assembly_ch,
+        file_assembly.out.file_assembly_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE file_assembly PROCESS\n\n========\n\n"},
         meta_file,
         meta_name_replacement
     )
@@ -1628,23 +1628,33 @@ workflow {
         germ_tree_duplicate_seq,
         igphylm_exe_path
     )
-    get_germ_tree.out.rdata_germ_tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: EMPTY OUTPUT FOLLOWING THE get_germ_tree PROCESS -> NO TREE RETURNED\n\n")}}
+    get_germ_tree.out.rdata_germ_tree_ch.count().subscribe { n -> if ( n == 0 ){
+        print("\n\nWARNING: EMPTY OUTPUT FOLLOWING THE get_germ_tree PROCESS -> NO TREE RETURNED\n\n")
+    }}
     rdata_germ_tree_ch2 = get_germ_tree.out.rdata_germ_tree_ch.collect()
     //rdata_germ_tree_ch2.view()
 
-    get_germ_tree.out.no_germ_tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: ALL SEQUENCES IN TREES FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_dismissed_seq.tsv FILE RETURNED\n\n")}}
+    get_germ_tree.out.no_germ_tree_ch.count().subscribe { n -> if ( n == 0 ){
+        print("\n\nWARNING: ALL SEQUENCES IN TREES FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_dismissed_seq.tsv FILE RETURNED\n\n")
+    }}
     no_germ_tree_ch2 = get_germ_tree.out.no_germ_tree_ch.collectFile(name: "germ_tree_dismissed_seq.tsv", skip: 1, keepHeader: true)
     no_germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
-    get_germ_tree.out.germ_tree_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: NO SEQUENCES IN TREES FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_seq.tsv FILE RETURNED\n\n")}}
+    get_germ_tree.out.germ_tree_ch.count().subscribe { n -> if ( n == 0 ){
+        print("\n\nWARNING: NO SEQUENCES IN TREES FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_seq.tsv FILE RETURNED\n\n")
+    }}
     germ_tree_ch2 = get_germ_tree.out.germ_tree_ch.collectFile(name: "germ_tree_seq.tsv", skip: 1, keepHeader: true)
     germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
-    get_germ_tree.out.no_cloneID_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: ALL SEQUENCES IN CLONAL GROUP FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_dismissed_clone_id.tsv FILE RETURNED\n\n")}}
+    get_germ_tree.out.no_cloneID_ch.count().subscribe { n -> if ( n == 0 ){
+        print("\n\nWARNING: ALL SEQUENCES IN CLONAL GROUP FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_dismissed_clone_id.tsv FILE RETURNED\n\n")
+    }}
     no_cloneID_ch2 = get_germ_tree.out.no_cloneID_ch.collectFile(name: "germ_tree_dismissed_clone_id.tsv")
     no_cloneID_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
-    get_germ_tree.out.cloneID_ch.count().subscribe { n -> if ( n == 0 ){print("\n\nWARNING: NO CLONAL GROUP FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_clone_id.tsv and germ_tree.pdf FILES RETURNED\n\n")}}
+    get_germ_tree.out.cloneID_ch.count().subscribe { n -> if ( n == 0 ){
+        print("\n\nWARNING: NO CLONAL GROUP FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_clone_id.tsv and germ_tree.pdf FILES RETURNED\n\n")
+    }}
     cloneID_ch2 = get_germ_tree.out.cloneID_ch.collectFile(name: "germ_tree_clone_id.tsv")
     cloneID_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
@@ -1670,10 +1680,11 @@ workflow {
         meta_legend,
         cute_file
     )
-   germ_tree_vizu.out.germ_tree_vizu_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE germ_tree_vizu PROCESS\n\n========\n\n"}}
-    germ_tree_vizu.out.germ_tree_dup_seq_not_displayed_ch.count().subscribe { n -> if ( n == 0 ){
+    germ_tree_vizu.out.germ_tree_vizu_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE germ_tree_vizu PROCESS\n\n========\n\n"}
+    //germ_tree_vizu.out.germ_tree_vizu_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE germ_tree_vizu PROCESS\n\n========\n\n"}}
+    germ_tree_vizu.out.germ_tree_dup_seq_not_displayed_ch.ifEmpty{
         print("\n\nWARNING: -> NO germ_tree_dup_seq_not_displayed.tsv FILE RETURNED\n\n")
-    }}
+    }
     germ_tree_dup_seq_not_displayed_ch2 = germ_tree_vizu.out.germ_tree_dup_seq_not_displayed_ch.flatten().collectFile(name: "germ_tree_dup_seq_not_displayed.tsv", skip: 1, keepHeader: true) // flatten split the list into several objects which is required by collectFile()
     germ_tree_dup_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}")}
 
@@ -1702,6 +1713,7 @@ workflow {
         donut_legend_limit,
         cute_file
     )
+    donut.out.donut_pdf_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut PROCESS\n\n========\n\n"}
     donut.out.donut_pdf_ch.count().subscribe { n -> if ( n == 0 ){
         print("\n\nWARNING: EMPTY OUTPUT FOLLOWING THE donut PROCESS -> NO DONUT RETURNED\n\n")
     }}
@@ -1718,7 +1730,8 @@ workflow {
     donut_assembly(
         donut_pdf_ch2
     )
-   donut_assembly.out.donut_assembly_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}}
+    donut_assembly.out.donut_assembly_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}
+    donut_assembly.out.donut_assembly_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}}
 
 
 

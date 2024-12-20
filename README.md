@@ -80,6 +80,10 @@ Installation of:<br />
 [nextflow DSL2](https://gael-millot.github.io/protocols/docs/Protocol%20152-rev0%20DSL2.html#_Toc159933761)<br />
 [Graphviz](https://www.graphviz.org/download/), `sudo apt install graphviz` for Linux ubuntu<br />
 [Apptainer](https://gael-millot.github.io/protocols/docs/Protocol%20135-rev0%20APPTAINER.html#_Toc160091693)<br />
+<br />
+
+Optional installation (to avoid reccurent message) of:<br />
+[Gocryptfs](https://github.com/rfjakob/gocryptfs), `sudo apt install gocryptfs` for Linux ubuntu<br /> 
 
 <br /><br />
 ### 2. Local running (personal computer)
@@ -302,6 +306,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 
 <br /><br />
 ## WHAT'S NEW IN
+
+#### v11.8
+
+- Error messages imporved so that now nextflow does not display all subsequent error messages because of empty file when execution is stopped by an error
+
 
 #### v11.7
 
