@@ -78,8 +78,8 @@ process Unzip {
         # Check if the file is a regular file and not a directory
         if [ -f "\$file" ] ; then
             # Check if the file does not match the extensions .fasta or .fa
-            if [[ ! "\$file" =~ \\.(fasta|fa|fna|faa)\$ ]] ; then
-                echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nALL THE UNZIPPED FILE EXTENSION MUST BE fasta, fa, fna OR faa.\\nHERE A FILE IS:\\n\$file.\\n\\n========\\n\\n"
+            if [[ ! "\$file" =~ \\.(fasta|fa|fas|fna|txt|seq)\$ ]] ; then
+                echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nALL THE UNZIPPED FILE EXTENSION MUST BE fasta, fa, fna, txt, seq OR faa.\\nHERE A FILE IS:\\n\$file.\\n\\n========\\n\\n"
                 exit 1
             fi
         else
@@ -167,11 +167,11 @@ process igblast {
 
     # checks
     if [[ ! "\${FILE_EXTENSION}" =~ fasta|fa|fas|fna|txt|seq ]] ; then
-        echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID FILE EXTENSION IN THE sample_path PARAMETER OF THE repertoire_profiler.config FILE:\\n${fs_ch}\\n\${FILENAME}\\nMUST BE fasta|fa|fas|fna|txt|seq\\n\\n========\\n\\n"
+        echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID FILE EXTENSION IN THE sample_path PARAMETER OF THE repertoire_profiler.config FILE:\\n${fs_ch}\\n\${FILENAME}\\nMUST BE fasta|fa|fas|fna|txt|seq|faa\\n\\n========\\n\\n"
         exit 1
     fi
     sed 's/\\r\$//' ${fs_ch} > tempo_file.fasta # remove carriage returns
-    awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){gsub(/ /, "_", \$0) ; if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' tempo_file.fasta > \${FILE}.fa # remove \\n in the middle of the sequence # gsub(/ /, "_", \$0) replace spaces in the first line # \${FILENAME}.fa is a trick to do not use ${fs_ch} and modify the initial file due to the link in the nextflow work folder
+    awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){gsub(/[ \t]+/, "_", \$0) ; if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' tempo_file.fasta > \${FILE}.fa # remove \\n in the middle of the sequence # gsub(/[ \t]+/, "_", \$0) replace spaces and tabs in the first line by a single underscore# \${FILENAME}.fa is a trick to do not use ${fs_ch} and modify the initial file due to the link in the nextflow work folder
     TEMPO=\$(wc -l \${FILE}.fa | cut -f1 -d' ')
     if read -n 1 char <"\${FILE}.fa"; [[ \$char != ">" || \$TEMPO != 2 ]]; then
         echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID FASTA FILE IN THE sample_path OF THE repertoire_profiler.config FILE:\\n${fs_ch}\\nMUST BE A FASTA FILE (\'>\' AS FIRST CHARATER) MADE OF A SINGLE SEQUENCE\\n\\n========\\n\\n"
