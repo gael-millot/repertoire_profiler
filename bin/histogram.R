@@ -34,8 +34,8 @@
 
 
 # R version checking
-if(version$version.string != "R version 4.0.5 (2021-03-31)"){
-    stop(paste0("\n\n================\n\nERROR IN histogram.R\n", version$version.string, " IS NOT THE 4.0.5 RECOMMANDED\n\n================\n\n"))
+if(version$version.string != "R version 4.3.2 (2023-10-31)"){
+    stop(paste0("\n\n================\n\nERROR IN histogram.R\n", version$version.string, " IS NOT THE 4.3.2 RECOMMANDED\n\n================\n\n"))
 }
 # other initializations
 erase.objects = TRUE # write TRUE to erase all the existing objects in R before starting the algorithm and FALSE otherwise. Beginners should use TRUE
