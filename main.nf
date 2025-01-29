@@ -567,6 +567,7 @@ process seq_name_remplacement {
     input:
     path mutation_load_ch // parallelization expected
     path meta_file
+    val meta_seq_names
     val meta_name_replacement
 
     output:
@@ -594,8 +595,8 @@ process seq_name_remplacement {
     else
         Rscript -e '
             meta <- read.table("./${meta_file}", sep = "\\t", header = TRUE)
-            if(names(meta)[1] != "Label"){
-                stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\", THEN THE FIRST COLUMN OF THE METADATA FILE MUST BE NAMED \\"Label\\" AND BE MADE OF THE NAMES OF THE FASTA SEQUENCES\\n\\n============\\n\\n"), call. = FALSE)
+            if( ! "${meta_seq_names}" %in% names(meta)){
+                stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\", THEN THE meta_seq_names PARAMETER MUST BE A COLUMN NAME OF THE METADATA FILE.\\n\\n============\\n\\n"), call. = FALSE)
             }
         ' |& tee -a seq_name_remplacement.log
     fi
@@ -610,22 +611,22 @@ process seq_name_remplacement {
             }
             seq2 <- data.frame(seq[1], tempo = seq[1], seq[2:length(seq)]) # the second column is created to keep the initial sequence names, before replacement
             for(i2 in 1:nrow(meta)){
-                if(sum(seq2[ , 2] %in% meta[i2, 1]) > 1){
-                    stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIN THE METADATA FILE, A SEQUENCE NAME CANNOT BELONG TO SEVERAL VALUES OF THE meta_name_replacement PARAMETER COLUMN NAME OF THE meta_path PARAMETER\\nTHE METAFILE IS: ${meta_file}\\nTHE COLUM NAME IS: ", col_name, "\\nTHE PROBLEMATIC REPLACEMENT NAME IN THE METAFILE IS: ", paste(meta[i2, 1], collapse = " "), "\\n\\n============\\n\\n"), call. = FALSE)
-                }else if(any(seq2[ , 2] == meta[i2, 1])){
+                if(sum(seq2[ , 2] %in% meta[i2, "${meta_seq_names}"]) > 1){
+                    stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIN THE METADATA FILE, A SEQUENCE NAME CANNOT BELONG TO SEVERAL VALUES OF THE meta_name_replacement PARAMETER COLUMN NAME OF THE meta_path PARAMETER\\nTHE METAFILE IS: ${meta_file}\\nTHE COLUM NAME IS: ", col_name, "\\nTHE PROBLEMATIC REPLACEMENT NAME IN THE METAFILE IS: ", paste(meta[i2, "${meta_seq_names}"], collapse = " "), "\\n\\n============\\n\\n"), call. = FALSE)
+                }else if(any(seq2[ , 2] == meta[i2, "${meta_seq_names}"])){
                     if( ! (meta[i2, col_name] == "" | is.na(meta[i2, col_name]))){
-                        seq2[seq2[ , 2] == meta[i2, 1], 1] <- meta[i2, col_name] # remplacement of the name in column 1
+                        seq2[seq2[ , 2] == meta[i2, "${meta_seq_names}"], 1] <- meta[i2, col_name] # remplacement of the name in column 1
                     }
                 }
             }
             names(seq2)[2] <- paste0("initial_", names(seq)[1])
             names(seq2)[1] <- names(seq)[1]
             write.table(seq2, file = paste0("./", clone_id, "_renamed_seq.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
-            # modification of the metadata file for the correct use of ggtree::"%<+%" in germ_tree_vizu.R that uses the column name "Label" for that 
-            meta <- data.frame(meta, initial_label = meta[ , 1])
-            meta[ , 1] <- meta[ , col_name]
+            # modification of the metadata file for the correct use of ggtree::"%<+%" in germ_tree_vizu.R that uses the column name meta_seq_names for that 
+            meta <- data.frame(meta, initial_label = meta[ , "${meta_seq_names}"])
+            meta[ , "${meta_seq_names}"] <- meta[ , col_name]
             write.table(meta, file = "./metadata2.tsv", row.names = FALSE, col.names = TRUE, sep = "\\t")
-            # end modification of the metadata file for the correct use of ggtree::"%<+%" in germ_tree_vizu.R that uses the column name "Label" for that 
+            # end modification of the metadata file for the correct use of ggtree::"%<+%" in germ_tree_vizu.R that uses the column name meta_seq_names for that 
         ' |& tee -a seq_name_remplacement.log
     else
         IFS='_' read -r -a TEMPO <<< "\${FILENAME}" # string split into array
@@ -726,6 +727,7 @@ process metadata_check { // cannot be in germ_tree_vizu because I have to use th
     input:
     path file_assembly_ch // no parallelization
     path meta_file
+    val meta_seq_names
     val meta_name_replacement
 
     script:
@@ -734,11 +736,11 @@ process metadata_check { // cannot be in germ_tree_vizu because I have to use th
         Rscript -e '
             df <- read.table("${file_assembly_ch}", header = TRUE, sep = "\\t")
             meta <- read.table("${meta_file}", header = TRUE, sep = "\\t")
-            if(names(meta)[1] != "Label"){
-                stop(paste0("\\n\\n============\\n\\nERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\", THEN THE FIRST COLUMN OF THE METADATA FILE MUST BE NAMED \\"Label\\" AND BE MADE OF THE NAMES OF THE FASTA SEQUENCES\\n\\n============\\n\\n"), call. = FALSE)
+            if( ! "${meta_seq_names}" %in% names(meta)){
+                stop(paste0("\\n\\n============\\n\\nERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\", THEN THE meta_seq_names PARAMETER MUST BE A COLUMN NAME OF THE METADATA FILE.\\n\\n============\\n\\n"), call. = FALSE)
             }
             if( ! any(meta\$${meta_name_replacement} %in% df[ , 1])){
-                stop(paste0("\\n\\n============\\n\\nERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nTHE meta_file AND meta_name_replacement PARAMETERS OF THE nextflow.config FILE ARE NOT NULL BUT NO NAME REPLACEMENT PERFORMED\\nPROBABLY THAT THE \\"Label\\" COLUMN OF THE FILE INDICATED IN THE meta_path PARAMETER IS NOT MADE OF NAMES OF FASTA FILES INDICATED IN THE sample_path PARAMETER\\nFIRST ELEMENTS OF THE LABEL COLUMN OF THE META DATA FILE ARE:\\n", paste(head(meta\$Label, 20), collapse = "\\n"), "\\nFIRST FASTA FILES NAMES ARE:\\n", paste(head(df[ , 1], 20), collapse = "\\n"), "\\n\\n\\n============\\n\\n"), call. = FALSE)
+                stop(paste0("\\n\\n============\\n\\nERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nTHE meta_file AND meta_name_replacement PARAMETERS OF THE nextflow.config FILE ARE NOT NULL BUT NO NAME REPLACEMENT PERFORMED\\nPROBABLY THAT THE ${meta_seq_names} COLUMN OF THE FILE INDICATED IN THE meta_path PARAMETER IS NOT MADE OF NAMES OF FASTA FILES INDICATED IN THE sample_path PARAMETER\\nFIRST ELEMENTS OF THE ${meta_seq_names} COLUMN (meta_seq_names PARAMETER) OF THE META DATA FILE ARE:\\n", paste(head(meta\$${meta_seq_names}, 20), collapse = "\\n"), "\\nFIRST FASTA FILES NAMES ARE:\\n", paste(head(df[ , 1], 20), collapse = "\\n"), "\\n\\n\\n============\\n\\n"), call. = FALSE)
             }
         '
     fi
@@ -1100,13 +1102,14 @@ process ProcessMeta {
 
     input:
     path meta
+    val meta_seq_names
 
     output:
     path "iTOL*"
 
     script:
     """
-    table2itol.R -i Label $meta
+    table2itol.R -i $meta_seq_names $meta
     """
 }
 
@@ -1237,11 +1240,16 @@ workflow {
     }
     if( ! (meta_path in String || meta_path in GString) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_path PARAMETER IN repertoire_profiler.config FILE:\n${meta_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if(meta_path != "NULL"){
+    }
+    if(meta_path != "NULL"){
         if( ! (file(meta_path).exists()) ){
             error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_path PARAMETER IN repertoire_profiler.config FILE (DOES NOT EXIST): ${meta_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
         }
-        print("\n\nWARNING: THE 1st COLUMN OF THE METADATA FILE MUST BE NAMED \"Label\" AND MUST CONTAIN NAMES OF THE FILES IN THE FOLDER OF THE sample_path PARAMETER")
+    }
+    if( ! (meta_seq_names in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_seq_names PARAMETER IN repertoire_profiler.config FILE:\n${meta_seq_names}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if(meta_path != "NULL"){
+        print("\n\nWARNING: THE ${meta_seq_names} COLUMN OF THE METADATA FILE INDICATED IN THE meta_seq_names PARAMETER MUST CONTAIN NAMES OF THE FILES IN THE FOLDER OF THE sample_path PARAMETER")
     }
     if( ! (meta_name_replacement in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_name_replacement PARAMETER IN repertoire_profiler.config FILE:\n${meta_name_replacement}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
@@ -1585,6 +1593,7 @@ workflow {
     seq_name_remplacement(
         mutation_load.out.mutation_load_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE mutation_load PROCESS\n\n========\n\n"},
         meta_file,
+        meta_seq_names, 
         meta_name_replacement
     )
     seq_name_remplacement.out.seq_name_remplacement_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE seq_name_remplacement PROCESS\n\n========\n\n"}}
@@ -1606,7 +1615,8 @@ workflow {
 
     metadata_check(
         file_assembly.out.file_assembly_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE file_assembly PROCESS\n\n========\n\n"},
-        meta_file,
+        meta_file, 
+        meta_seq_names, 
         meta_name_replacement
     )
 

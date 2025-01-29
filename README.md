@@ -306,6 +306,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 <br /><br />
 ## WHAT'S NEW IN
 
+#### v14.0
+
+- New meta_seq_names parameter in the nextflow.config file, that help to set the name of the column containing the fasta sequence names.
+
+
 #### v13.0
 
 - Immcantation upgraded to 4.5.0: now the constant region allele is provided
