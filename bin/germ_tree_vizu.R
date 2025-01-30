@@ -81,7 +81,9 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
         "germ_tree_label_outside", 
         "germ_tree_right_margin", 
         "germ_tree_legend", 
+        "germ_tree_file_assembly_path", 
         "germ_tree_meta_path", 
+        "germ_tree_meta_seq_names", 
         "germ_tree_meta_legend", 
         "cute", 
         "log"
@@ -107,10 +109,11 @@ rm(tempo.cat)
 
 ################################ Test
 
-# setwd("C:/Users/gael/Documents/Git_projects/repertoire_profiler/dev/test")
-# setwd("C:/Users/gael/Documents/Git_projects/repertoire_profiler/work/39/7f3246fe992a263d507019c825a683")
+# setwd("C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/dev/test")
+# setwd("C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/e6/9a4aa4f90243b1a9c9308eb9952edb")
 # setwd("Z:/Alice/sort1_VH/repertoire_profiler-v8.1/work/6a/5804f66785412c808f6f7d9ca46cca")
 # setwd("Z:/Alice/human_Patient_B9_886_VH/ig_clustering-v8.8/work/ea/d1287c99e6a36d2790910c98fffcc0")
+# setwd("C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/e6/9a4aa4f90243b1a9c9308eb9952edb")
 # germ_tree_kind = "rectangular"
 # clone_nb_seq = "3"
 # germ_tree_duplicate_seq = "FALSE" 
@@ -123,11 +126,14 @@ rm(tempo.cat)
 # germ_tree_label_outside = "TRUE"
 # germ_tree_right_margin = "1.5" 
 # germ_tree_legend = "TRUE" 
-# germ_tree_meta_path = "./metadata2.tsv" # do not write "./NULL" but "NULL"
-# germ_tree_meta_legend = "inverted_KD"
-# cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.2.0/cute_little_R_functions.R"
+# germ_tree_file_assembly_path = "caca"
+# germ_tree_meta_path = "./metadata3.tsv" 
+# germ_tree_meta_legend = "KD"
+# germ_tree_meta_seq_names = "Seq_ID"
+# cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.8/cute_little_R_functions.R"
 # log = "germ_tree_vizu.log"
 # file.remove(c("./all_objects.RData", "./all_germ_trees.RData", "./germ_tree.pdf", "./germ_tree_vizu.log"))
+
 
 
 
@@ -156,7 +162,9 @@ param.list <- c(
     "germ_tree_label_outside", 
     "germ_tree_right_margin", 
     "germ_tree_legend", 
+    "germ_tree_file_assembly_path", 
     "germ_tree_meta_path", 
+    "germ_tree_meta_seq_names", 
     "germ_tree_meta_legend", 
     "cute", 
     "log"
@@ -239,6 +247,8 @@ if( ! is.null(tempo)){
 # R Packages required
 req.package.list <- c(
     "lubridate", 
+    "tibble", 
+    "svglite", 
     "ggplot2", 
     "ggtree",
     "dplyr",
@@ -288,7 +298,9 @@ tempo.arg <-c(
     "germ_tree_label_outside", 
     "germ_tree_right_margin", 
     "germ_tree_legend", 
+    "germ_tree_file_assembly_path",
     "germ_tree_meta_path", 
+    "germ_tree_meta_seq_names", 
     "germ_tree_meta_legend", 
     "log"
 )
@@ -430,6 +442,9 @@ if(germ_tree_meta_path == "NULL"){
     arg.check2 <- c(arg.check2, TRUE)
 }
 
+if(germ_tree_meta_seq_names == "NULL"){
+    germ_tree_meta_seq_names <- NULL
+}
 if(germ_tree_meta_legend == "NULL"){
     germ_tree_meta_legend <- NULL
 }
@@ -558,7 +573,7 @@ if(length(tempo.list) == 0){
 
 
     if( ! is.null(germ_tree_meta_path)){
-        meta.df <- read.table(germ_tree_meta_path, sep = "\t", header = TRUE, comment.char = "")
+        meta.df <- read.table(germ_tree_file_assembly_path, sep = "\t", header = TRUE, comment.char = "")
     }
 
 
@@ -701,11 +716,13 @@ if(length(tempo.list) == 0){
                 if( ( ! is.null(germ_tree_meta_path)) & ! is.null(germ_tree_meta_legend)){
                     # merge of the meta data into the ggtree object. See https://yulab-smu.top/treedata-book/chapter7.html#attach-operator
                     if( ! germ_tree_meta_legend %in% names(meta.df)){
-                        stop(paste0("\n\n============\n\nERROR IN germ_tree_vizu.R for clone ID ", paste(unique(db.list[[i3]]$clone_id)), "\nIF NOT \"NULL\", THE meta_legend PARAMETER MUST BE A COLUMN NAME OF THE meta_path PARAMETER. HERE IT IS:\ngerm_tree_meta_legend: ", germ_tree_meta_legend, "\nCOLUMN NAMES OF germ_tree_meta_path: ", paste(names(meta.df), collapse = " "), "\n\n============\n\n"), call. = FALSE)
+                        stop(paste0("\n\n============\n\nERROR IN germ_tree_vizu.R for clone ID ", paste(unique(db.list[[i3]]$clone_id)), "\nIF NOT \"NULL\", THE meta_legend PARAMETER MUST BE A COLUMN NAME OF THE meta_path PARAMETER. HERE IT IS:\ngerm_tree_meta_legend: ", germ_tree_meta_legend, "\nCOLUMN NAMES OF meta_path: ", paste(names(meta.df), collapse = " "), "\n\n============\n\n"), call. = FALSE)
                     }
-                    
-                    if( ! any(trees$trees[[i3]]$tip.label %in% meta.df$Label)){
-                        tempo.cat <- "Warning: meta_legend parameter indicated in the nextflow.config file but no metadata present in this tree (check the Label column of the metadata file?)."
+                    if( ! germ_tree_meta_seq_names %in% names(meta.df)){
+                        stop(paste0("\n\n============\n\nERROR IN germ_tree_vizu.R for clone ID ", paste(unique(db.list[[i3]]$clone_id)), "THE meta_seq_names PARAMETER MUST BE A COLUMN NAME OF THE meta_path PARAMETER. HERE IT IS:\nmeta_seq_names: ", germ_tree_meta_seq_names, "\nCOLUMN NAMES OF meta_path: ", paste(names(meta.df), collapse = " "), "\n\n============\n\n"), call. = FALSE)
+                    }
+                    if( ! any(trees$trees[[i3]]$tip.label %in% meta.df[ , germ_tree_meta_seq_names])){
+                        tempo.cat <- paste0("Warning: meta_legend parameter indicated in the nextflow.config file but no metadata present in this tree (check the ", germ_tree_meta_seq_names, " column of the metadata file?).")
                         paste0(ifelse(is.null(add.text), tempo.cat, paste0(add.text, "\n", tempo.cat)))
                     }
                     tempo.added.trees <- ggtree::"%<+%"( # it seems that this command uses the tip.label compartment to merge meta.df into ggtree::ggtree(trees$trees[[i3]], layout = germ_tree_kind)

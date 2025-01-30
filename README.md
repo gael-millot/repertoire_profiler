@@ -306,6 +306,12 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 <br /><br />
 ## WHAT'S NEW IN
 
+#### v14.1
+
+- Bug fixed in the metadata display in trees.
+- New metadata set.
+
+
 #### v14.0
 
 - New meta_seq_names parameter in the nextflow.config file, that help to set the name of the column containing the fasta sequence names.
