@@ -293,6 +293,7 @@ The developers & maintainers of the mentioned softwares and packages, including:
 
 - [R](https://www.r-project.org/)
 - [ggplot2](https://ggplot2.tidyverse.org/)
+- [immacantation](https://immcantation.readthedocs.io/en/stable/)
 - [ggtree](https://yulab-smu.top/treedata-book/)
 - [Nextflow](https://www.nextflow.io/)
 - [Apptainer](https://apptainer.org/)
@@ -305,6 +306,12 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 
 <br /><br />
 ## WHAT'S NEW IN
+
+#### v14.2
+
+- Bug fixed in the metadata display in trees.
+- Tree display improved.
+
 
 #### v14.1
 
