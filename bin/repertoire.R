@@ -442,7 +442,7 @@ if(any(arg.check2) == TRUE){ # normally no NA
 
 ################ internal variables
 
-var1 <- c("v_call", "j_call") # names of the columns to deal with
+var1 <- c("v_call", "j_call", "c_call") # names of the columns to deal with
 var2 <- c("non-zero", "all") # kind of repertoire (warning annotated can be added in var2 below)
 
 ################ end internal variables
@@ -511,13 +511,13 @@ if(length(tempo4) == 1){
 ################ data verification
 
 
-if( ! all(var1 %in% c("v_call", "j_call"))){
-    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 5 IN repertoire.R:\nPROBLEM WITH THE var1 INTERNAL VARIABLE THAT MUST BE \"v_call\" AND \"j_call\"\nHERE IT IS:\n", paste(var1, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+if( ! all(var1 %in% c("v_call", "j_call", "c_call"))){
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 5 IN repertoire.R:\nPROBLEM WITH THE var1 INTERNAL VARIABLE THAT MUST BE \"v_call\", \"j_call\" AND \"c_call\"\nHERE IT IS:\n", paste(var1, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
 }
 
 
 if( ! all(var1 %in% names(df))){
-    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 6 IN repertoire.R:\nPROBLEM WITH THE NAMES OF file_assembly_ch THAT MUST CONTAIN \"v_call\" AND \"j_call\"\nHERE IT IS:\n", paste(names(df), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 6 IN repertoire.R:\nPROBLEM WITH THE NAMES OF file_assembly_ch THAT MUST CONTAIN \"v_call\", \"j_call\" AND \"c_call\"\nHERE IT IS:\n", paste(names(df), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
 }
 
 for(i1 in 1:length(alleles)){
