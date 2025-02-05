@@ -653,7 +653,8 @@ process seq_name_remplacement {
     fi
     """
 }
-// add the distance to the data file to return
+
+
 process file_assembly {
     label 'immcantation'
     publishDir path: "${out_path}", mode: 'copy', pattern: "{all_passed_seq.tsv}", overwrite: false
@@ -728,7 +729,15 @@ process file_assembly {
             stop(tempo.cat)
         }
         db3 <- data.frame(db, dist_nearest = tempo.dtn\$dist_nearest)
-        write.table(db3, file = paste0("./all_passed_seq.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
+        if( ! "c_call" %in% names(db)){
+            tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE file_assembly PROCESS\\ndb SHOULD HAVE \\"c_call\\" AS COLUMN NAME. HERE:\\nNAMES: ", paste(names(db), collapse = " "), "\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
+            stop(tempo.cat)
+        }
+        tempo_subclass <- strsplit(db3\$c_call, ",")
+        subclass <- sapply(X = tempo_subclass, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; paste0(unique(y), collapse = ",")})
+        class <- sapply(X = tempo_subclass, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; y <- substr(y, 1, 4) ; paste0(unique(y), collapse = ",")})
+        db4 <- data.frame(db3, isotype_class = class, isotype_subclass = subclass)
+        write.table(db4, file = paste0("./all_passed_seq.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
     ' |& tee -a file_assembly.log
     """
 }
