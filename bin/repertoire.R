@@ -69,7 +69,6 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
         stop(paste0("\n\n================\n\nERROR IN repertoire.R\nTHE args OBJECT HAS NA\n\n================\n\n"), call. = FALSE)
     }
     tempo.arg.names <- c(
-        "igblast_database_path", 
         "file_assembly_ch", 
         "repertoire_names_ch", 
         "cute", 
@@ -96,14 +95,17 @@ rm(tempo.cat)
 
 ################################ Test
 
-# setwd("C:/Users/gael/Documents/Git_projects/repertoire_profiler/work/c0/15b238a2ee5928549fc971d797bf57")
-# setwd("C:/Users/gael/Documents/Git_projects/repertoire_profiler/work/f3/c86535d18aa196a3aaed118466e031")
-# igblast_database_path = "germlines/imgt/mouse/vdj"
+# setwd("C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/c0/15b238a2ee5928549fc971d797bf57")
+# setwd("C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/2d/c0b94410a5633bf6e7639bfb61d60d")
 # file_assembly_ch <- "all_passed_seq.tsv"
-# repertoire_names_ch <- "imgt_mouse_IGHD.tsv imgt_mouse_IGHJ.tsv imgt_mouse_IGHV.tsv"
+# repertoire_names_ch <- "imgt_mouse_IGHD.tsv imgt_mouse_IGHJ.tsv imgt_mouse_IGHV.tsv imgt_mouse_IGHC.tsv"
 # cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.4.0/cute_little_R_functions.R"
 # log = "repertoire.log"
-
+setwd("C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/2d/c0b94410a5633bf6e7639bfb61d60d")
+file_assembly_ch <- "all_passed_seq.tsv"
+repertoire_names_ch <- "imgt_mouse_IGHD.tsv imgt_mouse_IGHJ.tsv imgt_mouse_IGHV.tsv imgt_mouse_IGHC.tsv"
+cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.4.0/cute_little_R_functions.R"
+log = "repertoire.log"
 
 ################################ end Test
 
@@ -116,8 +118,7 @@ param.list <- c(
     "script", 
     "run.way",
     "tempo.arg.names", 
-    if(run.way == "SCRIPT"){"command"}, 
-    "igblast_database_path", 
+    if(run.way == "SCRIPT"){"command"},   
     "file_assembly_ch", 
     "repertoire_names_ch", 
     "cute", 
@@ -383,8 +384,7 @@ if(any(arg.check) == TRUE){ # normally no NA
 # management of NA arguments
 # end management of NA arguments
 # management of NULL arguments, WARNING: only for repertoire.R because NULL is "NULL" in the nextflow.config file
-tempo.arg <-c(
-    "igblast_database_path", 
+tempo.arg <-c( 
     "file_assembly_ch", 
     "repertoire_names_ch", 
     "log"
@@ -411,12 +411,6 @@ text.check2 <- NULL #
 checked.arg.names2 <- NULL # for function debbuging: used by r_debugging_tools
 ee <- expression(arg.check2 <- c(arg.check2, tempo$problem) , text.check2 <- c(text.check2, tempo$text) , checked.arg.names2 <- c(checked.arg.names2, tempo$object.name))
 
-if( ! grepl(igblast_database_path, pattern = "^.+vdj$")){ # positive prop
-    tempo.cat <- paste0("ERROR IN repertoire.R:\nRIGHT NOW, THE PIPELINE CAN ONLY WORK WITH THE VDJ DATASET OF THE imgt DATABASE (igblast_database_path PARAMETER FINISHING BY \"vdj\")\nHERE IT IS: \n", igblast_database_path)
-    text.check2 <- c(text.check2, tempo.cat)
-    arg.check2 <- c(arg.check2, TRUE)
-}
-
 rep_file_names <- strsplit(repertoire_names_ch, split = " ")[[1]]
 if(length(rep_file_names) == 0){
     stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 4 IN repertoire.R:\nPROBLEM WITH repertoire_names_ch: ", paste(repertoire_names_ch, collapse = " "), "PLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
@@ -442,7 +436,8 @@ if(any(arg.check2) == TRUE){ # normally no NA
 
 ################ internal variables
 
-var1 <- c("v_call", "j_call", "c_call") # names of the columns to deal with
+var1 <- c("v_call", "j_call") # names of the columns to deal with
+var3 <- "c_call"
 var2 <- c("non-zero", "all") # kind of repertoire (warning annotated can be added in var2 below)
 
 ################ end internal variables
@@ -472,6 +467,7 @@ fun_report(data = paste0("\n\n################################ RUNNING\n\n"), ou
 
 df <- read.table(file_assembly_ch, header = TRUE, sep = "\t", stringsAsFactors = FALSE, comment.char = "")
 
+
 tempo <- strsplit(rep_file_names, split = "[_.]")
 tempo2 <- sapply(tempo, FUN = function(x){x[length(x) - 1]})
 if(any(grepl(x = tempo2, pattern = "^IG.+")) & ! all(grepl(x = tempo2, pattern = "^IG.+"))){
@@ -479,31 +475,39 @@ if(any(grepl(x = tempo2, pattern = "^IG.+")) & ! all(grepl(x = tempo2, pattern =
 }
 tempo3 <- substr(tempo2, 3, 3)
 tempo4 <- unique(tempo3)
+# all the potential allele and cassette names recovery
 if(length(tempo4) == 1){
     alleles <- vector(mode = "list", length = 1)
+    cassettes <- vector(mode = "list", length = 1)
     alleles[[1]] <- vector(mode = "list", length = length(rep_file_names))
+    cassettes[[1]] <- vector(mode = "list", length = length(rep_file_names))
     for(i1 in 1:length(alleles[[1]])){
         tempo <- strsplit(rep_file_names[i1], split = "[_.]")[[1]]
         names(alleles[[1]])[i1] <- tempo[length(tempo) - 1]
+        names(cassettes[[1]])[i1] <- tempo[length(tempo) - 1]
         alleles[[1]][[i1]] <- scan(rep_file_names[i1], what = "character", quiet = TRUE)
+        cassettes[[1]][[i1]] <- unique(sub(pattern = "\\*.*", replacement = "", x = alleles[[1]][[i1]]))
     }
 }else if(length(tempo4) == 2 & all(tempo4 %in% c("K", "L"))){
     alleles <- vector(mode = "list", length = 2)
+    cassettes <- vector(mode = "list", length = 2)
     names(alleles) <- c("K", "L")
     for(i1 in 1:length(alleles)){
         tempo.pos <- which(tempo3 == names(alleles)[i1])
         alleles[[i1]] <- vector(mode = "list", length = length(tempo.pos))
+        cassettes[[i1]] <- vector(mode = "list", length = length(tempo.pos))
         for(i2 in 1:length(tempo.pos)){
             tempo <- strsplit(rep_file_names[tempo.pos[i2]], split = "[_.]")[[1]]
             names(alleles[[i1]])[i2] <- tempo[length(tempo) - 1]
+            names(cassettes[[i1]])[i2] <- tempo[length(tempo) - 1]
             alleles[[i1]][[i2]] <- scan(rep_file_names[tempo.pos[i2]], what = "character", quiet = TRUE)
+            cassettes[[i1]][[i2]] <- unique(sub(pattern = "\\*.*", replacement = "", x = alleles[[i1]][[i2]]))
         }
     }
 }else{
     stop(paste0("\n\n================\n\nERROR IN repertoire.R:\nTHE igblast_files PARAMETER OF THE nextflow.config FILE MUST BE .fasta FILES OF THE SAME CHAIN (FOR INSTANCE, IGH OR IGK),\nOR POTENTIALLY BOTH KIND OF LIGHT CHAINS (IGK AND IGL) ONLY.\nHERE THEY ARE:\n", paste(tempo2 , collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
 }
-
-
+# end all the potential allele and cassette names recovery
 
 ################ End Data import
 
@@ -511,23 +515,34 @@ if(length(tempo4) == 1){
 ################ data verification
 
 
-if( ! all(var1 %in% c("v_call", "j_call", "c_call"))){
+if( ! all(var1 %in% c("v_call", "j_call"))){
     stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 5 IN repertoire.R:\nPROBLEM WITH THE var1 INTERNAL VARIABLE THAT MUST BE \"v_call\", \"j_call\" AND \"c_call\"\nHERE IT IS:\n", paste(var1, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
 }
-
+if( ! all(var3 %in% c("c_call"))){
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 6 IN repertoire.R:\nPROBLEM WITH THE var3 INTERNAL VARIABLE THAT MUST BE \"c_call\"\nHERE IT IS:\n", paste(var3, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+}
 
 if( ! all(var1 %in% names(df))){
-    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 6 IN repertoire.R:\nPROBLEM WITH THE NAMES OF file_assembly_ch THAT MUST CONTAIN \"v_call\", \"j_call\" AND \"c_call\"\nHERE IT IS:\n", paste(names(df), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 7 IN repertoire.R:\nPROBLEM WITH THE NAMES OF file_assembly_ch THAT MUST CONTAIN \"v_call\", \"j_call\" AND \"c_call\"\nHERE IT IS:\n", paste(names(df), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+}
+if( ! all(var3 %in% names(df))){
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 8 IN repertoire.R:\nPROBLEM WITH THE NAMES OF file_assembly_ch THAT MUST CONTAIN \"c_call\"\nHERE IT IS:\n", paste(names(df), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
 }
 
 for(i1 in 1:length(alleles)){
     for(i2 in 1:length(alleles[[i1]])){
         if(is.null(names(alleles[[i1]])[i2])){
-            stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 7 IN repertoire.R:\nPROBLEM WITH rep_file_names:\n", paste(rep_file_names, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+            stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 9 IN repertoire.R:\nPROBLEM WITH rep_file_names:\n", paste(rep_file_names, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
         }
     }
 }
-
+for(i1 in 1:length(cassettes)){
+    for(i2 in 1:length(cassettes[[i1]])){
+        if(is.null(names(cassettes[[i1]])[i2])){
+            stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 9 IN repertoire.R:\nPROBLEM WITH rep_file_names:\n", paste(rep_file_names, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+        }
+    }
+}
 
 ################ end data verification
 
@@ -572,7 +587,7 @@ for(i0 in 1:length(alleles)){
         tempo2 <- tolower(substr(var1[i1], 1, 1))
         tempo.log <- allele.kind == tempo2
         if(any(is.na(tempo.log)) | sum(tempo.log, na.rm = TRUE) != 1){
-            stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 8 IN repertoire.R:\nPROBLEM WITH tempo.log:\n", paste(tempo.log, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+            stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 10 IN repertoire.R:\nPROBLEM WITH tempo.log:\n", paste(tempo.log, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
         }else{
             tempo.pos <- which(tempo.log)
             output.name <- names(alleles[[i0]])[tempo.pos]
@@ -641,7 +656,7 @@ for(i0 in 1:length(alleles)){
             tempo.log1 <- allele.kind == tempo1
             tempo.log2 <- allele.kind == tempo2
             if(any(is.na(tempo.log1)) | sum(tempo.log1, na.rm = TRUE) != 1 | any(is.na(tempo.log2)) | sum(tempo.log2, na.rm = TRUE) != 1){
-                stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 9 IN repertoire.R:\nPROBLEM WITH tempo.log1:\n", paste(tempo.log1, collapse = "\n"), " OR tempo.log2:\n", paste(tempo.log2, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+                stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 11 IN repertoire.R:\nPROBLEM WITH tempo.log1:\n", paste(tempo.log1, collapse = "\n"), " OR tempo.log2:\n", paste(tempo.log2, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
             }else{
                 tempo.pos1 <- which(tempo.log1)
                 tempo.pos2 <- which(tempo.log2)
@@ -670,12 +685,14 @@ for(i0 in 1:length(alleles)){
                         tempo.table3 <- tempo.table2
                     }
                     # end here the work is using data frames because it keeps the structure even if one cell
+                    print(tempo.table.gg)
                     if(sum(tempo.table3, na.rm = TRUE) > 0){
                         if(nrow(tempo.table3) > 1 & ncol(tempo.table3) > 1){
                             tempo.table.gg <- as.data.frame(as.table(as.matrix(tempo.table3)))
                         }else{
                             tempo.table.gg <- data.frame(Var1 = rownames(tempo.table3), Var2 = colnames(tempo.table3), Freq = tempo.table3, row.names = NULL)
                         }
+
                         names(tempo.table.gg) <- c(var1, "Count")
                         tempo.table.gg$Count[tempo.table.gg$Count == 0] <- NA
                         tempo.title <- paste0(

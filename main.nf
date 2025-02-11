@@ -101,8 +101,9 @@ process igblast_data_check { // cannot be igblast_data_check outside of process 
     cache 'true'
 
     input:
-    val igblast_database_path
-    val igblast_files
+    val igblast_organism
+    val igblast_variable_ref_files
+    val igblast_constant_ref_files
 
     output:
     path "*.tsv", emit: igblast_data_check_ch
@@ -110,12 +111,26 @@ process igblast_data_check { // cannot be igblast_data_check outside of process 
     script:
     """
     #!/bin/bash -ue
-    REPO_PATH="/usr/local/share/${igblast_database_path}" # path where the imgt_human_IGHV.fasta, imgt_human_IGHD.fasta and imgt_human_IGHJ.fasta files are in the docker container
-    VDJ_FILES=\$(awk -v var1="${igblast_files}" -v var2="\${REPO_PATH}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}') # assemble files with their path
+    REPO_PATH_VAR="/usr/local/share/germlines/imgt/${igblast_organism}/vdj" # path where the imgt .fasta reference seq files are in the docker container
+    REPO_PATH_CONST="/usr/local/share/germlines/imgt/${igblast_organism}/constant" # path where the imgt .fasta reference seq files are in the docker container
+    VDJ_FILES=\$(awk -v var1="${igblast_variable_ref_files}" -v var2="\${REPO_PATH_VAR}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}') # assemble files with their path
+    CONST_FILES=\$(awk -v var1="${igblast_constant_ref_files}" -v var2="\${REPO_PATH_CONST}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}') # assemble files with their path
     for i1 in \$VDJ_FILES ; do
         if [[ ! -e \${i1} ]] ; then
-            echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nFILE DOES NOT EXISTS:\\n\${i1}\\n\\nINDICATED PATH:\\n\${REPO_PATH}\\n\\nCONTAINS:\\n"
-            ls -la -w 1 \${REPO_PATH}
+            echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nFILE DOES NOT EXISTS:\\n\${i1}\\n\\nINDICATED PATH:\\n\${REPO_PATH_VAR}\\n\\nCONTAINS:\\n"
+            ls -la -w 1 \${REPO_PATH_VAR}
+            echo -e "\\n\\n========\\n\\n"
+            exit 1
+        else
+            FILENAME=\$(basename -- "\${i1}") # recover a file name without path
+            FILENAME="\${FILENAME%.*}" # remove extension
+            grep -E '^>.*\$' \${i1} | cut -f2 -d'|' > \${FILENAME}.tsv # detect line starting by > and extract the 2nd field after cutting by |
+        fi
+    done
+    for i1 in \$CONST_FILES ; do
+        if [[ ! -e \${i1} ]] ; then
+            echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nFILE DOES NOT EXISTS:\\n\${i1}\\n\\nINDICATED PATH:\\n\${REPO_PATH_CONST}\\n\\nCONTAINS:\\n"
+            ls -la -w 1 \${REPO_PATH_CONST}
             echo -e "\\n\\n========\\n\\n"
             exit 1
         else
@@ -137,8 +152,7 @@ process igblast {
 
     input:
     path fs_ch // parallelization expected (for each fasta file)
-    val igblast_database_path
-    val igblast_files
+    val igblast_variable_ref_files
     val igblast_organism
     val igblast_loci
     val igblast_aa
@@ -154,8 +168,8 @@ process igblast {
     #!/bin/bash -ue
 
     # variables
-    REPO_PATH="/usr/local/share/${igblast_database_path}" # path where the imgt_human_IGHV.fasta, imgt_human_IGHD.fasta and imgt_human_IGHJ.fasta files are in the docker container
-    VDJ_FILES=\$(awk -v var1="${igblast_files}" -v var2="\${REPO_PATH}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}')
+    REPO_PATH="/usr/local/share/germlines/imgt/${igblast_organism}/vdj" # path where the imgt_human_IGHV.fasta, imgt_human_IGHD.fasta and imgt_human_IGHJ.fasta files are in the docker container
+    VDJ_FILES=\$(awk -v var1="${igblast_variable_ref_files}" -v var2="\${REPO_PATH}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}')
     FILENAME=\$(basename -- "${fs_ch}") # recover a file name without path
     FILE=\${FILENAME%.*} # file name without extension
     MODIF_FILE="\${FILE// /_}" # spaces in the name file replaced by _
@@ -450,8 +464,8 @@ process closest_germline {
 
     input:
     path clone_split_ch // parallelization expected
-    val igblast_database_path
-    val igblast_files
+    val igblast_organism
+    val igblast_variable_ref_files
 
     output:
     path "*_germ-pass.tsv", emit: closest_ch
@@ -470,8 +484,8 @@ process closest_germline {
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a closest_germline.log
     # variables
 
-    REPO_PATH="/usr/local/share/${igblast_database_path}" # path where the imgt_human_IGHV.fasta, imgt_human_IGHD.fasta and imgt_human_IGHJ.fasta files are in the docker container
-    VDJ_FILES=\$(awk -v var1="${igblast_files}" -v var2="\${REPO_PATH}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}')
+    REPO_PATH="/usr/local/share/germlines/imgt/${igblast_organism}/vdj" # path where the imgt_human_IGHV.fasta, imgt_human_IGHD.fasta and imgt_human_IGHJ.fasta files are in the docker container
+    VDJ_FILES=\$(awk -v var1="${igblast_variable_ref_files}" -v var2="\${REPO_PATH}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}')
     # end variables
     CreateGermlines.py -d \$FILENAME -g dmask --cloned -r \${VDJ_FILES} |& tee -a closest_germline.log
     """
@@ -733,10 +747,16 @@ process file_assembly {
             tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE file_assembly PROCESS\\ndb SHOULD HAVE \\"c_call\\" AS COLUMN NAME. HERE:\\nNAMES: ", paste(names(db), collapse = " "), "\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
             stop(tempo.cat)
         }
+        # remove allele info
+        tempo_v <- strsplit(db3\$v_call, ",")
+        sub_v <- sapply(X = tempo_v, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; paste0(unique(y), collapse = ",")})
+        tempo_j <- strsplit(db3\$j_call, ",")
+        sub_j <- sapply(X = tempo_j, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; paste0(unique(y), collapse = ",")})
         tempo_subclass <- strsplit(db3\$c_call, ",")
         subclass <- sapply(X = tempo_subclass, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; paste0(unique(y), collapse = ",")})
         class <- sapply(X = tempo_subclass, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; y <- substr(y, 1, 4) ; paste0(unique(y), collapse = ",")})
-        db4 <- data.frame(db3, isotype_class = class, isotype_subclass = subclass)
+        db4 <- data.frame(db3, v_gene = sub_v, j_gene = sub_j, isotype_class = class, isotype_subclass = subclass)
+        # end remove allele info
         write.table(db4, file = paste0("./all_passed_seq.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
     ' |& tee -a file_assembly.log
     """
@@ -805,7 +825,6 @@ process repertoire {
     cache 'true'
 
     input:
-    val igblast_database_path
     path file_assembly_ch // no parallelization
     path igblast_data_check_ch
     path cute_file
@@ -821,7 +840,6 @@ process repertoire {
     """
     #!/bin/bash -ue
     repertoire.R \
-"${igblast_database_path}" \
 "${file_assembly_ch}" \
 "${igblast_data_check_ch}" \
 "${cute_file}" \
@@ -1246,9 +1264,6 @@ workflow {
     }else if( ! (file(sample_path).exists()) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID sample_path PARAMETER IN repertoire_profiler.config FILE (DOES NOT EXIST): ${sample_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
     }
-    if( ! (igblast_database_path in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_database_path PARAMETER IN repertoire_profiler.config FILE:\n${igblast_database_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    } // path not checked because inside a container
     if( ! (igblast_organism in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_organism PARAMETER IN repertoire_profiler.config FILE:\n${igblast_organism}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (igblast_organism =~ /^(mouse|human|rabbit|rat|rhesus_monkey)$/) ){
@@ -1264,9 +1279,12 @@ workflow {
     }else if( ! (igblast_aa == "false" || igblast_aa == "true") ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_aa PARAMETER IN repertoire_profiler.config FILE:\n${igblast_aa}\nMUST BE EITHER \"true\" OR \"false\"\n\n========\n\n"
     }
-    if( ! (igblast_files in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_files PARAMETER IN repertoire_profiler.config FILE:\n${igblast_files}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }
+    if( ! (igblast_variable_ref_files in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_variable_ref_files PARAMETER IN repertoire_profiler.config FILE:\n${igblast_variable_ref_files}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    } // path not checked here but below because inside a container
+    if( ! (igblast_constant_ref_files in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_constant_ref_files PARAMETER IN repertoire_profiler.config FILE:\n${igblast_constant_ref_files}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    } // path not checked here but below because inside a container
     if( ! (clone_nb_seq in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_nb_seq PARAMETER IN repertoire_profiler.config FILE:\n${clone_nb_seq}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ( ! (clone_nb_seq =~/^\d+$/)) || clone_nb_seq.toInteger() < 3 ){
@@ -1297,8 +1315,6 @@ workflow {
     }
     if( ! (meta_seq_names in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_seq_names PARAMETER IN repertoire_profiler.config FILE:\n${meta_seq_names}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if(meta_path != "NULL"){
-        print("\n\nWARNING: THE ${meta_seq_names} COLUMN OF THE METADATA FILE INDICATED IN THE meta_seq_names PARAMETER MUST CONTAIN NAMES OF THE FILES IN THE FOLDER OF THE sample_path PARAMETER")
     }
     if( ! (meta_name_replacement in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_name_replacement PARAMETER IN repertoire_profiler.config FILE:\n${meta_name_replacement}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
@@ -1464,10 +1480,10 @@ workflow {
         print("    qos: ${qos}")
         print("    add_options: ${add_options}")
     }
-    if(igblast_files =~ /^.*IGKV.*$/){
-        print("\n\nWARNING:\nLIGHT CHAIN DETECTED IN THE igblast_files parameter.\nBUT CLONAL GROUPING IS GENERALLY RESTRICTED TO HEAVY CHAIN SEQUENCES, AS THE DIVERSITY OF LIGHT CHAINS IS NOT SUFFICIENT TO DISTINGUISH CLONES WITH REASONABLE CERTAINTY")
+    if(igblast_variable_ref_files =~ /^.*IG(K|L)V.*$/){
+        print("\n\nWARNING:\nLIGHT CHAIN DETECTED IN THE igblast_variable_ref_files parameter.\nBUT CLONAL GROUPING IS GENERALLY RESTRICTED TO HEAVY CHAIN SEQUENCES, AS THE DIVERSITY OF LIGHT CHAINS IS NOT SUFFICIENT TO DISTINGUISH CLONES WITH REASONABLE CERTAINTY")
     }
-    print("\n\nWARNING:\nTO MAKE THE REPERTOIRES, THE SCRIPT CURRENTLY TAKES THE FIRST ANNOTATION OF THE IMGT ANNOTATION IF SEVERAL ARE PRESENTS IN THE v_call OR j_call COLUMN OF THE all_passed_seq.tsv FILE")
+    print("\n\nWARNING:\nTO MAKE THE REPERTOIRES, THE SCRIPT CURRENTLY TAKES THE FIRST ANNOTATION OF THE IMGT ANNOTATION IF SEVERAL ARE PRESENTS IN THE v_call, j_call OR c_call COLUMN OF THE all_passed_seq.tsv FILE")
     print("\n\n")
 
 
@@ -1516,19 +1532,19 @@ workflow {
     )
 
     igblast_data_check(
-        igblast_database_path, 
-        igblast_files
+        igblast_organism, 
+        igblast_variable_ref_files,
+        igblast_constant_ref_files
     )
 
     igblast(
         fs_ch, 
-        igblast_database_path, 
-        igblast_files, 
+        igblast_variable_ref_files, 
         igblast_organism, 
         igblast_loci, 
         igblast_aa
     )
-    igblast.out.tsv_ch1.count().subscribe{ n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE igblast PROCESS\n\nCHECK THAT THE igblast_organism, igblast_loci AND igblast_files ARE CORRECTLY SET IN THE repertoire_profiler.config FILE\n\n========\n\n"}}
+    igblast.out.tsv_ch1.count().subscribe{ n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE igblast PROCESS\n\nCHECK THAT THE igblast_organism, igblast_loci AND igblast_variable_ref_files ARE CORRECTLY SET IN THE repertoire_profiler.config FILE\n\n========\n\n"}}
     tsv_ch2 = igblast.out.tsv_ch1.collectFile(name: "all_igblast_seq.tsv", skip: 1, keepHeader: true)
     igblast.out.aligned_seq_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\n0 ALIGNED SEQ FILES RETURNED BY THE igblast PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
     aligned_seq_ch2 = igblast.out.aligned_seq_ch.collectFile(name: "igblast_aligned_seq.tsv")
@@ -1624,8 +1640,8 @@ workflow {
 
     closest_germline(
         split_by_clones.out.clone_split_ch.flatten(), // flatten split the list into several objects (required for parallelization)
-        igblast_database_path, 
-        igblast_files
+        igblast_organism, 
+        igblast_variable_ref_files
     )
     closest_germline.out.closest_log_ch.collectFile(name: "closest_germline.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
 
@@ -1671,7 +1687,6 @@ workflow {
 
 
     repertoire(
-        igblast_database_path,
         file_assembly.out.file_assembly_ch,
         igblast_data_check.out.igblast_data_check_ch,
         cute_file
