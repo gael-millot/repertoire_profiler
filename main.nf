@@ -755,7 +755,7 @@ process file_assembly {
         tempo_subclass <- strsplit(db3\$c_call, ",")
         subclass <- sapply(X = tempo_subclass, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; paste0(unique(y), collapse = ",")})
         class <- sapply(X = tempo_subclass, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; y <- substr(y, 1, 4) ; paste0(unique(y), collapse = ",")})
-        db4 <- data.frame(db3, v_gene = sub_v, j_gene = sub_j, isotype_class = class, isotype_subclass = subclass)
+        db4 <- data.frame(db3, v_gene = sub_v, j_gene = sub_j, isotype_class = class, c_gene = subclass)
         # end remove allele info
         write.table(db4, file = paste0("./all_passed_seq.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
     ' |& tee -a file_assembly.log
