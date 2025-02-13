@@ -101,11 +101,14 @@ rm(tempo.cat)
 # repertoire_names_ch <- "imgt_mouse_IGHD.tsv imgt_mouse_IGHJ.tsv imgt_mouse_IGHV.tsv imgt_mouse_IGHC.tsv"
 # cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.4.0/cute_little_R_functions.R"
 # log = "repertoire.log"
-setwd("C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/2d/c0b94410a5633bf6e7639bfb61d60d")
+setwd("C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/06/13ac33a3d708d2d2b2e63dab67370b")
 file_assembly_ch <- "all_passed_seq.tsv"
-repertoire_names_ch <- "imgt_mouse_IGHD.tsv imgt_mouse_IGHJ.tsv imgt_mouse_IGHV.tsv imgt_mouse_IGHC.tsv"
+repertoire_names_ch <- "imgt_human_IGHD.tsv imgt_human_IGHJ.tsv imgt_human_IGHV.tsv imgt_human_IGHC.tsv"
 cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.4.0/cute_little_R_functions.R"
 log = "repertoire.log"
+
+
+
 
 ################################ end Test
 
@@ -496,7 +499,11 @@ const_cassette_obs <- c("c_gene")
 cassette_obs <- c(var_cassette_obs, const_cassette_obs)
 # names of the columns to deal with in single allele repertoire
 kind <- c("non-zero", "all") # kind of repertoire (warning annotated can be added in kind below)
-
+check_concordance_imgt <- list( # warning: must be same order than "v_call", "j_call", "c_call"
+    V = c("IGHV", "IGKV", "IGLV", "TRAV", "TRBV", "TRDV", "TRGV"), 
+    J = c("IGHJ", "IGKJ", "IGLJ", "TRAJ", "TRBJ", "TRDJ", "TRGJ"), 
+    C = c("IGHC", "IGKC", "IGLC", "TRAC", "TRBC", "TRDC", "TRGC")
+)
 ################ end internal variables
 
 ################ Ignition
@@ -559,20 +566,11 @@ if( ! all(allele_obs %in% names(df))){
 if( ! all(cassette_obs %in% names(df))){
     stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 8 IN repertoire.R:\nPROBLEM WITH THE NAMES OF file_assembly_ch THAT MUST CONTAIN \"v_gene\", \"j_gene\" OR \"c_gene\"\nHERE IT IS:\n", paste(names(df), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
 }
-
-for(i1 in 1:length(allele)){
-    for(i2 in 1:length(allele[[i1]])){
-        if(is.null(names(allele[[i1]])[i2])){
-            stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 9 IN repertoire.R:\nPROBLEM WITH rep_file_names:\n", paste(rep_file_names, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
-        }
-    }
+if(is.null(names(allele))){
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 9 IN repertoire.R:\nNO NAMES OF allele CAN BE NULL:", paste(names(allele), collapse = "\n"), "\nSEE rep_file_names:\n", paste(rep_file_names, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
 }
-for(i1 in 1:length(cassette)){
-    for(i2 in 1:length(cassette[[i1]])){
-        if(is.null(names(cassette[[i1]])[i2])){
-            stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 10 IN repertoire.R:\nPROBLEM WITH rep_file_names:\n", paste(rep_file_names, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
-        }
-    }
+if(is.null(names(cassette))){
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 9 IN repertoire.R:\nNO NAMES OF cassette CAN BE NULL:", paste(names(cassette), collapse = "\n"), "\nSEE rep_file_names:\n", paste(rep_file_names, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
 }
 
 ################ end data verification
@@ -625,17 +623,33 @@ cassette_trunk <- tempo$rest
 if(allele_common != cassette_common){
     stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 11 IN repertoire.R:\nallele_common AND cassette_common SHOULD BE IDENTICAL.\nHERE allele_common IS:\n", allele_common, "\nAND cassette_common IS:\n", cassette_common, "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
 }
+# concordance
+pos <- NULL
+names_allele <- names(allele_trunk)
+for(i0 in 1:length(check_concordance_imgt)){
+    tempo_log <- names_allele %in% check_concordance_imgt[[i0]]
+    if(sum(tempo_log) != 1){
+        stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 12 IN repertoire.R:\nnames_allele NOT PRESENT IN check_concordance_imgt NUMBER ", i0, ".\nHERE names_allele IS:\n", paste(names_allele, collapse = "\n"), "\nAND check_concordance_imgt NUMBER ", i0, " IS:\n", paste(check_concordance_imgt[[i0]], collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+    }else{
+        pos <- c(pos, which(tempo_log))
+    }
+}
+allele_trunk <- allele_trunk[pos]
+cassette_trunk <- cassette_trunk[pos]
+# end concordance
 # end in imgt files
 
 # in data
-tempo <- left_common_chars(s = allele)
-allele_common <- tempo$common
-allele_trunk <- tempo$rest
-tempo <- left_common_chars(s = cassette)
-cassette_common <- tempo$common
-cassette_trunk <- tempo$rest
-if(allele_common != cassette_common){
-    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 11 IN repertoire.R:\nallele_common AND cassette_common SHOULD BE IDENTICAL.\nHERE allele_common IS:\n", allele_common, "\nAND cassette_common IS:\n", cassette_common, "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+tempo_list <- as.list(df[, allele_obs])
+tempo <- left_common_chars(s = tempo_list)
+allele_obs_common <- tempo$common
+allele_obs_trunk <- tempo$rest
+tempo_list <- as.list(df[, cassette_obs])
+tempo <- left_common_chars(s = tempo_list)
+cassette_obs_common <- tempo$common
+cassette_obs_trunk <- tempo$rest
+if( ! (allele_obs_common == allele_common & allele_obs_common == cassette_obs_common)){
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 12 IN repertoire.R:\nallele_obs_common, cassette_obs_common AND allele_common SHOULD BE IDENTICAL.\nHERE allele_obs_common IS:\n", allele_obs_common, "\ncassette_obs_common IS:\n", cassette_obs_common, "\nAND allele_common IS:\n", allele_common, "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
 }
 # end data
 
@@ -646,71 +660,64 @@ if(allele_common != cassette_common){
 # simple repertoire
 type <- c("allele", "cassette")
 for(i0 in type){
-    for(i1 in 1:length(get(i0))){
-        allele.kind <- tolower(substring(names(get(i0)[[i1]]), nchar(names(get(i0)[[i1]])))) # get V from IGHV
-        for(i2 in 1:length(get(paste0(i0, "_obs")))){
-            tempo2 <- tolower(substr(get(paste0(i0, "_obs"))[i2], 1, 1))
-            tempo.log <- allele.kind == tempo2
-            if(any(is.na(tempo.log)) | sum(tempo.log, na.rm = TRUE) != 1){
-                stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 10 IN repertoire.R:\nPROBLEM WITH tempo.log:\n", paste(tempo.log, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+    # concordance between imgt and obs data already made above
+    for(i1 in 1:length(get(paste0(i0, "_obs_trunk")))){
+        tempo.df <- get(paste0(i0, "_obs_trunk"))[[i1]]
+        tempo.df <- factor(tempo.df, levels = unique(get(paste0(i0, "_trunk"))[[i1]]))
+        # plot
+        for(i2 in kind){
+            if(i2 == "non-zero"){
+                tempo.table <- table(tempo.df)
+                tempo.table.gg <- tempo.table[tempo.table > 0]
+            }else if(i2 == "annotated"){
+                tempo.table <- table(tempo.df[ ! annotation.log])
+                tempo.table.gg <- tempo.table[tempo.table > 0]
             }else{
-                tempo.pos <- which(tempo.log)
-                output.name <- names(get(i0)[[i1]])[tempo.pos]
-                tempo.df <- df[grepl(x = df[ , get(paste0(i0, "_obs"))[i2]], pattern = output.name), ]
-                tempo.df[ , names(tempo.df) == get(paste0(i0, "_obs"))[i2]] <- factor(tempo.df[ , names(tempo.df) == get(paste0(i0, "_obs"))[i2]], levels = unique(get(i0)[[i1]][[tempo.pos]]))
-                # plot
-                for(i4 in kind){
-                    if(i4 == "non-zero"){
-                        tempo.table <- table(tempo.df[ , names(tempo.df) == get(paste0(i0, "_obs"))[i2]])
-                        tempo.table.gg <- tempo.table[tempo.table > 0]
-                    }else if(i4 == "annotated"){
-                        tempo.table <- table(tempo.df[ ! annotation.log, names(tempo.df) == get(paste0(i0, "_obs"))[i2]])
-                        tempo.table.gg <- tempo.table[tempo.table > 0]
-                    }else{
-                        tempo.table <- table(tempo.df[ , names(tempo.df) == get(paste0(i0, "_obs"))[i2]])
-                        write.table(tempo.table, file = paste0("./rep_", names(get(i0)[[i1]])[tempo.pos], ".tsv"), row.names = FALSE, col.names = FALSE, sep = "\t", quote = FALSE) # separate repertoires
-                        tempo.table.gg <- tempo.table
-                    }
-                    if(sum(tempo.table.gg, na.rm = TRUE) > 0){
-                        if(length(tempo.table.gg) == 1){
-                            tempo.table.gg <- data.frame(Var1 = names(tempo.table.gg), Count = tempo.table.gg, row.names = NULL)
-                        }else{
-                            tempo.table.gg <- as.data.frame(tempo.table.gg)
-                            names(tempo.table.gg)[names(tempo.table.gg) == "Freq"] <- "Count"
-                        }
-                        tempo.table.gg$Count[tempo.table.gg$Count == 0] <- NA
-                        tempo.title <- paste0(
-                            "Locus: ", output.name, "\n",
-                            "Kind: ", i4, "\n",
-                            "Type: ", i0, "\n",
-                            "Total count: ", sum(tempo.table.gg$Count, na.rm = TRUE)
-                        )
-                        label.size <- -5/132 * nrow(tempo.table.gg) + 1081/66 # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
-                        final.plot <- fun_gg_heatmap2(
-                            data1 = tempo.table.gg,
-                            x = NULL,
-                            y = "Var1",
-                            z = "Count",
-                            label.size = ifelse(label.size <= 0, 1, label.size),
-                            color.low = "white",
-                            color.high = "blue",
-                            zero.color = grey(0.95),
-                            cell.value = TRUE,
-                            cell.value.size = ifelse(label.size <= 0, 1, label.size) / 2,
-                            title = tempo.title,
-                            title.size = 12
-                        )
-                    }else{
-                        # no need to use pdf(NULL) with fun_gg_empty_graph()
-                        final.plot <- fun_gg_empty_graph(text = paste0("NO GRAPH PLOTTED FOR ", output.name, "\nNO ALLELE/CASSETTE DETECTED"), text.size = 3)
-                    }
-                    ggplot2::ggsave(filename = paste0(output.name, "_", i0, "_", i4, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300) # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
-                    ggplot2::ggsave(filename = paste0(output.name, "_", i0, "_", i4, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300)
-                    ggplot2::ggsave(filename = paste0(output.name, "_", i0, "_", i4, ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 4, height = 10, units = "in", dpi = 300)
-                }
-                # end plot
+                tempo.table <- table(tempo.df)
+                write.table(tempo.table, file = paste0("./rep_", i0, "_", names(get(paste0(i0, "_trunk")))[i1], ".tsv"), row.names = FALSE, col.names = FALSE, sep = "\t", quote = FALSE) # separate repertoires
+                tempo.table.gg <- tempo.table
             }
+            if(sum(tempo.table.gg, na.rm = TRUE) > 0){
+                if(length(tempo.table.gg) == 1){
+                    tempo.table.gg <- data.frame(Var1 = names(tempo.table.gg), Count = tempo.table.gg, row.names = NULL)
+                    names(tempo.table.gg)[1] <- i0
+                }else{
+                    tempo.table.gg <- as.data.frame(tempo.table.gg)
+                    names(tempo.table.gg)[1] <- i0
+                    names(tempo.table.gg)[names(tempo.table.gg) == "Freq"] <- "Count"
+                }
+                tempo.table.gg$Count[tempo.table.gg$Count == 0] <- NA
+                tempo.title <- paste0(
+                    "Locus: ", names(check_concordance_imgt)[i1], "\n",
+                    "Kind: ", i2, "\n",
+                    "Type: ", i0, "\n",
+                    "Chain: ", allele_obs_common, "\n",
+                    "Total count: ", sum(tempo.table.gg$Count, na.rm = TRUE)
+                )
+                label.size <- -5/132 * nrow(tempo.table.gg) + 1081/66 # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
+                final.plot <- fun_gg_heatmap2(
+                    data1 = tempo.table.gg,
+                    x = NULL,
+                    y = i0,
+                    z = "Count",
+                    label.size = ifelse(label.size <= 0, 1, label.size),
+                    color.low = "white",
+                    color.high = "blue",
+                    zero.color = grey(0.95),
+                    cell.value = TRUE,
+                    cell.value.size = ifelse(label.size <= 0, 1, label.size) / 2,
+                    title = tempo.title,
+                    title.size = 12
+                )
+            }else{
+                # no need to use pdf(NULL) with fun_gg_empty_graph()
+                final.plot <- fun_gg_empty_graph(text = paste0("NO GRAPH PLOTTED FOR ", names( get(paste0(i0, "_trunk")))[i1], "\nNO ALLELE/CASSETTE DETECTED"), text.size = 3)
+            }
+            ggplot2::ggsave(filename = paste0(names( get(paste0(i0, "_trunk")))[i1], "_", i0, "_", i2, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300) # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
+            ggplot2::ggsave(filename = paste0(names( get(paste0(i0, "_trunk")))[i1], "_", i0, "_", i2, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300)
+            ggplot2::ggsave(filename = paste0(names( get(paste0(i0, "_trunk")))[i1], "_", i0, "_", i2, ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 4, height = 10, units = "in", dpi = 300)
         }
+        # end plot
     }
 }
 
