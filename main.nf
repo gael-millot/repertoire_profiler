@@ -817,7 +817,7 @@ process metadata_check { // cannot be in germ_tree_vizu because I have to use th
 
 process repertoire {
     label 'r_ext'
-    publishDir path: "${out_path}", mode: 'copy', pattern: "{repertoire.pdf}", overwrite: false
+    publishDir path: "${out_path}", mode: 'copy', pattern: "{*_repertoire.pdf}", overwrite: false
     publishDir path: "${out_path}/png", mode: 'copy', pattern: "{*.png}", overwrite: false
     publishDir path: "${out_path}/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
     publishDir path: "${out_path}/repertoires", mode: 'copy', pattern: "{rep_*.tsv}", overwrite: false
@@ -830,7 +830,7 @@ process repertoire {
     path cute_file
 
     output:
-    path "repertoire.pdf"
+    path "*_repertoire.pdf"
     path "*.svg"
     path "*.png"
     path "rep_*.tsv"

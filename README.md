@@ -42,7 +42,6 @@
 | **main.nf** | File that can be executed using a linux terminal, a MacOS terminal or Windows 10 WSL2. |
 | **nextflow.config** | Parameter settings for the *main.nf* file. Users have to open this file, set the desired settings and save these modifications before execution. Of note, this configuration file is systematically saved in the reports folder (see [below](#output)) during each execution, to save the parameter settings. |
 | **bin folder** | Contains files required by the *main.nf* file. |
-| **xlsx2fasta.R** | Accessory file that creates all the fasta files required from a .xlsx file. To use it, 1) open the file, 2) complete the "Parameters that need to be set by the user" section, 3) save the modifications and 4) run the file in R. |
 | **Licence.txt** | Licence of the release. |
 
 
@@ -306,6 +305,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 
 <br /><br />
 ## WHAT'S NEW IN
+
+#### v15.0
+
+- Now repertoire files (.tsv and .pdf) deals with the constant chain.
+
 
 #### v14.3
 
@@ -705,8 +709,4 @@ Conversion into DSL2 ok
 #### v1.0
 
 First DSL1 version that works
-
-
-
-
 

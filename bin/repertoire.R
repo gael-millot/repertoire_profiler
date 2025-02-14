@@ -95,17 +95,12 @@ rm(tempo.cat)
 
 ################################ Test
 
-# setwd("C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/c0/15b238a2ee5928549fc971d797bf57")
-# setwd("C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/2d/c0b94410a5633bf6e7639bfb61d60d")
+
+# setwd("C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/06/13ac33a3d708d2d2b2e63dab67370b")
 # file_assembly_ch <- "all_passed_seq.tsv"
-# repertoire_names_ch <- "imgt_mouse_IGHD.tsv imgt_mouse_IGHJ.tsv imgt_mouse_IGHV.tsv imgt_mouse_IGHC.tsv"
+# repertoire_names_ch <- "imgt_human_IGHD.tsv imgt_human_IGHJ.tsv imgt_human_IGHV.tsv imgt_human_IGHC.tsv"
 # cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.4.0/cute_little_R_functions.R"
 # log = "repertoire.log"
-setwd("C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/06/13ac33a3d708d2d2b2e63dab67370b")
-file_assembly_ch <- "all_passed_seq.tsv"
-repertoire_names_ch <- "imgt_human_IGHD.tsv imgt_human_IGHJ.tsv imgt_human_IGHV.tsv imgt_human_IGHC.tsv"
-cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.4.0/cute_little_R_functions.R"
-log = "repertoire.log"
 
 
 
@@ -712,11 +707,11 @@ for(i0 in type){
                 )
             }else{
                 # no need to use pdf(NULL) with fun_gg_empty_graph()
-                final.plot <- fun_gg_empty_graph(text = paste0("NO GRAPH PLOTTED FOR ", names( get(paste0(i0, "_trunk")))[i1], "\nNO ALLELE/GENE DETECTED"), text.size = 3)
+                final.plot <- fun_gg_empty_graph(text = paste0("NO GRAPH PLOTTED FOR ", names(get(paste0(i0, "_trunk")))[i1], "\nNO ALLELE/GENE DETECTED"), text.size = 3)
             }
-            ggplot2::ggsave(filename = paste0(names( get(paste0(i0, "_trunk")))[i1], "_", i0, "_", i2, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300) # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
-            ggplot2::ggsave(filename = paste0(names( get(paste0(i0, "_trunk")))[i1], "_", i0, "_", i2, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300)
-            ggplot2::ggsave(filename = paste0(names( get(paste0(i0, "_trunk")))[i1], "_", i0, "_", i2, ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 4, height = 10, units = "in", dpi = 300)
+            ggplot2::ggsave(filename = paste0(names(get(paste0(i0, "_trunk")))[i1], "_", i0, "_", i2, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300) # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
+            ggplot2::ggsave(filename = paste0(names(get(paste0(i0, "_trunk")))[i1], "_", i0, "_", i2, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300)
+            ggplot2::ggsave(filename = paste0(names(get(paste0(i0, "_trunk")))[i1], "_", i0, "_", i2, ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 4, height = 10, units = "in", dpi = 300)
         }
         # end plot
     }
@@ -724,33 +719,41 @@ for(i0 in type){
     # combined repertoires
     # V x J
     tempo.df <- get(paste0(i0 , "_obs_trunk"))[get(paste0("var_", i0, "_obs"))]
-    tempo.df <- factor(tempo.df, levels = unique(get(paste0(i0, "_trunk"))[[i1]]))
+    tempo.df[[1]] <- factor(tempo.df[[1]], levels = unique(get(paste0(i0, "_trunk"))[[1]]))
+    tempo.df[[2]] <- factor(tempo.df[[2]], levels = unique(get(paste0(i0, "_trunk"))[[2]]))
     # plot
-    for(i2 in kind){
-        if(i2 == "non-zero"){
-            tempo.table <- table(tempo.df)
-            tempo.table.gg <- tempo.table[tempo.table > 0]
-        }else if(i2 == "annotated"){
-            tempo.table <- table(tempo.df[ ! annotation.log])
-            tempo.table.gg <- tempo.table[tempo.table > 0]
+    for(i1 in kind){
+        # here the work is using data frames because it keeps the structure even if one cell
+        if(i1 == "non-zero"){
+            tempo.table2 <- as.data.frame.matrix(table(tempo.df))
+            tempo.log <- apply(tempo.table2, 1, sum, na.rm = TRUE) > 0
+            tempo.table3 <- tempo.table2[tempo.log, ]
+            tempo.log <- apply(tempo.table3, 2, sum, na.rm = TRUE) > 0
+            tempo.table3 <- tempo.table3[tempo.log]
+        }else if(i1 == "annotated"){
+            tempo <- lapply(X = tempo.df, FUN = function(x){x[ ! annotation.log]})
+            tempo.table2 <- as.data.frame.matrix(table(tempo))
+            tempo.log <- apply(tempo.table2, 1, sum, na.rm = TRUE) > 0
+            tempo.table3 <- tempo.table2[tempo.log, ]
+            tempo.log <- apply(tempo.table3, 2, sum, na.rm = TRUE) > 0
+            tempo.table3 <- tempo.table3[tempo.log]
         }else{
-            tempo.table <- table(tempo.df)
-            write.table(tempo.table, file = paste0("./rep_", i0, "_", names(get(paste0(i0, "_trunk")))[i1], ".tsv"), row.names = FALSE, col.names = FALSE, sep = "\t", quote = FALSE) # separate repertoires
-            tempo.table.gg <- tempo.table
+            tempo.table2 <- as.data.frame.matrix(table(tempo.df))
+            write.table(tempo.table2, file = paste0("./rep_", i0, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], ".tsv"), row.names = TRUE, col.names = NA, sep = "\t", quote = FALSE) # separate repertoires
+            tempo.table3 <- tempo.table2
         }
-        if(sum(tempo.table.gg, na.rm = TRUE) > 0){
-            if(length(tempo.table.gg) == 1){
-                tempo.table.gg <- data.frame(Var1 = names(tempo.table.gg), Count = tempo.table.gg, row.names = NULL)
-                names(tempo.table.gg)[1] <- i0
+        # end here the work is using data frames because it keeps the structure even if one cell
+        if(sum(tempo.table3, na.rm = TRUE) > 0){
+            if(nrow(tempo.table3) > 1 & ncol(tempo.table3) > 1){
+                tempo.table.gg <- as.data.frame(as.table(as.matrix(tempo.table3)))
             }else{
-                tempo.table.gg <- as.data.frame(tempo.table.gg)
-                names(tempo.table.gg)[1] <- i0
-                names(tempo.table.gg)[names(tempo.table.gg) == "Freq"] <- "Count"
+                tempo.table.gg <- data.frame(Var1 = rownames(tempo.table3), Var2 = colnames(tempo.table3), Freq = tempo.table3, row.names = NULL)
             }
+            names(tempo.table.gg) <- c(names(check_concordance_imgt)[1], names(check_concordance_imgt)[2], "Count")
             tempo.table.gg$Count[tempo.table.gg$Count == 0] <- NA
             tempo.title <- paste0(
-                "Locus: ", names(check_concordance_imgt)[i1], "\n",
-                "Kind: ", i2, "\n",
+                "Locus: ", names(check_concordance_imgt)[1], "x", names(check_concordance_imgt)[2], "\n",
+                "Kind: ", i1, "\n",
                 "Type: ", i0, "\n",
                 "Chain: ", allele_obs_common, "\n",
                 "Total count: ", sum(tempo.table.gg$Count, na.rm = TRUE)
@@ -758,8 +761,8 @@ for(i0 in type){
             label.size <- -5/132 * nrow(tempo.table.gg) + 1081/66 # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
             final.plot <- fun_gg_heatmap2(
                 data1 = tempo.table.gg,
-                x = NULL,
-                y = i0,
+                x = names(check_concordance_imgt)[2],
+                y = names(check_concordance_imgt)[1],
                 z = "Count",
                 label.size = ifelse(label.size <= 0, 1, label.size),
                 color.low = "white",
@@ -774,101 +777,85 @@ for(i0 in type){
             # no need to use pdf(NULL) with fun_gg_empty_graph()
             final.plot <- fun_gg_empty_graph(text = paste0("NO GRAPH PLOTTED FOR ", names( get(paste0(i0, "_trunk")))[i1], "\nNO ALLELE/GENE DETECTED"), text.size = 3)
         }
-        ggplot2::ggsave(filename = paste0(names( get(paste0(i0, "_trunk")))[i1], "_", i0, "_", i2, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300) # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
-        ggplot2::ggsave(filename = paste0(names( get(paste0(i0, "_trunk")))[i1], "_", i0, "_", i2, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300)
-        ggplot2::ggsave(filename = paste0(names( get(paste0(i0, "_trunk")))[i1], "_", i0, "_", i2, ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 4, height = 10, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = paste0("./rep_", i0, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i1, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300) # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
+        ggplot2::ggsave(filename = paste0("./rep_", i0, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i1, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = paste0("./rep_", i0, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i1, ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 4, height = 10, units = "in", dpi = 300)
     }
     # end plot
     # end V x J
-
-
-
-    # end combined repertoires
-}
-
-
-# combined repertoires
-for(i0 in 1:length(allele)){
-    for(i1 in 1:(length(var1) - 1)){
-        for(i2 in 2:length(var1)){
-            tempo1 <- tolower(substr(var1[i1], 1, 1))
-            tempo2 <- tolower(substr(var1[i2], 1, 1))
-            tempo.log1 <- allele.kind == tempo1
-            tempo.log2 <- allele.kind == tempo2
-            if(any(is.na(tempo.log1)) | sum(tempo.log1, na.rm = TRUE) != 1 | any(is.na(tempo.log2)) | sum(tempo.log2, na.rm = TRUE) != 1){
-                stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 11 IN repertoire.R:\nPROBLEM WITH tempo.log1:\n", paste(tempo.log1, collapse = "\n"), " OR tempo.log2:\n", paste(tempo.log2, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+    # for each C
+    isotype_subclass_obs <- sort(unique(gene_obs_trunk[[3]]))
+    for(i1 in isotype_subclass_obs){
+        tempo.df <- lapply(X = get(paste0(i0 , "_obs_trunk"))[get(paste0("var_", i0, "_obs"))], FUN = function(x){x[get(paste0(i0 , "_obs_trunk"))[[get(paste0("const_", i0, "_obs"))]] == i1]})
+        tempo.df[[1]] <- factor(tempo.df[[1]], levels = unique(get(paste0(i0, "_trunk"))[[1]]))
+        tempo.df[[2]] <- factor(tempo.df[[2]], levels = unique(get(paste0(i0, "_trunk"))[[2]]))
+        # plot
+        for(i2 in kind){
+            # here the work is using data frames because it keeps the structure even if one cell
+            if(i2 == "non-zero"){
+                tempo.table2 <- as.data.frame.matrix(table(tempo.df))
+                tempo.log <- apply(tempo.table2, 1, sum, na.rm = TRUE) > 0
+                tempo.table3 <- tempo.table2[tempo.log, ]
+                tempo.log <- apply(tempo.table3, 2, sum, na.rm = TRUE) > 0
+                tempo.table3 <- tempo.table3[tempo.log]
+            }else if(i2 == "annotated"){
+                tempo <- lapply(X = tempo.df, FUN = function(x){x[ ! annotation.log]})
+                tempo.table2 <- as.data.frame.matrix(table(tempo))
+                tempo.log <- apply(tempo.table2, 1, sum, na.rm = TRUE) > 0
+                tempo.table3 <- tempo.table2[tempo.log, ]
+                tempo.log <- apply(tempo.table3, 2, sum, na.rm = TRUE) > 0
+                tempo.table3 <- tempo.table3[tempo.log]
             }else{
-                tempo.pos1 <- which(tempo.log1)
-                tempo.pos2 <- which(tempo.log2)
-                output.name <- paste0(names(allele[[i0]])[tempo.pos1], "_x_", names(allele[[i0]])[tempo.pos2])
-                tempo.df <- df[grepl(x = df[ , var1[i1]], pattern = names(allele[[i0]])[tempo.pos1]) | grepl(x = df[ , var1[i2]], pattern = names(allele[[i0]])[tempo.pos2]), ]
-                tempo.df[ , names(tempo.df) == var1[i1]] <- factor(tempo.df[ , names(tempo.df) == var1[i1]], levels = unique(allele[[i0]][[tempo.pos1]]))
-                tempo.df[ , names(tempo.df) == var1[i2]] <- factor(tempo.df[ , names(tempo.df) == var1[i2]], levels = unique(allele[[i0]][[tempo.pos2]]))
-                # plot
-                for(i4 in kind){
-                    # here the work is using data frames because it keeps the structure even if one cell
-                    if(i4 == "non-zero"){
-                        tempo.table2 <- as.data.frame.matrix(table(tempo.df[names(tempo.df) %in% c(var1[i1], var1[i2])]))
-                        tempo.log <- apply(tempo.table2, 1, sum, na.rm = TRUE) > 0
-                        tempo.table3 <- tempo.table2[tempo.log, ]
-                        tempo.log <- apply(tempo.table3, 2, sum, na.rm = TRUE) > 0
-                        tempo.table3 <- tempo.table3[tempo.log]
-                    }else if(i4 == "annotated"){
-                        tempo.table2 <- as.data.frame.matrix(table(tempo.df[ ! annotation.log, names(tempo.df) %in% c(var1[i1], var1[i2])]))
-                        tempo.log <- apply(tempo.table2, 1, sum, na.rm = TRUE) > 0
-                        tempo.table3 <- tempo.table2[tempo.log, ]
-                        tempo.log <- apply(tempo.table3, 2, sum, na.rm = TRUE) > 0
-                        tempo.table3 <- tempo.table3[tempo.log]
-                    }else{
-                        tempo.table2 <- as.data.frame.matrix(table(tempo.df[names(tempo.df) %in% c(var1[i1], var1[i2])]))
-                        write.table(tempo.table2, file = paste0("./rep_", output.name, ".tsv"), row.names = TRUE, col.names = NA, sep = "\t", quote = FALSE) # separate repertoires
-                        tempo.table3 <- tempo.table2
-                    }
-                    # end here the work is using data frames because it keeps the structure even if one cell
-                    if(sum(tempo.table3, na.rm = TRUE) > 0){
-                        if(nrow(tempo.table3) > 1 & ncol(tempo.table3) > 1){
-                            tempo.table.gg <- as.data.frame(as.table(as.matrix(tempo.table3)))
-                        }else{
-                            tempo.table.gg <- data.frame(Var1 = rownames(tempo.table3), Var2 = colnames(tempo.table3), Freq = tempo.table3, row.names = NULL)
-                        }
-                        names(tempo.table.gg) <- c(var1, "Count")
-                        tempo.table.gg$Count[tempo.table.gg$Count == 0] <- NA
-                        tempo.title <- paste0(
-                            "Locus: ", output.name, "\n",
-                            "Alleles: ", i4, "\n",
-                            "Total count: ", sum(tempo.table.gg$Count, na.rm = TRUE)
-                        )
-                        label.size <- -5/132 * nrow(tempo.table.gg) + 1081/66 # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
-                        final.plot <- fun_gg_heatmap2(
-                            data1 = tempo.table.gg,
-                            x = var1[2],
-                            y = var1[1],
-                            z = "Count",
-                            label.size = ifelse(label.size <= 0, 1, label.size), 
-                            color.low = "white",
-                            color.high = "blue",
-                            zero.color = grey(0.95),
-                            cell.value = TRUE,
-                            cell.value.size = ifelse(label.size <= 0, 1, label.size) / 3,
-                            title = tempo.title,
-                            title.size = 12
-                        )
-                    }else{
-                        # no need to use pdf(NULL) with fun_gg_empty_graph()
-                        final.plot <- fun_gg_empty_graph(text = paste0("NO GRAPH PLOTTED FOR ", output.name, "\nNO ALLELE DETECTED"), text.size = 3)
-                    }
-                    ggplot2::ggsave(filename = paste0(output.name, "_", i4, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300) # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
-                    ggplot2::ggsave(filename = paste0(output.name, "_", i4, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300)
-                    ggplot2::ggsave(filename = paste0(output.name, "_", i4, ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 4, height = 10, units = "in", dpi = 300)
-                }
-                # end plot
+                tempo.table2 <- as.data.frame.matrix(table(tempo.df))
+                write.table(tempo.table2, file = paste0("./rep_", i0, "_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], ".tsv"), row.names = TRUE, col.names = NA, sep = "\t", quote = FALSE) # separate repertoires
+                tempo.table3 <- tempo.table2
             }
+            # end here the work is using data frames because it keeps the structure even if one cell
+            if(sum(tempo.table3, na.rm = TRUE) > 0){
+                if(nrow(tempo.table3) > 1 & ncol(tempo.table3) > 1){
+                    tempo.table.gg <- as.data.frame(as.table(as.matrix(tempo.table3)))
+                }else{
+                    tempo.table.gg <- data.frame(Var1 = rownames(tempo.table3), Var2 = colnames(tempo.table3), Freq = tempo.table3, row.names = NULL)
+                }
+                names(tempo.table.gg) <- c(names(check_concordance_imgt)[1], names(check_concordance_imgt)[2], "Count")
+                tempo.table.gg$Count[tempo.table.gg$Count == 0] <- NA
+                tempo.title <- paste0(
+                    "Locus: ", names(check_concordance_imgt)[1], "x", names(check_concordance_imgt)[2], " for ", i1, "\n",
+                    "Kind: ", i2, "\n",
+                    "Type: ", i0, "\n",
+                    "Chain: ", allele_obs_common, "\n",
+                    "Total count: ", sum(tempo.table.gg$Count, na.rm = TRUE)
+                )
+                label.size <- -5/132 * nrow(tempo.table.gg) + 1081/66 # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
+                final.plot <- fun_gg_heatmap2(
+                    data1 = tempo.table.gg,
+                    x = names(check_concordance_imgt)[2],
+                    y = names(check_concordance_imgt)[1],
+                    z = "Count",
+                    label.size = ifelse(label.size <= 0, 1, label.size),
+                    color.low = "white",
+                    color.high = "blue",
+                    zero.color = grey(0.95),
+                    cell.value = TRUE,
+                    cell.value.size = ifelse(label.size <= 0, 1, label.size) / 2,
+                    title = tempo.title,
+                    title.size = 12
+                )
+            }else{
+                # no need to use pdf(NULL) with fun_gg_empty_graph()
+                final.plot <- fun_gg_empty_graph(title = tempo.title, title.size = 12, text = paste0("NO GRAPH PLOTTED FOR ", names( get(paste0(i0, "_trunk")))[i1], "\nNO ALLELE/GENE DETECTED"), text.size = 3)
+            }
+            ggplot2::ggsave(filename = paste0("./rep_", i0, "_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300) # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
+            ggplot2::ggsave(filename = paste0("./rep_", i0, "_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300)
+            ggplot2::ggsave(filename = paste0("./rep_", i0, "_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 4, height = 10, units = "in", dpi = 300)
         }
     }
+    # end plot
+    # end for each C
+    # end combined repertoires
+    tempo <- qpdf::pdf_combine(input = list.files(path = ".", pattern = paste0("^.*", i0, ".*\\.pdf$")), output = paste0("./", i0, "_repertoire.pdf")) # assignation to prevent a returned element
+
 }
-
-tempo <- qpdf::pdf_combine(input = list.files(path = ".", pattern = ".pdf$"), output = "./repertoire.pdf") # assignation to prevent a returned element
-
 
 ################ end data modification, plotting and saving
 
