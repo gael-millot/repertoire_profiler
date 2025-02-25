@@ -218,7 +218,7 @@ Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.
 <br /><br />
 Mandatory elements:
 <br /><br />
-| repertoire_profiler_<UNIQUE_ID> folder | Description |
+| repertoire_profiler_<UNIQUE_ID> folders and files | Description |
 | :--- | :--- |
 | **reports** | Folder containing all the reports of the different processes, as well as the *nextflow.config* file used and the map of the processes execution (*nf_dag.png* file). |
 | **repertoires** | Folder containing the repertoires, i.e., contingency tables of the V, J and C (constant) allele and gene usage from the *all_passed_seq.tsv* file (see below). Warning: the script currently takes the first annotation of the imgt annotation if several are presents in the v_call, j_call and c_call columns of the *all_passed_seq.tsv* file. (e.g., v_call with IGKV1-39\*01,IGKV1D-39\*01), so that contingencies are identical to those from the donut frequencies, that use germline_v_call and germline_j_call columns (allele reassignment by the CreateGermlines.py tool of immcantation) |
@@ -248,7 +248,7 @@ Mandatory elements:
 <br /><br />
 Optional elements only returned if the igblast_aa parameter is 'false' and if the input fasta are nucleotide sequences:
 <br /><br />
-| repertoire_profiler_xxxxx folder | Description |
+| repertoire_profiler_<UNIQUE_ID> folders and files | Description |
 | :--- | :--- |
 | **aa** | Folder containing the translation of the alignment_sequence column of the *productive_seq.tsv* file in fasta files. |
 | **aligned_seq** | Folder containing the alignment_sequence column of the *productive_seq.tsv* file in fasta files. |
