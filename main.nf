@@ -1070,14 +1070,16 @@ process backup {
 
 
 
+// Converts a tsv file containing several amino acid sequences into fasta file
+// Input : tsv file (columns sequence_id (CL4184329_VH) and sequence_alignment (QVQLQQSGAXELARPGASVK...))
+// Output : same data converted into a fasta file
 process Reformat{
     
     input:
     path aatsv
     
     output:
-    path "*.fasta"
-    
+    path "*.fasta", emit : aa_fasta_ch
     
     script:
     """
@@ -1094,7 +1096,7 @@ process Align {
     val phylo_tree_heavy
     
     output:
-    path "*_align.fasta"
+    path "*_align.fasta", emit : aligned_groups_ch
     
     script:
     parms="-al"
@@ -1104,6 +1106,9 @@ process Align {
     """
 }
 
+// Groups input sequences (amino-acid ones) into same vj combination
+// Input : single fasta file containing several sequences & a tsv file containing V|J info to corresponding sequence id
+// Output : one fasta file PER group, containing said group sequences
 process DefineGroups {
     publishDir path: "${out_path}/phylo", mode: 'copy'
     
@@ -1114,7 +1119,7 @@ process DefineGroups {
     path productivetsv
     
     output:
-    path "sequences_*.fasta"
+    path "sequences_*.fasta", emit : groups_ch
     
     script:
     """
@@ -1137,7 +1142,7 @@ process NbSequences {
     path fasta
 
     output:
-    tuple stdout, path(fasta)
+    tuple stdout, path(fasta), emit : nb_out
 
     script:
     """
@@ -1155,7 +1160,7 @@ process Tree {
     path phylo_tree_model_file
 
     output:
-    path "*.treefile"
+    path "*.treefile", emit : tree_file
     path "*.log"
 
     script:
@@ -1169,14 +1174,13 @@ process ProcessMeta {
 
     input:
     path meta
-    val meta_seq_names
 
     output:
-    path "iTOL*"
+    path "iTOL*", emit : itol_out
 
     script:
     """
-    table2itol.R -i $meta_seq_names $meta
+    table2itol.R -i ${meta_seq_names} ${meta}
     """
 }
 
@@ -1808,6 +1812,45 @@ workflow {
     donut_assembly.out.donut_assembly_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}}
 
 
+
+    Reformat(
+        aa_tsv_ch2
+    )
+    fasta = Reformat.out.aa_fasta_ch
+
+    DefineGroups(
+        fasta,
+        select_ch2
+    )
+    fastagroups = DefineGroups.out.groups_ch.flatten()
+
+    Align(
+        fastagroups,
+        phylo_tree_heavy
+    )
+    align = Align.out.aligned_groups_ch
+
+    NbSequences(
+        align
+    )
+    filtered = NbSequences.out.nb_out.filter{it[0].toInteger()>=3}.map{it->it[1]}
+
+    Tree(
+        filtered,
+        phylo_tree_model_file
+    )
+    tree = Tree.out.tree_file
+
+    ProcessMeta(
+        meta_file
+    )
+    itolmeta = ProcessMeta.out.itol_out
+
+    ITOL(
+        tree,
+        itolmeta,
+        phylo_tree_itolkey
+    )
 
 
     backup(
