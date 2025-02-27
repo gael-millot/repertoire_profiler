@@ -243,6 +243,10 @@ Mandatory elements:
 | **germ_tree_seq.tsv** | Sequences of the *all_passed_seq.tsv* file used in the germline tree analysis (clonal group with at least n sequences, n being set by the nb_seq_per_clone parameter of the *nextflow.config* file). |
 | **germ_tree_dismissed_seq.tsv** | Sequences of the *all_passed_seq.tsv* file not used in the germline tree analysis (clonal group with less than n sequences, n being set by the nb_seq_per_clone parameter of the *nextflow.config* file). |
 | **germ_tree_dup_seq_not_displayed.tsv** | Sequences file used in the germline tree analysis but not displayed in the graph, (1) because strictly identical to another sequence already in the tree and (2) because the tree_duplicate_seq parameter of the *nextflow.config* file has been set to "FALSE". |
+| **phylo** | Folder containing amino-acid sequences in fasta files. Each fasta file regroups the amino-acid sequences that come from the same V\|J recombination. |
+| **\*_align.fasta.treefile** | Phylogenic trees in newick format for each sequence group in the phylo file. This tree is not constructed when there are less than 4 sequences in 1 group. |
+| **\*_align.fasta.log** | Contains execution information of IQTree, used for constructing the phylogenic trees. Useful for troubleshooting. |
+| **\*_align.fasta_itol_url.txt** | URL access to each phylogenic tree (*\*_align.fasta.treefile*) uploaded on iTOL. |
 
 
 <br /><br />
