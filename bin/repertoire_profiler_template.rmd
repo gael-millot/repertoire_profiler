@@ -1,0 +1,38 @@
+---
+title: 'Repertoire Profiler Report'
+date: ''
+output:
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+params:
+  nb_seq_aligned: -1
+  nb_seq_not_aligned: -1
+---
+
+\n\n<br /><br />\n\n
+
+<br /><br />
+
+### Igblast sequence annotation
+
+Number of sequences that could be analysed by Igblast : ```r params$nb_seq_aligned```
+
+Number of sequences that could not be analysed by Igblast : ```r params$nb_seq_not_aligned```
+
+Ratio : ```r if (params$nb_seq_not_aligned ==0) {1} else {params$nb_seq_aligned / params$nb_seq_not_aligned}```
+
+<br /><br />
+
+
+###  Backup
+
+
+See the [reports](./reports) folder for all the details of the analysis, including the parameters used in the .config file
+
+
+Full .nextflow.log is in: /mnt/c/Users/Gael/Documents/Git_projects/14985_loot<br />The one in the [reports](./reports) folder is not complete (miss the end)
+
+
+<br /><br />
+

@@ -1202,6 +1202,55 @@ process ITOL{
     """
     gotree upload itol --project gotree_uploads --user-id $phylo_tree_itolkey -i $tree $meta > ${tree.baseName}_itol_url.txt 2>&1
     """
+
+
+
+}
+
+// The render function only creates the html file with the rmardown
+// Inputs :
+//      template_rmd : rmardown template file used to create the html (file path is defined in config.nextflow)
+//      nb_seq_aligned : number of sequences that igblast could analyse
+//      nb_seq_not_aligned : number of sequences that igblast could not alayse
+// Outputs :
+//      "report.html" : finalized html report for a specific run
+//      "print_report.log" : will contain any error or warning messages produced by rmardown::render
+process print_report{
+    label 'r_ext'
+
+    publishDir path: "${out_path}", mode: 'copy', pattern: "{*.html}", overwrite: false
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{print_report.log}", overwrite: false
+    cache 'false'
+
+    input:
+    file template_rmd
+    val nb_seq_aligned
+    val nb_seq_not_aligned
+
+    output:
+    file "report.html"
+    file "print_report.log"
+
+    script:
+    """
+    #!/bin/bash -ue
+    cp ${template_rmd} report_file.rmd
+    Rscript -e '
+        rmarkdown::render(
+        input = "report_file.rmd",
+        output_file = "report.html",
+        # list of the variables waiting to be replaced in the rmd file :
+        params =    list(nb_seq_aligned = ${nb_seq_aligned}, 
+                        nb_seq_not_aligned = ${nb_seq_not_aligned}),
+        # output_dir = ".",
+        # intermediates_dir = "./",
+        # knit_root_dir = "./",
+        run_pandoc = TRUE,
+        quiet = TRUE,
+        clean = TRUE
+        )
+    ' |& tee -a print_report.log
+    """
 }
 
 //////// End Processes
@@ -1513,6 +1562,7 @@ workflow {
     meta_file = file(meta_path) // in variable because a single file. If "NULL", will create a empty file, present in work folders, but that cannot be correctly linked. Thus, if the file has to be redirected into a channel inside a process, it will not work. Thus, in the first process using meta_file, I hard copy the NULL file if required (see below)
     cute_file = file(cute_path) // in variable because a single file
     phylo_tree_model_file  = file(phylo_tree_model_path)
+    template_rmd = file(template_rmd_path)
 
     //////// end files import
 
@@ -1850,6 +1900,16 @@ workflow {
         tree,
         itolmeta,
         phylo_tree_itolkey
+    )
+
+/*
+nb1 = aligned_seq_ch2.countLines() 
+    nb2 =  unaligned_seq_ch2.countLines()
+    */
+    print_report(
+        template_rmd,
+        nb1,
+        nb2
     )
 
 
