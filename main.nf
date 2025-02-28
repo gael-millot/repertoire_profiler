@@ -832,7 +832,7 @@ process repertoire {
     output:
     path "*_repertoire.pdf"
     path "*.svg"
-    path "*.png"
+    path "*.png", emit: repertoire_png
     path "rep_*.tsv"
     path "repertoire.log"
 
@@ -989,7 +989,7 @@ process donut {
     output:
     path "*.tsv", emit: donut_tsv_ch, optional: true
     path "*.pdf", emit: donut_pdf_ch, optional: true
-    path "*.png"
+    path "*.png", emit: donuts_png
     path "*.svg"
     path "*.log"
 
@@ -1210,8 +1210,10 @@ process ITOL{
 // The render function only creates the html file with the rmardown
 // Inputs :
 //      template_rmd : rmardown template file used to create the html (file path is defined in config.nextflow)
+//      nb_input : number of fasta sequences in initial input
 //      nb_seq_aligned : number of sequences that igblast could analyse
 //      nb_seq_not_aligned : number of sequences that igblast could not alayse
+//      donuts_png, repertoire_png : to make sure the report process is not called before processes that produces images it needs
 // Outputs :
 //      "report.html" : finalized html report for a specific run
 //      "print_report.log" : will contain any error or warning messages produced by rmardown::render
@@ -1224,8 +1226,15 @@ process print_report{
 
     input:
     file template_rmd
+    val nb_input
     val nb_seq_aligned
     val nb_seq_not_aligned
+    val nb_productive
+    val nb_unproductive
+    val nb_all_passed
+    val nb_failed_clone
+    path donuts_png
+    path repertoire_png
 
     output:
     file "report.html"
@@ -1235,13 +1244,19 @@ process print_report{
     """
     #!/bin/bash -ue
     cp ${template_rmd} report_file.rmd
+    cp -r "${out_path}/png" .
     Rscript -e '
         rmarkdown::render(
         input = "report_file.rmd",
         output_file = "report.html",
         # list of the variables waiting to be replaced in the rmd file :
-        params =    list(nb_seq_aligned = ${nb_seq_aligned}, 
-                        nb_seq_not_aligned = ${nb_seq_not_aligned}),
+        params =    list(nb_input = ${nb_input},
+                        nb_seq_aligned = ${nb_seq_aligned}, 
+                        nb_seq_not_aligned = ${nb_seq_not_aligned},
+                        nb_productive = ${nb_productive},
+                        nb_unproductive = ${nb_unproductive},
+                        nb_all_passed = ${nb_all_passed},
+                        nb_failed_clone = ${nb_failed_clone}),
         # output_dir = ".",
         # intermediates_dir = "./",
         # knit_root_dir = "./",
@@ -1578,8 +1593,8 @@ workflow {
     }else{
         fs_ch = Channel.fromPath("${sample_path}/*.*", checkIfExists: false) // in channel because many files 
     }
-    //fs_ch.count().view()
-    //fs_ch.view()
+    
+    nb_input = fs_ch.count()
 
     workflowParam(
         modules
@@ -1684,7 +1699,7 @@ workflow {
     )
     // clone_assignment.out.clone_ch.view()
 
-
+    nb_failed_clone = clone_assignment.out.failed_clone_ch.countLines() // Assuming there are only the sequence names and no column names on the first line
 
     split_by_clones(
         clone_assignment.out.clone_ch
@@ -1729,7 +1744,7 @@ workflow {
         clone_assignment.out.failed_clone_ch
     )
     file_assembly.out.file_assembly_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE file_assembly PROCESS\n\n========\n\n"}}
-
+    nb_all_passed = file_assembly.out.file_assembly_ch.countLines() - 1 // Minus 1 because 1st line = column names
 
     metadata_check(
         file_assembly.out.file_assembly_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE file_assembly PROCESS\n\n========\n\n"},
@@ -1908,8 +1923,15 @@ nb1 = aligned_seq_ch2.countLines()
     */
     print_report(
         template_rmd,
+        nb_input,
         nb1,
-        nb2
+        nb2,
+        nb1_b - 1, // Minus 1 because the 1st line = the column names
+        nb2_b - 1, // Minus 1 because the 1st line = the column names
+        nb_all_passed,
+        nb_failed_clone,
+        donut.out.donuts_png.collect(),
+        repertoire.out.repertoire_png.collect()
     )
 
 
