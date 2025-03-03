@@ -364,7 +364,7 @@ process distance_hist {
 
 process histogram_assembly {
     label 'r_ext'
-    publishDir path: "${out_path}", mode: 'copy', pattern: "{seq_distance.pdf}", overwrite: false
+    publishDir path: "${out_path}/files", mode: 'copy', pattern: "{seq_distance.pdf}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{histogram_assembly.log}", overwrite: false
     cache 'true'
 
@@ -388,7 +388,7 @@ process histogram_assembly {
 process clone_assignment {
     label 'immcantation'
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
-    publishDir path: "${out_path}", mode: 'copy', pattern: "non_clone_assigned_sequence.tsv", overwrite: false
+    publishDir path: "${out_path}/files", mode: 'copy', pattern: "non_clone_assigned_sequence.tsv", overwrite: false
     cache 'true'
 
     input:
@@ -671,7 +671,7 @@ process seq_name_remplacement {
 
 process file_assembly {
     label 'immcantation'
-    publishDir path: "${out_path}", mode: 'copy', pattern: "{all_passed_seq.tsv}", overwrite: false
+    publishDir path: "${out_path}/files", mode: 'copy', pattern: "{all_passed_seq.tsv}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{file_assembly.log}", overwrite: false
     cache 'true'
 
@@ -817,7 +817,7 @@ process metadata_check { // cannot be in germ_tree_vizu because I have to use th
 
 process repertoire {
     label 'r_ext'
-    publishDir path: "${out_path}", mode: 'copy', pattern: "{*_repertoire.pdf}", overwrite: false
+    publishDir path: "${out_path}/files", mode: 'copy', pattern: "{*_repertoire.pdf}", overwrite: false
     publishDir path: "${out_path}/png", mode: 'copy', pattern: "{*.png}", overwrite: false
     publishDir path: "${out_path}/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
     publishDir path: "${out_path}/repertoires", mode: 'copy', pattern: "{rep_*.tsv}", overwrite: false
@@ -895,8 +895,8 @@ process get_germ_tree {
 
 process germ_tree_vizu {
     label 'r_ext'
-    publishDir path: "${out_path}", mode: 'copy', pattern: "{germ_tree.pdf}", overwrite: false
-    publishDir path: "${out_path}", mode: 'copy', pattern: "{germ_no_tree.pdf}", overwrite: false
+    publishDir path: "${out_path}/files", mode: 'copy', pattern: "{germ_tree.pdf}", overwrite: false
+    publishDir path: "${out_path}/files", mode: 'copy', pattern: "{germ_no_tree.pdf}", overwrite: false
     publishDir path: "${out_path}/png", mode: 'copy', pattern: "{*.png}", overwrite: false
     publishDir path: "${out_path}/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
     publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{all_trees.RData}", overwrite: false
@@ -1024,7 +1024,7 @@ process donut {
 
 process donut_assembly {
     label 'r_ext'
-    publishDir path: "${out_path}", mode: 'copy', pattern: "{donuts.pdf}", overwrite: false
+    publishDir path: "${out_path}/files", mode: 'copy', pattern: "{donuts.pdf}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{donut_assembly.log}", overwrite: false
     cache 'true'
 
@@ -1151,7 +1151,7 @@ process NbSequences {
 }
 
 process Tree {
-    publishDir path: "${out_path}", mode: 'copy'
+    publishDir path: "${out_path}/files", mode: 'copy'
 
     label 'iqtree'
 
@@ -1186,7 +1186,7 @@ process ProcessMeta {
 
 
 process ITOL{
-    publishDir path: "${out_path}", mode: 'copy'
+    publishDir path: "${out_path}/files", mode: 'copy'
 
     label 'gotree'
 
@@ -1600,6 +1600,8 @@ workflow {
         modules
     )
 
+    file("${out_path}/files").mkdirs()
+
     igblast_data_check(
         igblast_organism, 
         igblast_variable_ref_files,
@@ -1617,10 +1619,10 @@ workflow {
     tsv_ch2 = igblast.out.tsv_ch1.collectFile(name: "all_igblast_seq.tsv", skip: 1, keepHeader: true)
     igblast.out.aligned_seq_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\n0 ALIGNED SEQ FILES RETURNED BY THE igblast PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
     aligned_seq_ch2 = igblast.out.aligned_seq_ch.collectFile(name: "igblast_aligned_seq.tsv")
-    aligned_seq_ch2.subscribe{it -> it.copyTo("${out_path}")}
+    aligned_seq_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
     igblast.out.unaligned_seq_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\n0 UNALIGNED SEQ FILES RETURNED BY THE igblast PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
     unaligned_seq_ch2 = igblast.out.unaligned_seq_ch.collectFile(name: "igblast_unaligned_seq.tsv") // because an empty file must be present
-    unaligned_seq_ch2.subscribe{it -> it.copyTo("${out_path}")}
+    unaligned_seq_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
     nb1 = aligned_seq_ch2.countLines() 
     nb2 =  unaligned_seq_ch2.countLines()
     // nb1.view()
@@ -1637,10 +1639,10 @@ workflow {
     // parseDb_filtering.out.unproductive_ch.count().subscribe{n -> if ( n == 0 ){print "\n\nWARNING: EMPTY unproductive_seq.tsv FILE RETURNED FOLLOWING THE parseDb_filtering PROCESS\n\n"}else{it -> it.copyTo("${out_path}/unproductive_seq.tsv")}} // see https://www.nextflow.io/docs/latest/script.html?highlight=copyto#copy-files
     parseDb_filtering.out.select_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FILES FOLLOWING THE parseDb_filtering PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
     select_ch2 = parseDb_filtering.out.select_ch.collectFile(name: "productive_seq.tsv", skip: 1, keepHeader: true)
-    select_ch2.subscribe{it -> it.copyTo("${out_path}")}
+    select_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
     parseDb_filtering.out.unselect_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nO UNPRODUCTIVE SEQUENCE FILES FOLLOWING THE parseDb_filtering PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // because an empty file must be present
     unselect_ch2 = parseDb_filtering.out.unselect_ch.collectFile(name: "unproductive_seq.tsv", skip: 1, keepHeader: true)
-    unselect_ch2.subscribe{it -> it.copyTo("${out_path}")}
+    unselect_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
     nb1_b = select_ch2.countLines()
     nb2_b = unselect_ch2.countLines()
     nb1_b.subscribe { n -> if ( n == 1 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FOLLOWING THE parseDb_filtering PROCESS\nSEE THE EMPTY productive_seq.tsv FILE AND THE unproductive_seq.tsv FILE IN THE OUTPUT FOLDER\n\n========\n\n"}}
@@ -1659,7 +1661,7 @@ workflow {
     //translation.out.translation_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE translation PROCESS\n\n========\n\n"}}
     translation_ch2 = translation.out.translation_ch.collectFile(name: "translation.tsv", skip: 1, keepHeader: true) // productive file with column sequence_alignment_aa added
     aa_tsv_ch2 = translation.out.aa_tsv_ch.collectFile(name: "aa.tsv", skip: 1, keepHeader: true)
-    aa_tsv_ch2.subscribe{it -> it.copyTo("${out_path}")}
+    aa_tsv_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
     translation.out.translation_log_ch.collectFile(name: "translation.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
 
@@ -1781,25 +1783,25 @@ workflow {
         print("\n\nWARNING: ALL SEQUENCES IN TREES FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_dismissed_seq.tsv FILE RETURNED\n\n")
     }}
     no_germ_tree_ch2 = get_germ_tree.out.no_germ_tree_ch.collectFile(name: "germ_tree_dismissed_seq.tsv", skip: 1, keepHeader: true)
-    no_germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}")}
+    no_germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 
     get_germ_tree.out.germ_tree_ch.count().subscribe { n -> if ( n == 0 ){
         print("\n\nWARNING: NO SEQUENCES IN TREES FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_seq.tsv FILE RETURNED\n\n")
     }}
     germ_tree_ch2 = get_germ_tree.out.germ_tree_ch.collectFile(name: "germ_tree_seq.tsv", skip: 1, keepHeader: true)
-    germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}")}
+    germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 
     get_germ_tree.out.no_cloneID_ch.count().subscribe { n -> if ( n == 0 ){
         print("\n\nWARNING: ALL SEQUENCES IN CLONAL GROUP FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_dismissed_clone_id.tsv FILE RETURNED\n\n")
     }}
     no_cloneID_ch2 = get_germ_tree.out.no_cloneID_ch.collectFile(name: "germ_tree_dismissed_clone_id.tsv")
-    no_cloneID_ch2.subscribe{it -> it.copyTo("${out_path}")}
+    no_cloneID_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 
     get_germ_tree.out.cloneID_ch.count().subscribe { n -> if ( n == 0 ){
         print("\n\nWARNING: NO CLONAL GROUP FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_clone_id.tsv and germ_tree.pdf FILES RETURNED\n\n")
     }}
     cloneID_ch2 = get_germ_tree.out.cloneID_ch.collectFile(name: "germ_tree_clone_id.tsv")
-    cloneID_ch2.subscribe{it -> it.copyTo("${out_path}")}
+    cloneID_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 
     get_germ_tree.out.get_germ_tree_log_ch.collectFile(name: "get_germ_tree.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
 
@@ -1830,7 +1832,7 @@ workflow {
         print("\n\nWARNING: -> NO germ_tree_dup_seq_not_displayed.tsv FILE RETURNED\n\n")
     }
     germ_tree_dup_seq_not_displayed_ch2 = germ_tree_vizu.out.germ_tree_dup_seq_not_displayed_ch.flatten().collectFile(name: "germ_tree_dup_seq_not_displayed.tsv", skip: 1, keepHeader: true) // flatten split the list into several objects which is required by collectFile()
-    germ_tree_dup_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}")}
+    germ_tree_dup_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 
 
 
@@ -1866,7 +1868,7 @@ workflow {
         print("\n\nWARNING: -> NO donut_stats.tsv FILE RETURNED\n\n")
     }}
     donut_tsv_ch2 = donut.out.donut_tsv_ch.collectFile(name: "donut_stats.tsv", skip: 1, keepHeader: true)
-    donut_tsv_ch2.subscribe{it -> it.copyTo("${out_path}")}
+    donut_tsv_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 
 
 
@@ -1917,10 +1919,6 @@ workflow {
         phylo_tree_itolkey
     )
 
-/*
-nb1 = aligned_seq_ch2.countLines() 
-    nb2 =  unaligned_seq_ch2.countLines()
-    */
     print_report(
         template_rmd,
         nb_input,
