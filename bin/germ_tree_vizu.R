@@ -81,7 +81,7 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
         "germ_tree_label_outside", 
         "germ_tree_right_margin", 
         "germ_tree_legend", 
-        "germ_tree_file_assembly_path", 
+        "germ_tree_data_assembly_path", 
         "germ_tree_meta_path", 
         "germ_tree_meta_legend", 
         "cute", 
@@ -125,7 +125,7 @@ rm(tempo.cat)
 # germ_tree_label_outside = "TRUE"
 # germ_tree_right_margin = "1.5" 
 # germ_tree_legend = "TRUE" 
-# germ_tree_file_assembly_path = "caca"
+# germ_tree_data_assembly_path = "caca"
 # germ_tree_meta_path = "./metadata3.tsv" 
 # germ_tree_meta_legend = "KD"
 # cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.8/cute_little_R_functions.R"
@@ -160,7 +160,7 @@ param.list <- c(
     "germ_tree_label_outside", 
     "germ_tree_right_margin", 
     "germ_tree_legend", 
-    "germ_tree_file_assembly_path", 
+    "germ_tree_data_assembly_path", 
     "germ_tree_meta_path", 
     "germ_tree_meta_legend", 
     "cute", 
@@ -295,7 +295,7 @@ tempo.arg <-c(
     "germ_tree_label_outside", 
     "germ_tree_right_margin", 
     "germ_tree_legend", 
-    "germ_tree_file_assembly_path",
+    "germ_tree_data_assembly_path",
     "germ_tree_meta_path", 
     "germ_tree_meta_legend", 
     "log"
@@ -566,7 +566,7 @@ if(length(tempo.list) == 0){
 
 
     if( ! is.null(germ_tree_meta_path)){
-        new_meta_df <- read.table(germ_tree_file_assembly_path, sep = "\t", header = TRUE, comment.char = "") # new because it is not the meta file anymore but the generated table used here has meta file
+        new_meta_df <- read.table(germ_tree_data_assembly_path, sep = "\t", header = TRUE, comment.char = "") # new because it is not the meta file anymore but the generated table used here has meta file
     }
 
 
