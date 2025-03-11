@@ -617,7 +617,7 @@ process mutation_load {
     """
 }
 
-process seq_name_remplacement {
+process seq_name_replacement {
     label 'r_ext'
     cache 'true'
 
@@ -629,15 +629,15 @@ process seq_name_remplacement {
     val meta_legend
 
     output:
-    path "*_renamed_seq.tsv", emit: seq_name_remplacement_ch
-    path "seq_name_remplacement.log", emit: seq_name_remplacement_log_ch
+    path "*_renamed_seq.tsv", emit: seq_name_replacement_ch
+    path "seq_name_replacement.log", emit: seq_name_replacement_log_ch
 
     script:
     """
     #!/bin/bash -ue
     FILENAME=\$(basename -- ${mutation_load_ch}) # recover a file name without path
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a seq_name_remplacement.log
-    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a seq_name_remplacement.log
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a seq_name_replacement.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a seq_name_replacement.log
     # check first that the data file does not have the second column name starting by "initial_". Otherwise, with create unproper behavior in donut
     if [[ "${meta_file}" == "NULL" ]] ; then
         rm NULL # remove the initial file to avoid to send it into the channel
@@ -646,11 +646,11 @@ process seq_name_remplacement {
         Rscript -e '
             seq <- read.table("./${mutation_load_ch}", sep = "\\t", header = TRUE)
             if(grepl(x = names(seq)[2], pattern = "^initial_")){
-                stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS \\"NULL\\", THEN THE SECOND COLUMN OF THE DATA IN THE sample_path PARAMETER CANNOT HAVE THE NAME OF THE SECOND COLUNM STARTING BY \\"initial_\\"\\n\\n============\\n\\n"), call. = FALSE)
+                stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_replacement PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS \\"NULL\\", THEN THE SECOND COLUMN OF THE DATA IN THE sample_path PARAMETER CANNOT HAVE THE NAME OF THE SECOND COLUNM STARTING BY \\"initial_\\"\\n\\n============\\n\\n"), call. = FALSE)
             }
-        ' |& tee -a seq_name_remplacement.log
+        ' |& tee -a seq_name_replacement.log
         IFS='_' read -r -a TEMPO <<< "\${FILENAME}" # string split into array
-        cat ${mutation_load_ch} > ./\${TEMPO[0]}_renamed_seq.tsv |& tee -a seq_name_remplacement.log
+        cat ${mutation_load_ch} > ./\${TEMPO[0]}_renamed_seq.tsv |& tee -a seq_name_replacement.log
     else
         # if [[ "${meta_file}" != "NULL" && "${meta_name_replacement}" != "NULL" ]] ; then # or [[ "${meta_file}" -ne "NULL" && "${meta_name_replacement}" -ne "NULL" ]], but not !=
         Rscript -e '
@@ -658,25 +658,25 @@ process seq_name_remplacement {
             seq <- read.table("./${mutation_load_ch}", sep = "\\t", header = TRUE)
             id <- seq[1, 1] # Extract the name of the sequence
             if( ! "${meta_seq_names}" %in% names(meta)){
-                stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\", THEN THE meta_seq_names PARAMETER MUST BE A COLUMN NAME OF THE METADATA FILE.\\n\\n============\\n\\n"), call. = FALSE)
+                stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_replacement PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\", THEN THE meta_seq_names PARAMETER MUST BE A COLUMN NAME OF THE METADATA FILE.\\n\\n============\\n\\n"), call. = FALSE)
             }
             if(names(seq)[1] != "sequence_id"){
-                stop(paste0("\\n\\n============\\n\\nINTERNAL ERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\", THEN THE TABLE GENERATED USING THE sample_path PARAMETER MUST CONTAIN sequence_id AS FIRST COLUMN NAME.\\n\\n============\\n\\n"), call. = FALSE)
+                stop(paste0("\\n\\n============\\n\\nINTERNAL ERROR IN THE seq_name_replacement PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\", THEN THE TABLE GENERATED USING THE sample_path PARAMETER MUST CONTAIN sequence_id AS FIRST COLUMN NAME.\\n\\n============\\n\\n"), call. = FALSE)
             }
             if("${meta_name_replacement}" != "NULL"){
                 if( ! "${meta_name_replacement}" %in% names(meta)){
-                    stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\ AND IF THE meta_name_replacement PARAMETER IS NOT \\"NULL\\", THEN IT MUST BE A COLUMN NAME OF THE METADATA FILE.\\n\\n============\\n\\n"), call. = FALSE)
+                    stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_replacement PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\ AND IF THE meta_name_replacement PARAMETER IS NOT \\"NULL\\", THEN IT MUST BE A COLUMN NAME OF THE METADATA FILE.\\n\\n============\\n\\n"), call. = FALSE)
                 }
                 if( ! any(names(meta) %in% "${meta_name_replacement}")){
-                    stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIF NOT \\"NULL\\", THE meta_name_replacement PARAMETER MUST BE A COLUMN NAME OF THE meta_path PARAMETER (METADATA FILE): ", "${meta_name_replacement}", "\\n\\n============\\n\\n"), call. = FALSE)
+                    stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_replacement PROCESS OF NEXTFLOW\\nIF NOT \\"NULL\\", THE meta_name_replacement PARAMETER MUST BE A COLUMN NAME OF THE meta_path PARAMETER (METADATA FILE): ", "${meta_name_replacement}", "\\n\\n============\\n\\n"), call. = FALSE)
                 }
                 seq <- data.frame(seq[1], tempo = seq[1], seq[2:length(seq)]) # the second column is created to keep the initial sequence names, before replacement
                 for(i2 in 1:nrow(meta)){
                     if(sum(seq[ , 2] %in% meta[i2, "${meta_seq_names}"]) > 1){
-                        stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIN THE METADATA FILE, A SEQUENCE NAME CANNOT BELONG TO SEVERAL VALUES OF THE meta_name_replacement PARAMETER COLUMN NAME OF THE meta_path PARAMETER\\nTHE METAFILE IS: ${meta_file}\\nTHE COLUM NAME IS: ", "${meta_name_replacement}", "\\nTHE PROBLEMATIC REPLACEMENT NAME IN THE METAFILE IS: ", paste(meta[i2, "${meta_seq_names}"], collapse = " "), "\\n\\n============\\n\\n"), call. = FALSE)
+                        stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_replacement PROCESS OF NEXTFLOW\\nIN THE METADATA FILE, A SEQUENCE NAME CANNOT BELONG TO SEVERAL VALUES OF THE meta_name_replacement PARAMETER COLUMN NAME OF THE meta_path PARAMETER\\nTHE METAFILE IS: ${meta_file}\\nTHE COLUM NAME IS: ", "${meta_name_replacement}", "\\nTHE PROBLEMATIC REPLACEMENT NAME IN THE METAFILE IS: ", paste(meta[i2, "${meta_seq_names}"], collapse = " "), "\\n\\n============\\n\\n"), call. = FALSE)
                     }else if(any(seq[ , 2] == meta[i2, "${meta_seq_names}"])){
                         if( ! (meta[i2, "${meta_name_replacement}"] == "" | is.na(meta[i2, "${meta_name_replacement}"]))){
-                            seq[seq[ , 2] == meta[i2, "${meta_seq_names}"], 1] <- meta[i2, "${meta_name_replacement}"] # remplacement of the name in column 1
+                            seq[seq[ , 2] == meta[i2, "${meta_seq_names}"], 1] <- meta[i2, "${meta_name_replacement}"] # replacement of the name in column 1
                         }
                     }
                 }
@@ -685,14 +685,14 @@ process seq_name_remplacement {
             }
             if("${meta_legend}" != "NULL"){
                 if( ! "${meta_legend}" %in% names(meta)){
-                    stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIF THE meta_legend PARAMETER IS NOT \\"NULL\\", THEN IT MUST BE A COLUMN NAME OF THE METADATA FILE.\\n\\n============\\n\\n"), call. = FALSE)
+                    stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_replacement PROCESS OF NEXTFLOW\\nIF THE meta_legend PARAMETER IS NOT \\"NULL\\", THEN IT MUST BE A COLUMN NAME OF THE METADATA FILE.\\n\\n============\\n\\n"), call. = FALSE)
                 }
                 seq <- data.frame(seq, TEMPO = as.character(NA))
                 names(seq)[length(seq)] <- "${meta_legend}"
                 for(i2 in 1:nrow(meta)){
                     # ifelse(test = "${meta_name_replacement}" == "NULL", yes = 1, no = 2) because 1st column to use or 2nd column
                     if(sum(seq[ , ifelse(test = "${meta_name_replacement}" == "NULL", yes = 1, no = 2)] %in% meta[i2, "${meta_seq_names}"]) > 1 | sum(meta[i2, "${meta_seq_names}"] %in% seq[ , ifelse(test = "${meta_name_replacement}" == "NULL", yes = 1, no = 2)]) > 1){
-                        stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_remplacement PROCESS OF NEXTFLOW\\nIN THE METADATA FILE, A SEQUENCE NAME CANNOT MATCH SEVERAL NAMES IN THE TABLE PROVIDED BY THE sample_path PARAMETER.\\nTHE METAFILE IS: ${meta_file}\\nTHE COLUM NAME IS: ", "${meta_name_replacement}", "\\nTHE PROBLEMATIC REPLACEMENT NAME IN THE METAFILE IS: ", paste(meta[i2, "${meta_seq_names}"], collapse = " "), "\\n\\n============\\n\\n"), call. = FALSE)
+                        stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_replacement PROCESS OF NEXTFLOW\\nIN THE METADATA FILE, A SEQUENCE NAME CANNOT MATCH SEVERAL NAMES IN THE TABLE PROVIDED BY THE sample_path PARAMETER.\\nTHE METAFILE IS: ${meta_file}\\nTHE COLUM NAME IS: ", "${meta_name_replacement}", "\\nTHE PROBLEMATIC REPLACEMENT NAME IN THE METAFILE IS: ", paste(meta[i2, "${meta_seq_names}"], collapse = " "), "\\n\\n============\\n\\n"), call. = FALSE)
                     }else if(any(seq[ , ifelse(test = "${meta_name_replacement}" == "NULL", yes = 1, no = 2)] == meta[i2, "${meta_seq_names}"])){
                         if( ! (meta[i2, "${meta_legend}"] == "" | is.na(meta[i2, "${meta_legend}"]))){
                             seq[seq[ , ifelse(test = "${meta_name_replacement}" == "NULL", yes = 1, no = 2)] == meta[i2, "${meta_seq_names}"], "${meta_legend}"] <- meta[i2, "${meta_legend}"]
@@ -706,32 +706,31 @@ process seq_name_remplacement {
             # meta[ , "${meta_seq_names}"] <- meta[ , "${meta_name_replacement}"]
             # write.table(meta, file = "./metadata2.tsv", row.names = FALSE, col.names = TRUE, sep = "\\t")
             # end modification of the metadata file for the correct use of ggtree::"%<+%" in germ_tree_vizu.R that uses the column name meta_seq_names for that
-        ' |& tee -a seq_name_remplacement.log
+        ' |& tee -a seq_name_replacement.log
     fi
     """
 }
 
 
-process file_assembly {
+process data_assembly {
     label 'immcantation'
     publishDir path: "${out_path}/files", mode: 'copy', pattern: "{productive_seq.tsv}", overwrite: false
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{file_assembly.log}", overwrite: false
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{data_assembly.log}", overwrite: false
     cache 'true'
 
     input:
-    path seq_name_remplacement_ch2 // no parallelization
+    path seq_name_replacement_ch2 // no parallelization
     path distToNearest_ch
-    // chloe : path failed_clone_ch
 
     output:
-    path "productive_seq.tsv", emit: productive_ch // chloe : anciennement file_assembly_ch
-    path "file_assembly.log"
+    path "productive_seq.tsv", emit: productive_ch
+    path "data_assembly.log"
 
     script:
     """
     #!/bin/bash -ue
     Rscript -e '
-        db <- read.table("${seq_name_remplacement_ch2}", header = TRUE, sep = "\\t")
+        db <- read.table("${seq_name_replacement_ch2}", header = TRUE, sep = "\\t")
         dtn <- read.table("${distToNearest_ch}", header = TRUE, sep = "\\t")
 
 
@@ -742,43 +741,43 @@ process file_assembly {
 
 
         if( ! any(c("sequence_id", "initial_sequence_id") %in% names(db))){
-            tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE file_assembly PROCESS\\ndb SHOULD HAVE \\"sequence_id\\" AND ALSO POTENTIALLY \\"initial_sequence_id\\" AS COLUMN NAME. HERE:\\nNAMES: ", paste(names(db), collapse = " "), "\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
+            tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE data_assembly PROCESS\\ndb SHOULD HAVE \\"sequence_id\\" AND ALSO POTENTIALLY \\"initial_sequence_id\\" AS COLUMN NAME. HERE:\\nNAMES: ", paste(names(db), collapse = " "), "\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
             stop(tempo.cat)
         }else{
             tempo.col.name <- ifelse("initial_sequence_id" %in% names(db), "initial_sequence_id", "sequence_id")
         }
         if(all(c("sequence_id", "initial_sequence_id") %in% names(db))){
             if(all(db\$sequence_id == db\$initial_sequence_id)){
-                tempo.cat <- paste0("\\n\\n========\\n\\nERROR IN THE file_assembly PROCESS OF NEXTFLOW\\nTHE meta_path AND meta_name_replacement PARAMETERS ARE NOT \\"NULL\\" BUT NO SEQUENCE NAMES HAVE BEEN REPLACED WHEN USING THE meta_name_replacement COLUMN\\n\\n========\\n\\n")
+                tempo.cat <- paste0("\\n\\n========\\n\\nERROR IN THE data_assembly PROCESS OF NEXTFLOW\\nTHE meta_path AND meta_name_replacement PARAMETERS ARE NOT \\"NULL\\" BUT NO SEQUENCE NAMES HAVE BEEN REPLACED WHEN USING THE meta_name_replacement COLUMN\\n\\n========\\n\\n")
                 stop(tempo.cat)
             }
         }
         if(any(is.na(match(db[, tempo.col.name], dtn\$sequence_id)))){
-            tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE file_assembly PROCESS\\nNO NA SHOULD APPEAR AT THAT STAGE WITH match()\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
+            tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE data_assembly PROCESS\\nNO NA SHOULD APPEAR AT THAT STAGE WITH match()\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
             stop(tempo.cat)
         }
         if(sum(db[, tempo.col.name] %in% dtn\$sequence_id, na.rm = TRUE) != nrow(db)){
-            tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE file_assembly PROCESS\\nsum(db[, tempo.col.name] %in% dtn\$sequence_id, na.rm = TRUE) SHOULD BE EQUAL TO nrow(db)\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
+            tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE data_assembly PROCESS\\nsum(db[, tempo.col.name] %in% dtn\$sequence_id, na.rm = TRUE) SHOULD BE EQUAL TO nrow(db)\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
             stop(tempo.cat)
         }
         if(nrow(dtn) < nrow(db)){
-            tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE file_assembly PROCESS\\ndtn CANNOT HAVE LESS ROWS THAN db. HERE:\\ndb: ", nrow(db), "\\ndtn: ", nrow(dtn), "\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
+            tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE data_assembly PROCESS\\ndtn CANNOT HAVE LESS ROWS THAN db. HERE:\\ndb: ", nrow(db), "\\ndtn: ", nrow(dtn), "\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
             stop(tempo.cat)
         }
         # selection of rows and ordering of dtn
         tempo.dtn <- dtn[dtn\$sequence_id %in% db[, tempo.col.name], ] # nb rows of dtn reduced to the one of db
         if(nrow(tempo.dtn) != nrow(db)){
-            tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE file_assembly PROCESS\\ntempo.dtn SHOULD HAVE THE SAME NUMBER OF ROWS AS db. HERE:\\ndb: ", nrow(db), "\\ntempo.dtn: ", nrow(tempo.dtn), "\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
+            tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE data_assembly PROCESS\\ntempo.dtn SHOULD HAVE THE SAME NUMBER OF ROWS AS db. HERE:\\ndb: ", nrow(db), "\\ntempo.dtn: ", nrow(tempo.dtn), "\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
             stop(tempo.cat)
         }
         tempo.dtn <- tempo.dtn[match(db[, tempo.col.name], tempo.dtn\$sequence_id), ]
         if( ! all(db[, tempo.col.name] == tempo.dtn\$sequence_id)){
-            tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE file_assembly PROCESS\\n", tempo.col.name, " COLUMNS OF db AND sequence_id COLUMN OF dtn SHOULD BE IDENTICAL. HERE THEY ARE\\ndb\$", tempo.col.name, ":\\n", paste0(db[, tempo.col.name], collapse = ","), "\\ndtn\$sequence_id:\\n", paste0(dtn\$sequence_id, collapse = ","), "\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
+            tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE data_assembly PROCESS\\n", tempo.col.name, " COLUMNS OF db AND sequence_id COLUMN OF dtn SHOULD BE IDENTICAL. HERE THEY ARE\\ndb\$", tempo.col.name, ":\\n", paste0(db[, tempo.col.name], collapse = ","), "\\ndtn\$sequence_id:\\n", paste0(dtn\$sequence_id, collapse = ","), "\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
             stop(tempo.cat)
         }
         db3 <- data.frame(db, dist_nearest = tempo.dtn\$dist_nearest)
         if( ! "c_call" %in% names(db)){
-            tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE file_assembly PROCESS\\ndb SHOULD HAVE \\"c_call\\" AS COLUMN NAME. HERE:\\nNAMES: ", paste(names(db), collapse = " "), "\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
+            tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE data_assembly PROCESS\\ndb SHOULD HAVE \\"c_call\\" AS COLUMN NAME. HERE:\\nNAMES: ", paste(names(db), collapse = " "), "\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
             stop(tempo.cat)
         }
         # remove allele info
@@ -792,7 +791,7 @@ process file_assembly {
         db4 <- data.frame(db3, v_gene = sub_v, j_gene = sub_j, isotype_class = class, c_gene = subclass)
         # end remove allele info
         write.table(db4, file = paste0("./productive_seq.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
-    ' |& tee -a file_assembly.log
+    ' |& tee -a data_assembly.log
     """
 }
 
@@ -801,7 +800,7 @@ process metadata_check { // cannot be in germ_tree_vizu because I have to use th
     cache 'true'
 
     input:
-    path file_assembly_ch // no parallelization
+    path data_assembly_ch // no parallelization
     path meta_file
     val meta_seq_names
     val meta_name_replacement
@@ -811,7 +810,7 @@ process metadata_check { // cannot be in germ_tree_vizu because I have to use th
     """
     if [[ "${meta_file}" != "NULL" ]] ; then
         Rscript -e '
-            df <- read.table("${file_assembly_ch}", header = TRUE, sep = "\\t")
+            df <- read.table("${data_assembly_ch}", header = TRUE, sep = "\\t")
             meta <- read.table("./${meta_file}", sep = "\\t", header = TRUE)
             meta_seq_names <- "${meta_seq_names}" # conversion here because if NULL, block the code
             meta_name_replacement <- "${meta_name_replacement}" # conversion here because if NULL, block the code
@@ -859,7 +858,7 @@ process repertoire {
     cache 'true'
 
     input:
-    path file_assembly_ch // no parallelization
+    path data_assembly_ch // no parallelization
     path igblast_data_check_ch
     path cute_file
 
@@ -874,7 +873,7 @@ process repertoire {
     """
     #!/bin/bash -ue
     repertoire.R \
-"${file_assembly_ch}" \
+"${data_assembly_ch}" \
 "${igblast_data_check_ch}" \
 "${cute_file}" \
 "repertoire.log"
@@ -889,7 +888,7 @@ process get_germ_tree {
     cache 'true'
 
     input:
-    path seq_name_remplacement_ch // parallelization expected
+    path seq_name_replacement_ch // parallelization expected
     path meta_file // just to determine if metadata have been provided (TRUE means NULL) meta_file_ch not required here
     path cute_file
     val clone_nb_seq
@@ -908,15 +907,15 @@ process get_germ_tree {
     script:
     """
     #!/bin/bash -ue
-    if [[ ! -s ${seq_name_remplacement_ch} ]]; then
-        echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nEMPTY ${seq_name_remplacement_ch} FILE AS INPUT OF THE mutation_load PROCESS\\nCHECK THE mutation_load.log IN THE report FOLDER INSIDE THE OUTPUT FOLDER\\n\\n========\\n\\n"
+    if [[ ! -s ${seq_name_replacement_ch} ]]; then
+        echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nEMPTY ${seq_name_replacement_ch} FILE AS INPUT OF THE mutation_load PROCESS\\nCHECK THE mutation_load.log IN THE report FOLDER INSIDE THE OUTPUT FOLDER\\n\\n========\\n\\n"
         exit 1
     fi
-    FILENAME=\$(basename -- ${seq_name_remplacement_ch}) # recover a file name without path
+    FILENAME=\$(basename -- ${seq_name_replacement_ch}) # recover a file name without path
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a get_germ_tree.log
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a get_germ_tree.log
     get_germ_tree.R \
-"${seq_name_remplacement_ch}" \
+"${seq_name_replacement_ch}" \
 "${meta_file}" \
 "${clone_nb_seq}" \
 "${germ_tree_duplicate_seq}" \
@@ -951,7 +950,7 @@ process germ_tree_vizu {
     val germ_tree_label_outside
     val germ_tree_right_margin
     val germ_tree_legend
-    path file_assembly_ch
+    path data_assembly_ch
     path meta_file
     val meta_legend
     path cute_file
@@ -982,7 +981,7 @@ process germ_tree_vizu {
 "${germ_tree_label_outside}" \
 "${germ_tree_right_margin}" \
 "${germ_tree_legend}" \
-"${file_assembly_ch}" \
+"${data_assembly_ch}" \
 "${meta_file}" \
 "${meta_legend}" \
 "${cute_file}" \
@@ -1672,9 +1671,7 @@ workflow {
     )
     // parseDb_filtering.out.unproductive_ch.count().subscribe{n -> if ( n == 0 ){print "\n\nWARNING: EMPTY unproductive_seq.tsv FILE RETURNED FOLLOWING THE parseDb_filtering PROCESS\n\n"}else{it -> it.copyTo("${out_path}/unproductive_seq.tsv")}} // see https://www.nextflow.io/docs/latest/script.html?highlight=copyto#copy-files
     parseDb_filtering.out.select_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FILES FOLLOWING THE parseDb_filtering PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
-    // chloe : il y aura peut-être besoin de garder le collectFile pour DefineGroups (mais enlever le copy car on ne l'affiche pas dans results) (changer le nom ?)
     select_ch2 = parseDb_filtering.out.select_ch.collectFile(name: "productive_seq_init.tsv", skip: 1, keepHeader: true)
-    // chloe select_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
     parseDb_filtering.out.unselect_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nO UNPRODUCTIVE SEQUENCE FILES FOLLOWING THE parseDb_filtering PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // because an empty file must be present
     unselect_ch2 = parseDb_filtering.out.unselect_ch.collectFile(name: "unproductive_seq.tsv", skip: 1, keepHeader: true)
     unselect_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
@@ -1709,8 +1706,6 @@ workflow {
     )
     //distToNearest.out.distToNearest_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE distToNearest PROCESS\n\n========\n\n"}}
 
-    // chloe : je ne sais pas s'il faut faire les workflow graphiques (distance_hist et histogram_assembly) après ou si on
-    // chloe : peut laisser là...
 
     distance_hist(
         distToNearest.out.distToNearest_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE distToNearest PROCESS\n\n========\n\n"},
@@ -1728,41 +1723,38 @@ workflow {
     )
 
 
-    // chloe : il faut insérer seq_name_replacement et file_assembly avant les 4 process suivants :
  
-   seq_name_remplacement(
+   seq_name_replacement(
         translation.out.translation_ch,
         meta_file,
         meta_seq_names, 
         meta_name_replacement,
         meta_legend
     )
-    seq_name_remplacement.out.seq_name_remplacement_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE seq_name_remplacement PROCESS\n\n========\n\n"}}
-    seq_name_remplacement_ch2 = seq_name_remplacement.out.seq_name_remplacement_ch.collectFile(name: "replacement.tsv", skip: 1, keepHeader: true)
-    // seq_name_remplacement_ch2.subscribe{it -> it.copyTo("${out_path}")}
-    // tuple_seq_name_remplacement = new Tuple("all", seq_name_remplacement_ch2) # warning: this is not a channel but a variable now
-    seq_name_remplacement.out.seq_name_remplacement_log_ch.collectFile(name: "seq_name_remplacement.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+    seq_name_replacement.out.seq_name_replacement_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE seq_name_replacement PROCESS\n\n========\n\n"}}
+    seq_name_replacement_ch2 = seq_name_replacement.out.seq_name_replacement_ch.collectFile(name: "replacement.tsv", skip: 1, keepHeader: true)
+    // seq_name_replacement_ch2.subscribe{it -> it.copyTo("${out_path}")}
+    // tuple_seq_name_replacement = new Tuple("all", seq_name_replacement_ch2) # warning: this is not a channel but a variable now
+    seq_name_replacement.out.seq_name_replacement_log_ch.collectFile(name: "seq_name_replacement.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
 
-    file_assembly(
-        seq_name_remplacement_ch2.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE seq_name_remplacement PROCESS\n\n========\n\n"}, 
+    data_assembly(
+        seq_name_replacement_ch2.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE seq_name_replacement PROCESS\n\n========\n\n"}, 
         distToNearest.out.distToNearest_ch
-        // chloe : clone_assignment.out.failed_clone_ch
     )
-    file_assembly.out.productive_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE file_assembly PROCESS\n\n========\n\n"}}
+    data_assembly.out.productive_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE data_assembly PROCESS\n\n========\n\n"}}
 
     metadata_check(
-        file_assembly.out.productive_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE file_assembly PROCESS\n\n========\n\n"},
+        data_assembly.out.productive_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE data_assembly PROCESS\n\n========\n\n"},
         meta_file, 
         meta_seq_names, 
         meta_name_replacement,
         meta_legend
     )
 
-   // chloe : (normalement les process clonaux ajoutent eux-même les données, pas besoin de file_assembly)
 
     clone_assignment(
-        file_assembly.out.productive_ch, // chloe : sortie translation_ch du process translation => c'est un collectfile tsv a remplacer par la derniere version de la channel de productive_seq.tsv
+        data_assembly.out.productive_ch, 
         clone_model,
         clone_normalize,
         clone_distance
@@ -1875,7 +1867,7 @@ workflow {
     germ_tree_dup_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 
     tempo1_ch = Channel.of("all", "annotated", "tree") // 1 channel with 3 values (not list)
-    tempo2_ch = file_assembly.out.productive_ch.mix(file_assembly.out.productive_ch.mix(germ_tree_ch2)) // 1 channel with 3 paths (do not use flatten() -> not list)
+    tempo2_ch = data_assembly.out.productive_ch.mix(data_assembly.out.productive_ch.mix(germ_tree_ch2)) // 1 channel with 3 paths (do not use flatten() -> not list)
     tempo3_ch = tempo1_ch.merge(tempo2_ch) // 3 lists
 
     donut(
