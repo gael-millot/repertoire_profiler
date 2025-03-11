@@ -1875,7 +1875,7 @@ workflow {
     germ_tree_dup_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 
     tempo1_ch = Channel.of("all", "annotated", "tree") // 1 channel with 3 values (not list)
-    tempo2_ch = file_assembly.out.productive_ch.mix(seq_name_remplacement_ch2.mix(germ_tree_ch2)) // 1 channel with 3 paths (do not use flatten() -> not list)
+    tempo2_ch = file_assembly.out.productive_ch.mix(file_assembly.out.productive_ch.mix(germ_tree_ch2)) // 1 channel with 3 paths (do not use flatten() -> not list)
     tempo3_ch = tempo1_ch.merge(tempo2_ch) // 3 lists
 
     donut(
@@ -1908,7 +1908,7 @@ workflow {
     donut_tsv_ch2 = donut.out.donut_tsv_ch.collectFile(name: "donut_stats.tsv", skip: 1, keepHeader: true)
     donut_tsv_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 
-/*
+
 
     donut_assembly(
         donut_pdf_ch2
@@ -1917,11 +1917,11 @@ workflow {
     donut_assembly.out.donut_assembly_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}}
 
 
-
     Reformat(
         aa_tsv_ch2
     )
     fasta = Reformat.out.aa_fasta_ch
+
 
     DefineGroups(
         fasta,
@@ -1929,11 +1929,13 @@ workflow {
     )
     fastagroups = DefineGroups.out.groups_ch.flatten()
 
+
     Align(
         fastagroups,
         phylo_tree_heavy
     )
     align = Align.out.aligned_groups_ch
+
 
     NbSequences(
         align
@@ -1946,16 +1948,19 @@ workflow {
     )
     tree = Tree.out.tree_file
 
+
     ProcessMeta(
         meta_file
     )
     itolmeta = ProcessMeta.out.itol_out
+
 
     ITOL(
         tree,
         itolmeta,
         phylo_tree_itolkey
     )
+
 
     print_report(
         template_rmd,
@@ -1971,12 +1976,11 @@ workflow {
     )
 
 
+
     backup(
         config_file, 
         log_file
     )
-
-    */
 
 }
 

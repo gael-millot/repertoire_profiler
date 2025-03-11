@@ -403,7 +403,7 @@ tempo.title <- paste0(
         paste0(
             "Donut plot of the all-passed sequences grouped by same V and J alleles\nWarning: this is different from clonal groups since the latter must have also the same CDR3 length\n\n",
             "Kind of sequences: ", 
-            "all the all-passed ones (see the corresponding all-passed_seq.tsv"
+            "all the productive ones (see the corresponding productive_seq.tsv"
         ), 
         ifelse(
             kind == "tree", 
@@ -417,7 +417,7 @@ tempo.title <- paste0(
                 paste0(
                     "Donut plot of the all-passed sequences grouped by same V and J alleles, for which at least one name replacement is present\n(according to the meta_name_replacement parameter of the nextflow.config file)\nWarning: this is different from clonal groups since the latter must have also the same CDR3 length\n\n",
                     "Kind of sequences: ", 
-                    "all the all-passed ones (see the corresponding all-passed_seq.tsv"
+                    "annotated productive ones (see the corresponding productive_seq.tsv"
                 ), 
                 stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 4 IN donut.R for kind THAT CAN ONLY BE \"all\", \"annotated\" OR \"tree\".\nHER IT IS: ", kind, "\n\n================\n\n"))
             )
@@ -427,9 +427,18 @@ tempo.title <- paste0(
 
 
 if(nrow(obs) > 0){
-    tempo.v <- obs$germline_v_call
-    tempo.j <- obs$germline_j_call
+    
+    if(kind == "tree"){
+        tempo.v <- obs$germline_v_call
+        tempo.j <- obs$germline_j_call
+        clone.id <-  obs$clone_id
+    }else{
+        tempo.v <- obs$v_call
+        tempo.j <- obs$j_call
+    }
+
     chain <- unique(substr(tempo.j, 1, 3)) # extract the IGH or IGK name
+    
     #inactivated because now chain can be both IGL and IGK
     # if(length(chain) != 1){
         # stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 4 IN donut.R for kind ", kind, ": chain MUST BE A SINGLE VALUE.\nHERE IT IS: ", paste(chain, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) 
@@ -444,14 +453,13 @@ if(nrow(obs) > 0){
     tempo.v <- substring(tempo.v, 4)
     tempo.j <- substring(tempo.j, 4)
     clone.name <- paste0(tempo.v, "_", tempo.j)
-    clone.id <-  obs$clone_id
 
 
     obs2 <- data.frame(table(clone.name))
-    names(obs2)[1] <- "Germline_Clone_Name"
+    names(obs2)[1] <- "V_J_allele"
     obs2 <- data.frame(obs2, Prop = obs2$Freq / sum(obs2$Freq), kind = kind)
-    obs2$Germline_Clone_Name <- factor(obs2$Germline_Clone_Name, levels = obs2$Germline_Clone_Name[order(obs2$Prop, decreasing = TRUE)]) # reorder so that the donut is according to decreasing proportion starting at the top in a clockwise direction
-    obs2 <- obs2[order(as.numeric(obs2$Germline_Clone_Name), decreasing = FALSE), ] # obs2 with rows in decreasing order, according to Prop
+    obs2$V_J_allele <- factor(obs2$V_J_allele, levels = obs2$V_J_allele[order(obs2$Prop, decreasing = TRUE)]) # reorder so that the donut is according to decreasing proportion starting at the top in a clockwise direction
+    obs2 <- obs2[order(as.numeric(obs2$V_J_allele), decreasing = FALSE), ] # obs2 with rows in decreasing order, according to Prop
     # # warning: I can use all.annotation.log because I have duplicated the first column of the dataset in the second column, in order to change the name in the first column with metadata. If all(obs[ , 1] == obs[ , 2]) == TRUE, it means no annotation added
     if(grepl(x = names(obs)[2], pattern = "^initial_")){ # means that fonctional annotations are present
         annotation.log <- obs[ , 1] == obs[ , 2]
@@ -463,7 +471,7 @@ if(nrow(obs) > 0){
         tempo.labels <- obs[ , 1]
         tempo.labels[annotation.log] <- NA
         tempo.data1 <- aggregate(tempo.labels ~ clone.name, FUN = function(x){paste(x, collapse = ",")})
-        obs2 <- data.frame(obs2, labels = tempo.data1$tempo.labels[match(obs2$Germline_Clone_Name, tempo.data1$clone.name)])
+        obs2 <- data.frame(obs2, labels = tempo.data1$tempo.labels[match(obs2$V_J_allele, tempo.data1$clone.name)])
     }
 
 
@@ -495,7 +503,7 @@ if(nrow(obs) > 0){
             tempo.plot <- fun_gg_donut(
                 data1 = obs3, # select only the classes with annotations if kind == "annotated" & all.annotation.log != TRUE
                 freq = "Freq", 
-                categ = "Germline_Clone_Name", 
+                categ = "V_J_allele", 
                 fill.palette = donut_palette,
                 fill.color = NULL, 
                 hole.size = donut_hole_size, 
