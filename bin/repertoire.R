@@ -69,7 +69,7 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
         stop(paste0("\n\n================\n\nERROR IN repertoire.R\nTHE args OBJECT HAS NA\n\n================\n\n"), call. = FALSE)
     }
     tempo.arg.names <- c(
-        "file_assembly_ch", 
+        "all_passed_seq", 
         "repertoire_names_ch", 
         "cute", 
         "log"
@@ -97,7 +97,7 @@ rm(tempo.cat)
 
 
 # setwd("C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/06/13ac33a3d708d2d2b2e63dab67370b")
-# file_assembly_ch <- "all_passed_seq.tsv"
+# all_passed_seq <- "all_passed_seq.tsv"
 # repertoire_names_ch <- "imgt_human_IGHD.tsv imgt_human_IGHJ.tsv imgt_human_IGHV.tsv imgt_human_IGHC.tsv"
 # cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.4.0/cute_little_R_functions.R"
 # log = "repertoire.log"
@@ -117,7 +117,7 @@ param.list <- c(
     "run.way",
     "tempo.arg.names", 
     if(run.way == "SCRIPT"){"command"},   
-    "file_assembly_ch", 
+    "all_passed_seq", 
     "repertoire_names_ch", 
     "cute", 
     "log"
@@ -434,7 +434,7 @@ if(any(arg.check) == TRUE){ # normally no NA
 # end management of NA arguments
 # management of NULL arguments, WARNING: only for repertoire.R because NULL is "NULL" in the nextflow.config file
 tempo.arg <-c( 
-    "file_assembly_ch", 
+    "all_passed_seq", 
     "repertoire_names_ch", 
     "log"
 )
@@ -524,7 +524,7 @@ fun_report(data = paste0("\n\n################################ RUNNING\n\n"), ou
 ################ Data import
 
 
-df <- read.table(file_assembly_ch, header = TRUE, sep = "\t", stringsAsFactors = FALSE, comment.char = "")
+df <- read.table(all_passed_seq, header = TRUE, sep = "\t", stringsAsFactors = FALSE, comment.char = "")
 
 # processing of the imgt database files
 tempo <- strsplit(rep_file_names, split = "[_.]")
@@ -556,10 +556,10 @@ if( ! all(gene_obs %in% c("v_gene", "j_gene", "c_gene"))){
 }
 
 if( ! all(allele_obs %in% names(df))){
-    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 7 IN repertoire.R:\nPROBLEM WITH THE NAMES OF file_assembly_ch THAT MUST CONTAIN \"v_call\", \"j_call\", \"c_call\"\nHERE IT IS:\n", paste(names(df), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 7 IN repertoire.R:\nPROBLEM WITH THE NAMES OF all_passed_seq THAT MUST CONTAIN \"v_call\", \"j_call\", \"c_call\"\nHERE IT IS:\n", paste(names(df), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
 }
 if( ! all(gene_obs %in% names(df))){
-    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 8 IN repertoire.R:\nPROBLEM WITH THE NAMES OF file_assembly_ch THAT MUST CONTAIN \"v_gene\", \"j_gene\" OR \"c_gene\"\nHERE IT IS:\n", paste(names(df), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 8 IN repertoire.R:\nPROBLEM WITH THE NAMES OF all_passed_seq THAT MUST CONTAIN \"v_gene\", \"j_gene\" OR \"c_gene\"\nHERE IT IS:\n", paste(names(df), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
 }
 if(is.null(names(allele))){
     stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 9 IN repertoire.R:\nNO NAMES OF allele CAN BE NULL:", paste(names(allele), collapse = "\n"), "\nSEE rep_file_names:\n", paste(rep_file_names, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
@@ -576,7 +576,7 @@ if(is.null(names(gene))){
 ######## observed data
 
 if(grepl(x = names(df)[2], pattern = "^initial_")){ # means that fonctional annotations are present
-    annotation.log <- df[ , 1] == df[ , 2]
+    annotation.log <- df[ , 1] == df[ , 2] 
     all.annotation.log <- all(annotation.log) # if one difference between df[ , 1] == df[ , 2], then all.annotation.log is FALSE
 }else{
     all.annotation.log <- TRUE
@@ -586,7 +586,7 @@ if(all.annotation.log == FALSE){
 }
 
 # take the first annotation if several in the tempo column
-if(file_assembly_ch == "all_passed_seq.tsv"){
+if(all_passed_seq == "all_passed_seq.tsv"){
     tempo.several.annot.log <- logical(length = nrow(df)) # only false
     tempo <- c(allele_obs, gene_obs)
     for(i1 in 1:length(tempo)){
