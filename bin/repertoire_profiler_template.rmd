@@ -28,9 +28,9 @@ Number of initial input sequences : ```r params$nb_input```
 
 ### Igblast sequence annotation
 
-[Succes](igblast_aligned_seq.tsv) number of sequences : ```r params$nb_seq_aligned```
+[Succes](files/igblast_aligned_seq.tsv) number of sequences : ```r params$nb_seq_aligned```
 
-[Failed](igblast_unaligned_seq.tsv) number of sequences : ```r params$nb_seq_not_aligned```
+[Failed](files/igblast_unaligned_seq.tsv) number of sequences : ```r params$nb_seq_not_aligned```
 
 Total : ```r params$nb_seq_aligned + params$nb_seq_not_aligned```
 
@@ -42,9 +42,9 @@ Success ratio : ```r base::round(params$nb_seq_aligned / (params$nb_seq_aligned 
 
 **Productive sequences** are : (1) coding region has an open reading frame, (2) no defect in the start codon, splicing sites or regulatory elements, (3) no internal stop codons, (4) an in-frame junction region. <br>
 
-Number of [productive sequences](productive_seq.tsv) : ```r params$nb_productive```
+Number of [productive sequences](files/productive_seq.tsv) : ```r params$nb_productive```
 
-Number of [unproductive sequences](unproductive_seq.tsv) : ```r params$nb_unproductive```
+Number of [unproductive sequences](files/unproductive_seq.tsv) : ```r params$nb_unproductive```
 
 Productiveness ratio : ```r base::round(params$nb_productive / (params$nb_productive + params$nb_unproductive), 2)```
 
@@ -55,9 +55,9 @@ Productiveness ratio : ```r base::round(params$nb_productive / (params$nb_produc
 **Passed sequences** are productive sequences with the Igblast annotations, annotated with additionnal features : germline clustering (clone ID), allele reannotation (germinal_v_call and germinal_j_call columns), mutation load, distance and sequence nickname (annotation from the metadata file) added. <br>
 Some sequences from the productive file can **fail to be clone assigned**, and will not be in the all_passed file. 
 
-Number of [passed sequences](all_passed_seq.tsv) : ```r params$nb_all_passed```
+Number of [passed sequences](files/all_passed_seq.tsv) : ```r params$nb_all_passed```
 
-Number of [failed clone-assigned sequences](non_clone_assigned_sequence.tsv) : ```r params$nb_failed_clone```
+Number of [failed clone-assigned sequences](files/non_clone_assigned_sequence.tsv) : ```r params$nb_failed_clone```
 
 Passing ratio : ```r base::round(params$nb_all_passed / (params$nb_all_passed + params$nb_failed_clone), 2)```
 

@@ -85,6 +85,7 @@ Optional installation (to avoid reccurent message) of:<br />
 [Gocryptfs](https://github.com/rfjakob/gocryptfs), `sudo apt install gocryptfs` for Linux ubuntu<br /> 
 
 <br />
+
 ### 2. Local running (personal computer)
 
 #### 2.1. *main.nf* file in the personal computer
@@ -220,11 +221,14 @@ Mandatory elements:
 <br /><br />
 | repertoire_profiler_<UNIQUE_ID> folders and files | Description |
 | :--- | :--- |
+| **report.html** | HTML report presenting the main results of the data processing. Currently, the report is in its early implementation stage and only contains a few basic details. Its content will be gradually expanded to provide a more comprehensive analysis.
 | **reports** | Folder containing all the reports of the different processes, as well as the *nextflow.config* file used and the map of the processes execution (*nf_dag.png* file). |
 | **repertoires** | Folder containing the repertoires, i.e., contingency tables of the V, J and C (constant) allele and gene usage from the *all_passed_seq.tsv* file (see below). Warning: the script currently takes the first annotation of the imgt annotation if several are presents in the v_call, j_call and c_call columns of the *all_passed_seq.tsv* file. (e.g., v_call with IGKV1-39\*01,IGKV1D-39\*01), so that contingencies are identical to those from the donut frequencies, that use germline_v_call and germline_j_call columns (allele reassignment by the CreateGermlines.py tool of immcantation) |
 | **png** | Folder containing the graphs in png format. |
 | **svg** | Folder containing the graphs in svg vectorial format. |
 | **RData** | Folder containing, for each clonal group, objects that can be used in R to further analyze of plot the data:<br /><ul><li>db: tibble data frame resulting from the import by the alakazam::readChangeoDb() function<br /></li><li>clones: db in the airClone format<br /></li><li>trees: output of the dowser::getTrees() function using the clones object as input (igphylm tree)</li><br /><br />Also contains the all_trees.RData file that combine the trees R objects of the different files in a single trees object. |
+| **phylo** | Folder containing amino-acid sequences in fasta files. Each fasta file regroups the amino-acid sequences that come from the same V\|J recombination. |
+| **files** | Folder containing **all the files** described below : |
 | **seq_distance.pdf** | Distribution of the distances between the two nearest sequences (see the *nearest_distance* column in the *all_passed_seq.tsv* file). |
 | **donuts.pdf** | donut plots showing the frequency of sequences per clonal groups, among:<br /><ul><li>all: all the passed sequences (*all_passed_seq.tsv* output file).<br /></li><li>annotated: as the "all" donut but using all the passed sequences that have been annotated using the meta_name_replacement parameter of the nextflow.config file if not "NULL".<br /></li><li>trees: all the sequences used for germline trees (*germ_tree_seq.tsv* output file).</li> |
 | **\*_repertoire.pdf** | heatmap of the files from the *repertoires* folder (see above), showing the frequency of alleles and genes used among all the all passed sequences ("all"), non empty cells ("non-zero") and "annotated" sequences (if metadata are provided). Non-zero means that unused alleles are removed from the heatmap (empty row or column). Warning: to build the repertoire contingencies, the script currently takes the first annotation of the imgt annotation if several are presents in the v_call, j_call or c_call columns of the *all_passed_seq.tsv* file (see the *all_passed_seq_several_annot_igmt.tsv* file below) |
@@ -243,7 +247,6 @@ Mandatory elements:
 | **germ_tree_seq.tsv** | Sequences of the *all_passed_seq.tsv* file used in the germline tree analysis (clonal group with at least n sequences, n being set by the nb_seq_per_clone parameter of the *nextflow.config* file). |
 | **germ_tree_dismissed_seq.tsv** | Sequences of the *all_passed_seq.tsv* file not used in the germline tree analysis (clonal group with less than n sequences, n being set by the nb_seq_per_clone parameter of the *nextflow.config* file). |
 | **germ_tree_dup_seq_not_displayed.tsv** | Sequences file used in the germline tree analysis but not displayed in the graph, (1) because strictly identical to another sequence already in the tree and (2) because the tree_duplicate_seq parameter of the *nextflow.config* file has been set to "FALSE". |
-| **phylo** | Folder containing amino-acid sequences in fasta files. Each fasta file regroups the amino-acid sequences that come from the same V\|J recombination. |
 | **\*_align.fasta.treefile** | Phylogenic trees in newick format for each sequence group in the phylo file. This tree is not constructed when there are less than 4 sequences in 1 group. |
 | **\*_align.fasta.log** | Contains execution information of IQTree, used for constructing the phylogenic trees. Useful for troubleshooting. |
 | **\*_align.fasta_itol_url.txt** | URL access to each phylogenic tree (*\*_align.fasta.treefile*) uploaded on iTOL. |
