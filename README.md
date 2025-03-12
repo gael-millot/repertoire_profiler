@@ -32,7 +32,7 @@
 ## WARNINGS
 
 - Right now, only dedicated to the analysis of VDJ repertoires (corresponding to the germlines/imgt/*\<SPECIES\>*/vdj folder of the [IMGT database](https://www.imgt.org/IMGTrepertoire/Proteins/index.php#C).
-- To make the repertoires contingency tables and heatmaps, the script currently takes the first annotation of the imgt annotation if several are presents in the *v_call* or *j_call* column of the *all_passed_seq.tsv* file.
+- To make the repertoires contingency tables and heatmaps, as well as donut plots, the script currently takes the first annotation of the imgt annotation if several are presents in the *v_call*, *j_call* or *c_call* column of the *productive_seq.tsv* file.
 
 <br /><br />
 ## CONTENT
