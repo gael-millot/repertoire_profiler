@@ -1001,7 +1001,7 @@ process donut {
     cache 'true'
 
     input:
-    tuple val(kind), path(data) // 3 parallelization expected
+    tuple val(kind), path(data), val(col) // 12 parallelization expected
     val donut_palette
     val donut_hole_size
     val donut_hole_text
@@ -1035,6 +1035,7 @@ process donut {
     donut.R \
 "${data}" \
 "${kind}" \
+"${col}" \
 "${donut_palette}" \
 "${donut_hole_size}" \
 "${donut_hole_text}" \
@@ -1869,9 +1870,12 @@ workflow {
     tempo1_ch = Channel.of("all", "annotated", "tree") // 1 channel with 3 values (not list)
     tempo2_ch = data_assembly.out.productive_ch.mix(data_assembly.out.productive_ch.mix(germ_tree_ch2)) // 1 channel with 3 paths (do not use flatten() -> not list)
     tempo3_ch = tempo1_ch.merge(tempo2_ch) // 3 lists
+    tempo4_ch = Channel.of("vj_allele", "c_allele", "vj_gene", "c_gene")
+    tempo5_ch = tempo3_ch.combine(tempo4_ch) // 12 tuples
+
 
     donut(
-        tempo3_ch,
+        tempo5_ch,
         donut_palette,
         donut_hole_size,
         donut_hole_text,
@@ -1966,6 +1970,8 @@ workflow {
         donut.out.donuts_png.collect(),
         repertoire.out.repertoire_png.collect()
     )
+
+    
 
 
 

@@ -68,9 +68,9 @@ Passing ratio : ```r base::round(params$nb_all_passed / (params$nb_all_passed + 
 <br>
 
 <div style="display: flex; justify-content: space-around;">
-  <img src="png/all_donutchart.png" width="33%" />
-  <img src="png/annotated_donutchart.png" width="33%" />
-  <img src="png/tree_donutchart.png" width="33%" />
+  <img src="png/vj_allele_all_donutchart.png" width="33%" />
+  <img src="png/vj_allele_annotated_donutchart.png" width="33%" />
+  <img src="png/vj_allele_tree_donutchart.png" width="33%" />
 </div>
 
 <br>
