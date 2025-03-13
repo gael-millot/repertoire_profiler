@@ -460,7 +460,6 @@ if(nrow(obs) > 0){
             tempo.primary <- obs$c_gene # temporary because there is no germline_c_gene column
             tempo.secondary <- NULL
         }
-        clone.id <-  obs$clone_id
     }else{
         if (col == "vj_allele") {
             tempo.primary <- obs$v_call
