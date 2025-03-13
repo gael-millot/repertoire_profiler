@@ -159,8 +159,8 @@ process igblast {
 
     output:
     path "*_igblast_db-pass.tsv", emit: tsv_ch1, optional: true
-    path "igblast_unaligned_seq.tsv", emit: unaligned_seq_ch
-    path "igblast_aligned_seq.tsv", emit: aligned_seq_ch
+    path "igblast_unaligned_seq_name.tsv", emit: unaligned_seq_ch
+    path "igblast_aligned_seq_name.tsv", emit: aligned_seq_ch
     path "*.log", emit: log_ch, optional: true
 
     script:
@@ -211,11 +211,11 @@ process igblast {
     fi
     # printing if no tsv file made
     if [[ ! -f ./\${FILE}_igblast_db-pass.tsv ]] ; then
-        echo "\${FILENAME}" | cat > igblast_unaligned_seq.tsv
-        echo -n "" | cat > igblast_aligned_seq.tsv
+        echo "\${FILENAME}" | cat > igblast_unaligned_seq_name.tsv
+        echo -n "" | cat > igblast_aligned_seq_name.tsv
     else
-        echo "\${FILENAME}" | cat > igblast_aligned_seq.tsv
-        echo -n "" | cat > igblast_unaligned_seq.tsv
+        echo "\${FILENAME}" | cat > igblast_aligned_seq_name.tsv
+        echo -n "" | cat > igblast_unaligned_seq_name.tsv
     fi
     """
     // write ${} between "" to make a single argument when the variable is made of several values separated by a space. Otherwise, several arguments will be considered
@@ -280,7 +280,7 @@ process translation {
     val igblast_aa
 
     output:
-    path "translation.tsv", optional: true, emit: translation_ch // productive file with column tsequence_alignment_aa added
+    path "translation.tsv", optional: true, emit: translation_ch // productive file with column sequence_alignment_aa added
     path "aligned_seq/*.*", optional: true
     path "aa.tsv", optional: true, emit: aa_tsv_ch
     path "aa/*.*", optional: true
@@ -622,7 +622,7 @@ process seq_name_replacement {
     cache 'true'
 
     input:
-    path mutation_load_ch // parallelization expected
+    path translation_ch // parallelization expected
     path meta_file
     val meta_seq_names
     val meta_name_replacement
@@ -635,7 +635,7 @@ process seq_name_replacement {
     script:
     """
     #!/bin/bash -ue
-    FILENAME=\$(basename -- ${mutation_load_ch}) # recover a file name without path
+    FILENAME=\$(basename -- ${translation_ch}) # recover a file name without path
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a seq_name_replacement.log
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a seq_name_replacement.log
     # check first that the data file does not have the second column name starting by "initial_". Otherwise, with create unproper behavior in donut
@@ -644,19 +644,19 @@ process seq_name_replacement {
         echo -n "" > NULL # new hard file that can be sent into the channel
         chmod 777 NULL
         Rscript -e '
-            seq <- read.table("./${mutation_load_ch}", sep = "\\t", header = TRUE)
+            seq <- read.table("./${translation_ch}", sep = "\\t", header = TRUE)
             if(grepl(x = names(seq)[2], pattern = "^initial_")){
                 stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_replacement PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS \\"NULL\\", THEN THE SECOND COLUMN OF THE DATA IN THE sample_path PARAMETER CANNOT HAVE THE NAME OF THE SECOND COLUNM STARTING BY \\"initial_\\"\\n\\n============\\n\\n"), call. = FALSE)
             }
         ' |& tee -a seq_name_replacement.log
         IFS='_' read -r -a TEMPO <<< "\${FILENAME}" # string split into array
-        cat ${mutation_load_ch} > ./\${TEMPO[0]}_renamed_seq.tsv |& tee -a seq_name_replacement.log
+        cat ${translation_ch} > ./\${TEMPO[0]}_renamed_seq.tsv |& tee -a seq_name_replacement.log
     else
         # if [[ "${meta_file}" != "NULL" && "${meta_name_replacement}" != "NULL" ]] ; then # or [[ "${meta_file}" -ne "NULL" && "${meta_name_replacement}" -ne "NULL" ]], but not !=
         Rscript -e '
             meta <- read.table("./${meta_file}", sep = "\\t", header = TRUE)
-            seq <- read.table("./${mutation_load_ch}", sep = "\\t", header = TRUE)
-            id <- seq[1, 1] # Extract the name of the sequence
+            seq <- read.table("./${translation_ch}", sep = "\\t", header = TRUE)
+            id <- seq[1, 1] # Extract the name of the colum one of seq
             if( ! "${meta_seq_names}" %in% names(meta)){
                 stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_replacement PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\", THEN THE meta_seq_names PARAMETER MUST BE A COLUMN NAME OF THE METADATA FILE.\\n\\n============\\n\\n"), call. = FALSE)
             }
@@ -665,9 +665,6 @@ process seq_name_replacement {
             }
             if("${meta_name_replacement}" != "NULL"){
                 if( ! "${meta_name_replacement}" %in% names(meta)){
-                    stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_replacement PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\ AND IF THE meta_name_replacement PARAMETER IS NOT \\"NULL\\", THEN IT MUST BE A COLUMN NAME OF THE METADATA FILE.\\n\\n============\\n\\n"), call. = FALSE)
-                }
-                if( ! any(names(meta) %in% "${meta_name_replacement}")){
                     stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_replacement PROCESS OF NEXTFLOW\\nIF NOT \\"NULL\\", THE meta_name_replacement PARAMETER MUST BE A COLUMN NAME OF THE meta_path PARAMETER (METADATA FILE): ", "${meta_name_replacement}", "\\n\\n============\\n\\n"), call. = FALSE)
                 }
                 seq <- data.frame(seq[1], tempo = seq[1], seq[2:length(seq)]) # the second column is created to keep the initial sequence names, before replacement
@@ -681,7 +678,6 @@ process seq_name_replacement {
                     }
                 }
                 names(seq)[2] <- paste0("initial_", names(seq)[1])
-                names(seq)[1] <- names(seq)[1]
             }
             if("${meta_legend}" != "NULL"){
                 if( ! "${meta_legend}" %in% names(meta)){
@@ -858,7 +854,7 @@ process repertoire {
     cache 'true'
 
     input:
-    path data_assembly_ch // no parallelization
+    path seq_name_replacement_ch2 // no parallelization
     path igblast_data_check_ch
     path cute_file
 
@@ -873,7 +869,7 @@ process repertoire {
     """
     #!/bin/bash -ue
     repertoire.R \
-"${data_assembly_ch}" \
+"${seq_name_replacement_ch2}" \
 "${igblast_data_check_ch}" \
 "${cute_file}" \
 "repertoire.log"
@@ -1309,12 +1305,7 @@ process print_report{
 
 workflow {
 
-    //////// Options of nextflow run
-
     print("\n\nINITIATION TIME: ${workflow.start}")
-
-    //////// end Options of nextflow run
-
 
     //////// Options of nextflow run
 
@@ -1584,7 +1575,7 @@ workflow {
     if(igblast_variable_ref_files =~ /^.*IG(K|L)V.*$/){
         print("\n\nWARNING:\nLIGHT CHAIN DETECTED IN THE igblast_variable_ref_files parameter.\nBUT CLONAL GROUPING IS GENERALLY RESTRICTED TO HEAVY CHAIN SEQUENCES, AS THE DIVERSITY OF LIGHT CHAINS IS NOT SUFFICIENT TO DISTINGUISH CLONES WITH REASONABLE CERTAINTY")
     }
-    print("\n\nWARNING:\nTO MAKE THE REPERTOIRES, THE SCRIPT CURRENTLY TAKES THE FIRST ANNOTATION OF THE IMGT ANNOTATION IF SEVERAL ARE PRESENTS IN THE v_call, j_call OR c_call COLUMN OF THE all_passed_seq.tsv FILE")
+    print("\n\nWARNING:\nTO MAKE THE REPERTOIRES AND DONUTS, THE SCRIPT CURRENTLY TAKES THE FIRST ANNOTATION OF THE IMGT ANNOTATION IF SEVERAL ARE PRESENTS IN THE v_call, j_call OR c_call COLUMN OF THE productive_seq.tsv FILE")
     print("\n\n")
 
 
@@ -1651,17 +1642,17 @@ workflow {
     igblast.out.tsv_ch1.count().subscribe{ n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE igblast PROCESS\n\nCHECK THAT THE igblast_organism, igblast_loci AND igblast_variable_ref_files ARE CORRECTLY SET IN THE repertoire_profiler.config FILE\n\n========\n\n"}}
     tsv_ch2 = igblast.out.tsv_ch1.collectFile(name: "all_igblast_seq.tsv", skip: 1, keepHeader: true)
     igblast.out.aligned_seq_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\n0 ALIGNED SEQ FILES RETURNED BY THE igblast PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
-    aligned_seq_ch2 = igblast.out.aligned_seq_ch.collectFile(name: "igblast_aligned_seq.tsv")
+    aligned_seq_ch2 = igblast.out.aligned_seq_ch.collectFile(name: "igblast_aligned_seq_name.tsv")
     aligned_seq_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
     igblast.out.unaligned_seq_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\n0 UNALIGNED SEQ FILES RETURNED BY THE igblast PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
-    unaligned_seq_ch2 = igblast.out.unaligned_seq_ch.collectFile(name: "igblast_unaligned_seq.tsv") // because an empty file must be present
+    unaligned_seq_ch2 = igblast.out.unaligned_seq_ch.collectFile(name: "igblast_unaligned_seq_name.tsv") // because an empty file must be present
     unaligned_seq_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
     nb1 = aligned_seq_ch2.countLines() 
     nb2 =  unaligned_seq_ch2.countLines()
     // nb1.view()
     //nb1.view()
     //fs_ch.count().view()
-    fs_ch.count().combine(nb1).combine(nb2).subscribe{n,n1,n2 -> if(n != n1 + n2){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE igblast_aligned_seq.tsv (${n1}) AND igblast_unaligned_seq.tsv (${n2}) IS NOT EQUAL TO THE NUMBER OF SUBMITTED FASTA FILES (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
+    fs_ch.count().combine(nb1).combine(nb2).subscribe{n,n1,n2 -> if(n != n1 + n2){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE igblast_aligned_seq.tsv (${n1}) AND igblast_unaligned_seq_name.tsv (${n2}) IS NOT EQUAL TO THE NUMBER OF SUBMITTED FASTA FILES (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
     igblast.out.log_ch.collectFile(name: "igblast_report.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
 
