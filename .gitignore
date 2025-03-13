@@ -2,7 +2,9 @@
 dataset/
 dev/
 example_of_results/
+results_example/
 results/
 work/
 singularity/
-.nextflow*
+.nextflow*/
+.mailmap
