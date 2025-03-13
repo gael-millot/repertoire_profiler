@@ -69,7 +69,7 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
         stop(paste0("\n\n================\n\nERROR IN get_germ_tree.R\nTHE args OBJECT HAS NA\n\n================\n\n"), call. = FALSE)
     }
     tempo.arg.names <- c(
-        "seq_name_remplacement_ch", 
+        "mutation_load_ch", 
         "meta_file", 
         "clone_nb_seq", 
         "germ_tree_duplicate_seq", 
@@ -111,7 +111,7 @@ rm(tempo.cat)
 # getwd() # to check that we are indeed in /caca/dataset/fd7f938fe6ebcb2bdbefb2334d45c6/
 # copy-paste this code:
 
-# seq_name_remplacement_ch = "17_renamed_seq.tsv"
+# mutation_load_ch = "17_renamed_seq.tsv"
 # germ_tree_duplicate_seq = "FALSE" 
 # meta_file = "metadata_sort1.tsv"
 # clone_nb_seq = "3"
@@ -134,7 +134,7 @@ param.list <- c(
     "run.way",
     "tempo.arg.names", 
     if(run.way == "SCRIPT"){"command"}, 
-    "seq_name_remplacement_ch", 
+    "mutation_load_ch", 
     "meta_file", 
     "clone_nb_seq", 
     "germ_tree_duplicate_seq", 
@@ -253,7 +253,7 @@ if(any(arg.check) == TRUE){ # normally no NA
 # end management of NA arguments
 # management of NULL arguments, WARNING: only for get_germ_tree.R because NULL is "NULL" in the nextflow.config file
 tempo.arg <-c(
-    "seq_name_remplacement_ch", 
+    "mutation_load_ch", 
     "meta_file", 
     "clone_nb_seq", 
     "germ_tree_duplicate_seq", 
@@ -283,8 +283,8 @@ checked.arg.names2 <- NULL # for function debbuging: used by r_debugging_tools
 ee <- expression(arg.check2 <- c(arg.check2, tempo$problem) , text.check2 <- c(text.check2, tempo$text) , checked.arg.names2 <- c(checked.arg.names2, tempo$object.name))
 
 
-if( ! file.exists(seq_name_remplacement_ch)){
-    tempo.cat <- paste0("ERROR IN get_germ_tree.R:\nTHE seq_name_remplacement_ch PARAMETER MUST BE A VALID PATH OF A FILE IF NOT \"NULL\"\nHERE IT IS: \n", paste0(seq_name_remplacement_ch, collapse = " "))
+if( ! file.exists(mutation_load_ch)){
+    tempo.cat <- paste0("ERROR IN get_germ_tree.R:\nTHE mutation_load_ch PARAMETER MUST BE A VALID PATH OF A FILE IF NOT \"NULL\"\nHERE IT IS: \n", paste0(mutation_load_ch, collapse = " "))
     text.check2 <- c(text.check2, tempo.cat)
     arg.check2 <- c(arg.check2, TRUE)
 }
@@ -361,8 +361,8 @@ fun_report(data = paste0("\n\n################################ RUNNING\n\n"), ou
 
 
 
-clone.id <- strsplit(seq_name_remplacement_ch, split = "_")[[1]][1] # name of the file split into array with the first being the clone ID
-db <- alakazam::readChangeoDb(seq_name_remplacement_ch)
+clone.id <- strsplit(mutation_load_ch, split = "_")[[1]][1] # name of the file split into array with the first being the clone ID
+db <- alakazam::readChangeoDb(mutation_load_ch)
 db2 <- tibble::add_column(db, collapsed = db[[1]]) # add a column to detected collapsed identical sequences names
 clones <- dowser::formatClones(
     data = db2, 
@@ -377,13 +377,13 @@ clones <- dowser::formatClones(
 )
 if(nrow(clones$data[[1]]@data) < clone_nb_seq){
     cat(paste0("\nLESS THAN ", clone_nb_seq, " DIFFERENT SEQUENCES SET BY THE clone_nb_seq PARAMETER OF THE repertoire_profiler.config FILE: NO TREE COMPUTED\n"))
-    file.copy(from = paste0("./", seq_name_remplacement_ch), to = "./germ_tree_dismissed_seq.tsv")
+    file.copy(from = paste0("./", mutation_load_ch), to = "./germ_tree_dismissed_seq.tsv")
     write.table(matrix(names(db), nrow = 1), file = "./seq_for_germ_tree.tsv", row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t") # empty file
     file.create("./germ_tree_clone_id.tsv") # empty file
     write.table(clone.id, file = "./germ_tree_dismissed_clone_id.tsv", row.names = FALSE, col.names = FALSE, quote = FALSE)
     save(list = c("db", "clones"), file = paste0("./", clones$clone_id, "_get_germ_tree_cloneID.RData"))
 }else{
-    file.copy(from = paste0("./", seq_name_remplacement_ch), to = "./seq_for_germ_tree.tsv")
+    file.copy(from = paste0("./", mutation_load_ch), to = "./seq_for_germ_tree.tsv")
     file.create("./germ_tree_dismissed_clone_id.tsv") # empty file
     write.table(matrix(names(db), nrow = 1), file = "./germ_tree_dismissed_seq.tsv", row.names = FALSE, col.names = FALSE, quote = FALSE, sep = "\t") # empty file
     # add the metadata names in the first column of clones$data[[1]]@data to have them in final trees

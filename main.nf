@@ -401,7 +401,7 @@ process clone_assignment {
     cache 'true'
 
     input:
-    path translation_ch2 // no parallelization
+    path productive_ch // no parallelization
     val clone_model
     val clone_normalize
     val clone_distance
@@ -414,8 +414,8 @@ process clone_assignment {
     script:
     """
     #!/bin/bash -ue
-    if [[ -s ${translation_ch2} ]]; then # see above for -s
-        DefineClones.py -d ${translation_ch2} --act set --model ${clone_model} --norm ${clone_normalize} --dist ${clone_distance} --fail |& tee -a clone_assignment.log
+    if [[ -s ${productive_ch} ]]; then # see above for -s
+        DefineClones.py -d ${productive_ch} --act set --model ${clone_model} --norm ${clone_normalize} --dist ${clone_distance} --fail |& tee -a clone_assignment.log
         if [ -s *_clone-fail.tsv ]; then # see above for -s
             cp *_clone-fail.tsv non_clone_assigned_sequence.tsv |& tee -a clone_assignment.log
         else
@@ -600,25 +600,24 @@ process mutation_load {
                                     nproc=1)
 
         VDJ_db <- dplyr::arrange(VDJ_db, clone_id)
-        write.table(VDJ_db, file = paste0("./", file_name, "_shm-pass.tsv"), row.names = FALSE, sep = "\\t")
+        # write.table(VDJ_db, file = paste0("./", file_name, "_shm-pass.tsv"), row.names = FALSE, sep = "\\t")
 
         # Reposition the column starting with "initial_" to the second position
-        data <- read.table(paste0("./", file_name, "_shm-pass.tsv"), sep = "\\t", header = TRUE)
-        initial_col <- grep("^initial_", names(data), value = TRUE)
+        initial_col <- grep("^initial_", names(VDJ_db), value = TRUE)
         if (length(initial_col) == 0) {
           stop("No column starting with 'initial_' found")
         }
-        tempo <- data[[initial_col]]
-        data <- data[ , !(names(data) %in% initial_col)]
-        data <- data.frame(data[1], tempo, data[2:length(data)])
-        names(data)[2] <- initial_col
+        tempo <- VDJ_db[[initial_col]]
+        VDJ_db <- VDJ_db[ , !(names(VDJ_db) %in% initial_col)]
+        VDJ_db <- data.frame(VDJ_db[1], tempo, VDJ_db[2:length(VDJ_db)])
+        names(VDJ_db)[2] <- initial_col
 
         # Check if the column "kd" exists and rename it to "KD"
-        if ("kd" %in% names(data)) {
-          names(data)[names(data) == "kd"] <- "KD"
+        if ("kd" %in% names(VDJ_db)) {
+          names(VDJ_db)[names(VDJ_db) == "kd"] <- "KD"
         }
 
-        write.table(data, file = paste0("./", file_name, "_shm-pass.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
+        write.table(VDJ_db, file = paste0("./", file_name, "_shm-pass.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
 
     ' "\${FILENAME}" |& tee -a mutation_load.log
     # cp ./tempo_shm-pass.tsv \${FILENAME}_shm-pass.tsv
@@ -898,7 +897,7 @@ process get_germ_tree {
     cache 'true'
 
     input:
-    path seq_name_replacement_ch // parallelization expected
+    path mutation_load_ch // parallelization expected
     path meta_file // just to determine if metadata have been provided (TRUE means NULL) meta_file_ch not required here
     path cute_file
     val clone_nb_seq
@@ -917,15 +916,15 @@ process get_germ_tree {
     script:
     """
     #!/bin/bash -ue
-    if [[ ! -s ${seq_name_replacement_ch} ]]; then
-        echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nEMPTY ${seq_name_replacement_ch} FILE AS INPUT OF THE mutation_load PROCESS\\nCHECK THE mutation_load.log IN THE report FOLDER INSIDE THE OUTPUT FOLDER\\n\\n========\\n\\n"
+    if [[ ! -s ${mutation_load_ch} ]]; then
+        echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nEMPTY ${mutation_load_ch} FILE AS INPUT OF THE mutation_load PROCESS\\nCHECK THE mutation_load.log IN THE report FOLDER INSIDE THE OUTPUT FOLDER\\n\\n========\\n\\n"
         exit 1
     fi
-    FILENAME=\$(basename -- ${seq_name_replacement_ch}) # recover a file name without path
+    FILENAME=\$(basename -- ${mutation_load_ch}) # recover a file name without path
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a get_germ_tree.log
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a get_germ_tree.log
     get_germ_tree.R \
-"${seq_name_replacement_ch}" \
+"${mutation_load_ch}" \
 "${meta_file}" \
 "${clone_nb_seq}" \
 "${germ_tree_duplicate_seq}" \
@@ -1759,8 +1758,16 @@ workflow {
     )
 
 
+    repertoire(
+        seq_name_replacement_ch2,
+        igblast_data_check.out.igblast_data_check_ch,
+        cute_file
+    )
+
+
+
     clone_assignment(
-        data_assembly.out.productive_ch, 
+        data_assembly.out.productive_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE data_assembly PROCESS\n\n========\n\n"}, 
         clone_model,
         clone_normalize,
         clone_distance
@@ -1770,7 +1777,7 @@ workflow {
     nb_failed_clone = clone_assignment.out.failed_clone_ch.countLines() // Assuming there are only the sequence names and no column names on the first line
 
     split_by_clones(
-        clone_assignment.out.clone_ch
+        clone_assignment.out.clone_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE clone_assignment PROCESS\n\n========\n\n"}
     )
 
 
@@ -1794,13 +1801,6 @@ workflow {
     nb_all_passed = all_passed_seq.countLines() - 1 // Minus 1 because 1st line = column names
     all_passed_seq.subscribe{it -> it.copyTo("${out_path}/files")}
 
-
-
-    repertoire(
-        all_passed_seq,
-        igblast_data_check.out.igblast_data_check_ch,
-        cute_file
-    )
 
 
     get_germ_tree(
