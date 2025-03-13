@@ -20,6 +20,7 @@ params:
 <br /><br />
 
 
+
 ### Initial dataset
 
 Number of initial input sequences : ```r params$nb_input```
@@ -67,11 +68,50 @@ Passing ratio : ```r base::round(params$nb_all_passed / (params$nb_all_passed + 
 
 <br>
 
-<div style="display: flex; justify-content: space-around;">
-  <img src="png/all_donutchart.png" width="33%" />
-  <img src="png/annotated_donutchart.png" width="33%" />
-  <img src="png/tree_donutchart.png" width="33%" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Images cliquables</title>
+    <style>
+        .image-container {
+            display: flex;
+            justify-content: space-around;
+            gap: 10px;
+        }
+        .image-container img {
+            width: 33%;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw !important;
+            height: 100vh !important;
+            object-fit: contain;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            transform: scale(1);
+        }
+    </style>
+</head>
+<div class="image-container">
+  <img src="png/vj_allele_all_donutchart.png" onclick="toggleFullscreen(this)" />
+  <img src="png/vj_allele_annotated_donutchart.png" onclick="toggleFullscreen(this)" />
+  <img src="png/vj_allele_tree_donutchart.png" onclick="toggleFullscreen(this)" />
 </div>
+
+<script>
+  function toggleFullscreen(img) {
+    if (img.classList.contains('fullscreen')) {
+      img.classList.remove('fullscreen');
+    } else {
+      document.querySelectorAll('.fullscreen').forEach(el => el.classList.remove('fullscreen'));
+      img.classList.add('fullscreen');
+    }
+  }
+</script>
 
 <br>
 

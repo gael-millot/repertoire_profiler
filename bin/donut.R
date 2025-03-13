@@ -71,6 +71,7 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
     tempo.arg.names <- c(
         "file_name", 
         "kind", 
+        "col",
         "donut_palette",
         "donut_hole_size",
         "donut_hole_text",
@@ -113,6 +114,7 @@ rm(tempo.cat)
 # setwd("C:/Users/gael/Documents/Git_projects/19532_marbouty/dataset/test")
 # file_name = "./caca.tsv"
 # kind = "all"
+# col = "vj_allele"
 # donut_palette = "NULL" 
 # donut_hole_size = "0.5" 
 # donut_hole_text = "TRUE" 
@@ -146,6 +148,7 @@ param.list <- c(
     if(run.way == "SCRIPT"){"command"}, 
     "file_name", 
     "kind", 
+    "col",
     "donut_palette",
     "donut_hole_size",
     "donut_hole_text",
@@ -276,6 +279,7 @@ if(any(arg.check) == TRUE){ # normally no NA
 tempo.arg <-c(
     "file_name", 
     "kind", 
+    "col",
     # "donut_palette", # can be NULL
     "donut_hole_size",
     "donut_hole_text",
@@ -314,10 +318,16 @@ if( ! file.exists(file_name)){
     tempo.cat <- paste0("ERROR IN donut.R:\nTHE file_name PARAMETER MUST BE A VALID PATH OF A FILE IS NOT \"NULL\"\nHERE IT IS: \n", paste0(file_name, collapse = " "))
     stop(paste0("\n\n================\n\n", tempo$text, "\n\n================\n\n"), call. = FALSE)
 }
+
 tempo <- fun_check(data = kind, options = c("all", "tree", "annotated"), length = 1) ; eval(ee)
 if(tempo$problem == TRUE){
     stop(paste0("\n\n================\n\n", tempo$text, "\n\n================\n\n"), call. = FALSE)
 }
+tempo <- fun_check(data = col, options = c("vj_allele", "c_allele", "vj_gene", "c_gene"), length = 1) ; eval(ee)
+if(tempo$problem == TRUE){
+    stop(paste0("\n\n================\n\n", tempo$text, "\n\n================\n\n"), call. = FALSE)
+}
+
 # following parameter are those of the gg_donut() function and are checked by this one
 if(donut_palette == "NULL"){
     donut_palette <- NULL
@@ -396,28 +406,36 @@ obs <- read.table(file_name, sep = "\t", header = TRUE, comment.char = "")
 
 ################ data modification
 
+type_text <- switch(
+    col,
+    "vj_allele" = "V and J alleles",
+    "c_allele" = "C alleles",
+    "vj_gene" = "V and J genes",
+    "c_gene" = "C genes",
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR: unexpected allele_type value: ", col, "\n\n================\n\n"))
+)
 
 tempo.title <- paste0(
     ifelse(
         kind == "all", 
         paste0(
-            "Donut plot of the all-passed sequences grouped by same V and J alleles\nWarning: this is different from clonal groups since the latter must have also the same CDR3 length\n\n",
-            "Kind of sequences: ", 
-            "all the productive ones (see the corresponding productive_seq.tsv"
+            "Donut plot of the all-passed sequences grouped by same ", type_text, "\n",
+            "Warning: this is different from clonal groups since the latter must have also the same CDR3 length\n\n",
+            "Kind of sequences: all the productive ones (see the corresponding productive_seq.tsv"
         ), 
         ifelse(
             kind == "tree", 
             paste0(
-                "Donut plot of all the sequences in trees plotted in the germ_trees.pdf file\n\n\n",
-                "Kind of sequences: ", 
-                "all the sequences in trees (see the corresponding germ_tree_seq.tsv"
+                "Donut plot of all the sequences in trees plotted in the germ_trees.pdf file, grouped by same ", type_text, "\n\n\n",
+                "Kind of sequences: all the sequences in trees (see the corresponding germ_tree_seq.tsv"
             ), 
             ifelse(
                 kind == "annotated", 
                 paste0(
-                    "Donut plot of the all-passed sequences grouped by same V and J alleles, for which at least one name replacement is present\n(according to the meta_name_replacement parameter of the nextflow.config file)\nWarning: this is different from clonal groups since the latter must have also the same CDR3 length\n\n",
-                    "Kind of sequences: ", 
-                    "annotated productive ones (see the corresponding productive_seq.tsv"
+                    "Donut plot of the all-passed sequences grouped by same ", type_text, ", for which at least one name replacement is present\n",
+                    "(according to the meta_name_replacement parameter of the nextflow.config file)\n",
+                    "Warning: this is different from clonal groups since the latter must have also the same CDR3 length\n\n",
+                    "Kind of sequences: annotated productive ones (see the corresponding productive_seq.tsv"
                 ), 
                 stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 4 IN donut.R for kind THAT CAN ONLY BE \"all\", \"annotated\" OR \"tree\".\nHER IT IS: ", kind, "\n\n================\n\n"))
             )
@@ -429,15 +447,36 @@ tempo.title <- paste0(
 if(nrow(obs) > 0){
     
     if(kind == "tree"){
-        tempo.v <- obs$germline_v_call
-        tempo.j <- obs$germline_j_call
-        clone.id <-  obs$clone_id
+        if (col == "vj_allele") {
+            tempo.primary <- obs$germline_v_call
+            tempo.secondary <- obs$germline_j_call
+        } else if (col == "vj_gene") {
+            tempo.primary <- obs$v_gene # temporary because there is no germline_v_gene column
+            tempo.secondary <- obs$j_gene # temporary because there is no germline_j_gene column
+        } else if (col == "c_allele") {
+            tempo.primary <- obs$c_call # temporary because there is no germline_c_call column
+            tempo.secondary <- NULL
+        } else if (col == "c_gene") {
+            tempo.primary <- obs$c_gene # temporary because there is no germline_c_gene column
+            tempo.secondary <- NULL
+        }
     }else{
-        tempo.v <- obs$v_call
-        tempo.j <- obs$j_call
+        if (col == "vj_allele") {
+            tempo.primary <- obs$v_call
+            tempo.secondary <- obs$j_call
+        } else if (col == "vj_gene") {
+            tempo.primary <- obs$v_gene
+            tempo.secondary <- obs$j_gene
+        } else if (col == "c_allele") {
+            tempo.primary <- obs$c_call
+            tempo.secondary <- NULL
+        } else if (col == "c_gene") {
+            tempo.primary <- obs$c_gene
+            tempo.secondary <- NULL
+        }
     }
 
-    chain <- unique(substr(tempo.j, 1, 3)) # extract the IGH or IGK name
+    chain <- unique(substr(tempo.primary, 1, 3)) # extract the IGH or IGK name
     
     #inactivated because now chain can be both IGL and IGK
     # if(length(chain) != 1){
@@ -445,21 +484,28 @@ if(nrow(obs) > 0){
     # }else if(chain != unique(substr(tempo.v, 1, 3))){
         # stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN donut.R for kind ", kind, ": CHAIN OF J DIFFERENT FROM CHAIN OF V.\nCHAIN OF V: ", paste(chain, collapse = " "), "\nCHAIN OF J: ", paste(unique(substr(tempo.v, 1, 3)), collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) 
     # }
-    check1 <- substr(tempo.v, 1, 3)
-    check2 <- substr(tempo.j, 1, 3)
-    if( ! all(check1 == check2)){
-        stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN donut.R for kind ", kind, ": CHAIN OF J DIFFERENT FROM CHAIN OF V.\nCHAIN OF V: ", paste(tempo.v[check1 != check2], collapse = " "), "\nCHAIN OF J: ", paste(tempo.j[check1 != check2], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) 
+
+    if (!is.null(tempo.secondary)) { # if there is a secondary column (meaning we are looking at VJ alleles/genes) check that it is the same chain
+        check1 <- substr(tempo.primary, 1, 3)
+        check2 <- substr(tempo.secondary, 1, 3)
+        if( ! all(check1 == check2)){
+            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN donut.R for kind ", kind, ": CHAIN OF J DIFFERENT FROM CHAIN OF V.\nCHAIN OF V: ", paste(tempo.v[check1 != check2], collapse = " "), "\nCHAIN OF J: ", paste(tempo.j[check1 != check2], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) 
+        }
     }
-    tempo.v <- substring(tempo.v, 4)
-    tempo.j <- substring(tempo.j, 4)
-    clone.name <- paste0(tempo.v, "_", tempo.j)
+    tempo.primary <- substring(tempo.primary, 4)
+    if (!is.null(tempo.secondary)) {
+        tempo.secondary <- substring(tempo.secondary, 4)
+        clone.name <- paste0(tempo.primary, "_", tempo.secondary)
+    } else {
+        clone.name <- tempo.primary
+    }
 
 
     obs2 <- data.frame(table(clone.name))
-    names(obs2)[1] <- "V_J_allele"
+    names(obs2)[1] <- col
     obs2 <- data.frame(obs2, Prop = obs2$Freq / sum(obs2$Freq), kind = kind)
-    obs2$V_J_allele <- factor(obs2$V_J_allele, levels = obs2$V_J_allele[order(obs2$Prop, decreasing = TRUE)]) # reorder so that the donut is according to decreasing proportion starting at the top in a clockwise direction
-    obs2 <- obs2[order(as.numeric(obs2$V_J_allele), decreasing = FALSE), ] # obs2 with rows in decreasing order, according to Prop
+    obs2[[col]] <- factor(obs2[[col]], levels = obs2[[col]][order(obs2$Prop, decreasing = TRUE)]) # reorder so that the donut is according to decreasing proportion starting at the top in a clockwise direction
+    obs2 <- obs2[order(as.numeric(obs2[[col]]), decreasing = FALSE), ] # obs2 with rows in decreasing order, according to Prop
     # # warning: I can use all.annotation.log because I have duplicated the first column of the dataset in the second column, in order to change the name in the first column with metadata. If all(obs[ , 1] == obs[ , 2]) == TRUE, it means no annotation added
     if(grepl(x = names(obs)[2], pattern = "^initial_")){ # means that fonctional annotations are present
         annotation.log <- obs[ , 1] == obs[ , 2]
@@ -471,7 +517,7 @@ if(nrow(obs) > 0){
         tempo.labels <- obs[ , 1]
         tempo.labels[annotation.log] <- NA
         tempo.data1 <- aggregate(tempo.labels ~ clone.name, FUN = function(x){paste(x, collapse = ",")})
-        obs2 <- data.frame(obs2, labels = tempo.data1$tempo.labels[match(obs2$V_J_allele, tempo.data1$clone.name)])
+        obs2 <- data.frame(obs2, labels = tempo.data1$tempo.labels[match(obs2[[col]], tempo.data1$clone.name)])
     }
 
 
@@ -482,7 +528,7 @@ if(nrow(obs) > 0){
     tempo.title <- paste0(
         tempo.title,
         "\nChain: ", paste(chain, collapse = " "), "\n",
-        "Proportions of sequences with the indicated V and J alleles are indicated in the legend, after the labels.\n", 
+        "Proportions of sequences with the indicated ", type_text, " are indicated in the legend, after the labels.\n", 
         "The total number of sequences of the donut is indicated in the center.\nSee the donut_stats.tsv file for the complete stats."
     )
     if( ! is.null(donut_legend_limit)){
@@ -503,7 +549,7 @@ if(nrow(obs) > 0){
             tempo.plot <- fun_gg_donut(
                 data1 = obs3, # select only the classes with annotations if kind == "annotated" & all.annotation.log != TRUE
                 freq = "Freq", 
-                categ = "V_J_allele", 
+                categ = col, 
                 fill.palette = donut_palette,
                 fill.color = NULL, 
                 hole.size = donut_hole_size, 
@@ -520,7 +566,7 @@ if(nrow(obs) > 0){
                 annotation.force.pull = donut_annotation_force_pull,
                 legend.show = TRUE, 
                 legend.width = donut_legend_width, 
-                legend.name = "V J alleles", 
+                legend.name = type_text, 
                 legend.text.size = donut_legend_text_size, 
                 legend.box.size = donut_legend_box_size, 
                 legend.box.space = donut_legend_box_space, 
@@ -560,9 +606,9 @@ if(nrow(obs) > 0){
 
 ################ saving plots
 
-ggplot2::ggsave(filename = paste0(kind, "_donutchart.png"), plot = final.plot, device = "png", path = ".", width = 120, height = 120, units = "mm", dpi = 300)
-ggplot2::ggsave(filename = paste0(kind, "_donutchart.svg"), plot = final.plot, device = "svg", path = ".", width = 120, height = 120, units = "mm", dpi = 300)
-ggplot2::ggsave(filename = paste0(kind, "_donutchart.pdf"), plot = final.plot, device = "pdf", path = ".", width = 120, height = 120, units = "mm", dpi = 300)
+ggplot2::ggsave(filename = paste0(col, "_", kind, "_donutchart.png"), plot = final.plot, device = "png", path = ".", width = 120, height = 120, units = "mm", dpi = 300)
+ggplot2::ggsave(filename = paste0(col, "_", kind, "_donutchart.svg"), plot = final.plot, device = "svg", path = ".", width = 120, height = 120, units = "mm", dpi = 300)
+ggplot2::ggsave(filename = paste0(col, "_", kind, "_donutchart.pdf"), plot = final.plot, device = "pdf", path = ".", width = 120, height = 120, units = "mm", dpi = 300)
 
 
 ################ end saving plots
