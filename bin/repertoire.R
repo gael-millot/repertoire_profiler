@@ -324,17 +324,29 @@ left_common_chars <- function(
     # s = list("flee", "flower", "flour")
     # function name
     ini <- s # save the unitial input
+    s <- s[!is.na(s)] # remove NA values
+    if (length(s) == 0) {
+        return(list(common = "", rest = ini))
+    }
     s <- base::unlist(x = s) # change nothing if s is a vector
     expl <- base::strsplit(s, "")
     stop <- FALSE
     common <- NULL
     count <- 1
     while(stop == FALSE){
-        tempo <- base::unique(x = base::sapply(X = expl, FUN = function(x){x[count]}))
-        if(base::length(x = tempo) == 1){
+        tempo <- base::unique(x = base::sapply(X = expl, FUN = function(x) {
+            if (length(x) >= count) {
+                x[count]
+            } else {
+                NA  # If the string is shorter than the count, return NA
+            }
+        }))
+        # Do not compare NA values to keep the common pattern
+        tempo <- tempo[!is.na(tempo)]
+        if (length(tempo) == 1) {
             common <- c(common, tempo)
             count <- count + 1
-        }else{
+        } else {
             stop <- TRUE
         }
     }

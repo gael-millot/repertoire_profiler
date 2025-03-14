@@ -263,7 +263,7 @@ process parseDb_filtering {
             exit 1
         fi
         if [ -s *_productive-F.tsv ]; then # see above for -s
-            cp *_productive-F.tsv unproductive_seq_init.tsv |& tee -a ParseDb_filtering.log
+            cp *_productive-F.tsv unproductive_seq.tsv |& tee -a ParseDb_filtering.log
         else
             echo -e "\n\nWARNING: EMPTY unproductive_seq.tsv FILE RETURNED FOLLOWING THE parseDb_filtering PROCESS\n\n" |& tee -a ParseDb_filtering.log
             # echo -n "" | cat > unproductive_seq.tsv
@@ -304,7 +304,9 @@ process translation {
 
 
 
-
+// Compares cdr3 différences from sequences with same cdr3 length, same v and same j
+// Number of substitutions normalized by the length of the cdr3
+// NA means cdr3 sequences are exactly the same for the group
 process distToNearest {
     label 'immcantation'
     //publishDir path: "${out_path}", mode: 'copy', pattern: "{nearest_distance.tsv}", overwrite: false
@@ -533,6 +535,7 @@ process mutation_load {
 
     input:
     path closest_ch // parallelization expected
+    val meta_legend
 
 
     output:
@@ -612,9 +615,11 @@ process mutation_load {
         VDJ_db <- data.frame(VDJ_db[1], tempo, VDJ_db[2:length(VDJ_db)])
         names(VDJ_db)[2] <- initial_col
 
-        # Check if the column "kd" exists and rename it to "KD"
-        if ("kd" %in% names(VDJ_db)) {
-          names(VDJ_db)[names(VDJ_db) == "kd"] <- "KD"
+        # Check if a column equal to meta_legend in lowercase exists in 'data' 
+        meta_legend_lower <- tolower("${meta_legend}")
+        if (any(tolower(names(data)) == meta_legend_lower)) {
+            # Renommer la colonne à partir de meta_legend (non minuscules)
+            names(data)[tolower(names(data)) == meta_legend_lower] <- "${meta_legend}"
         }
 
         write.table(VDJ_db, file = paste0("./", file_name, "_shm-pass.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
@@ -755,12 +760,12 @@ process data_assembly {
         }else{
             tempo.col.name <- ifelse("initial_sequence_id" %in% names(db), "initial_sequence_id", "sequence_id")
         }
-        if(all(c("sequence_id", "initial_sequence_id") %in% names(db))){
-            if(all(db\$sequence_id == db\$initial_sequence_id)){
-                tempo.cat <- paste0("\\n\\n========\\n\\nERROR IN THE data_assembly PROCESS OF NEXTFLOW\\nTHE meta_path AND meta_name_replacement PARAMETERS ARE NOT \\"NULL\\" BUT NO SEQUENCE NAMES HAVE BEEN REPLACED WHEN USING THE meta_name_replacement COLUMN\\n\\n========\\n\\n")
-                stop(tempo.cat)
-            }
-        }
+        # if(all(c("sequence_id", "initial_sequence_id") %in% names(db))){
+        #     if(all(db\$sequence_id == db\$initial_sequence_id)){
+        #         tempo.cat <- paste0("\\n\\n========\\n\\nERROR IN THE data_assembly PROCESS OF NEXTFLOW\\nTHE meta_path AND meta_name_replacement PARAMETERS ARE NOT \\"NULL\\" BUT NO SEQUENCE NAMES HAVE BEEN REPLACED WHEN USING THE meta_name_replacement COLUMN\\n\\n========\\n\\n")
+        #         stop(tempo.cat)
+        #     }
+        # }
         if(any(is.na(match(db[, tempo.col.name], dtn\$sequence_id)))){
             tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE data_assembly PROCESS\\nNO NA SHOULD APPEAR AT THAT STAGE WITH match()\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
             stop(tempo.cat)
@@ -789,7 +794,9 @@ process data_assembly {
             tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE data_assembly PROCESS\\ndb SHOULD HAVE \\"c_call\\" AS COLUMN NAME. HERE:\\nNAMES: ", paste(names(db), collapse = " "), "\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
             stop(tempo.cat)
         }
-        # remove allele info
+
+        #### Remove allele info
+
         tempo_v <- strsplit(db3\$v_call, ",")
         sub_v <- sapply(X = tempo_v, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; paste0(unique(y), collapse = ",")})
         tempo_j <- strsplit(db3\$j_call, ",")
@@ -798,7 +805,9 @@ process data_assembly {
         subclass <- sapply(X = tempo_subclass, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; paste0(unique(y), collapse = ",")})
         class <- sapply(X = tempo_subclass, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; y <- substr(y, 1, 4) ; paste0(unique(y), collapse = ",")})
         db4 <- data.frame(db3, v_gene = sub_v, j_gene = sub_j, isotype_class = class, c_gene = subclass)
-        # end remove allele info
+
+        #### end remove allele info
+
         write.table(db4, file = paste0("./productive_seq.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
     ' |& tee -a data_assembly.log
     """
@@ -840,9 +849,10 @@ process metadata_check { // cannot be in germ_tree_vizu because I have to use th
                 if(names(df)[2] != "initial_sequence_id"){
                     stop(paste0("\\n\\n============\\n\\nINTERNAL ERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\" AND IF THE meta_name_replacement PARAMETER IS NOT \\"NULL\\", THEN THE TABLE GENERATED USING THE sample_path PARAMETER MUST CONTAIN initial_sequence_id AS FIRST COLUMN NAME.\\n\\n============\\n\\n"), call. = FALSE)
                 }
-                if( ! any(meta[ , meta_name_replacement] %in% df[ , 1])){
-                    stop(paste0("\\n\\n============\\n\\nERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nTHE meta_file AND meta_name_replacement PARAMETERS OF THE nextflow.config FILE ARE NOT NULL BUT NO NAME REPLACEMENT PERFORMED\\nPROBABLY THAT THE ${meta_seq_names} COLUMN OF THE FILE INDICATED IN THE meta_path PARAMETER IS NOT MADE OF NAMES OF FASTA FILES INDICATED IN THE sample_path PARAMETER\\nFIRST ELEMENTS OF THE ${meta_seq_names} COLUMN (meta_seq_names PARAMETER) OF THE META DATA FILE ARE:\\n", paste(head(meta[ , meta_seq_names], 20), collapse = "\\n"), "\\nFIRST FASTA FILES NAMES ARE:\\n", paste(head(df[ , 1], 20), collapse = "\\n"), "\\n\\n\\n============\\n\\n"), call. = FALSE)
-                }
+                # Inactivated because no replacement is possible if same metadata file used for several data files (for different runs)
+                # if( ! any(meta[ , meta_name_replacement] %in% df[ , 1])){
+                #    stop(paste0("\\n\\n============\\n\\nERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nTHE meta_file AND meta_name_replacement PARAMETERS OF THE nextflow.config FILE ARE NOT NULL BUT NO NAME REPLACEMENT PERFORMED\\nPROBABLY THAT THE ${meta_seq_names} COLUMN OF THE FILE INDICATED IN THE meta_path PARAMETER IS NOT MADE OF NAMES OF FASTA FILES INDICATED IN THE sample_path PARAMETER\\nFIRST ELEMENTS OF THE ${meta_seq_names} COLUMN (meta_seq_names PARAMETER) OF THE META DATA FILE ARE:\\n", paste(head(meta[ , meta_seq_names], 20), collapse = "\\n"), "\\nFIRST FASTA FILES NAMES ARE:\\n", paste(head(df[ , 1], 20), collapse = "\\n"), "\\n\\n\\n============\\n\\n"), call. = FALSE)
+                # }
             }
             if(meta_legend != "NULL"){
                 if( ! meta_legend %in% names(meta)){
@@ -1656,6 +1666,9 @@ workflow {
     igblast.out.tsv_ch1.count().subscribe{ n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE igblast PROCESS\n\nCHECK THAT THE igblast_organism, igblast_loci AND igblast_variable_ref_files ARE CORRECTLY SET IN THE repertoire_profiler.config FILE\n\n========\n\n"}}
     tsv_ch2 = igblast.out.tsv_ch1.collectFile(name: "all_igblast_seq.tsv", skip: 1, keepHeader: true)
     igblast.out.aligned_seq_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\n0 ALIGNED SEQ FILES RETURNED BY THE igblast PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
+    //test
+    tsv_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
+    //fin test
     aligned_seq_ch2 = igblast.out.aligned_seq_ch.collectFile(name: "igblast_aligned_seq_name.tsv")
     aligned_seq_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
     igblast.out.unaligned_seq_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\n0 UNALIGNED SEQ FILES RETURNED BY THE igblast PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
@@ -1758,13 +1771,6 @@ workflow {
     )
 
 
-    repertoire(
-        data_assembly.out.productive_ch,
-        igblast_data_check.out.igblast_data_check_ch,
-        cute_file
-    )
-
-
 
     clone_assignment(
         data_assembly.out.productive_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE data_assembly PROCESS\n\n========\n\n"}, 
@@ -1792,7 +1798,8 @@ workflow {
 
 
     mutation_load(
-        closest_germline.out.closest_ch
+        closest_germline.out.closest_ch,
+        meta_legend
     )
     //mutation_load.out.mutation_load_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE mutation_load PROCESS\n\n========\n\n"}}
     mutation_load.out.mutation_load_log_ch.collectFile(name: "mutation_load.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
@@ -1801,6 +1808,13 @@ workflow {
     nb_clone_assigned = clone_assigned_seq.countLines() - 1 // Minus 1 because 1st line = column names
     clone_assigned_seq.subscribe{it -> it.copyTo("${out_path}/files")}
 
+
+
+    repertoire(
+        data_assembly.out.productive_ch,
+        igblast_data_check.out.igblast_data_check_ch,
+        cute_file
+    )
 
 
     get_germ_tree(
