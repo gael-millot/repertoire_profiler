@@ -11,7 +11,7 @@ params:
   nb_seq_not_aligned: -1
   nb_productive: -1
   nb_unproductive: -1
-  nb_clone-assigned: -1
+  nb_clone_assigned: -1
   nb_failed_clone: -1
 ---
 
@@ -54,13 +54,13 @@ Productiveness ratio : ```r base::round(params$nb_productive / (params$nb_produc
 ### Clonal groups
 
 **Clone-assigned sequences** are productive sequences with additionnal features: germline clustering (clone ID), allele reannotation (germinal_v_call and germinal_j_call columns), mutation load, distance and sequence nickname (annotation from the metadata file) added. <br>
-Some sequences from the productive file can **fail to be clone assigned**, and will not be in the clone-assigned_seq.tsv file. 
+Some sequences from the productive file can **fail to be clone-assigned**, and will not be in the clone_assigned_seq.tsv file. 
 
-Number of [clone-assigned sequences](files/clone-assigned_seq.tsv) : ```r params$nb_clone-assigned```
+Number of [clone-assigned sequences](files/clone_assigned_seq.tsv) : ```r params$nb_clone_assigned```
 
 Number of [failed clone-assigned sequences](files/non_clone_assigned_sequence.tsv) : ```r params$nb_failed_clone```
 
-Passing ratio : ```r base::round(params$nb_clone-assigned / (params$nb_clone-assigned + params$nb_failed_clone), 2)```
+Passing ratio : ```r base::round(params$nb_clone_assigned / (params$nb_clone_assigned + params$nb_failed_clone), 2)```
 
 <br>
 
