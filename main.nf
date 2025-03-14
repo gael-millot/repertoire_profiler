@@ -1759,7 +1759,7 @@ workflow {
 
 
     repertoire(
-        seq_name_replacement_ch2,
+        data_assembly.out.productive_ch,
         igblast_data_check.out.igblast_data_check_ch,
         cute_file
     )
