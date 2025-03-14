@@ -419,28 +419,29 @@ tempo.title <- paste0(
     ifelse(
         kind == "all", 
         paste0(
-            "Donut plot of the all-passed sequences grouped by same ", type_text, "\n",
-            "Warning: this is different from clonal groups since the latter must have also the same CDR3 length\n\n",
-            "Kind of sequences: all the productive ones (see the corresponding productive_seq.tsv"
+            "Donut plot of the productive sequences (see the corresponding productive_seq.tsv) grouped by same ", type_text, "\n\n",
+            "Kind of sequences: ",
+            kind
         ), 
         ifelse(
             kind == "tree", 
             paste0(
-                "Donut plot of all the sequences in trees plotted in the germ_trees.pdf file, grouped by same ", type_text, "\n\n\n",
-                "Kind of sequences: all the sequences in trees (see the corresponding germ_tree_seq.tsv"
+                "Donut plot of the clone-assigned sequences (see the corresponding germ_tree_seq.tsv), grouped by same ", type_text, "\n\n",
+                "Kind of sequences: ",
+                kind
             ), 
             ifelse(
                 kind == "annotated", 
                 paste0(
-                    "Donut plot of the all-passed sequences grouped by same ", type_text, ", for which at least one name replacement is present\n",
+                    "Donut plot of the productive sequences (see the corresponding productive_seq.tsv) grouped by same ", type_text, ", for which at least one name replacement is present\n",
                     "(according to the meta_name_replacement parameter of the nextflow.config file)\n",
-                    "Warning: this is different from clonal groups since the latter must have also the same CDR3 length\n\n",
-                    "Kind of sequences: annotated productive ones (see the corresponding productive_seq.tsv"
+                    "Kind of sequences: ",
+                    kind
                 ), 
                 stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 4 IN donut.R for kind THAT CAN ONLY BE \"all\", \"annotated\" OR \"tree\".\nHER IT IS: ", kind, "\n\n================\n\n"))
             )
         )
-    ), " file)"
+    )
 )
 
 

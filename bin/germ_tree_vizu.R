@@ -712,7 +712,7 @@ if(length(tempo.list) == 0){
                         stop(paste0("\n\n============\n\nERROR IN germ_tree_vizu.R for clone ID ", paste(unique(db.list[[i3]]$clone_id)), "\nIF NOT \"NULL\", THE meta_legend PARAMETER MUST BE A COLUMN NAME OF THE meta_path PARAMETER. HERE IT IS:\ngerm_tree_meta_legend: ", germ_tree_meta_legend, "\nCOLUMN NAMES OF meta_path: ", paste(names(new_meta_df), collapse = " "), "\n\n============\n\n"), call. = FALSE)
                     }
                     if( ! any(trees$trees[[i3]]$tip.label %in% new_meta_df[ , 1])){
-                        tempo.cat <- paste0("Warning: meta_legend parameter indicated in the nextflow.config file but no metadata present in this tree (check the first column of the all_passed_seq.tsv file used here as meta file?).")
+                        tempo.cat <- paste0("Warning: meta_legend parameter indicated in the nextflow.config file but no metadata present in this tree (check the first column of the clone_assigned_seq.tsv file used here as meta file?).")
                         paste0(ifelse(is.null(add.text), tempo.cat, paste0(add.text, "\n", tempo.cat)))
                     }
                     tempo.added.trees <- ggtree::"%<+%"( # it seems that this command uses the tip.label compartment to merge new_meta_df into ggtree::ggtree(trees$trees[[i3]], layout = germ_tree_kind)

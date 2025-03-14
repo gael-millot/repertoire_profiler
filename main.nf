@@ -804,7 +804,7 @@ process data_assembly {
     """
 }
 
-process metadata_check { // cannot be in germ_tree_vizu because I have to use the all_passed_seq.tsv file for the check
+process metadata_check { // cannot be in germ_tree_vizu because I have to use the clone_assigned_seq.tsv file for the check
     label 'immcantation'
     cache 'true'
 
@@ -849,7 +849,7 @@ process metadata_check { // cannot be in germ_tree_vizu because I have to use th
                     stop(paste0("\\n\\n============\\n\\nERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\" AND IF THE meta_legend PARAMETER IS NOT \\"NULL\\", THEN THE meta_legend PARAMETER MUST BE A COLUMN NAME OF THE METADATA FILE.\\n\\n============\\n\\n"), call. = FALSE)
                 }
                 if( ! meta_legend %in% names(df)){
-                    stop(paste0("\\n\\n============\\n\\nINTERNAL ERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\" AND IF THE meta_legend PARAMETER IS NOT \\"NULL\\", THEN meta_legend MUST BE A COLUMN NAME OF all_passed_seq.tsv.\\n\\n============\\n\\n"), call. = FALSE)
+                    stop(paste0("\\n\\n============\\n\\nINTERNAL ERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\" AND IF THE meta_legend PARAMETER IS NOT \\"NULL\\", THEN meta_legend MUST BE A COLUMN NAME OF clone_assigned_seq.tsv.\\n\\n============\\n\\n"), call. = FALSE)
                 }
             }
         '
@@ -1274,7 +1274,7 @@ process print_report{
     val nb_seq_not_aligned
     val nb_productive
     val nb_unproductive
-    val nb_all_passed
+    val nb_clone_assigned
     val nb_failed_clone
     path donuts_png
     path repertoire_png
@@ -1298,7 +1298,7 @@ process print_report{
                         nb_seq_not_aligned = ${nb_seq_not_aligned},
                         nb_productive = ${nb_productive},
                         nb_unproductive = ${nb_unproductive},
-                        nb_all_passed = ${nb_all_passed},
+                        nb_clone_assigned = ${nb_clone_assigned},
                         nb_failed_clone = ${nb_failed_clone}),
         # output_dir = ".",
         # intermediates_dir = "./",
@@ -1797,9 +1797,9 @@ workflow {
     //mutation_load.out.mutation_load_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE mutation_load PROCESS\n\n========\n\n"}}
     mutation_load.out.mutation_load_log_ch.collectFile(name: "mutation_load.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
 
-    all_passed_seq = mutation_load.out.mutation_load_ch.collectFile(name: "all_passed_seq.tsv", skip: 1, keepHeader: true)
-    nb_all_passed = all_passed_seq.countLines() - 1 // Minus 1 because 1st line = column names
-    all_passed_seq.subscribe{it -> it.copyTo("${out_path}/files")}
+    clone_assigned_seq = mutation_load.out.mutation_load_ch.collectFile(name: "clone_assigned_seq.tsv", skip: 1, keepHeader: true)
+    nb_clone_assigned = clone_assigned_seq.countLines() - 1 // Minus 1 because 1st line = column names
+    clone_assigned_seq.subscribe{it -> it.copyTo("${out_path}/files")}
 
 
 
@@ -1859,7 +1859,7 @@ workflow {
         germ_tree_label_outside,
         germ_tree_right_margin,
         germ_tree_legend,
-        all_passed_seq, // may be add .first()
+        clone_assigned_seq, // may be add .first()
         meta_file, 
         meta_legend,
         cute_file
@@ -1970,7 +1970,7 @@ workflow {
         nb2,
         nb1_b - 1, // Minus 1 because the 1st line = the column names
         nb2_b - 1, // Minus 1 because the 1st line = the column names
-        nb_all_passed,
+        nb_clone_assigned,
         nb_failed_clone,
         donut.out.donuts_png.collect(),
         repertoire.out.repertoire_png.collect()

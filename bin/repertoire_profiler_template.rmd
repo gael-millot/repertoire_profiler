@@ -11,7 +11,7 @@ params:
   nb_seq_not_aligned: -1
   nb_productive: -1
   nb_unproductive: -1
-  nb_all_passed: -1
+  nb_clone-assigned: -1
   nb_failed_clone: -1
 ---
 
@@ -41,7 +41,7 @@ Success ratio : ```r base::round(params$nb_seq_aligned / (params$nb_seq_aligned 
 
 ### Productive sequences
 
-**Productive sequences** are : (1) coding region has an open reading frame, (2) no defect in the start codon, splicing sites or regulatory elements, (3) no internal stop codons, (4) an in-frame junction region. <br>
+**Productive sequences** are sequences with: (1) coding region with an open reading frame, (2) no defect in the start codon, splicing sites or regulatory elements, (3) no internal stop codons, (4) an in-frame junction region. <br>
 
 Number of [productive sequences](files/productive_seq.tsv) : ```r params$nb_productive```
 
@@ -51,20 +51,24 @@ Productiveness ratio : ```r base::round(params$nb_productive / (params$nb_produc
 
 <br>
 
-### Passed sequences
+### Clonal groups
 
-**Passed sequences** are productive sequences with the Igblast annotations, annotated with additionnal features : germline clustering (clone ID), allele reannotation (germinal_v_call and germinal_j_call columns), mutation load, distance and sequence nickname (annotation from the metadata file) added. <br>
-Some sequences from the productive file can **fail to be clone assigned**, and will not be in the all_passed file. 
+**Clone-assigned sequences** are productive sequences with additionnal features: germline clustering (clone ID), allele reannotation (germinal_v_call and germinal_j_call columns), mutation load, distance and sequence nickname (annotation from the metadata file) added. <br>
+Some sequences from the productive file can **fail to be clone assigned**, and will not be in the clone-assigned_seq.tsv file. 
 
-Number of [passed sequences](files/all_passed_seq.tsv) : ```r params$nb_all_passed```
+Number of [clone-assigned sequences](files/clone-assigned_seq.tsv) : ```r params$nb_clone-assigned```
 
 Number of [failed clone-assigned sequences](files/non_clone_assigned_sequence.tsv) : ```r params$nb_failed_clone```
 
-Passing ratio : ```r base::round(params$nb_all_passed / (params$nb_all_passed + params$nb_failed_clone), 2)```
+Passing ratio : ```r base::round(params$nb_clone-assigned / (params$nb_clone-assigned + params$nb_failed_clone), 2)```
 
 <br>
 
-### Donuts
+### Repertoire summary
+
+<br>
+
+#### Donut plots
 
 <br>
 
@@ -115,7 +119,7 @@ Passing ratio : ```r base::round(params$nb_all_passed / (params$nb_all_passed + 
 
 <br>
 
-### Titre TBD
+#### Heatmaps
 
 <br>
 
