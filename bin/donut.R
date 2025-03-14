@@ -419,7 +419,7 @@ tempo.title <- paste0(
     ifelse(
         kind == "all", 
         paste0(
-            "Donut plot of the all-passed sequences grouped by same ", type_text, "\n",
+            "Donut plot of the productive sequences grouped by same ", type_text, "\n",
             "Warning: this is different from clonal groups since the latter must have also the same CDR3 length\n\n",
             "Kind of sequences: all the productive ones (see the corresponding productive_seq.tsv"
         ), 
@@ -432,7 +432,7 @@ tempo.title <- paste0(
             ifelse(
                 kind == "annotated", 
                 paste0(
-                    "Donut plot of the all-passed sequences grouped by same ", type_text, ", for which at least one name replacement is present\n",
+                    "Donut plot of the productive sequences grouped by same ", type_text, ", for which at least one name replacement is present\n",
                     "(according to the meta_name_replacement parameter of the nextflow.config file)\n",
                     "Warning: this is different from clonal groups since the latter must have also the same CDR3 length\n\n",
                     "Kind of sequences: annotated productive ones (see the corresponding productive_seq.tsv"
