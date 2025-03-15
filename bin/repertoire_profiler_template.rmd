@@ -17,7 +17,7 @@ params:
 
 \n\n<br /><br />\n\n
 
-<br /><br />
+
 
 
 [comment]: <> (The following script is used to be able to zoom on images)
@@ -116,11 +116,11 @@ Productiveness ratio : ```r base::round(params$nb_productive / (params$nb_produc
   <img src="png/vj_allele_tree_donutchart.png" onclick="toggleFullscreen(this)" />
 </div>
 
-<br>
+<br><br>
 
 See also the [donuts.pdf](files/donuts.pdf) file in the files folder.
-<br>
 
+<br><br><br>
 
 #### Heatmaps
 
@@ -134,8 +134,8 @@ See also the [donuts.pdf](files/donuts.pdf) file in the files folder.
 <br />
 
 See the [gene_repertoire.pdf](files/gene_repertoire.pdf) and [allele_repertoire.pdf](files/allele_repertoire.pdf) files in the files folder.
-<br>
 
+<br><br><br>
 
 ###  Clonal prediction 
 
@@ -156,14 +156,17 @@ See the [germ_tree.pdf](files/germ_tree.pdf) file in the files folder.
 <br>
 
 See also:<br /><ul><li>[germ_tree_seq.tsv](files/germ_tree_seq.tsv)<br /></li><li>[germ_tree_dismissed_seq.tsv](files/germ_tree_dismissed_seq.tsv)<br /></li><li>[germ_tree_clone_id.tsv](files/germ_tree_clone_id.tsv)<br /></li><li>[germ_tree_dismissed_clone_id.tsv](files/germ_tree_dismissed_clone_id.tsv)
-<br>
+
+
+<br><br><br>
 
 ###  Amino acid sequences phylogeny 
 
 <br>
 
-Open the different sequences_<SEQ>_align.fasta_itol_url.txt files in the [phylo](./phylo) folder and click on the link to see the trees.
-<br>
+Open the different sequences_\<SEQ_NAME\>_align.fasta_itol_url.txt files in the [phylo](./phylo) folder and click on the link to see the trees.
+
+<br><br><br>
 
 ###  Backup
 
