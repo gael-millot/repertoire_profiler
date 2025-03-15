@@ -1204,7 +1204,8 @@ process NbSequences {
 }
 
 process Tree {
-    publishDir path: "${out_path}/files", mode: 'copy'
+    publishDir path: "${out_path}/phylo", mode: 'copy', pattern: "{.treefile}", overwrite: false
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
 
     label 'iqtree'
 
@@ -1239,7 +1240,7 @@ process ProcessMeta {
 
 
 process ITOL{
-    publishDir path: "${out_path}/files", mode: 'copy'
+    publishDir path: "${out_path}/phylo", mode: 'copy'
 
     label 'gotree'
 

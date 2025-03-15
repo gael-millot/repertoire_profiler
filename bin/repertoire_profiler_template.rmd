@@ -100,18 +100,6 @@ Productiveness ratio : ```r base::round(params$nb_productive / (params$nb_produc
 
 <br>
 
-### Clonal groups
-
-**Clone-assigned sequences** are productive sequences with additionnal features: germline clustering (clone ID), allele reannotation (germinal_v_call and germinal_j_call columns), mutation load, distance and sequence nickname (annotation from the metadata file) added. <br>
-Some sequences from the productive file can **fail to be clone-assigned**, and will not be in the clone_assigned_seq.tsv file. 
-
-Number of [clone-assigned sequences](files/clone_assigned_seq.tsv) : ```r params$nb_clone_assigned```
-
-Number of [failed clone-assigned sequences](files/non_clone_assigned_sequence.tsv) : ```r params$nb_failed_clone```
-
-Passing ratio : ```r base::round(params$nb_clone_assigned / (params$nb_clone_assigned + params$nb_failed_clone), 2)```
-
-<br>
 
 ### Repertoire summary
 
@@ -128,10 +116,11 @@ Passing ratio : ```r base::round(params$nb_clone_assigned / (params$nb_clone_ass
   <img src="png/vj_allele_tree_donutchart.png" onclick="toggleFullscreen(this)" />
 </div>
 
-
-
-
 <br>
+
+See also the [donuts.pdf](files/donuts.pdf) file in the files folder.
+<br>
+
 
 #### Heatmaps
 
@@ -142,8 +131,39 @@ Passing ratio : ```r base::round(params$nb_clone_assigned / (params$nb_clone_ass
   <img src="png/rep_gene_IGHV_IGHJ_non-zero.png" width="40%" style="border: 2px solid black;" /> 
 </div>
 
-<br /><br />
+<br />
 
+See the [gene_repertoire.pdf](files/gene_repertoire.pdf) and [allele_repertoire.pdf](files/allele_repertoire.pdf) files in the files folder.
+<br>
+
+
+###  Clonal prediction 
+
+<br>
+
+**Clone-assigned sequences** are productive sequences with additionnal features: germline clustering (clone ID), allele reannotation (germinal_v_call and germinal_j_call columns), mutation load, distance and sequence nickname (annotation from the metadata file) added. <br>
+Some sequences from the productive file can **fail to be clone-assigned**, and will not be in the clone_assigned_seq.tsv file. 
+
+Number of [clone-assigned sequences](files/clone_assigned_seq.tsv) : ```r params$nb_clone_assigned```
+
+Number of [failed clone-assigned sequences](files/non_clone_assigned_sequence.tsv) : ```r params$nb_failed_clone```
+
+Passing ratio : ```r base::round(params$nb_clone_assigned / (params$nb_clone_assigned + params$nb_failed_clone), 2)```
+
+<br>
+
+See the [germ_tree.pdf](files/germ_tree.pdf) file in the files folder.
+<br>
+
+See also:<br /><ul><li>[germ_tree_seq.tsv](files/germ_tree_seq.tsv)<br /></li><li>[germ_tree_dismissed_seq.tsv](files/germ_tree_dismissed_seq.tsv)<br /></li><li>[germ_tree_clone_id.tsv](files/germ_tree_clone_id.tsv)<br /></li><li>[germ_tree_dismissed_clone_id.tsv](files/germ_tree_dismissed_clone_id.tsv)
+<br>
+
+###  Amino acid sequences phylogeny 
+
+<br>
+
+Open the different sequences_<SEQ>_align.fasta_itol_url.txt files in the [phylo](./phylo) folder and click on the link to see the trees.
+<br>
 
 ###  Backup
 
