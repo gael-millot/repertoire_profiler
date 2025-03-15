@@ -302,334 +302,6 @@ process translation {
     """
 }
 
-
-
-// Compares cdr3 différences from sequences with same cdr3 length, same v and same j
-// Number of substitutions normalized by the length of the cdr3
-// NA means cdr3 sequences are exactly the same for the group
-process distToNearest {
-    label 'immcantation'
-    //publishDir path: "${out_path}", mode: 'copy', pattern: "{nearest_distance.tsv}", overwrite: false
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{distToNearest.log}", overwrite: false
-    cache 'true'
-
-    input:
-    path translation_ch2 // no parallelization
-    val igblast_aa
-    val clone_model
-    val clone_normalize
-
-    output:
-    path "nearest_distance.tsv", emit: distToNearest_ch
-    path "distToNearest.log"
-
-    script:
-    """
-    #!/bin/bash -ue
-    Rscript -e '
-         # WEIRD stuf: if db alone is returned, and if distToNearest_ch is used for the clone_assignment process and followings, everything is fine. But if db3 is returned with db3 <- data.frame(db, dist_nearest = db2\$dist_nearest) or db3 <- data.frame(db, caca = db2\$dist_nearest) or data.frame(db, caca = db\$sequence_id) or db3 <- data.frame(db, caca = as.numeric(db2\$dist_nearest)) or db3 <- data.frame(db[1:3], caca = db\$sequence_id, db[4:length(db)]), the get_germ_tree process cannot make trees, while the productive.tsv seem identical at the end, between the use of db or db3, except that the clone_id order is not the same
-        db <- read.table("${translation_ch2}", header = TRUE, sep = "\\t")
-        if("${clone_model}" != "aa" & "${igblast_aa}" == "true"){
-          tempo.cat <- paste0("\\n\\n========\\n\\nERROR IN THE NEXTFLOW EXECUTION OF THE distToNearest PROCESS\\nclone_model PARAMETER SHOULD BE \\"aa\\" IF AA FASTA FILES ARE USED (igblast_aa PARAMETER SET TO \\"true\\"). HERE:\\nclone_model: ${clone_model}\\n\\n========\\n\\n")
-          stop(tempo.cat)
-        }
-        db2 <- shazam::distToNearest(db, sequenceColumn = "junction", locusColumn = "locus", model = "${clone_model}", normalize = "${clone_normalize}", nproc = 1)
-        write.table(db2, file = paste0("./nearest_distance.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
-    ' |& tee -a distToNearest.log
-    """
-}
-
-
-process distance_hist {
-    label 'immcantation'
-    publishDir path: "${out_path}/png", mode: 'copy', pattern: "{*.png}", overwrite: false
-    publishDir path: "${out_path}/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{distance_hist.log}", overwrite: false
-    cache 'true'
-
-    input:
-    path distToNearest_ch // no parallelization
-    path cute_file
-    val clone_model
-    val clone_normalize
-    val clone_distance
-
-    output:
-    path "seq*.pdf", emit: histogram_pdf_ch
-    path "*.png", emit: distance_hist_ch // png plot (but sometimes empty) sustematically returned
-    path "*.svg"
-    path "distance_hist.log"
-
-    script:
-    """
-    #!/bin/bash -ue
-    histogram.R \
-"${distToNearest_ch}" \
-"${clone_model}" \
-"${clone_normalize}" \
-"${clone_distance}" \
-"${cute_file}" \
-"distance_hist.log"
-    """
-}
-
-process histogram_assembly {
-    label 'r_ext'
-    publishDir path: "${out_path}/files", mode: 'copy', pattern: "{seq_distance.pdf}", overwrite: false
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{histogram_assembly.log}", overwrite: false
-    cache 'true'
-
-    input:
-    path histogram_pdf_ch
-
-    output:
-    path "seq_distance.pdf"
-
-    script:
-    """
-    #!/bin/bash -ue
-    Rscript -e '
-    # assignation to prevent a returned element
-        tempo <- qpdf::pdf_combine(input = list.files(path = ".", pattern = "^seq.*.pdf\$"), output = "./seq_distance.pdf")
-    ' |& tee -a histogram_assembly.log
-    """
-}
-
-
-process clone_assignment {
-    label 'immcantation'
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
-    publishDir path: "${out_path}/files", mode: 'copy', pattern: "non_clone_assigned_sequence.tsv", overwrite: false
-    cache 'true'
-
-    input:
-    path productive_ch // no parallelization
-    val clone_model
-    val clone_normalize
-    val clone_distance
-
-    output:
-    path "*_clone-pass.tsv", emit: clone_ch
-    path "non_clone_assigned_sequence.tsv", emit: failed_clone_ch
-    path "*.log"
-
-    script:
-    """
-    #!/bin/bash -ue
-    if [[ -s ${productive_ch} ]]; then # see above for -s
-        DefineClones.py -d ${productive_ch} --act set --model ${clone_model} --norm ${clone_normalize} --dist ${clone_distance} --fail |& tee -a clone_assignment.log
-        if [ -s *_clone-fail.tsv ]; then # see above for -s
-            cp *_clone-fail.tsv non_clone_assigned_sequence.tsv |& tee -a clone_assignment.log
-        else
-            echo -e "\n\nNOTE: EMPTY non_clone_assigned_sequence.tsv FILE RETURNED FOLLOWING THE clone_assignment PROCESS\n\n" |& tee -a clone_assignment.log
-            echo -n "" | cat > non_clone_assigned_sequence.tsv
-        fi
-    else
-        echo -e "\\n\\n========\\n\\nINTERNAL ERROR IN NEXTFLOW EXECUTION\\n\\nEMPTY FILE GENERATED BY THE translation PROCESS\\nCHECK THE clone_assignment.log AND *_productive-F.tsv FILES IN THE report FOLDER INSIDE THE OUTPUT FOLDER\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n"
-        exit 1
-    fi
-    """
-}
-
-process split_by_clones { // split the file into multiple files according to the clone_id column
-    label 'immcantation'
-    cache 'true'
-
-    input:
-    path clone_ch // no parallelization
-
-    output:
-    path "*_productive_seq_clone-pass.tsv", emit: clone_split_ch // multiple files -> parall expected
-
-    script:
-    """
-    #!/bin/bash -ue
-    FILENAME=\$(basename -- ${clone_ch}) # recover a file name without path
-    cp -Lr ${clone_ch} "./TEMPO.tsv" # to have the hard file, not the symlink, because modifications will be performed inside
-    chmod 777 TEMPO.tsv
-    rm \$FILENAME # remove the initial file to avoid to send it into the channel
-    cp -rp TEMPO.tsv "\$FILENAME" # -p for preserve permissions
-    rm TEMPO.tsv
-
-    # Determine the position of the clone_id column
-    clone_id_col=\$(Rscript -e '
-        args <- commandArgs(trailingOnly = TRUE)
-        filename <- args[1]
-
-        # Read the header of the file
-        header <- read.table(filename, sep = "\\t", header = TRUE, nrows = 1)
-
-        # Find the position of the clone_id column
-        clone_id_col <- which(names(header) == "clone_id")
-
-        if (length(clone_id_col) == 0) {
-          cat("ERROR: clone_id column not found in the input file\\n")
-          quit(status = 1)
-        } else {
-          cat(clone_id_col, "\\n")
-        }
-    ' \$FILENAME)
-
-    if [ -z "\$clone_id_col" ]; then
-        echo "ERROR IN THE SPLIT_BY_CLONES PROCESS: clone_id column not found in the input file"
-        exit 1
-    fi
-
-    awk -v var1=\$FILENAME -v col=\$clone_id_col -F "\\t" '{
-        print \$col
-        if(NR == 1){
-            header=\$0 ; next
-        }else{
-            clone_id=\$col
-            if(system( "[ -f " \$col"_"var1 " ] " ) > 0){ # test if a file exists
-                print header > \$col"_"var1
-            }
-            print \$0 > \$col"_"var1
-        }
-    }' \$FILENAME
-    """
-}
-
-
-process closest_germline {
-    label 'immcantation'
-    //publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
-    //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
-    cache 'true'
-
-    input:
-    path clone_split_ch // parallelization expected
-    val igblast_organism
-    val igblast_variable_ref_files
-
-    output:
-    path "*_germ-pass.tsv", emit: closest_ch
-    path "*.log", emit: closest_log_ch
-
-    script:
-    """
-    #!/bin/bash -ue
-    FILENAME=\$(basename -- ${clone_split_ch}) # recover a file name without path
-    cp -Lr ${clone_split_ch} "./TEMPO.tsv" # to have the hard file, not the symlink, because modifications will be performed inside
-    chmod 777 TEMPO.tsv
-    rm \$FILENAME # remove the initial file to avoid to send it into the channel
-    cp -rp TEMPO.tsv "\$FILENAME" # -p for preserve permissions
-    rm TEMPO.tsv
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a closest_germline.log
-    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a closest_germline.log
-    # variables
-
-    REPO_PATH="/usr/local/share/germlines/imgt/${igblast_organism}/vdj" # path where the imgt_human_IGHV.fasta, imgt_human_IGHD.fasta and imgt_human_IGHJ.fasta files are in the docker container
-    VDJ_FILES=\$(awk -v var1="${igblast_variable_ref_files}" -v var2="\${REPO_PATH}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}')
-    # end variables
-    CreateGermlines.py -d \$FILENAME -g dmask --cloned -r \${VDJ_FILES} |& tee -a closest_germline.log
-    """
-}
-
-
-process mutation_load {
-    label 'immcantation'
-    //publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
-    //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
-    cache 'true'
-
-    input:
-    path closest_ch // parallelization expected
-    val meta_legend
-
-
-    output:
-    path "*_shm-pass.tsv", emit: mutation_load_ch
-    path "*.log", emit: mutation_load_log_ch
-
-    script:
-    """
-    #!/bin/bash -ue
-    FILENAME=\$(basename -- ${closest_ch}) # recover a file name without path
-    cp -Lr ${closest_ch} "./TEMPO.tsv" # to have the hard file, not the symlink, because modifications will be performed inside
-    chmod 777 TEMPO.tsv
-    rm \$FILENAME # remove the initial file to avoid to send it into the channel
-    cp -rp TEMPO.tsv "\$FILENAME" # -p for preserve permissions
-    rm TEMPO.tsv
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a mutation_load.log
-    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a mutation_load.log
-    Rscript -e '
-        # Clonal assignment and germline sequences reconstruction should have been performed 
-        # using the DefineClone.py and CreateGerlines.py in ChangeO
-        # A "germline_alignment_d_mask" collumn should be present. 
-        # If germline sequences reconstruction has been performed after clonal assignment,
-        # a single germline_alignment_d_mask" consensus sequence should be present for each clone.
-
-
-        args <- commandArgs(trailingOnly = TRUE)  # recover arguments written after the call of the Rscript
-        tempo.arg.names <- c("file_name") # objects names exactly in the same order as in the bash code and recovered in args
-        if(length(args) != length(tempo.arg.names)){
-          tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE mutation_load PROCESS\\n THE NUMBER OF ELEMENTS IN args (", length(args),") IS DIFFERENT FROM THE NUMBER OF ELEMENTS IN tempo.arg.names (", length(tempo.arg.names),")\\nargs:", paste0(args, collapse = ","), "\\ntempo.arg.names:", paste0(tempo.arg.names, collapse = ","), "\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
-          stop(tempo.cat)
-        }
-        for(i2 in 1:length(tempo.arg.names)){
-          assign(tempo.arg.names[i2], args[i2])
-        }
-
-        VDJ_db <- read.table(file_name, sep = "\\t", header = TRUE)
-
-        # Calculate R and S mutation counts
-        VDJ_db <- shazam::observedMutations(VDJ_db, sequenceColumn="sequence_alignment",
-                                    germlineColumn="germline_alignment_d_mask",
-                                    regionDefinition=shazam::IMGT_V,
-                                    frequency=FALSE, 
-                                    nproc=1)
-        # Calculate combined R and S mutation counts
-        VDJ_db <- shazam::observedMutations(VDJ_db, sequenceColumn="sequence_alignment",
-                                    germlineColumn="germline_alignment_d_mask",
-                                    regionDefinition=shazam::IMGT_V,
-                                    frequency=FALSE, 
-                                    combine=TRUE,
-                                    nproc=1)
-
-        # Calculate R and S mutation frequencies
-        VDJ_db <- shazam::observedMutations(VDJ_db, sequenceColumn="sequence_alignment",
-                                    germlineColumn="germline_alignment_d_mask",
-                                    regionDefinition=shazam::IMGT_V,
-                                    frequency=TRUE, 
-                                    nproc=1)
-
-        # Calculate combined R and S mutation frequencies
-        VDJ_db <- shazam::observedMutations(VDJ_db, sequenceColumn="sequence_alignment",
-                                    germlineColumn="germline_alignment_d_mask",
-                                    regionDefinition=shazam::IMGT_V,
-                                    frequency=TRUE, 
-                                    combine=TRUE,
-                                    nproc=1)
-
-        VDJ_db <- dplyr::arrange(VDJ_db, clone_id)
-        # write.table(VDJ_db, file = paste0("./", file_name, "_shm-pass.tsv"), row.names = FALSE, sep = "\\t")
-
-        # Reposition the column starting with "initial_" to the second position
-        initial_col <- grep("^initial_", names(VDJ_db), value = TRUE)
-        if (length(initial_col) == 0) {
-          stop("No column starting with 'initial_' found")
-        }
-        tempo <- VDJ_db[[initial_col]]
-        VDJ_db <- VDJ_db[ , !(names(VDJ_db) %in% initial_col)]
-        VDJ_db <- data.frame(VDJ_db[1], tempo, VDJ_db[2:length(VDJ_db)])
-        names(VDJ_db)[2] <- initial_col
-
-        # Check if a column equal to meta_legend in lowercase exists in 'data' 
-        meta_legend_lower <- tolower("${meta_legend}")
-        if (any(tolower(names(data)) == meta_legend_lower)) {
-            # Renommer la colonne à partir de meta_legend (non minuscules)
-            names(data)[tolower(names(data)) == meta_legend_lower] <- "${meta_legend}"
-        }
-
-        write.table(VDJ_db, file = paste0("./", file_name, "_shm-pass.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
-
-    ' "\${FILENAME}" |& tee -a mutation_load.log
-    # cp ./tempo_shm-pass.tsv \${FILENAME}_shm-pass.tsv
-    # rm tempo_shm-pass.tsv
-    """
-}
-
 // Rename the sequence names in the data file
 // The sequence names are replaced by the values of the column meta_name_replacement (specified in .config) of the metadata file
 process seq_name_replacement {
@@ -795,7 +467,7 @@ process data_assembly {
             stop(tempo.cat)
         }
 
-        #### Remove allele info
+        #### remove allele info
 
         tempo_v <- strsplit(db3\$v_call, ",")
         sub_v <- sapply(X = tempo_v, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; paste0(unique(y), collapse = ",")})
@@ -899,6 +571,356 @@ process repertoire {
     """
 }
 
+// Compares cdr3 différences from sequences with same cdr3 length, same v and same j
+// Number of substitutions normalized by the length of the cdr3
+// NA means cdr3 sequences are exactly the same for the group
+process distToNearest {
+    label 'immcantation'
+    //publishDir path: "${out_path}", mode: 'copy', pattern: "{nearest_distance.tsv}", overwrite: false
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{distToNearest.log}", overwrite: false
+    cache 'true'
+
+    input:
+    path translation_ch2 // no parallelization
+    val igblast_aa
+    val clone_model
+    val clone_normalize
+
+    output:
+    path "nearest_distance.tsv", emit: distToNearest_ch
+    path "distToNearest.log"
+
+    script:
+    """
+    #!/bin/bash -ue
+    Rscript -e '
+         # WEIRD stuf: if db alone is returned, and if distToNearest_ch is used for the clone_assignment process and followings, everything is fine. But if db3 is returned with db3 <- data.frame(db, dist_nearest = db2\$dist_nearest) or db3 <- data.frame(db, caca = db2\$dist_nearest) or data.frame(db, caca = db\$sequence_id) or db3 <- data.frame(db, caca = as.numeric(db2\$dist_nearest)) or db3 <- data.frame(db[1:3], caca = db\$sequence_id, db[4:length(db)]), the get_germ_tree process cannot make trees, while the productive.tsv seem identical at the end, between the use of db or db3, except that the clone_id order is not the same
+        db <- read.table("${translation_ch2}", header = TRUE, sep = "\\t")
+        if("${clone_model}" != "aa" & "${igblast_aa}" == "true"){
+          tempo.cat <- paste0("\\n\\n========\\n\\nERROR IN THE NEXTFLOW EXECUTION OF THE distToNearest PROCESS\\nclone_model PARAMETER SHOULD BE \\"aa\\" IF AA FASTA FILES ARE USED (igblast_aa PARAMETER SET TO \\"true\\"). HERE:\\nclone_model: ${clone_model}\\n\\n========\\n\\n")
+          stop(tempo.cat)
+        }
+        db2 <- shazam::distToNearest(db, sequenceColumn = "junction", locusColumn = "locus", model = "${clone_model}", normalize = "${clone_normalize}", nproc = 1)
+        write.table(db2, file = paste0("./nearest_distance.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
+    ' |& tee -a distToNearest.log
+    """
+}
+
+
+process distance_hist {
+    label 'immcantation'
+    publishDir path: "${out_path}/png", mode: 'copy', pattern: "{*.png}", overwrite: false
+    publishDir path: "${out_path}/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{distance_hist.log}", overwrite: false
+    cache 'true'
+
+    input:
+    path distToNearest_ch // no parallelization
+    path cute_file
+    val clone_model
+    val clone_normalize
+    val clone_distance
+
+    output:
+    path "seq*.pdf", emit: histogram_pdf_ch
+    path "*.png", emit: distance_hist_ch // png plot (but sometimes empty) sustematically returned
+    path "*.svg"
+    path "distance_hist.log"
+
+    script:
+    """
+    #!/bin/bash -ue
+    histogram.R \
+"${distToNearest_ch}" \
+"${clone_model}" \
+"${clone_normalize}" \
+"${clone_distance}" \
+"${cute_file}" \
+"distance_hist.log"
+    """
+}
+
+process histogram_assembly {
+    label 'r_ext'
+    publishDir path: "${out_path}/files", mode: 'copy', pattern: "{seq_distance.pdf}", overwrite: false
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{histogram_assembly.log}", overwrite: false
+    cache 'true'
+
+    input:
+    path histogram_pdf_ch
+
+    output:
+    path "seq_distance.pdf"
+
+    script:
+    """
+    #!/bin/bash -ue
+    Rscript -e '
+    # assignation to prevent a returned element
+        tempo <- qpdf::pdf_combine(input = list.files(path = ".", pattern = "^seq.*.pdf\$"), output = "./seq_distance.pdf")
+    ' |& tee -a histogram_assembly.log
+    """
+}
+
+
+process clone_assignment {
+    label 'immcantation'
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
+    publishDir path: "${out_path}/files", mode: 'copy', pattern: "non_clone_assigned_sequence.tsv", overwrite: false
+    cache 'true'
+
+    input:
+    path productive_ch // no parallelization
+    val clone_model
+    val clone_normalize
+    val clone_distance
+    path meta_file
+    val meta_legend
+
+    output:
+    path "*_clone-pass.tsv", emit: clone_ch
+    path "non_clone_assigned_sequence.tsv", emit: failed_clone_ch
+    path "*.log"
+
+    script:
+    """
+    #!/bin/bash -ue
+    if [[ -s ${productive_ch} ]]; then # see above for -s
+        DefineClones.py -d ${productive_ch} --act set --model ${clone_model} --norm ${clone_normalize} --dist ${clone_distance} --fail |& tee -a clone_assignment.log
+        Rscript -e '
+            args = commandArgs(trailingOnly=TRUE)
+            db <- read.table(args[1], sep = "\\t", header = TRUE)
+            if("${meta_file}" != "NULL" & "${meta_legend}" != "NULL" ){
+                tempo_log <- names(db) == tolower("${meta_legend}")
+                if(any(tempo_log, na.rm = TRUE)){
+                    names(db)[tempo_log] <- "${meta_legend}"
+                }
+            }
+            write.table(db, file = paste0(args[1]), row.names = FALSE, col.names = TRUE, sep = "\\t")
+        ' *_clone-pass.tsv
+        if [ -s *_clone-fail.tsv ]; then # see above for -s
+            cp *_clone-fail.tsv non_clone_assigned_sequence.tsv |& tee -a clone_assignment.log
+            Rscript -e '
+                db <- read.table("./non_clone_assigned_sequence.tsv", sep = "\\t", header = TRUE)
+                if("${meta_file}" != "NULL" & "${meta_legend}" != "NULL" ){
+                    tempo_log <- names(db) == tolower("${meta_legend}")
+                    if(any(tempo_log, na.rm = TRUE)){
+                        names(db)[tempo_log] <- "${meta_legend}"
+                    }
+                }
+                write.table(db, file = paste0("./non_clone_assigned_sequence.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
+            '
+        else
+            echo -e "\n\nNOTE: EMPTY non_clone_assigned_sequence.tsv FILE RETURNED FOLLOWING THE clone_assignment PROCESS\n\n" |& tee -a clone_assignment.log
+            echo -n "" | cat > non_clone_assigned_sequence.tsv
+        fi
+    else
+        echo -e "\\n\\n========\\n\\nINTERNAL ERROR IN NEXTFLOW EXECUTION\\n\\nEMPTY FILE GENERATED BY THE translation PROCESS\\nCHECK THE clone_assignment.log AND *_productive-F.tsv FILES IN THE report FOLDER INSIDE THE OUTPUT FOLDER\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n"
+        exit 1
+    fi
+    """
+}
+
+process split_by_clones { // split the file into multiple files according to the clone_id column
+    label 'immcantation'
+    cache 'true'
+
+    input:
+    path clone_ch // no parallelization
+
+    output:
+    path "*_productive_seq_clone-pass.tsv", emit: clone_split_ch // multiple files -> parall expected
+
+    script:
+    """
+    #!/bin/bash -ue
+    FILENAME=\$(basename -- ${clone_ch}) # recover a file name without path
+    cp -Lr ${clone_ch} "./TEMPO.tsv" # to have the hard file, not the symlink, because modifications will be performed inside
+    chmod 777 TEMPO.tsv
+    rm \$FILENAME # remove the initial file to avoid to send it into the channel
+    cp -rp TEMPO.tsv "\$FILENAME" # -p for preserve permissions
+    rm TEMPO.tsv
+
+    # Determine the position of the clone_id column
+    clone_id_col=\$(Rscript -e '
+        args <- commandArgs(trailingOnly = TRUE)
+        filename <- args[1]
+
+        # Read the header of the file
+        header <- read.table(filename, sep = "\\t", header = TRUE, nrows = 1)
+
+        # Find the position of the clone_id column
+        clone_id_col <- which(names(header) == "clone_id")
+
+        if (length(clone_id_col) == 0) {
+          cat("ERROR: clone_id column not found in the input file\\n")
+          quit(status = 1)
+        } else {
+          cat(clone_id_col, "\\n")
+        }
+    ' \$FILENAME)
+
+    if [ -z "\$clone_id_col" ]; then
+        echo "ERROR IN THE SPLIT_BY_CLONES PROCESS: clone_id column not found in the input file"
+        exit 1
+    fi
+
+    awk -v var1=\$FILENAME -v col=\$clone_id_col -F "\\t" '{
+        print \$col
+        if(NR == 1){
+            header=\$0 ; next
+        }else{
+            clone_id=\$col
+            if(system( "[ -f " \$col"_"var1 " ] " ) > 0){ # test if a file exists
+                print header > \$col"_"var1
+            }
+            print \$0 > \$col"_"var1
+        }
+    }' \$FILENAME
+    """
+}
+
+
+process closest_germline {
+    label 'immcantation'
+    //publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
+    //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
+    cache 'true'
+
+    input:
+    path clone_split_ch // parallelization expected
+    val igblast_organism
+    val igblast_variable_ref_files
+
+    output:
+    path "*_germ-pass.tsv", emit: closest_ch
+    path "*.log", emit: closest_log_ch
+
+    script:
+    """
+    #!/bin/bash -ue
+    FILENAME=\$(basename -- ${clone_split_ch}) # recover a file name without path
+    cp -Lr ${clone_split_ch} "./TEMPO.tsv" # to have the hard file, not the symlink, because modifications will be performed inside
+    chmod 777 TEMPO.tsv
+    rm \$FILENAME # remove the initial file to avoid to send it into the channel
+    cp -rp TEMPO.tsv "\$FILENAME" # -p for preserve permissions
+    rm TEMPO.tsv
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a closest_germline.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a closest_germline.log
+    # variables
+
+    REPO_PATH="/usr/local/share/germlines/imgt/${igblast_organism}/vdj" # path where the imgt_human_IGHV.fasta, imgt_human_IGHD.fasta and imgt_human_IGHJ.fasta files are in the docker container
+    VDJ_FILES=\$(awk -v var1="${igblast_variable_ref_files}" -v var2="\${REPO_PATH}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}')
+    # end variables
+    CreateGermlines.py -d \$FILENAME -g dmask --cloned -r \${VDJ_FILES} |& tee -a closest_germline.log
+    """
+}
+
+
+process mutation_load {
+    label 'immcantation'
+    //publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
+    //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
+    cache 'true'
+
+    input:
+    path closest_ch // parallelization expected
+    path meta_file
+    val meta_legend
+
+
+    output:
+    path "*_shm-pass.tsv", emit: mutation_load_ch
+    path "*.log", emit: mutation_load_log_ch
+
+    script:
+    """
+    #!/bin/bash -ue
+    FILENAME=\$(basename -- ${closest_ch}) # recover a file name without path
+    cp -Lr ${closest_ch} "./TEMPO.tsv" # to have the hard file, not the symlink, because modifications will be performed inside
+    chmod 777 TEMPO.tsv
+    rm \$FILENAME # remove the initial file to avoid to send it into the channel
+    cp -rp TEMPO.tsv "\$FILENAME" # -p for preserve permissions
+    rm TEMPO.tsv
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a mutation_load.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a mutation_load.log
+    Rscript -e '
+        # Clonal assignment and germline sequences reconstruction should have been performed 
+        # using the DefineClone.py and CreateGerlines.py in ChangeO
+        # A "germline_alignment_d_mask" collumn should be present. 
+        # If germline sequences reconstruction has been performed after clonal assignment,
+        # a single germline_alignment_d_mask" consensus sequence should be present for each clone.
+
+
+        args <- commandArgs(trailingOnly = TRUE)  # recover arguments written after the call of the Rscript
+        tempo.arg.names <- c("file_name") # objects names exactly in the same order as in the bash code and recovered in args
+        if(length(args) != length(tempo.arg.names)){
+          tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE mutation_load PROCESS\\n THE NUMBER OF ELEMENTS IN args (", length(args),") IS DIFFERENT FROM THE NUMBER OF ELEMENTS IN tempo.arg.names (", length(tempo.arg.names),")\\nargs:", paste0(args, collapse = ","), "\\ntempo.arg.names:", paste0(tempo.arg.names, collapse = ","), "\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
+          stop(tempo.cat)
+        }
+        for(i2 in 1:length(tempo.arg.names)){
+          assign(tempo.arg.names[i2], args[i2])
+        }
+
+        VDJ_db <- read.table(file_name, sep = "\\t", header = TRUE)
+
+        # Calculate R and S mutation counts
+        VDJ_db <- shazam::observedMutations(VDJ_db, sequenceColumn="sequence_alignment",
+                                    germlineColumn="germline_alignment_d_mask",
+                                    regionDefinition=shazam::IMGT_V,
+                                    frequency=FALSE, 
+                                    nproc=1)
+        # Calculate combined R and S mutation counts
+        VDJ_db <- shazam::observedMutations(VDJ_db, sequenceColumn="sequence_alignment",
+                                    germlineColumn="germline_alignment_d_mask",
+                                    regionDefinition=shazam::IMGT_V,
+                                    frequency=FALSE, 
+                                    combine=TRUE,
+                                    nproc=1)
+
+        # Calculate R and S mutation frequencies
+        VDJ_db <- shazam::observedMutations(VDJ_db, sequenceColumn="sequence_alignment",
+                                    germlineColumn="germline_alignment_d_mask",
+                                    regionDefinition=shazam::IMGT_V,
+                                    frequency=TRUE, 
+                                    nproc=1)
+
+        # Calculate combined R and S mutation frequencies
+        VDJ_db <- shazam::observedMutations(VDJ_db, sequenceColumn="sequence_alignment",
+                                    germlineColumn="germline_alignment_d_mask",
+                                    regionDefinition=shazam::IMGT_V,
+                                    frequency=TRUE, 
+                                    combine=TRUE,
+                                    nproc=1)
+
+        VDJ_db <- dplyr::arrange(VDJ_db, clone_id)
+        # write.table(VDJ_db, file = paste0("./", file_name, "_shm-pass.tsv"), row.names = FALSE, sep = "\\t")
+
+        # Reposition the column starting with "initial_" to the second position
+        initial_col <- grep("^initial_", names(VDJ_db), value = TRUE)
+        if (length(initial_col) == 0) {
+          stop("No column starting with 'initial_' found")
+        }
+        tempo <- VDJ_db[[initial_col]]
+        VDJ_db <- VDJ_db[ , !(names(VDJ_db) %in% initial_col)]
+        VDJ_db <- data.frame(VDJ_db[1], tempo, VDJ_db[2:length(VDJ_db)])
+        names(VDJ_db)[2] <- initial_col
+
+        # Check if a column equal to meta_legend in lowercase exists in 'data' 
+        if("${meta_file}" != "NULL" & "${meta_legend}" != "NULL" ){
+            tempo_log <- names(VDJ_db) == tolower("${meta_legend}")
+            if(any(tempo_log, na.rm = TRUE)){
+                names(VDJ_db)[tempo_log] <- "${meta_legend}"
+            }
+        }
+        # end Check if a column equal to meta_legend in lowercase exists in 'data'
+        write.table(VDJ_db, file = paste0("./", file_name, "_shm-pass.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
+
+    ' "\${FILENAME}" |& tee -a mutation_load.log
+    # cp ./tempo_shm-pass.tsv \${FILENAME}_shm-pass.tsv
+    # rm tempo_shm-pass.tsv
+    """
+}
 
 
 process get_germ_tree {
@@ -1777,7 +1799,9 @@ workflow {
         data_assembly.out.productive_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE data_assembly PROCESS\n\n========\n\n"}, 
         clone_model,
         clone_normalize,
-        clone_distance
+        clone_distance,
+        meta_file,
+        meta_legend
     )
     // clone_assignment.out.clone_ch.view()
 
@@ -1800,6 +1824,7 @@ workflow {
 
     mutation_load(
         closest_germline.out.closest_ch,
+        meta_file, 
         meta_legend
     )
     //mutation_load.out.mutation_load_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE mutation_load PROCESS\n\n========\n\n"}}
