@@ -139,6 +139,7 @@ process igblast_data_check { // cannot be igblast_data_check outside of process 
             grep -E '^>.*\$' \${i1} | cut -f2 -d'|' > \${FILENAME}.tsv # detect line starting by > and extract the 2nd field after cutting by |
         fi
     done
+
     """
     // write ${} between "" to make a single argument when the variable is made of several values separated by a space. Otherwise, several arguments will be considered
 }
@@ -432,12 +433,12 @@ process data_assembly {
         }else{
             tempo.col.name <- ifelse("initial_sequence_id" %in% names(db), "initial_sequence_id", "sequence_id")
         }
-        # if(all(c("sequence_id", "initial_sequence_id") %in% names(db))){
-        #     if(all(db\$sequence_id == db\$initial_sequence_id)){
-        #         tempo.cat <- paste0("\\n\\n========\\n\\nERROR IN THE data_assembly PROCESS OF NEXTFLOW\\nTHE meta_path AND meta_name_replacement PARAMETERS ARE NOT \\"NULL\\" BUT NO SEQUENCE NAMES HAVE BEEN REPLACED WHEN USING THE meta_name_replacement COLUMN\\n\\n========\\n\\n")
-        #         stop(tempo.cat)
-        #     }
-        # }
+        if(all(c("sequence_id", "initial_sequence_id") %in% names(db))){
+            if(all(db\$sequence_id == db\$initial_sequence_id)){
+                tempo.cat <- paste0("\\n\\n========\\n\\nERROR IN THE data_assembly PROCESS OF NEXTFLOW\\nTHE meta_path AND meta_name_replacement PARAMETERS ARE NOT \\"NULL\\" BUT NO SEQUENCE NAMES HAVE BEEN REPLACED WHEN USING THE meta_name_replacement COLUMN\\n\\n========\\n\\n")
+                stop(tempo.cat)
+            }
+        }
         if(any(is.na(match(db[, tempo.col.name], dtn\$sequence_id)))){
             tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE data_assembly PROCESS\\nNO NA SHOULD APPEAR AT THAT STAGE WITH match()\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
             stop(tempo.cat)
@@ -521,10 +522,9 @@ process metadata_check { // cannot be in germ_tree_vizu because I have to use th
                 if(names(df)[2] != "initial_sequence_id"){
                     stop(paste0("\\n\\n============\\n\\nINTERNAL ERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\" AND IF THE meta_name_replacement PARAMETER IS NOT \\"NULL\\", THEN THE TABLE GENERATED USING THE sample_path PARAMETER MUST CONTAIN initial_sequence_id AS FIRST COLUMN NAME.\\n\\n============\\n\\n"), call. = FALSE)
                 }
-                # Inactivated because no replacement is possible if same metadata file used for several data files (for different runs)
-                # if( ! any(meta[ , meta_name_replacement] %in% df[ , 1])){
-                #    stop(paste0("\\n\\n============\\n\\nERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nTHE meta_file AND meta_name_replacement PARAMETERS OF THE nextflow.config FILE ARE NOT NULL BUT NO NAME REPLACEMENT PERFORMED\\nPROBABLY THAT THE ${meta_seq_names} COLUMN OF THE FILE INDICATED IN THE meta_path PARAMETER IS NOT MADE OF NAMES OF FASTA FILES INDICATED IN THE sample_path PARAMETER\\nFIRST ELEMENTS OF THE ${meta_seq_names} COLUMN (meta_seq_names PARAMETER) OF THE META DATA FILE ARE:\\n", paste(head(meta[ , meta_seq_names], 20), collapse = "\\n"), "\\nFIRST FASTA FILES NAMES ARE:\\n", paste(head(df[ , 1], 20), collapse = "\\n"), "\\n\\n\\n============\\n\\n"), call. = FALSE)
-                # }
+                if( ! any(meta[ , meta_name_replacement] %in% df[ , 1])){
+                   stop(paste0("\\n\\n============\\n\\nERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nTHE meta_file AND meta_name_replacement PARAMETERS OF THE nextflow.config FILE ARE NOT NULL BUT NO NAME REPLACEMENT PERFORMED\\nPROBABLY THAT THE ${meta_seq_names} COLUMN OF THE FILE INDICATED IN THE meta_path PARAMETER IS NOT MADE OF NAMES OF FASTA FILES INDICATED IN THE sample_path PARAMETER\\nFIRST ELEMENTS OF THE ${meta_seq_names} COLUMN (meta_seq_names PARAMETER) OF THE META DATA FILE ARE:\\n", paste(head(meta[ , meta_seq_names], 20), collapse = "\\n"), "\\nFIRST FASTA FILES NAMES ARE:\\n", paste(head(df[ , 1], 20), collapse = "\\n"), "\\n\\n\\n============\\n\\n"), call. = FALSE)
+                }
             }
             if(meta_legend != "NULL"){
                 if( ! meta_legend %in% names(meta)){
@@ -898,13 +898,13 @@ process mutation_load {
 
         # Reposition the column starting with "initial_" to the second position
         initial_col <- grep("^initial_", names(VDJ_db), value = TRUE)
-        if (length(initial_col) == 0) {
-          stop("No column starting with 'initial_' found")
+        if (length(initial_col) > 0) {
+            tempo <- VDJ_db[[initial_col]]
+            VDJ_db <- VDJ_db[ , !(names(VDJ_db) %in% initial_col)]
+            VDJ_db <- data.frame(VDJ_db[1], tempo, VDJ_db[2:length(VDJ_db)])
+            names(VDJ_db)[2] <- initial_col
         }
-        tempo <- VDJ_db[[initial_col]]
-        VDJ_db <- VDJ_db[ , !(names(VDJ_db) %in% initial_col)]
-        VDJ_db <- data.frame(VDJ_db[1], tempo, VDJ_db[2:length(VDJ_db)])
-        names(VDJ_db)[2] <- initial_col
+        
 
         # Check if a column equal to meta_legend in lowercase exists in 'data' 
         if("${meta_file}" != "NULL" & "${meta_legend}" != "NULL" ){
@@ -1957,6 +1957,7 @@ workflow {
     //donut_assembly.out.donut_assembly_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}
     donut_assembly.out.donut_assembly_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}}
 
+    
 
     Reformat(
         aa_tsv_ch2
@@ -2001,7 +2002,7 @@ workflow {
         itolmeta,
         phylo_tree_itolkey
     )
-
+    
 
     print_report(
         template_rmd,
