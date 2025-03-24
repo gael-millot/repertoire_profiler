@@ -544,6 +544,9 @@ tempo2 <- sapply(tempo, FUN = function(x){x[length(x) - 1]})
 if(any(grepl(x = tempo2, pattern = "^IG.+")) & ! all(grepl(x = tempo2, pattern = "^IG.+"))){
     stop(paste0("\n\n================\n\nERROR IN repertoire.R:\nIF ONE OF THE .fasta FILE IN THE igblast_files PARAMETER OF THE nextflow.config FILE IS \"IG\" (FOR INSTANCE, imgt_human_IGLV.fasta), THEN, ALL THE OTHER MUST ALSO BE \"IG\".\nHERE THEY ARE:\n", paste(tempo2 , collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
 }
+if(! all(grepl(x = tempo2, pattern = "^IG.+"))){
+    stop(paste0("\n\n================\n\nERROR IN repertoire.R:\nTHE repertoire PROCESS CURRENTLY ONLY SUPPORTS THE ANALYSIS FOR ig LOCI.\nTHEREFORE, ALL THE FILES IN THE igblast_files PARAMETER OF THE nextflow.config FILE MUST BE \"IG\" (FOR INSTANCE, imgt_human_IGLV.fasta)\nHERE THEY ARE:\n", paste(tempo2 , collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
+}
 allele <- vector(mode = "list", length = length(rep_file_names)) # list that will contain all the imgt alleles
 gene <- vector(mode = "list", length = length(rep_file_names)) # list that will contain all the imgt genes
 for(i1 in 1:length(allele)){
@@ -713,6 +716,7 @@ for(i0 in type){
     # simple repertoires
     for(i1 in 1:length(get(paste0(i0, "_obs_trunk")))){
         tempo.df <- get(paste0(i0, "_obs_trunk"))[[i1]]
+        tempo.df <- tempo.df[ ! is.na(tempo.df)]
         tempo.df <- factor(tempo.df, levels = unique(get(paste0(i0, "_trunk"))[[i1]]))
         # plot
         for(i2 in kind){
