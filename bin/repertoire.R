@@ -844,7 +844,13 @@ for(i0 in type){
     # for each C
     isotype_subclass_obs <- sort(unique(gene_obs_trunk[[3]]))
     for(i1 in isotype_subclass_obs){
-        tempo.df <- lapply(X = get(paste0(i0 , "_obs_trunk"))[get(paste0("var_", i0, "_obs"))], FUN = function(x){x[get(paste0(i0 , "_obs_trunk"))[[get(paste0("const_", i0, "_obs"))]] == i1]})
+        tempo.df <- lapply(X = get(paste0(i0 , "_obs_trunk"))[get(paste0("var_", i0, "_obs"))], 
+                           FUN = function(x) {
+                               c_values <- get(paste0(i0, "_obs_trunk"))[[get(paste0("const_", i0, "_obs"))]]
+                               c_genes <- lapply(strsplit(c_values, "\\*"), function(x) x[[1]])
+                               x[c_genes == i1]
+                           })
+        
         tempo.df[[1]] <- factor(tempo.df[[1]], levels = unique(get(paste0(i0, "_trunk"))[[1]]))
         tempo.df[[2]] <- factor(tempo.df[[2]], levels = unique(get(paste0(i0, "_trunk"))[[2]]))
         # plot
@@ -901,7 +907,7 @@ for(i0 in type){
                 )
             }else{
                 # no need to use pdf(NULL) with fun_gg_empty_graph()
-                final.plot <- fun_gg_empty_graph(title = tempo.title, title.size = 12, text = paste0("NO GRAPH PLOTTED FOR ", names( get(paste0(i0, "_trunk")))[i1], "\nNO ALLELE/GENE DETECTED"), text.size = 3)
+                final.plot <- fun_gg_empty_graph(title = tempo.title, title.size = 12, text = paste0("NO GRAPH PLOTTED FOR VxJ for ", i1, "\nNO ALLELE/GENE DETECTED"), text.size = 3)
             }
             ggplot2::ggsave(filename = paste0("./rep_", i0, "_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300) # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
             ggplot2::ggsave(filename = paste0("./rep_", i0, "_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300)
