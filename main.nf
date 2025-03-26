@@ -1200,12 +1200,15 @@ process backup {
 
 
 // Converts a tsv file containing several amino acid sequences into fasta file
-// Input : tsv file (columns sequence_id (CL4184329_VH) and sequence_alignment (QVQLQQSGAXELARPGASVK...))
+// Inputs : aatsv : tsv file (columns sequence_id (CL4184329_VH) and sequence_alignment (QVQLQQSGAXELARPGASVK...))
+//          igblast_data_check_ch : not actually needed by this process, this input's only purpose is to make sure the ig_blast_data_check process is completed before Reformat begins ; so that any errors in the igblast_variable/constant_ref_files defined in the nextflow.config are caught before Reformat is executed
+//                                  Reformat, ALign, DefineGroups, NbSequences, Tree, ProcessMeta and ITOL are processes all dependant on Reformat and they can only be called on heavy chains
 // Output : same data converted into a fasta file
 process Reformat{
     
     input:
-    path aatsv
+    path aatsv,
+    path igblast_data_check_ch
     
     output:
     path "*.fasta", emit : aa_fasta_ch
@@ -1676,7 +1679,7 @@ workflow {
     if(igblast_variable_ref_files =~ /^.*IG(K|L)V.*$/){
         print("\n\nWARNING:\nLIGHT CHAIN DETECTED IN THE igblast_variable_ref_files parameter.\nBUT CLONAL GROUPING IS GENERALLY RESTRICTED TO HEAVY CHAIN SEQUENCES, AS THE DIVERSITY OF LIGHT CHAINS IS NOT SUFFICIENT TO DISTINGUISH CLONES WITH REASONABLE CERTAINTY")
     }
-    print("\n\nWARNING:\nTHE REPERTOIRE PROCESS CURRENTLY ONLY SUPPORTS ig REFERENCE FILES AND 'mouse' OR 'human' SPECIES (please remove the 'repertoire' and 'igblast_data_check' from the workflow if other species or loci are used)")
+    print("\n\nWARNING:\nTHE REPERTOIRE PROCESS CURRENTLY ONLY SUPPORTS ig REFERENCE FILES AND 'mouse' OR 'human' SPECIES")
     print("\n\nWARNING:\nTO MAKE THE REPERTOIRES AND DONUTS, THE SCRIPT CURRENTLY TAKES THE FIRST ANNOTATION OF THE IMGT ANNOTATION IF SEVERAL ARE PRESENTS IN THE v_call, j_call OR c_call COLUMN OF THE productive_seq.tsv FILE")
     print("\n\n")
 
@@ -1734,8 +1737,6 @@ workflow {
         igblast_variable_ref_files,
         igblast_constant_ref_files
     )
-
-
 
     igblast(
         fs_ch, 
@@ -1976,7 +1977,6 @@ workflow {
     tempo4_ch = Channel.of("vj_allele", "c_allele", "vj_gene", "c_gene")
     tempo5_ch = tempo3_ch.combine(tempo4_ch) // 12 tuples
 
-
     donut(
         tempo5_ch,
         donut_palette,
@@ -2015,54 +2015,58 @@ workflow {
     //donut_assembly.out.donut_assembly_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}
     donut_assembly.out.donut_assembly_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}}
 
-    /*
 
-    Reformat(
-        aa_tsv_ch2
-    )
-    fasta = Reformat.out.aa_fasta_ch
-
-
-    DefineGroups(
-        fasta,
-        select_ch2
-    )
-    fastagroups = DefineGroups.out.groups_ch.flatten()
+    // The following processes are meant to be executed only if the analyzed sequences are heavy chains
+    if(igblast_variable_ref_files =~ /^.*IGHV.*$/){
+        // Heavy chain detected
+        Reformat(
+            aa_tsv_ch2,
+            igblast_data_check.out.igblast_data_check_ch
+        )
+        fasta = Reformat.out.aa_fasta_ch
 
 
-    Align(
-        fastagroups,
-        phylo_tree_heavy
-    )
-    align = Align.out.aligned_groups_ch
+        DefineGroups(
+            fasta,
+            select_ch2
+        )
+        fastagroups = DefineGroups.out.groups_ch.flatten()
 
 
-    NbSequences(
-        align
-    )
-    filtered = NbSequences.out.nb_out.filter{it[0].toInteger()>=3}.map{it->it[1]}
-
-    Tree(
-        filtered,
-        phylo_tree_model_file
-    )
-    tree = Tree.out.tree_file
+        Align(
+            fastagroups,
+            phylo_tree_heavy
+        )
+        align = Align.out.aligned_groups_ch
 
 
-    ProcessMeta(
-        meta_file
-    )
-    itolmeta = ProcessMeta.out.itol_out
+        NbSequences(
+            align
+        )
+        filtered = NbSequences.out.nb_out.filter{it[0].toInteger()>=3}.map{it->it[1]}
+
+        Tree(
+            filtered,
+            phylo_tree_model_file
+        )
+        tree = Tree.out.tree_file
 
 
-    ITOL(
-        tree,
-        itolmeta,
-        phylo_tree_itolkey
-    )
+        ProcessMeta(
+            meta_file
+        )
+        itolmeta = ProcessMeta.out.itol_out
 
 
+        ITOL(
+            tree,
+            itolmeta,
+            phylo_tree_itolkey
+        )
+    }
 
+ 
+/*
     print_report(
         template_rmd,
         nb_input,
@@ -2076,9 +2080,7 @@ workflow {
         repertoire.out.repertoire_png.collect()
     )
 
-    */
-
-
+*/
 
     backup(
         config_file, 

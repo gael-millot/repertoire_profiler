@@ -476,7 +476,7 @@ if(nrow(obs) > 0){
         }
     }
 
-    chain <- unique(substr(tempo.primary, 1, 3)) # extract the IGH or IGK name
+    chain <- unique(substr(tempo.primary[!is.na(tempo.primary)], 1, 3)) # extract the IGH or IGK name (ignoring NA values)
     
     #inactivated because now chain can be both IGL and IGK
     # if(length(chain) != 1){
