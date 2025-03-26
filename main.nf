@@ -1021,6 +1021,57 @@ process get_germ_tree {
 }
 
 
+// Adds germline_v_gene and germline_j_gene columns to the get_germ_tree tsv output files
+process germline_genes{
+    label 'r_ext'
+    cache 'true'
+
+    input:
+    path germ_tree_ch2
+
+    output:
+    path "get_germ_tree_with_germline_genes.tsv", emit : germline_genes_ch
+
+    script:
+    """
+    #!/bin/bash -ue
+    Rscript -e '
+        df <- read.table("${germ_tree_ch2}", sep = "\\t", header = TRUE)
+
+        required_inputs <- c("germline_v_call", "germline_d_call", "germline_j_call")
+
+        if( !all(required_inputs %in% names(df)) ){
+            stop(paste0("\\n\\n========\\n\\nERROR IN THE NEXTFLOW EXECUTION OF THE germline_genes PROCESS\\nMISSING germline_v_call, germline_d_call OR germline_j_call FOLLOWING THE get_germ_tree PROCESS (OUTPUT germ_tree_ch)\\n\\n========\\n\\n"), call. = FALSE)
+        }
+
+        tempo_v <- strsplit(df\$germline_v_call, ",")
+        sub_v <- sapply(X = tempo_v, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; paste0(unique(y), collapse = ",")})
+        sub_d <- sapply(df\$germline_d_call, function(x) {
+            if (is.na(x) || x == "") { # The germline_d_call column can have only empty values if the sequences are light chain
+                return(NA)
+            } else {
+                y <- sub(pattern = "\\\\*.*", replacement = "", x = unlist(strsplit(x, ",")))
+                return(paste0(unique(y), collapse = ","))
+            }
+        })
+        tempo_j <- strsplit(df\$germline_j_call, ",")
+        sub_j <- sapply(X = tempo_j, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; paste0(unique(y), collapse = ",")})
+
+        df <- data.frame(df, germline_v_gene = sub_v, germline_d_gene = sub_d, germline_j_gene = sub_j)
+
+        required_outputs <- c("germline_v_gene", "germline_d_gene", "germline_j_gene")
+
+        if( !all(required_outputs %in% names(df)) ){
+            stop(paste0("\\n\\n========\\n\\nERROR IN THE NEXTFLOW EXECUTION OF THE germline_genes PROCESS\\nMISSING germline_v_call, germline_d_call OR germline_j_call FOLLOWING THE get_germ_tree PROCESS (OUTPUT germ_tree_ch)\\n\\n========\\n\\n"), call. = FALSE)
+        }
+
+        df <- write.table(df, file = "get_germ_tree_with_germline_genes.tsv", row.names = FALSE, col.names = TRUE, sep = "\\t")
+    '
+    """
+}
+
+
+
 process germ_tree_vizu {
     label 'r_ext'
     publishDir path: "${out_path}/files", mode: 'copy', pattern: "{germ_tree.pdf}", overwrite: false
@@ -1083,6 +1134,7 @@ process germ_tree_vizu {
 "germ_tree_vizu.log"
     """
 }
+
 
 
 
@@ -1748,9 +1800,8 @@ workflow {
     igblast.out.tsv_ch1.count().subscribe{ n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE igblast PROCESS\n\nCHECK THAT THE igblast_organism, igblast_loci AND igblast_variable_ref_files ARE CORRECTLY SET IN THE repertoire_profiler.config FILE\n\n========\n\n"}}
     tsv_ch2 = igblast.out.tsv_ch1.collectFile(name: "all_igblast_seq.tsv", skip: 1, keepHeader: true)
     igblast.out.aligned_seq_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\n0 ALIGNED SEQ FILES RETURNED BY THE igblast PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
-    //test
-    tsv_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
-    //fin test
+    // tsv_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
+
     aligned_seq_ch2 = igblast.out.aligned_seq_ch.collectFile(name: "igblast_aligned_seq_name.tsv")
     aligned_seq_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
     igblast.out.unaligned_seq_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\n0 UNALIGNED SEQ FILES RETURNED BY THE igblast PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
@@ -1925,8 +1976,8 @@ workflow {
     get_germ_tree.out.germ_tree_ch.count().subscribe { n -> if ( n == 0 ){
         print("\n\nWARNING: NO SEQUENCES IN TREES FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_seq.tsv FILE RETURNED\n\n")
     }}
-    germ_tree_ch2 = get_germ_tree.out.germ_tree_ch.collectFile(name: "germ_tree_seq.tsv", skip: 1, keepHeader: true)
-    germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
+    germ_tree_ch2 = get_germ_tree.out.germ_tree_ch.collectFile(name: "seq_for_germ_tree.tsv", skip: 1, keepHeader: true)
+    // germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 
     get_germ_tree.out.no_cloneID_ch.count().subscribe { n -> if ( n == 0 ){
         print("\n\nWARNING: ALL SEQUENCES IN CLONAL GROUP FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_dismissed_clone_id.tsv FILE RETURNED\n\n")
@@ -1942,6 +1993,13 @@ workflow {
 
     get_germ_tree.out.get_germ_tree_log_ch.collectFile(name: "get_germ_tree.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
 
+
+    germline_genes(
+        germ_tree_ch2
+    )
+
+    germline_genes_ch2 = germline_genes.out.germline_genes_ch.collectFile(name: "germ_tree_seq.tsv", skip: 1, keepHeader: true)
+    germline_genes_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 
 
     germ_tree_vizu(
@@ -1972,10 +2030,11 @@ workflow {
     germ_tree_dup_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 
     tempo1_ch = Channel.of("all", "annotated", "tree") // 1 channel with 3 values (not list)
-    tempo2_ch = data_assembly.out.productive_ch.mix(data_assembly.out.productive_ch.mix(germ_tree_ch2)) // 1 channel with 3 paths (do not use flatten() -> not list)
+    tempo2_ch = data_assembly.out.productive_ch.mix(data_assembly.out.productive_ch.mix(germline_genes_ch2)) // 1 channel with 3 paths (do not use flatten() -> not list)
     tempo3_ch = tempo1_ch.merge(tempo2_ch) // 3 lists
     tempo4_ch = Channel.of("vj_allele", "c_allele", "vj_gene", "c_gene")
     tempo5_ch = tempo3_ch.combine(tempo4_ch) // 12 tuples
+    // tempo5_ch.view()
 
     donut(
         tempo5_ch,
