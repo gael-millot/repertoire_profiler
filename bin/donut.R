@@ -451,13 +451,13 @@ if(nrow(obs) > 0){
             tempo.primary <- obs$germline_v_call
             tempo.secondary <- obs$germline_j_call
         } else if (col == "vj_gene") {
-            tempo.primary <- obs$v_gene # temporary because there is no germline_v_gene column
-            tempo.secondary <- obs$j_gene # temporary because there is no germline_j_gene column
+            tempo.primary <- obs$germline_v_gene
+            tempo.secondary <- obs$germline_j_gene
         } else if (col == "c_allele") {
-            tempo.primary <- obs$c_call # temporary because there is no germline_c_call column
+            tempo.primary <- obs$c_call
             tempo.secondary <- NULL
         } else if (col == "c_gene") {
-            tempo.primary <- obs$c_gene # temporary because there is no germline_c_gene column
+            tempo.primary <- obs$c_gene
             tempo.secondary <- NULL
         }
     }else{
