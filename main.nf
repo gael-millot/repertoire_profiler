@@ -1220,7 +1220,15 @@ process donut_assembly {
     """
     #!/bin/bash -ue
     Rscript -e '
-        qpdf::pdf_combine(input = list.files(path = ".", pattern = ".pdf\$"), output = "./donuts.pdf")
+        files <- list.files(path = ".", pattern = ".pdf\$")
+
+        sorted_files <- files[order(
+            !grepl("allele", files),  # Alleles will be displayed before genes
+            grepl("gene", files),     
+            !grepl("vj_", files)     # Amongst alleles and genes, vj will be displayed before c
+        )]
+
+        qpdf::pdf_combine(input = sorted_files, output = "./donuts.pdf")
     ' |& tee -a donut_assembly.log
     """
 }
@@ -1419,7 +1427,7 @@ process print_report{
     val nb_clone_assigned
     val nb_failed_clone
     path donuts_png
-    path repertoire_png
+    val repertoire_png
 
     output:
     file "report.html"
@@ -1430,7 +1438,18 @@ process print_report{
     #!/bin/bash -ue
     cp ${template_rmd} report_file.rmd
     cp -r "${out_path}/png" .
+
+
     Rscript -e '
+
+        # Find the constant and vj repertoires to be displayed in the html file (file names differ depending on light/heavy chain)
+        repertoire_files <- as.character("${repertoire_png}")
+        cleaned_repertoire <- gsub("^\\\\[\\\\[|\\\\]\\\\]\$", "", repertoire_files)
+        repertoire_paths <- strsplit(cleaned_repertoire, ",\\\\s*")[[1]]
+        repertoire_names <- basename(repertoire_paths)
+        constant_rep <- repertoire_names[grepl("^IG.C_.*gene_non-zero\\\\.png\$", repertoire_names)]
+        vj_rep <- repertoire_names[grepl("^rep_gene_IG.V_.*non-zero\\\\.png\$", repertoire_names)]
+
         rmarkdown::render(
         input = "report_file.rmd",
         output_file = "report.html",
@@ -1441,7 +1460,9 @@ process print_report{
                         nb_productive = ${nb_productive},
                         nb_unproductive = ${nb_unproductive},
                         nb_clone_assigned = ${nb_clone_assigned},
-                        nb_failed_clone = ${nb_failed_clone}),
+                        nb_failed_clone = ${nb_failed_clone},
+                        constant_rep = constant_rep,
+                        vj_rep = vj_rep),
         # output_dir = ".",
         # intermediates_dir = "./",
         # knit_root_dir = "./",
@@ -2124,8 +2145,8 @@ workflow {
         )
     }
 
- 
-/*
+    
+
     print_report(
         template_rmd,
         nb_input,
@@ -2136,10 +2157,10 @@ workflow {
         nb_clone_assigned,
         nb_failed_clone,
         donut.out.donuts_png.collect(),
-        repertoire.out.repertoire_png.collect()
+        repertoire.out.repertoire_png.toList()
     )
 
-*/
+
 
     backup(
         config_file, 

@@ -13,6 +13,8 @@ params:
   nb_unproductive: -1
   nb_clone_assigned: -1
   nb_failed_clone: -1
+  constant_rep: ""
+  vj_rep: ""
 ---
 
 \n\n<br /><br />\n\n
@@ -127,8 +129,8 @@ See also the [donuts.pdf](files/donuts.pdf) file in the files folder.
 <br>
 
 <div style="display: flex; justify-content: space-around;"> 
-  <img src="png/IGHC_gene_non-zero.png" width="40%" style="border: 2px solid black;" /> 
-  <img src="png/rep_gene_IGHV_IGHJ_non-zero.png" width="40%" style="border: 2px solid black;" /> 
+  <img src="png/`r params$constant_rep`" width="40%" style="border: 2px solid black;" /> 
+  <img src="png/`r params$vj_rep`" width="40%" style="border: 2px solid black;" /> 
 </div>
 
 <br />
@@ -163,6 +165,8 @@ See also:<br /><ul><li>[germ_tree_seq.tsv](files/germ_tree_seq.tsv)<br /></li><l
 ###  Amino acid sequences phylogeny 
 
 <br>
+
+**Only available for heavy chain analysis.**
 
 Open the different sequences_\<SEQ_NAME\>_align.fasta_itol_url.txt files in the [phylo](./phylo) folder and click on the link to see the trees.
 

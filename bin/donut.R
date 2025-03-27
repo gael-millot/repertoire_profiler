@@ -476,6 +476,10 @@ if(nrow(obs) > 0){
         }
     }
 
+    # keep only the first allele or gene if igblast hesitated between several
+    tempo.primary <- unlist(lapply(tempo.primary, function(x) strsplit(x, ",")[[1]][1]))
+    tempo.secondary <- unlist(lapply(tempo.secondary, function(x) strsplit(x, ",")[[1]][1]))
+
     chain <- unique(substr(tempo.primary[!is.na(tempo.primary)], 1, 3)) # extract the IGH or IGK name (ignoring NA values)
     
     #inactivated because now chain can be both IGL and IGK
