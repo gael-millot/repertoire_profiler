@@ -540,6 +540,7 @@ process data_assembly {
     """
 }
 
+
 process metadata_check { // cannot be in germ_tree_vizu because I have to use the clone_assigned_seq.tsv file for the check
     label 'immcantation'
     cache 'true'
