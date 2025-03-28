@@ -92,7 +92,7 @@ Success ratio : ```r base::round(params$nb_seq_aligned / (params$nb_seq_aligned 
 
 ### Productive sequences
 
-**Productive sequences** are sequences with: (1) coding region with an open reading frame, (2) no defect in the start codon, splicing sites or regulatory elements, (3) no internal stop codons, (4) an in-frame junction region. <br>
+**Productive sequences** are sequences with: (1) an open reading frame (start and stop codon), (2) no defect in the start codon, splicing sites or regulatory elements, (3) no internal stop codons, (4) in-frame junction between regions. <br>
 
 Number of [productive sequences](files/productive_seq.tsv) : ```r params$nb_productive```
 
@@ -143,7 +143,8 @@ See the [gene_repertoire.pdf](files/gene_repertoire.pdf) and [allele_repertoire.
 
 <br>
 
-**Clone-assigned sequences** are productive sequences with additionnal features: germline clustering (clone ID), allele reannotation (germinal_v_call and germinal_j_call columns), mutation load, distance and sequence nickname (annotation from the metadata file) added. <br>
+**Clone-assigned sequences** are productive sequences with additionnal features:<br /><ul><li>germline clustering (clone ID)<br /></li><li>allele reannotation (germinal_v_call and germinal_j_call columns)<br /></li><li>mutation load<br /></li><li>distance and sequence nickname (annotation from the metadata file) added<br>
+
 Some sequences from the productive file can **fail to be clone-assigned**, and will not be in the clone_assigned_seq.tsv file. 
 
 Number of [clone-assigned sequences](files/clone_assigned_seq.tsv) : ```r params$nb_clone_assigned```
