@@ -95,9 +95,11 @@ process Unzip {
 
 
 // next process is for repertoire
+// It currently only accepts IG reference files and 'mouse' or 'human' species
 process igblast_data_check { // cannot be igblast_data_check outside of process because the files are present in the docker
     label 'immcantation'
     //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
+
     cache 'true'
 
     input:
@@ -111,6 +113,59 @@ process igblast_data_check { // cannot be igblast_data_check outside of process 
     script:
     """
     #!/bin/bash -ue
+
+    # Check that the reference files are in the right format
+
+    Rscript -e '
+        organism <- "${igblast_organism}"
+
+        variable <- unlist(strsplit("${igblast_variable_ref_files}", " "))
+        constant <- unlist(strsplit("${igblast_constant_ref_files}", " "))
+        valid_species <- c("human", "mouse") # "rabbit" "rat" "rhesus_monkey" could be added but are not currently supported by the repertoire process
+
+        if(length(variable) < 2 || length(variable) > 4){
+            stop(paste0("\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nigblast_variable_ref_files CONFIGURED IN nextflow.config CAN ONLY CONTAIN 2, 3 OR 4 FILES.\nHERE IT CONTAINS ", length(variable), " FILES\nHERE ARE THE igblast_variable_ref_files : \n", paste(variable, collapse = "\n"), "\n\n========\n\n"), call. = FALSE)
+        }
+        if(length(constant) != 1 && length(constant) != 2){
+            stop(paste0("\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nigblast_constant_ref_files CONFIGURED IN nextflow.config CAN ONLY CONTAIN 1 OR 2 FILES.\nHERE IT CONTAINS ", length(constant), " FILES\nHERE ARE THE igblast_constant_ref_files : \n", paste(constant, collapse = "\n"), "\n\n========\n\n"), call. = FALSE)
+        }
+        if(!all(grepl(x = variable, pattern = "^imgt_([a-z_]+)_IG[KL][VJ].fasta\$")) && !all(grepl(x = variable, pattern = "^imgt_([a-z_]+)_IGH[VDJ.fasta\$"))){
+            stop(paste0("\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID FORMAT FOR ONE OR SEVERAL OF THE FOLLOWING igblast_variable_ref_files CONFIGURED IN nextflow.config FILE:\n", paste(variable, collapse = "\n"), "\nVALID FORMAT FOR EACH FILE WOULD BE: imgt_<species>_IG[HKL][VDJ].fasta\nWARNING: THE repertoire PROCESS CURRENTLY ONLY SUPPORTS IG REFERENCE FILES AND 'mouse' OR 'human' SPECIES\n\n========\n\n"), call. = FALSE)
+        }
+        if(!all(grepl(x = constant, pattern = "^imgt_([a-z_]+)_IG[HKL]C.fasta\$"))){
+            stop(paste0("\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID FORMAT FOR ONE OR SEVERAL OF THE FOLLOWING igblast_constant_ref_files CONFIGURED IN nextflow.config FILE:\n", paste(constant, collapse = "\n"), "\nVALID FORMAT FOR EACH FILE WOULD BE: imgt_<species>_IG[HKL]C.fasta\nWARNING: THE repertoire PROCESS CURRENTLY ONLY SUPPORTS IG REFERENCE FILES AND 'mouse' OR 'human' SPECIES\n\n========\n\n"), call. = FALSE)
+        }
+        species <- c(unlist(lapply(strsplit(variable, "_"), `[`, 2)), unlist(lapply(strsplit(constant, "_"), `[`, 2)))
+        if(!all(species == species[1])){
+            stop(paste0("\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE SPECIES IN THE igblast_constant_ref_files AND igblast_variable_ref_files CONFIGURED IN nextflow.config FILE MUST BE THE SAME\nHERE ARE THE igblast_variable_ref_files:\n", paste(variable, collapse = "\n"), "\nHERE ARE THE igblast_constant_ref_files:\n", paste(constant, collapse = "\n"), "\n\n========\n\n"), call. = FALSE)
+        }
+        if(species[1] != organism){
+            stop(paste0("\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE SPECIES IN THE igblast_constant_ref_files AND igblast_variable_ref_files CONFIGURED IN nextflow.config FILE MUST BE THE SAME AS THE organism PARAMETER CONGIGURED IN nextflow.config\nHERE ARE THE igblast_variable_ref_files:\n", paste(variable, collapse = "\n"), "\nHERE ARE THE igblast_constant_ref_files:\n", paste(constant, collapse = "\n"), "\nTHE organism PARAMETER IS SET TO : ", organism, "\n\n========\n\n"), call. = FALSE)
+        }
+        # Check the coherence between the loci mentioned in the files (KL, KJ, HJ...)
+        extract_locus <- function(x) {
+            parts <- strsplit(x, "_")[[1]]
+            ig_part <- parts[grepl("^IG[A-Z]{2}", parts)]
+            return(substr(ig_part, 3, 4))
+        }
+        loci <- c(sapply(variable, extract_locus), sapply(constant, extract_locus))
+        if(any(grepl("^H", loci)) && any(grepl("^[KL]", loci))){
+            stop(paste0("\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID VALUES OF igblast_variable_ref_files AND igblast_constant_ref_files CONFIGURED IN nextflow.config FILE:\nIGH WAS FOUND ALONG WITH IGL OR IGK\n!! LIGHT CHAIN AND HEAVY CHAIN LOCI CANNOT BE ANALYZED SIMULTANEOUSLY !!\n\nHERE ARE THE igblast_variable_ref_files:\n", paste(variable, collapse = "\n"), "\nHERE ARE THE igblast_constant_ref_files:\n", paste(constant, collapse = "\n"), "\n\n========\n\n"), call. = FALSE)
+        }
+        
+        valid_combinations <- list(
+            c("HJ", "HV", "HD", "HC"),
+            c("KJ", "KV", "KC"),
+            c("LJ", "LV", "LC"),
+            c("KJ", "KV", "KC", "LJ", "LV", "LC")
+        )
+        if(!any(sapply(valid_combinations, function(valid) identical(sort(unique(loci)), sort(valid))))){
+            stop(paste0("\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID VALUES OF igblast_variable_ref_files AND igblast_constant_ref_files CONFIGURED IN nextflow.config FILE:\n\nHERE ARE THE igblast_variable_ref_files:\n", paste(variable, collapse = "\n"), "\nHERE ARE THE igblast_constant_ref_files:\n", paste(constant, collapse = "\n"), "\n\nINDICATIONS : \nIF K AND L FILES ARE ENTERED FOR A CASSETTE, THEN BOTH MUST BE ENTERED FOR THE OTHER CASSETTE AND THE CONSTANT REGION AS WELL\nTHERE CANNOT BE A IGLD OR IGKD FILE, AS THE LIGHT CHAIN DOES NOT HAVE A D CASSETTE\nHEAVY CHAIN ANALYSIS MUST INCLUDE IGHV, IGHD, IGHJ and IGHC FILES\n\n========\n\n"), call. = FALSE)
+        }
+    '
+
+    # End of format checking for the reference files
+
     REPO_PATH_VAR="/usr/local/share/germlines/imgt/${igblast_organism}/vdj" # path where the imgt .fasta reference seq files are in the docker container
     REPO_PATH_CONST="/usr/local/share/germlines/imgt/${igblast_organism}/constant" # path where the imgt .fasta reference seq files are in the docker container
     VDJ_FILES=\$(awk -v var1="${igblast_variable_ref_files}" -v var2="\${REPO_PATH_VAR}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}') # assemble files with their path
@@ -432,12 +487,12 @@ process data_assembly {
         }else{
             tempo.col.name <- ifelse("initial_sequence_id" %in% names(db), "initial_sequence_id", "sequence_id")
         }
-        # if(all(c("sequence_id", "initial_sequence_id") %in% names(db))){
-        #     if(all(db\$sequence_id == db\$initial_sequence_id)){
-        #         tempo.cat <- paste0("\\n\\n========\\n\\nERROR IN THE data_assembly PROCESS OF NEXTFLOW\\nTHE meta_path AND meta_name_replacement PARAMETERS ARE NOT \\"NULL\\" BUT NO SEQUENCE NAMES HAVE BEEN REPLACED WHEN USING THE meta_name_replacement COLUMN\\n\\n========\\n\\n")
-        #         stop(tempo.cat)
-        #     }
-        # }
+        if(all(c("sequence_id", "initial_sequence_id") %in% names(db))){
+            if(all(db\$sequence_id == db\$initial_sequence_id)){
+                tempo.cat <- paste0("\\n\\n========\\n\\nERROR IN THE data_assembly PROCESS OF NEXTFLOW\\nTHE meta_path AND meta_name_replacement PARAMETERS ARE NOT \\"NULL\\" BUT NO SEQUENCE NAMES HAVE BEEN REPLACED WHEN USING THE meta_name_replacement COLUMN\\n\\n========\\n\\n")
+                stop(tempo.cat)
+            }
+        }
         if(any(is.na(match(db[, tempo.col.name], dtn\$sequence_id)))){
             tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE data_assembly PROCESS\\nNO NA SHOULD APPEAR AT THAT STAGE WITH match()\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
             stop(tempo.cat)
@@ -485,6 +540,7 @@ process data_assembly {
     """
 }
 
+
 process metadata_check { // cannot be in germ_tree_vizu because I have to use the clone_assigned_seq.tsv file for the check
     label 'immcantation'
     cache 'true'
@@ -521,10 +577,9 @@ process metadata_check { // cannot be in germ_tree_vizu because I have to use th
                 if(names(df)[2] != "initial_sequence_id"){
                     stop(paste0("\\n\\n============\\n\\nINTERNAL ERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\" AND IF THE meta_name_replacement PARAMETER IS NOT \\"NULL\\", THEN THE TABLE GENERATED USING THE sample_path PARAMETER MUST CONTAIN initial_sequence_id AS FIRST COLUMN NAME.\\n\\n============\\n\\n"), call. = FALSE)
                 }
-                # Inactivated because no replacement is possible if same metadata file used for several data files (for different runs)
-                # if( ! any(meta[ , meta_name_replacement] %in% df[ , 1])){
-                #    stop(paste0("\\n\\n============\\n\\nERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nTHE meta_file AND meta_name_replacement PARAMETERS OF THE nextflow.config FILE ARE NOT NULL BUT NO NAME REPLACEMENT PERFORMED\\nPROBABLY THAT THE ${meta_seq_names} COLUMN OF THE FILE INDICATED IN THE meta_path PARAMETER IS NOT MADE OF NAMES OF FASTA FILES INDICATED IN THE sample_path PARAMETER\\nFIRST ELEMENTS OF THE ${meta_seq_names} COLUMN (meta_seq_names PARAMETER) OF THE META DATA FILE ARE:\\n", paste(head(meta[ , meta_seq_names], 20), collapse = "\\n"), "\\nFIRST FASTA FILES NAMES ARE:\\n", paste(head(df[ , 1], 20), collapse = "\\n"), "\\n\\n\\n============\\n\\n"), call. = FALSE)
-                # }
+                if( ! any(meta[ , meta_name_replacement] %in% df[ , 1])){
+                   stop(paste0("\\n\\n============\\n\\nERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nTHE meta_file AND meta_name_replacement PARAMETERS OF THE nextflow.config FILE ARE NOT NULL BUT NO NAME REPLACEMENT PERFORMED\\nPROBABLY THAT THE ${meta_seq_names} COLUMN OF THE FILE INDICATED IN THE meta_path PARAMETER IS NOT MADE OF NAMES OF FASTA FILES INDICATED IN THE sample_path PARAMETER\\nFIRST ELEMENTS OF THE ${meta_seq_names} COLUMN (meta_seq_names PARAMETER) OF THE META DATA FILE ARE:\\n", paste(head(meta[ , meta_seq_names], 20), collapse = "\\n"), "\\nFIRST FASTA FILES NAMES ARE:\\n", paste(head(df[ , 1], 20), collapse = "\\n"), "\\n\\n\\n============\\n\\n"), call. = FALSE)
+                }
             }
             if(meta_legend != "NULL"){
                 if( ! meta_legend %in% names(meta)){
@@ -899,13 +954,13 @@ process mutation_load {
 
         # Reposition the column starting with "initial_" to the second position
         initial_col <- grep("^initial_", names(VDJ_db), value = TRUE)
-        if (length(initial_col) == 0) {
-          stop("No column starting with 'initial_' found")
+        if (length(initial_col) > 0) {
+            tempo <- VDJ_db[[initial_col]]
+            VDJ_db <- VDJ_db[ , !(names(VDJ_db) %in% initial_col)]
+            VDJ_db <- data.frame(VDJ_db[1], tempo, VDJ_db[2:length(VDJ_db)])
+            names(VDJ_db)[2] <- initial_col
         }
-        tempo <- VDJ_db[[initial_col]]
-        VDJ_db <- VDJ_db[ , !(names(VDJ_db) %in% initial_col)]
-        VDJ_db <- data.frame(VDJ_db[1], tempo, VDJ_db[2:length(VDJ_db)])
-        names(VDJ_db)[2] <- initial_col
+        
 
         # Check if a column equal to meta_legend in lowercase exists in 'data' 
         if("${meta_file}" != "NULL" & "${meta_legend}" != "NULL" ){
@@ -966,6 +1021,57 @@ process get_germ_tree {
 "get_germ_tree.log"
     """
 }
+
+
+// Adds germline_v_gene and germline_j_gene columns to the get_germ_tree tsv output files
+process germline_genes{
+    label 'r_ext'
+    cache 'true'
+
+    input:
+    path germ_tree_ch2
+
+    output:
+    path "get_germ_tree_with_germline_genes.tsv", emit : germline_genes_ch
+
+    script:
+    """
+    #!/bin/bash -ue
+    Rscript -e '
+        df <- read.table("${germ_tree_ch2}", sep = "\\t", header = TRUE)
+
+        required_inputs <- c("germline_v_call", "germline_d_call", "germline_j_call")
+
+        if( !all(required_inputs %in% names(df)) ){
+            stop(paste0("\\n\\n========\\n\\nERROR IN THE NEXTFLOW EXECUTION OF THE germline_genes PROCESS\\nMISSING germline_v_call, germline_d_call OR germline_j_call FOLLOWING THE get_germ_tree PROCESS (OUTPUT germ_tree_ch)\\n\\n========\\n\\n"), call. = FALSE)
+        }
+
+        tempo_v <- strsplit(df\$germline_v_call, ",")
+        sub_v <- sapply(X = tempo_v, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; paste0(unique(y), collapse = ",")})
+        sub_d <- sapply(df\$germline_d_call, function(x) {
+            if (is.na(x) || x == "") { # The germline_d_call column can have only empty values if the sequences are light chain
+                return(NA)
+            } else {
+                y <- sub(pattern = "\\\\*.*", replacement = "", x = unlist(strsplit(x, ",")))
+                return(paste0(unique(y), collapse = ","))
+            }
+        })
+        tempo_j <- strsplit(df\$germline_j_call, ",")
+        sub_j <- sapply(X = tempo_j, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; paste0(unique(y), collapse = ",")})
+
+        df <- data.frame(df, germline_v_gene = sub_v, germline_d_gene = sub_d, germline_j_gene = sub_j)
+
+        required_outputs <- c("germline_v_gene", "germline_d_gene", "germline_j_gene")
+
+        if( !all(required_outputs %in% names(df)) ){
+            stop(paste0("\\n\\n========\\n\\nERROR IN THE NEXTFLOW EXECUTION OF THE germline_genes PROCESS\\nMISSING germline_v_call, germline_d_call OR germline_j_call FOLLOWING THE get_germ_tree PROCESS (OUTPUT germ_tree_ch)\\n\\n========\\n\\n"), call. = FALSE)
+        }
+
+        df <- write.table(df, file = "get_germ_tree_with_germline_genes.tsv", row.names = FALSE, col.names = TRUE, sep = "\\t")
+    '
+    """
+}
+
 
 
 process germ_tree_vizu {
@@ -1030,6 +1136,7 @@ process germ_tree_vizu {
 "germ_tree_vizu.log"
     """
 }
+
 
 
 
@@ -1115,7 +1222,15 @@ process donut_assembly {
     """
     #!/bin/bash -ue
     Rscript -e '
-        qpdf::pdf_combine(input = list.files(path = ".", pattern = ".pdf\$"), output = "./donuts.pdf")
+        files <- list.files(path = ".", pattern = ".pdf\$")
+
+        sorted_files <- files[order(
+            !grepl("allele", files),  # Alleles will be displayed before genes
+            grepl("gene", files),     
+            !grepl("vj_", files)     # Amongst alleles and genes, vj will be displayed before c
+        )]
+
+        qpdf::pdf_combine(input = sorted_files, output = "./donuts.pdf")
     ' |& tee -a donut_assembly.log
     """
 }
@@ -1147,12 +1262,15 @@ process backup {
 
 
 // Converts a tsv file containing several amino acid sequences into fasta file
-// Input : tsv file (columns sequence_id (CL4184329_VH) and sequence_alignment (QVQLQQSGAXELARPGASVK...))
+// Inputs : aatsv : tsv file (columns sequence_id (CL4184329_VH) and sequence_alignment (QVQLQQSGAXELARPGASVK...))
+//          igblast_data_check_ch : not actually needed by this process, this input's only purpose is to make sure the ig_blast_data_check process is completed before Reformat begins ; so that any errors in the igblast_variable/constant_ref_files defined in the nextflow.config are caught before Reformat is executed
+//                                  Reformat, ALign, DefineGroups, NbSequences, Tree, ProcessMeta and ITOL are processes all dependant on Reformat and they can only be called on heavy chains
 // Output : same data converted into a fasta file
 process Reformat{
     
     input:
-    path aatsv
+    path aatsv,
+    path igblast_data_check_ch
     
     output:
     path "*.fasta", emit : aa_fasta_ch
@@ -1311,7 +1429,7 @@ process print_report{
     val nb_clone_assigned
     val nb_failed_clone
     path donuts_png
-    path repertoire_png
+    val repertoire_png
 
     output:
     file "report.html"
@@ -1322,7 +1440,18 @@ process print_report{
     #!/bin/bash -ue
     cp ${template_rmd} report_file.rmd
     cp -r "${out_path}/png" .
+
+
     Rscript -e '
+
+        # Find the constant and vj repertoires to be displayed in the html file (file names differ depending on light/heavy chain)
+        repertoire_files <- as.character("${repertoire_png}")
+        cleaned_repertoire <- gsub("^\\\\[\\\\[|\\\\]\\\\]\$", "", repertoire_files)
+        repertoire_paths <- strsplit(cleaned_repertoire, ",\\\\s*")[[1]]
+        repertoire_names <- basename(repertoire_paths)
+        constant_rep <- repertoire_names[grepl("^IG.C_.*gene_non-zero\\\\.png\$", repertoire_names)]
+        vj_rep <- repertoire_names[grepl("^rep_gene_IG.V_.*non-zero\\\\.png\$", repertoire_names)]
+
         rmarkdown::render(
         input = "report_file.rmd",
         output_file = "report.html",
@@ -1333,7 +1462,9 @@ process print_report{
                         nb_productive = ${nb_productive},
                         nb_unproductive = ${nb_unproductive},
                         nb_clone_assigned = ${nb_clone_assigned},
-                        nb_failed_clone = ${nb_failed_clone}),
+                        nb_failed_clone = ${nb_failed_clone},
+                        constant_rep = constant_rep,
+                        vj_rep = vj_rep),
         # output_dir = ".",
         # intermediates_dir = "./",
         # knit_root_dir = "./",
@@ -1623,8 +1754,10 @@ workflow {
     if(igblast_variable_ref_files =~ /^.*IG(K|L)V.*$/){
         print("\n\nWARNING:\nLIGHT CHAIN DETECTED IN THE igblast_variable_ref_files parameter.\nBUT CLONAL GROUPING IS GENERALLY RESTRICTED TO HEAVY CHAIN SEQUENCES, AS THE DIVERSITY OF LIGHT CHAINS IS NOT SUFFICIENT TO DISTINGUISH CLONES WITH REASONABLE CERTAINTY")
     }
+    print("\n\nWARNING:\nTHE REPERTOIRE PROCESS CURRENTLY ONLY SUPPORTS ig REFERENCE FILES AND 'mouse' OR 'human' SPECIES")
     print("\n\nWARNING:\nTO MAKE THE REPERTOIRES AND DONUTS, THE SCRIPT CURRENTLY TAKES THE FIRST ANNOTATION OF THE IMGT ANNOTATION IF SEVERAL ARE PRESENTS IN THE v_call, j_call OR c_call COLUMN OF THE productive_seq.tsv FILE")
     print("\n\n")
+
 
 
 
@@ -1690,9 +1823,8 @@ workflow {
     igblast.out.tsv_ch1.count().subscribe{ n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE igblast PROCESS\n\nCHECK THAT THE igblast_organism, igblast_loci AND igblast_variable_ref_files ARE CORRECTLY SET IN THE repertoire_profiler.config FILE\n\n========\n\n"}}
     tsv_ch2 = igblast.out.tsv_ch1.collectFile(name: "all_igblast_seq.tsv", skip: 1, keepHeader: true)
     igblast.out.aligned_seq_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\n0 ALIGNED SEQ FILES RETURNED BY THE igblast PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
-    //test
-    tsv_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
-    //fin test
+    // tsv_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
+
     aligned_seq_ch2 = igblast.out.aligned_seq_ch.collectFile(name: "igblast_aligned_seq_name.tsv")
     aligned_seq_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
     igblast.out.unaligned_seq_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\n0 UNALIGNED SEQ FILES RETURNED BY THE igblast PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
@@ -1867,8 +1999,8 @@ workflow {
     get_germ_tree.out.germ_tree_ch.count().subscribe { n -> if ( n == 0 ){
         print("\n\nWARNING: NO SEQUENCES IN TREES FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_seq.tsv FILE RETURNED\n\n")
     }}
-    germ_tree_ch2 = get_germ_tree.out.germ_tree_ch.collectFile(name: "germ_tree_seq.tsv", skip: 1, keepHeader: true)
-    germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
+    germ_tree_ch2 = get_germ_tree.out.germ_tree_ch.collectFile(name: "seq_for_germ_tree.tsv", skip: 1, keepHeader: true)
+    // germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 
     get_germ_tree.out.no_cloneID_ch.count().subscribe { n -> if ( n == 0 ){
         print("\n\nWARNING: ALL SEQUENCES IN CLONAL GROUP FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_dismissed_clone_id.tsv FILE RETURNED\n\n")
@@ -1884,6 +2016,13 @@ workflow {
 
     get_germ_tree.out.get_germ_tree_log_ch.collectFile(name: "get_germ_tree.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
 
+
+    germline_genes(
+        germ_tree_ch2
+    )
+
+    germline_genes_ch2 = germline_genes.out.germline_genes_ch.collectFile(name: "germ_tree_seq.tsv", skip: 1, keepHeader: true)
+    germline_genes_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 
 
     germ_tree_vizu(
@@ -1914,11 +2053,11 @@ workflow {
     germ_tree_dup_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 
     tempo1_ch = Channel.of("all", "annotated", "tree") // 1 channel with 3 values (not list)
-    tempo2_ch = data_assembly.out.productive_ch.mix(data_assembly.out.productive_ch.mix(germ_tree_ch2)) // 1 channel with 3 paths (do not use flatten() -> not list)
+    tempo2_ch = data_assembly.out.productive_ch.mix(data_assembly.out.productive_ch.mix(germline_genes_ch2)) // 1 channel with 3 paths (do not use flatten() -> not list)
     tempo3_ch = tempo1_ch.merge(tempo2_ch) // 3 lists
     tempo4_ch = Channel.of("vj_allele", "c_allele", "vj_gene", "c_gene")
     tempo5_ch = tempo3_ch.combine(tempo4_ch) // 12 tuples
-
+    // tempo5_ch.view()
 
     donut(
         tempo5_ch,
@@ -1959,50 +2098,56 @@ workflow {
     donut_assembly.out.donut_assembly_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}}
 
 
-    Reformat(
-        aa_tsv_ch2
-    )
-    fasta = Reformat.out.aa_fasta_ch
+    // The following processes are meant to be executed only if the analyzed sequences are heavy chains
+    if(igblast_variable_ref_files =~ /^.*IGHV.*$/){
+        // Heavy chain detected
+        Reformat(
+            aa_tsv_ch2,
+            igblast_data_check.out.igblast_data_check_ch
+        )
+        fasta = Reformat.out.aa_fasta_ch
 
 
-    DefineGroups(
-        fasta,
-        select_ch2
-    )
-    fastagroups = DefineGroups.out.groups_ch.flatten()
+        DefineGroups(
+            fasta,
+            select_ch2
+        )
+        fastagroups = DefineGroups.out.groups_ch.flatten()
 
 
-    Align(
-        fastagroups,
-        phylo_tree_heavy
-    )
-    align = Align.out.aligned_groups_ch
+        Align(
+            fastagroups,
+            phylo_tree_heavy
+        )
+        align = Align.out.aligned_groups_ch
 
 
-    NbSequences(
-        align
-    )
-    filtered = NbSequences.out.nb_out.filter{it[0].toInteger()>=3}.map{it->it[1]}
+        NbSequences(
+            align
+        )
+        filtered = NbSequences.out.nb_out.filter{it[0].toInteger()>=3}.map{it->it[1]}
 
-    Tree(
-        filtered,
-        phylo_tree_model_file
-    )
-    tree = Tree.out.tree_file
-
-
-    ProcessMeta(
-        meta_file
-    )
-    itolmeta = ProcessMeta.out.itol_out
+        Tree(
+            filtered,
+            phylo_tree_model_file
+        )
+        tree = Tree.out.tree_file
 
 
-    ITOL(
-        tree,
-        itolmeta,
-        phylo_tree_itolkey
-    )
+        ProcessMeta(
+            meta_file
+        )
+        itolmeta = ProcessMeta.out.itol_out
 
+
+        ITOL(
+            tree,
+            itolmeta,
+            phylo_tree_itolkey
+        )
+    }
+
+    
 
     print_report(
         template_rmd,
@@ -2014,10 +2159,8 @@ workflow {
         nb_clone_assigned,
         nb_failed_clone,
         donut.out.donuts_png.collect(),
-        repertoire.out.repertoire_png.collect()
+        repertoire.out.repertoire_png.toList()
     )
-
-    
 
 
 

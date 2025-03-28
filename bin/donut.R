@@ -451,13 +451,13 @@ if(nrow(obs) > 0){
             tempo.primary <- obs$germline_v_call
             tempo.secondary <- obs$germline_j_call
         } else if (col == "vj_gene") {
-            tempo.primary <- obs$v_gene # temporary because there is no germline_v_gene column
-            tempo.secondary <- obs$j_gene # temporary because there is no germline_j_gene column
+            tempo.primary <- obs$germline_v_gene
+            tempo.secondary <- obs$germline_j_gene
         } else if (col == "c_allele") {
-            tempo.primary <- obs$c_call # temporary because there is no germline_c_call column
+            tempo.primary <- obs$c_call
             tempo.secondary <- NULL
         } else if (col == "c_gene") {
-            tempo.primary <- obs$c_gene # temporary because there is no germline_c_gene column
+            tempo.primary <- obs$c_gene
             tempo.secondary <- NULL
         }
     }else{
@@ -476,7 +476,11 @@ if(nrow(obs) > 0){
         }
     }
 
-    chain <- unique(substr(tempo.primary, 1, 3)) # extract the IGH or IGK name
+    # keep only the first allele or gene if igblast hesitated between several
+    tempo.primary <- unlist(lapply(tempo.primary, function(x) strsplit(x, ",")[[1]][1]))
+    tempo.secondary <- unlist(lapply(tempo.secondary, function(x) strsplit(x, ",")[[1]][1]))
+
+    chain <- unique(substr(tempo.primary[!is.na(tempo.primary)], 1, 3)) # extract the IGH or IGK name (ignoring NA values)
     
     #inactivated because now chain can be both IGL and IGK
     # if(length(chain) != 1){

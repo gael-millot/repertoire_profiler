@@ -69,7 +69,7 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
         stop(paste0("\n\n================\n\nERROR IN repertoire.R\nTHE args OBJECT HAS NA\n\n================\n\n"), call. = FALSE)
     }
     tempo.arg.names <- c(
-        "all_passed_seq", 
+        "productive_seq", 
         "repertoire_names_ch", 
         "cute", 
         "log"
@@ -117,7 +117,7 @@ param.list <- c(
     "run.way",
     "tempo.arg.names", 
     if(run.way == "SCRIPT"){"command"},   
-    "all_passed_seq", 
+    "productive_seq", 
     "repertoire_names_ch", 
     "cute", 
     "log"
@@ -153,18 +153,18 @@ for(i in 1:length(param.list)){
 
 
 fun_gg_heatmap2 <- function(
-    data1, 
-    x = NULL, 
-    y = NULL, 
-    z, 
-    label.size = 12, 
-    color.low = "white", 
-    color.high = "blue", 
-    zero.color = grey(0.9),
-    cell.value = TRUE,
-    cell.value.size = 6,
-    title = "", 
-    title.size = 12
+        data1, 
+        x = NULL, 
+        y = NULL, 
+        z, 
+        label.size = 12, 
+        color.low = "white", 
+        color.high = "blue", 
+        zero.color = grey(0.9),
+        cell.value = TRUE,
+        cell.value.size = 6,
+        title = "", 
+        title.size = 12
 ){
     # AIM
     # Plot a ggplot2 heatmap using contingency data
@@ -174,7 +174,7 @@ fun_gg_heatmap2 <- function(
     # ARGUMENTS
     # data1: a dataframe compatible with ggplot2 or a matrix of contingency
     # x: single character string of the data1 column name of the x-axis heatmap if data1 is a data.frame. Ignored if data1 is a matrix. Write NULL if data1 is a data.frame with a single categorical column and that the returned heatmap is vertical (single colum)
-    # x: single character string of the data1 column name of the y-axis heatmap if data1 is a data.frame. Ignored if data1 is a matrix. Write NULL if data1 is a data.frame with a single categorical column and that the returned heatmap is horizontal (single row)
+    # y: single character string of the data1 column name of the y-axis heatmap if data1 is a data.frame. Ignored if data1 is a matrix. Write NULL if data1 is a data.frame with a single categorical column and that the returned heatmap is horizontal (single row)
     # z: single character string of the data1 column name of the heatmap frequencie if data1 is a data.frame. Ignored if data1 is a matrix
     # label.size: single positive numeric value of the x-axis and y-axis font size in mm
     # color.low: a single character string or integer of the color corresponding to the lower value in the gradient color. Colors can be color names (see ?colors() in R), hexadecimal color codes, or integers (according to the ggplot2 palette)
@@ -184,7 +184,7 @@ fun_gg_heatmap2 <- function(
     # cell.value.size: single positive numeric value of the cell value font size in mm. Ignored if cell.value is FALSE
     # title: single character string of the graph title
     # title.size: single numeric value of the title font size in mm
-
+    
     # add: character string allowing to add more ggplot2 features (dots, lines, themes, facet, etc.). Ignored if NULL
     # WARNING: (1) the string must start with "+", (2) the string must finish with ")" and (3) each function must be preceded by "ggplot2::". Example: "+ ggplot2::coord_flip() + ggplot2::theme_bw()"
     # If the character string contains the "ggplot2::theme" string, then the article argument of fun_gg_donut() (see above) is ignored with a warning. In addition, some arguments can be overwritten, like x.angle (check all the arguments)
@@ -225,8 +225,7 @@ fun_gg_heatmap2 <- function(
     # function name
     tempo.gg.name <- "gg.indiv.plot."
     tempo.gg.count <- 0
-
-
+    
     if(class(data1) == "data.frame" & (is.null(x) | is.null(y)) & ncol(data1) != 2){
         stop(paste0("\n\n================\n\nERROR IN fun_gg_heatmap2:\ndata1 ARGUMENT MUST BE A TWO COLUMN DATA FRAME IF data1 ARGUMENT IS A DATA FRAME AND IF x OR y ARGUMENT IS NULL\n\n================\n\n"), call. = FALSE)
     }
@@ -245,7 +244,7 @@ fun_gg_heatmap2 <- function(
     }else if(class(data1) == "data.frame" & ncol(data1) == 3){
         assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::ggplot(
             data = data1,
-             ggplot2::aes_string(x = x, y = y, fill= z) # Var1 with first capital letter because converted by table()
+            ggplot2::aes_string(x = x, y = y, fill= z) # Var1 with first capital letter because converted by table()
         ))
     }else{
         stop(paste0("\n\n================\n\nINTERNAL CODE ERROR IN fun_gg_heatmap2\n\n================\n\n"), call. = FALSE)
@@ -300,11 +299,12 @@ fun_gg_heatmap2 <- function(
     pdf(NULL)
     output <- suppressMessages(suppressWarnings(gridExtra::arrangeGrob(grobs = list(eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + "))), legend.final), ncol=2, widths=c(1, 0.5), top = title.grob, left = " ", right = " "))) # , left = " ", right = " " : trick to add margins in the plot. padding =  unit(0.5, "inch") is for top margin above the title
     suppressMessages(dev.off())
+    print(output)
     return(output)
 }
 
 left_common_chars <- function(
-    s
+        s
 ){
     # AIM
     # Get the first common character of a vector or list of strings
@@ -446,7 +446,7 @@ if(any(arg.check) == TRUE){ # normally no NA
 # end management of NA arguments
 # management of NULL arguments, WARNING: only for repertoire.R because NULL is "NULL" in the nextflow.config file
 tempo.arg <-c( 
-    "all_passed_seq", 
+    "productive_seq", 
     "repertoire_names_ch", 
     "log"
 )
@@ -507,9 +507,9 @@ gene_obs <- c(var_gene_obs, const_gene_obs)
 # names of the columns to deal with in single allele repertoire
 kind <- c("non-zero", "all") # kind of repertoire (warning annotated can be added in kind below)
 check_concordance_imgt <- list( # warning: must be same order than "v_call", "j_call", "c_call"
-    V = c("IGHV", "IGKV", "IGLV", "TRAV", "TRBV", "TRDV", "TRGV"), 
-    J = c("IGHJ", "IGKJ", "IGLJ", "TRAJ", "TRBJ", "TRDJ", "TRGJ"), 
-    C = c("IGHC", "IGKC", "IGLC", "TRAC", "TRBC", "TRDC", "TRGC")
+    V = c("IGHV", "IGKV", "IGLV", "TRAV", "TRBV", "TRDV", "TRGV", "IGKV_IGLV"), 
+    J = c("IGHJ", "IGKJ", "IGLJ", "TRAJ", "TRBJ", "TRDJ", "TRGJ", "IGKJ_IGLJ"), 
+    C = c("IGHC", "IGKC", "IGLC", "TRAC", "TRBC", "TRDC", "TRGC", "IGKC_IGLC")
 )
 ################ end internal variables
 
@@ -536,13 +536,16 @@ fun_report(data = paste0("\n\n################################ RUNNING\n\n"), ou
 ################ Data import
 
 
-df <- read.table(all_passed_seq, header = TRUE, sep = "\t", stringsAsFactors = FALSE, comment.char = "")
+df <- read.table(productive_seq, header = TRUE, sep = "\t", stringsAsFactors = FALSE, comment.char = "")
 
 # processing of the imgt database files
 tempo <- strsplit(rep_file_names, split = "[_.]")
 tempo2 <- sapply(tempo, FUN = function(x){x[length(x) - 1]})
 if(any(grepl(x = tempo2, pattern = "^IG.+")) & ! all(grepl(x = tempo2, pattern = "^IG.+"))){
     stop(paste0("\n\n================\n\nERROR IN repertoire.R:\nIF ONE OF THE .fasta FILE IN THE igblast_files PARAMETER OF THE nextflow.config FILE IS \"IG\" (FOR INSTANCE, imgt_human_IGLV.fasta), THEN, ALL THE OTHER MUST ALSO BE \"IG\".\nHERE THEY ARE:\n", paste(tempo2 , collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
+}
+if(! all(grepl(x = tempo2, pattern = "^IG.+"))){
+    stop(paste0("\n\n================\n\nERROR IN repertoire.R:\nTHE repertoire PROCESS CURRENTLY ONLY SUPPORTS THE ANALYSIS FOR ig LOCI.\nTHEREFORE, ALL THE FILES IN THE igblast_files PARAMETER OF THE nextflow.config FILE MUST BE \"IG\" (FOR INSTANCE, imgt_human_IGLV.fasta)\nHERE THEY ARE:\n", paste(tempo2 , collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
 }
 allele <- vector(mode = "list", length = length(rep_file_names)) # list that will contain all the imgt alleles
 gene <- vector(mode = "list", length = length(rep_file_names)) # list that will contain all the imgt genes
@@ -553,6 +556,47 @@ for(i1 in 1:length(allele)){
     allele[[i1]] <- scan(rep_file_names[i1], what = "character", quiet = TRUE)
     gene[[i1]] <- unique(sub(pattern = "\\*.*", replacement = "", x = allele[[i1]]))
 }
+
+# The light chain can be determined by locus K or locus L. 
+# This program expects the allele and gene lists to each contain 3 lists : one list for loci coding cassette V, one for loci coding cassette and one for loci coding constant region)
+# If both IGKJ and IGLJ are listed in the rep_file_names, they need to be united into a single list, referencing the locuses that code the J cassette. Same goes for the V cassette and the constant region
+if(!setequal(names(allele),names(gene))){
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 4.5 IN repertoire.R:\nTHE COMPARTMENT NAMES OF allele AND gene LIST SHOULD BE IDENTICAL\nHERE THEY ARE:\nALLELE:", paste(names(allele), collapse = "\n"), "\nGENE:", paste(names(gene), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+}
+if(all(c("IGKV", "IGLV") %in% names(allele))){
+    if(all(c("IGKJ", "IGLJ") %in% names(allele))){
+        if(all(c("IGKC", "IGLC") %in% names(allele))){
+        # unite the lists
+        allele$IGKV_IGLV <- c(allele$IGKV, allele$IGLV)
+        allele$IGKV <- NULL
+        allele$IGLV <- NULL
+        # Same operations for the "gene" list since it is already verified they have the same compartment names
+        gene$IGKV_IGLV <- c(gene$IGKV, gene$IGLV)
+        gene$IGKV <- NULL
+        gene$IGLV <- NULL
+
+        allele$IGKJ_IGLJ <- c(allele$IGKJ, allele$IGLJ)
+        allele$IGKJ <- NULL
+        allele$IGLJ <- NULL
+        gene$IGKJ_IGLJ <- c(gene$IGKJ, gene$IGLJ)
+        gene$IGKJ <- NULL
+        gene$IGLJ <- NULL
+
+        allele$IGKC_IGLC <- c(allele$IGKC, allele$IGLC)
+        allele$IGKC <- NULL
+        allele$IGLC <- NULL
+        gene$IGKC_IGLC <- c(gene$IGKC, gene$IGLC)
+        gene$IGKC <- NULL
+        gene$IGLC <- NULL
+        }else{
+            stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 4.6 IN repertoire.R:\nTHE ig_blast_constant_ref_files DO NOT CONTAIN LIGHT CHAIN FILES WHEREAS THE ignlast_variable_ref_files DO.\nIF THE variable_ref_files CONTAIN IGKV, IGLV IGKJ AND IGLJ, THEN THE constant_ref_files MUST CONTAIN IGKC AND IGLC\nHERE ARE ALL THE igblast_ref_files:\n:", paste(names(allele), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+        }
+    }else{
+        stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 4.7 IN repertoire.R:\nIF THE variable_ref_files CONTAIN IGKV and IGLV THEN IT MUST CONTAIN IGKJ AND IGLJ\nHERE ARE ALL THE igblast_ref_files:\n:", paste(names(allele), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+    }
+}
+
+
 # end processing of the imgt database files
 
 ################ End Data import
@@ -568,10 +612,10 @@ if( ! all(gene_obs %in% c("v_gene", "j_gene", "c_gene"))){
 }
 
 if( ! all(allele_obs %in% names(df))){
-    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 7 IN repertoire.R:\nPROBLEM WITH THE NAMES OF all_passed_seq THAT MUST CONTAIN \"v_call\", \"j_call\", \"c_call\"\nHERE IT IS:\n", paste(names(df), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 7 IN repertoire.R:\nPROBLEM WITH THE NAMES OF productive_seq THAT MUST CONTAIN \"v_call\", \"j_call\", \"c_call\"\nHERE IT IS:\n", paste(names(df), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
 }
 if( ! all(gene_obs %in% names(df))){
-    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 8 IN repertoire.R:\nPROBLEM WITH THE NAMES OF all_passed_seq THAT MUST CONTAIN \"v_gene\", \"j_gene\" OR \"c_gene\"\nHERE IT IS:\n", paste(names(df), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 8 IN repertoire.R:\nPROBLEM WITH THE NAMES OF productive_seq THAT MUST CONTAIN \"v_gene\", \"j_gene\" OR \"c_gene\"\nHERE IT IS:\n", paste(names(df), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
 }
 if(is.null(names(allele))){
     stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 9 IN repertoire.R:\nNO NAMES OF allele CAN BE NULL:", paste(names(allele), collapse = "\n"), "\nSEE rep_file_names:\n", paste(rep_file_names, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
@@ -598,7 +642,7 @@ if(all.annotation.log == FALSE){
 }
 
 # take the first annotation if several in the tempo column
-if(all_passed_seq == "all_passed_seq.tsv"){
+if(productive_seq == "productive_seq.tsv"){
     tempo.several.annot.log <- logical(length = nrow(df)) # only false
     tempo <- c(allele_obs, gene_obs)
     for(i1 in 1:length(tempo)){
@@ -606,9 +650,9 @@ if(all_passed_seq == "all_passed_seq.tsv"){
         tempo.several.annot.log[tempo.nb > 1] <- TRUE
     }
     if(any(tempo.several.annot.log)){
-        write.table(df[tempo.several.annot.log, ], file = paste0("./all_passed_seq_several_annot_igmt.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE) # separate repertoires
+        write.table(df[tempo.several.annot.log, ], file = paste0("./productive_seq_several_annot_igmt.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE) # separate repertoires
     }else{
-        write.table("", file = paste0("./all_passed_seq_several_annot_igmt.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
+        write.table("", file = paste0("./productive_seq_several_annot_igmt.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
     }
     for(i1 in 1:length(tempo)){
         df[ , names(df) == tempo[i1]] <- sapply(strsplit(df[ , names(df) == tempo[i1]], split = ","), FUN = function(x){x[1]})
@@ -633,9 +677,11 @@ if(allele_common != gene_common){
 # concordance
 pos <- NULL
 names_allele <- names(allele_trunk)
+
 for(i0 in 1:length(check_concordance_imgt)){
     tempo_log <- names_allele %in% check_concordance_imgt[[i0]]
-    if(sum(tempo_log) != 1){
+    # Check that a concordance is found
+    if(sum(tempo_log) != 1){ 
         stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 12 IN repertoire.R:\nnames_allele NOT PRESENT IN check_concordance_imgt NUMBER ", i0, ".\nHERE names_allele IS:\n", paste(names_allele, collapse = "\n"), "\nAND check_concordance_imgt NUMBER ", i0, " IS:\n", paste(check_concordance_imgt[[i0]], collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
     }else{
         pos <- c(pos, which(tempo_log))
@@ -656,13 +702,12 @@ tempo <- left_common_chars(s = tempo_list)
 gene_obs_common <- tempo$common
 gene_obs_trunk <- tempo$rest
 if( ! (allele_obs_common == allele_common & allele_obs_common == gene_obs_common)){
-    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 13 IN repertoire.R:\nallele_obs_common, gene_obs_common AND allele_common SHOULD BE IDENTICAL.\nHERE allele_obs_common IS:\n", allele_obs_common, "\ngene_obs_common IS:\n", gene_obs_common, "\nAND allele_common IS:\n", allele_common, "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 15 IN repertoire.R:\nallele_obs_common, gene_obs_common AND allele_common SHOULD BE IDENTICAL.\nHERE allele_obs_common IS:\n", allele_obs_common, "\ngene_obs_common IS:\n", gene_obs_common, "\nAND allele_common IS:\n", allele_common, "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
 }
 # end data
 
 
 ######## end removal of the common character on the left of strings
-
 
 # simple repertoire
 type <- c("allele", "gene")
@@ -671,6 +716,7 @@ for(i0 in type){
     # simple repertoires
     for(i1 in 1:length(get(paste0(i0, "_obs_trunk")))){
         tempo.df <- get(paste0(i0, "_obs_trunk"))[[i1]]
+        tempo.df <- tempo.df[ ! is.na(tempo.df)]
         tempo.df <- factor(tempo.df, levels = unique(get(paste0(i0, "_trunk"))[[i1]]))
         # plot
         for(i2 in kind){
@@ -798,7 +844,13 @@ for(i0 in type){
     # for each C
     isotype_subclass_obs <- sort(unique(gene_obs_trunk[[3]]))
     for(i1 in isotype_subclass_obs){
-        tempo.df <- lapply(X = get(paste0(i0 , "_obs_trunk"))[get(paste0("var_", i0, "_obs"))], FUN = function(x){x[get(paste0(i0 , "_obs_trunk"))[[get(paste0("const_", i0, "_obs"))]] == i1]})
+        tempo.df <- lapply(X = get(paste0(i0 , "_obs_trunk"))[get(paste0("var_", i0, "_obs"))], 
+                           FUN = function(x) {
+                               c_values <- get(paste0(i0, "_obs_trunk"))[[get(paste0("const_", i0, "_obs"))]]
+                               c_genes <- lapply(strsplit(c_values, "\\*"), function(x) x[[1]])
+                               x[c_genes == i1]
+                           })
+        
         tempo.df[[1]] <- factor(tempo.df[[1]], levels = unique(get(paste0(i0, "_trunk"))[[1]]))
         tempo.df[[2]] <- factor(tempo.df[[2]], levels = unique(get(paste0(i0, "_trunk"))[[2]]))
         # plot
@@ -855,7 +907,7 @@ for(i0 in type){
                 )
             }else{
                 # no need to use pdf(NULL) with fun_gg_empty_graph()
-                final.plot <- fun_gg_empty_graph(title = tempo.title, title.size = 12, text = paste0("NO GRAPH PLOTTED FOR ", names( get(paste0(i0, "_trunk")))[i1], "\nNO ALLELE/GENE DETECTED"), text.size = 3)
+                final.plot <- fun_gg_empty_graph(title = tempo.title, title.size = 12, text = paste0("NO GRAPH PLOTTED FOR VxJ for ", i1, "\nNO ALLELE/GENE DETECTED"), text.size = 3)
             }
             ggplot2::ggsave(filename = paste0("./rep_", i0, "_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300) # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
             ggplot2::ggsave(filename = paste0("./rep_", i0, "_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300)
@@ -866,7 +918,7 @@ for(i0 in type){
     # end for each C
     # end combined repertoires
     tempo <- qpdf::pdf_combine(input = list.files(path = ".", pattern = paste0("^.*", i0, ".*\\.pdf$")), output = paste0("./", i0, "_repertoire.pdf")) # assignation to prevent a returned element
-
+    
 }
 
 ################ end data modification, plotting and saving
