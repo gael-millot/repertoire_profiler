@@ -96,8 +96,8 @@ rm(tempo.cat)
 ################################ Test
 
 
-# setwd("C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/06/13ac33a3d708d2d2b2e63dab67370b")
-# all_passed_seq <- "all_passed_seq.tsv"
+# setwd("Z:/thomas_derenne/repertoire_profiler-master/work/6b/2d1f7c09424fd2b0ff522192dd3c9d")
+# all_passed_seq <- "productive_seq.tsv"
 # repertoire_names_ch <- "imgt_human_IGHD.tsv imgt_human_IGHJ.tsv imgt_human_IGHV.tsv imgt_human_IGHC.tsv"
 # cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.4.0/cute_little_R_functions.R"
 # log = "repertoire.log"

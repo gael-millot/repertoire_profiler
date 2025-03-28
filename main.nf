@@ -813,6 +813,7 @@ process closest_germline {
     VDJ_FILES=\$(awk -v var1="${igblast_variable_ref_files}" -v var2="\${REPO_PATH}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}')
     # end variables
     CreateGermlines.py -d \$FILENAME -g dmask --cloned -r \${VDJ_FILES} |& tee -a closest_germline.log
+    # -r: List of folders and/or fasta files (with .fasta, .fna or .fa extension) with germline sequences. When using the default Change-O sequence and coordinate fields, these reference sequences must contain IMGT-numbering spacers (gaps) in the V segment. 
     """
 }
 
