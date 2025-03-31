@@ -80,9 +80,9 @@ Number of initial input sequences : ```r params$nb_input```
 
 ### Igblast sequence annotation
 
-[Succes](files/igblast_aligned_seq.tsv) number of sequences : ```r params$nb_seq_aligned```
+[Succes](files/igblast_aligned_seq_name.tsv) number of sequences : ```r params$nb_seq_aligned```
 
-[Failed](files/igblast_unaligned_seq.tsv) number of sequences : ```r params$nb_seq_not_aligned```
+[Failed](files/igblast_unaligned_seq_name.tsv) number of sequences : ```r params$nb_seq_not_aligned```
 
 Total : ```r params$nb_seq_aligned + params$nb_seq_not_aligned```
 
@@ -113,9 +113,9 @@ Productiveness ratio : ```r base::round(params$nb_productive / (params$nb_produc
 
 
 <div class="image-container">
-  <img src="png/vj_allele_all_donutchart.png" onclick="toggleFullscreen(this)" />
-  <img src="png/vj_allele_annotated_donutchart.png" onclick="toggleFullscreen(this)" />
-  <img src="png/vj_allele_tree_donutchart.png" onclick="toggleFullscreen(this)" />
+  <img src="png/vj_gene_all_donutchart.png" onclick="toggleFullscreen(this)" />
+  <img src="png/vj_gene_annotated_donutchart.png" onclick="toggleFullscreen(this)" />
+  <img src="png/vj_gene_tree_donutchart.png" onclick="toggleFullscreen(this)" />
 </div>
 
 <br><br>
@@ -128,9 +128,9 @@ See also the [donuts.pdf](files/donuts.pdf) file in the files folder.
 
 <br>
 
-<div style="display: flex; justify-content: space-around;"> 
-  <img src="png/`r params$constant_rep`" width="40%" style="border: 2px solid black;" /> 
-  <img src="png/`r params$vj_rep`" width="40%" style="border: 2px solid black;" /> 
+<div class="image-container"> 
+  <img src="png/`r params$constant_rep`" onclick="toggleFullscreen(this)" style="border: 2px solid black; width: 25%;"/> 
+  <img src="png/`r params$vj_rep`" onclick="toggleFullscreen(this)" style="border: 2px solid black; width: 25%"/> 
 </div>
 
 <br />
@@ -149,9 +149,13 @@ Some sequences from the productive file can **fail to be clone-assigned**, and w
 
 Number of [clone-assigned sequences](files/clone_assigned_seq.tsv) : ```r params$nb_clone_assigned```
 
-Number of [failed clone-assigned sequences](files/non_clone_assigned_sequence.tsv) : ```r params$nb_failed_clone```
+```{r include = FALSE}
+nb_failed_clone <- ifelse(params$nb_failed_clone > 0, params$nb_failed_clone, 0)
+```
 
-Passing ratio : ```r base::round(params$nb_clone_assigned / (params$nb_clone_assigned + params$nb_failed_clone), 2)```
+Number of [failed clone-assigned sequences](files/non_clone_assigned_sequence.tsv) : ```r nb_failed_clone```
+
+Passing ratio : ```r base::round(params$nb_clone_assigned / (params$nb_clone_assigned + nb_failed_clone), 2)```
 
 <br>
 
@@ -163,15 +167,9 @@ See also:<br /><ul><li>[germ_tree_seq.tsv](files/germ_tree_seq.tsv)<br /></li><l
 
 <br><br><br>
 
-###  Amino acid sequences phylogeny 
-
-<br>
-
-**Only available for heavy chain analysis.**
-
-Open the different sequences_\<SEQ_NAME\>_align.fasta_itol_url.txt files in the [phylo](./phylo) folder and click on the link to see the trees.
-
-<br><br><br>
+`r  if(TRUE){"### Amino acid sequences phylogeny \n\n **Only available for heavy chain analysis.**  "}`
+`r  if(TRUE){"Open the different sequences_\\<SEQ_NAME\\>_align.fasta_itol_url.txt files in the [phylo](./phylo) folder and click on the link to see the trees."}`
+<br><br>
 
 ###  Backup
 

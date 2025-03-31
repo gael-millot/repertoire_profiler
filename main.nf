@@ -1944,7 +1944,7 @@ workflow {
     )
     // clone_assignment.out.clone_ch.view()
 
-    nb_failed_clone = clone_assignment.out.failed_clone_ch.countLines() // Assuming there are only the sequence names and no column names on the first line
+    nb_failed_clone = clone_assignment.out.failed_clone_ch.countLines() - 6
 
     split_by_clones(
         clone_assignment.out.clone_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE clone_assignment PROCESS\n\n========\n\n"}
