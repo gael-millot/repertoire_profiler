@@ -909,15 +909,17 @@ for(i0 in type){
                 # no need to use pdf(NULL) with fun_gg_empty_graph()
                 final.plot <- fun_gg_empty_graph(title = tempo.title, title.size = 12, text = paste0("NO GRAPH PLOTTED FOR VxJ for ", i1, "\nNO ALLELE/GENE DETECTED"), text.size = 3)
             }
-            ggplot2::ggsave(filename = paste0("./rep_", i0, "_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300) # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
-            ggplot2::ggsave(filename = paste0("./rep_", i0, "_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300)
-            ggplot2::ggsave(filename = paste0("./rep_", i0, "_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 4, height = 10, units = "in", dpi = 300)
+            ggplot2::ggsave(filename = paste0("./rep_", i0, "_for_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300) # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
+            ggplot2::ggsave(filename = paste0("./rep_", i0, "_for_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300)
+            ggplot2::ggsave(filename = paste0("./rep_", i0, "_for_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 4, height = 10, units = "in", dpi = 300)
         }
     }
     # end plot
     # end for each C
     # end combined repertoires
-    tempo <- qpdf::pdf_combine(input = list.files(path = ".", pattern = paste0("^.*", i0, ".*\\.pdf$")), output = paste0("./", i0, "_repertoire.pdf")) # assignation to prevent a returned element
+    files <- list.files(path = ".", pattern = paste0("^.*", i0, ".*\\.pdf$"))
+    sorted_files <- files[order(grepl("for", files))]
+    tempo <- qpdf::pdf_combine(input = sorted_files, output = paste0("./", i0, "_repertoire.pdf")) # assignation to prevent a returned element
     
 }
 
