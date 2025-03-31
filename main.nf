@@ -1436,6 +1436,7 @@ process print_report{
     val nb_failed_clone
     path donuts_png
     val repertoire_png
+    val heavy_chain
 
     output:
     file "report.html"
@@ -1470,7 +1471,8 @@ process print_report{
                         nb_clone_assigned = ${nb_clone_assigned},
                         nb_failed_clone = ${nb_failed_clone},
                         constant_rep = constant_rep,
-                        vj_rep = vj_rep),
+                        vj_rep = vj_rep,
+                        heavy_chain = ${heavy_chain}),
         # output_dir = ".",
         # intermediates_dir = "./",
         # knit_root_dir = "./",
@@ -2103,10 +2105,13 @@ workflow {
     //donut_assembly.out.donut_assembly_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}
     donut_assembly.out.donut_assembly_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}}
 
-
+    
     // The following processes are meant to be executed only if the analyzed sequences are heavy chains
     if(igblast_variable_ref_files =~ /^.*IGHV.*$/){
         // Heavy chain detected
+
+        heavy_chain = channel.of("TRUE")
+
         Reformat(
             aa_tsv_ch2,
             igblast_data_check.out.igblast_data_check_ch.collect()
@@ -2151,6 +2156,8 @@ workflow {
             itolmeta,
             phylo_tree_itolkey
         )
+    }else{
+        heavy_chain = channel.of("FALSE")
     }
 
     
@@ -2165,7 +2172,8 @@ workflow {
         nb_clone_assigned,
         nb_failed_clone,
         donut.out.donuts_png.collect(),
-        repertoire.out.repertoire_png.toList()
+        repertoire.out.repertoire_png.toList(),
+        heavy_chain
     )
 
 

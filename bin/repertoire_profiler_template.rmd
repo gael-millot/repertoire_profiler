@@ -15,6 +15,7 @@ params:
   nb_failed_clone: -1
   constant_rep: ""
   vj_rep: ""
+  heavy_chain: FALSE
 ---
 
 \n\n<br /><br />\n\n
@@ -117,6 +118,11 @@ Productiveness ratio : ```r base::round(params$nb_productive / (params$nb_produc
   <img src="png/vj_gene_annotated_donutchart.png" onclick="toggleFullscreen(this)" />
   <img src="png/vj_gene_tree_donutchart.png" onclick="toggleFullscreen(this)" />
 </div>
+<div class="image-container">
+  <img src="png/c_gene_all_donutchart.png" onclick="toggleFullscreen(this)" />
+  <img src="png/c_gene_annotated_donutchart.png" onclick="toggleFullscreen(this)" />
+  <img src="png/c_gene_tree_donutchart.png" onclick="toggleFullscreen(this)" />
+</div>
 
 <br><br>
 
@@ -167,17 +173,24 @@ See also:<br /><ul><li>[germ_tree_seq.tsv](files/germ_tree_seq.tsv)<br /></li><l
 
 <br><br><br>
 
-`r  if(TRUE){"### Amino acid sequences phylogeny \n\n **Only available for heavy chain analysis.**  "}`
-`r  if(TRUE){"Open the different sequences_\\<SEQ_NAME\\>_align.fasta_itol_url.txt files in the [phylo](./phylo) folder and click on the link to see the trees."}`
+`r  if(params$heavy_chain == "TRUE"){"### Amino acid sequences phylogeny \n\n **Only available for heavy chain analysis.**  "}`
+`r  if(params$heavy_chain == "TRUE"){"Open the different sequences_\\<SEQ_NAME\\>_align.fasta_itol_url.txt files in the [phylo](./phylo) folder and click on the link to see the trees."}`
 <br><br>
 
 ###  Backup
 
 
 See the [reports](./reports) folder for all the details of the analysis, including the parameters used in the .config file
-
-
-Full .nextflow.log is in: /mnt/c/Users/Gael/Documents/Git_projects/14985_loot<br />The one in the [reports](./reports) folder is not complete (miss the end)
+```{r include = FALSE}
+#remove work directory from current directory
+wd <- getwd()
+parts <- unlist(strsplit(wd, "/"))
+path <- paste(parts[1:(length(parts) - 3)], collapse = "/")
+path <- paste0(path, "/")
+```
+Full .nextflow.log is in: ```r path```
+<br />
+The one in the [reports](./reports) folder is not complete (miss the end)
 
 
 <br /><br />
@@ -195,4 +208,4 @@ Full .nextflow.log is in: /mnt/c/Users/Gael/Documents/Git_projects/14985_loot<br
   .toc-content.col-xs-12.col-sm-8.col-md-9 { margin-left: 10px !important; padding-left: 0 !important; } 
 </style>
 
-<style> /* Forcer une largeur fixe, flotter à gauche et ajouter un espace à droite */ .col-xs-12.col-sm-4.col-md-3 { width: 250px !important; float: left; margin-right: 20px; /* éventuellement, réduire sa marge intérieure si besoin */ padding: 5px; } </style>
+<style> /* Force a fixated width, float left and add space on the right */ .col-xs-12.col-sm-4.col-md-3 { width: 250px !important; float: left; margin-right: 20px; /* reduce interior margin */ padding: 5px; } </style>
