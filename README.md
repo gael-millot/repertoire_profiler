@@ -227,7 +227,6 @@ Mandatory elements:
 | **png** | Folder containing the graphs in png format. |
 | **svg** | Folder containing the graphs in svg vectorial format. |
 | **RData** | Folder containing, for each clonal group, objects that can be used in R to further analyze of plot the data:<br /><ul><li>db: tibble data frame resulting from the import by the alakazam::readChangeoDb() function<br /></li><li>clones: db in the airClone format<br /></li><li>trees: output of the dowser::getTrees() function using the clones object as input (igphylm tree)</li><br /><br />Also contains the all_trees.RData file that combine the trees R objects of the different files in a single trees object. |
-| **phylo** | Folder containing amino-acid sequences in fasta files. Each fasta file regroups the amino-acid sequences that come from the same V\|J recombination. |
 | **files** | Folder containing **all the files** described below : |
 | **seq_distance.pdf** | Distribution of the distances between the two nearest sequences (see the *nearest_distance* column in the *clone_assigned_seq.tsv* file). |
 | **donuts.pdf** | donut plots showing the frequency of sequences per clonal groups, among:<br /><ul><li>all: all the clone-assigned sequences (*clone_assigned_seq.tsv* output file).<br /></li><li>annotated: as the "all" donut but using all the clone-assigned sequences that have been annotated using the meta_name_replacement parameter of the nextflow.config file if not "NULL".<br /></li><li>trees: all the sequences used for germline trees (*germ_tree_seq.tsv* output file).</li> |
@@ -244,13 +243,20 @@ Mandatory elements:
 | **non_clone_assigned_sequence.tsv** | Productive sequences that failed to be assigned to a clone ID by the DefineClones.py function (empty file if all the sequences are assigned). See https://changeo.readthedocs.io/en/latest/methods/clustering.html but failure reasons are not explained.|
 | **germ_tree_clone_id.tsv** | Clonal group IDs used in the germline tree analysis (clonal group with at least n sequences, n being set by the nb_seq_per_clone parameter of the *nextflow.config* file). |
 | **germ_tree_dismissed_clone_id.tsv** | Clonal group IDs not used in the germline tree analysis (clonal group with less than n sequences, n being set by the nb_seq_per_clone parameter of the *nextflow.config* file). |
-| **germ_tree_seq.tsv** | Sequences of the *clone_assigned_seq.tsv* file used in the germline tree analysis (clonal group with at least n sequences, n being set by the nb_seq_per_clone parameter of the *nextflow.config* file). |
+| **germ_tree_seq.tsv** | Sequences of the *clone_assigned_seq.tsv* file used in the germline tree analysis (clonal group with at least n sequences, n being set by the nb_seq_per_clone parameter of the *nextflow.config* file). Additionnal germline_[*vdj*]_gene columns. |
 | **germ_tree_dismissed_seq.tsv** | Sequences of the *clone_assigned_seq.tsv* file not used in the germline tree analysis (clonal group with less than n sequences, n being set by the nb_seq_per_clone parameter of the *nextflow.config* file). |
 | **germ_tree_dup_seq_not_displayed.tsv** | Sequences file used in the germline tree analysis but not displayed in the graph, (1) because strictly identical to another sequence already in the tree and (2) because the tree_duplicate_seq parameter of the *nextflow.config* file has been set to "FALSE". |
+
+
+<br /><br />
+*Elements only returned for **heavy chain** analysis:*
+<br />
+| repertoire_profiler_<UNIQUE_ID> folders and files | Description |
+| :--- | :--- |
+| **phylo** | Folder containing amino-acid sequences in fasta files. Each fasta file regroups the amino-acid sequences that come from the same V\|J recombination. |
 | **\*_align.fasta.treefile** | Phylogenic trees in newick format for each sequence group in the phylo file. This tree is not constructed when there are less than 4 sequences in 1 group. |
 | **\*_align.fasta.log** | Contains execution information of IQTree, used for constructing the phylogenic trees. Useful for troubleshooting. |
 | **\*_align.fasta_itol_url.txt** | URL access to each phylogenic tree (*\*_align.fasta.treefile*) uploaded on iTOL. |
-
 
 <br /><br />
 Optional elements only returned if the igblast_aa parameter is 'false' and if the input fasta are nucleotide sequences:
@@ -317,6 +323,12 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 <br /><br />
 ## WHAT'S NEW IN
 
+#### v16.2
+
+- HTML report now includes donuts, repertoires, statistics on successfull sequence outputs following several processes, and clonal  prediction
+- Bugs regarding the study of K and L loci on light chains fixed
+- Thorough checking of *ig_ref_files* format
+
 #### v16.0
 
 - HTML report produced to present the main results in a more accessible way (work in progress)
@@ -326,7 +338,7 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 
 #### v15.0
 
-- Now repertoire files (.tsv and .pdf) deals with the constant chain.
+- Now repertoire files (.tsv and .pdf) deal with the constant chain.
 
 
 #### v14.3
