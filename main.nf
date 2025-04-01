@@ -1145,7 +1145,14 @@ process germ_tree_vizu {
 
 
 
-
+// Creates donut plots for the constant and variable region ; grouped by same allele or genes
+// Inputs:
+//      - kind : kind of donut plot to display. can be "all", "annotated" or "tree"
+//      - data : tsv file containing the sequences to plot 
+//      - col : columns in the data file to take into account when plotting the donut (can be c_call if the donut should be grouped by same constant region alleles for instance)
+//      - donut_* : parameters for the display of the donut. These are entered in the nextflow.config file
+//      - cute_file : file containing R functions used in the donut.R script
+//      - igblast_variable_ref_files & igblast_constant_ref_files : only used to be certain that all studied loci are displayed in the donut's title (if we included IGL and IGK in the study but only one was found, both loci still need to be in the title)
 process donut {
     label 'r_ext'
     //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
@@ -1173,6 +1180,8 @@ process donut {
     val donut_legend_box_space
     val donut_legend_limit
     path cute_file
+    val igblast_variable_ref_files
+    val igblast_constant_ref_files
 
     output:
     path "*.tsv", emit: donut_tsv_ch, optional: true
@@ -1207,6 +1216,8 @@ process donut {
 "${donut_legend_box_space}" \
 "${donut_legend_limit}" \
 "${cute_file}" \
+"${igblast_variable_ref_files}" \
+"${igblast_constant_ref_files}" \
 "${kind}_donut.log"
     """
 }
@@ -2085,7 +2096,9 @@ workflow {
         donut_legend_box_size,
         donut_legend_box_space,
         donut_legend_limit,
-        cute_file
+        cute_file,
+        igblast_variable_ref_files,
+        igblast_constant_ref_files
     )
     donut.out.donut_pdf_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut PROCESS\n\n========\n\n"}
     donut.out.donut_pdf_ch.count().subscribe { n -> if ( n == 0 ){
