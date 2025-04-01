@@ -1946,7 +1946,7 @@ workflow {
     )
     // clone_assignment.out.clone_ch.view()
 
-    nb_failed_clone = clone_assignment.out.failed_clone_ch.countLines() - 6
+    nb_failed_clone = clone_assignment.out.failed_clone_ch.countLines() - 1
 
     split_by_clones(
         clone_assignment.out.clone_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE clone_assignment PROCESS\n\n========\n\n"}
