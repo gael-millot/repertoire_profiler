@@ -88,8 +88,7 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
         "donut_legend_box_space", 
         "donut_legend_limit",
         "cute", 
-        "igblast_variable_ref_files",
-        "igblast_constant_ref_files",
+        "repertoire_names_ch",
         "log"
     ) # objects names exactly in the same order as in the bash code and recovered in args. Here only one, because only the path of the config file to indicate after the donut.R script execution
     if(length(args) != length(tempo.arg.names)){
@@ -167,8 +166,7 @@ param.list <- c(
     "donut_legend_box_space", 
     "donut_legend_limit",
     "cute", 
-    "igblast_variable_ref_files",
-    "igblast_constant_ref_files",
+    "repertoire_names_ch",
     "log"
 )
 if(any(duplicated(param.list))){
@@ -316,8 +314,7 @@ tempo.arg <-c(
     "donut_legend_box_size", 
     # "donut_legend_limit", # can be NULL
     "cute",
-    "igblast_variable_ref_files",
-    "igblast_constant_ref_files",
+    "repertoire_names_ch",
     "log"
 )
 tempo.log <- sapply(lapply(tempo.arg, FUN = get, env = sys.nframe(), inherit = FALSE), FUN = function(x){x == "NULL"}) # WARNING: only for donut.R
@@ -465,6 +462,9 @@ tempo.title <- paste0(
     )
 )
 
+# Chain is determined with igblast_ref_files because if we studied IGL and IGK but only one was found, both still need to be in the title
+loci <- sapply(repertoire_names_ch, extract_chain)
+chain <- unique(loci[!is.na(loci)]) # extract the IGH or IGK name (ignoring NA values)
 
 if(nrow(obs) > 0){
     
@@ -501,10 +501,6 @@ if(nrow(obs) > 0){
     # keep only the first allele or gene if igblast hesitated between several
     tempo.primary <- unlist(lapply(tempo.primary, function(x) strsplit(x, ",")[[1]][1]))
     tempo.secondary <- unlist(lapply(tempo.secondary, function(x) strsplit(x, ",")[[1]][1]))
-
-    # Chain is determined with igblast_ref_files because if we studied IGL and IGK but only one was found, both still need to be in the title
-    loci <- c(sapply(igblast_variable_ref_files, extract_chain), sapply(igblast_constant_ref_files, extract_chain))
-    chain <- unique(loci[!is.na(loci)]) # extract the IGH or IGK name (ignoring NA values)
     
     #inactivated because now chain can be both IGL and IGK
     # if(length(chain) != 1){

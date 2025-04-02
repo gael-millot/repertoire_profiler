@@ -365,6 +365,20 @@ left_common_chars <- function(
     base::return(output)
 }
 
+# These functions extract the loci from a igblast_ref_file
+# Example of input : "imgt_human_IGLV.fasta imgt_human_IGKV.fasta"
+# The output would be ["IGL", "IGK"]
+extract_locus <- function(x) {
+    parts <- strsplit(x, "_")[[1]]
+    ig_part <- parts[grepl("^IG[A-Z]{2}", parts)]
+    return(substr(ig_part, 1, 3))
+}
+extract_chain <- function(x) {
+    files_list <- unlist(strsplit(x, " "))
+    chain <- sapply(files_list, extract_locus)
+    return(chain)
+}
+
 
 ################ import functions from cute little functions toolbox
 
@@ -709,6 +723,11 @@ if( ! (allele_obs_common == allele_common & allele_obs_common == gene_obs_common
 
 ######## end removal of the common character on the left of strings
 
+
+# Chain is determined with igblast_ref_files because if we studied IGL and IGK but only one was found, both still need to be in the title
+loci <- sapply(repertoire_names_ch, extract_chain)
+chain <- unique(loci[!is.na(loci)]) # extract the IGH or IGK name (ignoring NA values)
+
 # simple repertoire
 type <- c("allele", "gene")
 for(i0 in type){
@@ -745,7 +764,7 @@ for(i0 in type){
                     "Locus: ", names(check_concordance_imgt)[i1], "\n",
                     "Kind: ", i2, "\n",
                     "Type: ", i0, "\n",
-                    "Chain: ", allele_obs_common, "\n",
+                    "Chain: ", paste(chain, collapse = " "), "\n",
                     "Total count: ", sum(tempo.table.gg$Count, na.rm = TRUE)
                 )
                 label.size <- -5/132 * nrow(tempo.table.gg) + 1081/66 # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
@@ -813,7 +832,7 @@ for(i0 in type){
                 "Locus: ", names(check_concordance_imgt)[1], "x", names(check_concordance_imgt)[2], "\n",
                 "Kind: ", i1, "\n",
                 "Type: ", i0, "\n",
-                "Chain: ", allele_obs_common, "\n",
+                "Chain: ", paste(chain, collapse = " "), "\n",
                 "Total count: ", sum(tempo.table.gg$Count, na.rm = TRUE)
             )
             label.size <- -5/132 * nrow(tempo.table.gg) + 1081/66 # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
@@ -887,7 +906,7 @@ for(i0 in type){
                     "Locus: ", names(check_concordance_imgt)[1], "x", names(check_concordance_imgt)[2], " for ", i1, "\n",
                     "Kind: ", i2, "\n",
                     "Type: ", i0, "\n",
-                    "Chain: ", allele_obs_common, "\n",
+                    "Chain: ", paste(chain, collapse = " "), "\n",
                     "Total count: ", sum(tempo.table.gg$Count, na.rm = TRUE)
                 )
                 label.size <- -5/132 * nrow(tempo.table.gg) + 1081/66 # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66

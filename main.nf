@@ -1180,8 +1180,7 @@ process donut {
     val donut_legend_box_space
     val donut_legend_limit
     path cute_file
-    val igblast_variable_ref_files
-    val igblast_constant_ref_files
+    path igblast_data_check_ch
 
     output:
     path "*.tsv", emit: donut_tsv_ch, optional: true
@@ -1216,8 +1215,7 @@ process donut {
 "${donut_legend_box_space}" \
 "${donut_legend_limit}" \
 "${cute_file}" \
-"${igblast_variable_ref_files}" \
-"${igblast_constant_ref_files}" \
+"${igblast_data_check_ch}" \
 "${kind}_donut.log"
     """
 }
@@ -2097,8 +2095,7 @@ workflow {
         donut_legend_box_space,
         donut_legend_limit,
         cute_file,
-        igblast_variable_ref_files,
-        igblast_constant_ref_files
+        igblast_data_check.out.igblast_data_check_ch
     )
     donut.out.donut_pdf_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut PROCESS\n\n========\n\n"}
     donut.out.donut_pdf_ch.count().subscribe { n -> if ( n == 0 ){
