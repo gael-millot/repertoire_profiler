@@ -524,9 +524,9 @@ if(nrow(obs) > 0){
     # remove "IGH" if heavy chain ; remove "IG" if light chain to keep the info about K or L locus
     third_character <- substr(tempo.primary, 3, 3)
     if(!all(third_character == "H")){
-        tronc <- 4
-    }else{
         tronc <- 3
+    }else{
+        tronc <- 4
     }
     tempo.primary <- substring(tempo.primary, tronc)
     if (!is.null(tempo.secondary)) {
