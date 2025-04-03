@@ -365,6 +365,20 @@ left_common_chars <- function(
     base::return(output)
 }
 
+# These functions extract the loci from a igblast_ref_file
+# Example of input : "imgt_human_IGLV.fasta imgt_human_IGKV.fasta"
+# The output would be ["IGL", "IGK"]
+extract_locus <- function(x) {
+    parts <- strsplit(x, "_")[[1]]
+    ig_part <- parts[grepl("^IG[A-Z]{2}", parts)]
+    return(substr(ig_part, 1, 3))
+}
+extract_chain <- function(x) {
+    files_list <- unlist(strsplit(x, " "))
+    chain <- sapply(files_list, extract_locus)
+    return(chain)
+}
+
 
 ################ import functions from cute little functions toolbox
 
@@ -709,6 +723,11 @@ if( ! (allele_obs_common == allele_common & allele_obs_common == gene_obs_common
 
 ######## end removal of the common character on the left of strings
 
+
+# Chain is determined with igblast_ref_files because if we studied IGL and IGK but only one was found, both still need to be in the title
+loci <- sapply(repertoire_names_ch, extract_chain)
+chain <- unique(loci[!is.na(loci)]) # extract the IGH or IGK name (ignoring NA values)
+
 # simple repertoire
 type <- c("allele", "gene")
 for(i0 in type){
@@ -745,7 +764,7 @@ for(i0 in type){
                     "Locus: ", names(check_concordance_imgt)[i1], "\n",
                     "Kind: ", i2, "\n",
                     "Type: ", i0, "\n",
-                    "Chain: ", allele_obs_common, "\n",
+                    "Chain: ", paste(chain, collapse = " "), "\n",
                     "Total count: ", sum(tempo.table.gg$Count, na.rm = TRUE)
                 )
                 label.size <- -5/132 * nrow(tempo.table.gg) + 1081/66 # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
@@ -813,7 +832,7 @@ for(i0 in type){
                 "Locus: ", names(check_concordance_imgt)[1], "x", names(check_concordance_imgt)[2], "\n",
                 "Kind: ", i1, "\n",
                 "Type: ", i0, "\n",
-                "Chain: ", allele_obs_common, "\n",
+                "Chain: ", paste(chain, collapse = " "), "\n",
                 "Total count: ", sum(tempo.table.gg$Count, na.rm = TRUE)
             )
             label.size <- -5/132 * nrow(tempo.table.gg) + 1081/66 # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
@@ -887,7 +906,7 @@ for(i0 in type){
                     "Locus: ", names(check_concordance_imgt)[1], "x", names(check_concordance_imgt)[2], " for ", i1, "\n",
                     "Kind: ", i2, "\n",
                     "Type: ", i0, "\n",
-                    "Chain: ", allele_obs_common, "\n",
+                    "Chain: ", paste(chain, collapse = " "), "\n",
                     "Total count: ", sum(tempo.table.gg$Count, na.rm = TRUE)
                 )
                 label.size <- -5/132 * nrow(tempo.table.gg) + 1081/66 # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
@@ -909,15 +928,17 @@ for(i0 in type){
                 # no need to use pdf(NULL) with fun_gg_empty_graph()
                 final.plot <- fun_gg_empty_graph(title = tempo.title, title.size = 12, text = paste0("NO GRAPH PLOTTED FOR VxJ for ", i1, "\nNO ALLELE/GENE DETECTED"), text.size = 3)
             }
-            ggplot2::ggsave(filename = paste0("./rep_", i0, "_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300) # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
-            ggplot2::ggsave(filename = paste0("./rep_", i0, "_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300)
-            ggplot2::ggsave(filename = paste0("./rep_", i0, "_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 4, height = 10, units = "in", dpi = 300)
+            ggplot2::ggsave(filename = paste0("./rep_", i0, "_for_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300) # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
+            ggplot2::ggsave(filename = paste0("./rep_", i0, "_for_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300)
+            ggplot2::ggsave(filename = paste0("./rep_", i0, "_for_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 4, height = 10, units = "in", dpi = 300)
         }
     }
     # end plot
     # end for each C
     # end combined repertoires
-    tempo <- qpdf::pdf_combine(input = list.files(path = ".", pattern = paste0("^.*", i0, ".*\\.pdf$")), output = paste0("./", i0, "_repertoire.pdf")) # assignation to prevent a returned element
+    files <- list.files(path = ".", pattern = paste0("^.*", i0, ".*\\.pdf$"))
+    sorted_files <- files[order(grepl("for", files))]
+    tempo <- qpdf::pdf_combine(input = sorted_files, output = paste0("./", i0, "_repertoire.pdf")) # assignation to prevent a returned element
     
 }
 

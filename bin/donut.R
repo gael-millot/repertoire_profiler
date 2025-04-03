@@ -88,6 +88,7 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
         "donut_legend_box_space", 
         "donut_legend_limit",
         "cute", 
+        "repertoire_names_ch",
         "log"
     ) # objects names exactly in the same order as in the bash code and recovered in args. Here only one, because only the path of the config file to indicate after the donut.R script execution
     if(length(args) != length(tempo.arg.names)){
@@ -165,6 +166,7 @@ param.list <- c(
     "donut_legend_box_space", 
     "donut_legend_limit",
     "cute", 
+    "repertoire_names_ch",
     "log"
 )
 if(any(duplicated(param.list))){
@@ -194,7 +196,6 @@ for(i in 1:length(param.list)){
 # 1) Cute little function is sourced for the moment into the .GlobalEnv environment, but may be interesting to put it into a new environement just above .GlobalEnv environment. See https://stackoverflow.com/questions/9002544/how-to-add-functions-in-an-existing-environment
 # 2) Argument names of each function must not be a name of Global objects (error message otherwise)
 # 3) Argument name of each function ends with "_fun" in the first function, "_2fun" in the second, etc. This prevent conflicts with the argument partial names when using these functions, notably when they are imbricated
-
 
 ################ import functions from cute little functions toolbox
 
@@ -251,6 +252,23 @@ req.package.list <- c(
 for(i in 1:length(req.package.list)){suppressMessages(library(req.package.list[i], character.only = TRUE))}
 # fun_pack(req.package = req.package.list, load = TRUE, lib.path = NULL) # packages are imported even if inside functions are written as package.name::function() in the present code
 
+################ local function
+
+
+# These functions extract the loci from a igblast_ref_file
+# Example of input : "imgt_human_IGLV.fasta imgt_human_IGKV.fasta"
+# The output would be ["IGL", "IGK"]
+extract_locus <- function(x) {
+    parts <- strsplit(x, "_")[[1]]
+    ig_part <- parts[grepl("^IG[A-Z]{2}", parts)]
+    return(substr(ig_part, 1, 3))
+}
+extract_chain <- function(x) {
+    files_list <- unlist(strsplit(x, " "))
+    chain <- sapply(files_list, extract_locus)
+    return(chain)
+}
+
 
 ################################ End Functions
 
@@ -295,7 +313,8 @@ tempo.arg <-c(
     "donut_legend_text_size", 
     "donut_legend_box_size", 
     # "donut_legend_limit", # can be NULL
-    "cute", 
+    "cute",
+    "repertoire_names_ch",
     "log"
 )
 tempo.log <- sapply(lapply(tempo.arg, FUN = get, env = sys.nframe(), inherit = FALSE), FUN = function(x){x == "NULL"}) # WARNING: only for donut.R
@@ -443,6 +462,9 @@ tempo.title <- paste0(
     )
 )
 
+# Chain is determined with igblast_ref_files because if we studied IGL and IGK but only one was found, both still need to be in the title
+loci <- sapply(repertoire_names_ch, extract_chain)
+chain <- unique(loci[!is.na(loci)]) # extract the IGH or IGK name (ignoring NA values)
 
 if(nrow(obs) > 0){
     
@@ -479,8 +501,6 @@ if(nrow(obs) > 0){
     # keep only the first allele or gene if igblast hesitated between several
     tempo.primary <- unlist(lapply(tempo.primary, function(x) strsplit(x, ",")[[1]][1]))
     tempo.secondary <- unlist(lapply(tempo.secondary, function(x) strsplit(x, ",")[[1]][1]))
-
-    chain <- unique(substr(tempo.primary[!is.na(tempo.primary)], 1, 3)) # extract the IGH or IGK name (ignoring NA values)
     
     #inactivated because now chain can be both IGL and IGK
     # if(length(chain) != 1){
@@ -496,9 +516,18 @@ if(nrow(obs) > 0){
             stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN donut.R for kind ", kind, ": CHAIN OF J DIFFERENT FROM CHAIN OF V.\nCHAIN OF V: ", paste(tempo.v[check1 != check2], collapse = " "), "\nCHAIN OF J: ", paste(tempo.j[check1 != check2], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) 
         }
     }
-    tempo.primary <- substring(tempo.primary, 4)
+
+    # remove "IGH" if heavy chain ; remove "IG" if light chain to keep the info about K or L locus
+    third_character <- substr(tempo.primary, 3, 3)
+    third_character <- third_character[!is.na(third_character)]
+    if(!all(third_character == "H", na.rm = TRUE)){
+        tronc <- 3
+    }else{
+        tronc <- 4
+    }
+    tempo.primary <- substring(tempo.primary, tronc)
     if (!is.null(tempo.secondary)) {
-        tempo.secondary <- substring(tempo.secondary, 4)
+        tempo.secondary <- substring(tempo.secondary, tronc)
         clone.name <- paste0(tempo.primary, "_", tempo.secondary)
     } else {
         clone.name <- tempo.primary

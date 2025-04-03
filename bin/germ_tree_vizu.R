@@ -952,7 +952,7 @@ if(length(tempo.list) == 0){
             y = grid::unit(0, "lines"),
             hjust = 0,
             vjust = 0,
-            gp = grid::gpar(fontsize = 6)
+            gp = grid::gpar(fontsize = 5)
         )
         if( ! is.null(final.plot)){
             pdf(NULL)
