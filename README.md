@@ -84,6 +84,9 @@ Installation of:<br />
 Optional installation (to avoid reccurent message) of:<br />
 [Gocryptfs](https://github.com/rfjakob/gocryptfs), `sudo apt install gocryptfs` for Linux ubuntu<br /> 
 
+Itol key:<br />
+You must freely register at https://itol.embl.de/itol_account.cgi to get your own itol key. Once registered, go to https://itol.embl.de/userInfo.cgi and click on the Toggle API access button. Then, add the key in the `phylo_tree_itolkey` parameter of the *nextflow.config* file.
+
 <br />
 
 ### 2. Local running (personal computer)
