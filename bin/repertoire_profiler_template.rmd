@@ -180,7 +180,7 @@ See also:<br /><ul><li>[germ_tree_seq.tsv](files/germ_tree_seq.tsv)<br /></li><l
 ###  Backup
 
 
-See the [reports](./reports) folder for all the details of the analysis, including the parameters used in the .config file
+See the [reports](./reports) folder for all the details of the analysis, including the parameters used in the .config file.
 ```{r include = FALSE}
 #remove work directory from current directory
 wd <- getwd()
@@ -188,9 +188,7 @@ parts <- unlist(strsplit(wd, "/"))
 path <- paste(parts[1:(length(parts) - 3)], collapse = "/")
 path <- paste0(path, "/")
 ```
-Full .nextflow.log is in: ```r path```
-<br />
-The one in the [reports](./reports) folder is not complete (miss the end)
+Warning: the full .nextflow.log is in: ```r path```. Indeed, the one in the [reports](./reports) folder is not complete (miss the end).
 
 
 <br /><br />
