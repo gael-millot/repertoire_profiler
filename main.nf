@@ -124,23 +124,23 @@ process igblast_data_check { // cannot be igblast_data_check outside of process 
         valid_species <- c("human", "mouse") # "rabbit" "rat" "rhesus_monkey" could be added but are not currently supported by the repertoire process
 
         if(length(variable) < 2 || length(variable) > 4){
-            stop(paste0("\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nigblast_variable_ref_files CONFIGURED IN nextflow.config CAN ONLY CONTAIN 2, 3 OR 4 FILES.\nHERE IT CONTAINS ", length(variable), " FILES\nHERE ARE THE igblast_variable_ref_files : \n", paste(variable, collapse = "\n"), "\n\n========\n\n"), call. = FALSE)
+            stop(paste0("\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nigblast_variable_ref_files CONFIGURED IN nextflow.config CAN ONLY CONTAIN 2, 3 OR 4 FILES.\\nHERE IT CONTAINS ", length(variable), " FILES\\nHERE ARE THE igblast_variable_ref_files : \\n", paste(variable, collapse = "\\n"), "\\n\\n========\\n\\n"), call. = FALSE)
         }
         if(length(constant) != 1 && length(constant) != 2){
-            stop(paste0("\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nigblast_constant_ref_files CONFIGURED IN nextflow.config CAN ONLY CONTAIN 1 OR 2 FILES.\nHERE IT CONTAINS ", length(constant), " FILES\nHERE ARE THE igblast_constant_ref_files : \n", paste(constant, collapse = "\n"), "\n\n========\n\n"), call. = FALSE)
+            stop(paste0("\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nigblast_constant_ref_files CONFIGURED IN nextflow.config CAN ONLY CONTAIN 1 OR 2 FILES.\\nHERE IT CONTAINS ", length(constant), " FILES\\nHERE ARE THE igblast_constant_ref_files : \\n", paste(constant, collapse = "\\n"), "\\n\\n========\\n\\n"), call. = FALSE)
         }
         if(!all(grepl(x = variable, pattern = "^imgt_([a-z_]+)_IG[KL][VJ].fasta\$")) && !all(grepl(x = variable, pattern = "^imgt_([a-z_]+)_IGH[VDJ].fasta\$"))){
-            stop(paste0("\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID FORMAT FOR ONE OR SEVERAL OF THE FOLLOWING igblast_variable_ref_files CONFIGURED IN nextflow.config FILE:\n", paste(variable, collapse = "\n"), "\nVALID FORMAT FOR EACH FILE WOULD BE: imgt_<species>_IG[HKL][VDJ].fasta\nWARNING: THE repertoire PROCESS CURRENTLY ONLY SUPPORTS IG REFERENCE FILES AND 'mouse' OR 'human' SPECIES\n\n========\n\n"), call. = FALSE)
+            stop(paste0("\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID FORMAT FOR ONE OR SEVERAL OF THE FOLLOWING igblast_variable_ref_files CONFIGURED IN nextflow.config FILE:\\n", paste(variable, collapse = "\\n"), "\\nVALID FORMAT FOR EACH FILE WOULD BE: imgt_<species>_IG[HKL][VDJ].fasta\\nWARNING: THE repertoire PROCESS CURRENTLY ONLY SUPPORTS IG REFERENCE FILES AND 'mouse' OR 'human' SPECIES\\n\\n========\\n\\n"), call. = FALSE)
         }
         if(!all(grepl(x = constant, pattern = "^imgt_([a-z_]+)_IG[HKL]C.fasta\$"))){
-            stop(paste0("\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID FORMAT FOR ONE OR SEVERAL OF THE FOLLOWING igblast_constant_ref_files CONFIGURED IN nextflow.config FILE:\n", paste(constant, collapse = "\n"), "\nVALID FORMAT FOR EACH FILE WOULD BE: imgt_<species>_IG[HKL]C.fasta\nWARNING: THE repertoire PROCESS CURRENTLY ONLY SUPPORTS IG REFERENCE FILES AND 'mouse' OR 'human' SPECIES\n\n========\n\n"), call. = FALSE)
+            stop(paste0("\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID FORMAT FOR ONE OR SEVERAL OF THE FOLLOWING igblast_constant_ref_files CONFIGURED IN nextflow.config FILE:\\n", paste(constant, collapse = "\\n"), "\\nVALID FORMAT FOR EACH FILE WOULD BE: imgt_<species>_IG[HKL]C.fasta\\nWARNING: THE repertoire PROCESS CURRENTLY ONLY SUPPORTS IG REFERENCE FILES AND 'mouse' OR 'human' SPECIES\\n\\n========\\n\\n"), call. = FALSE)
         }
         species <- c(unlist(lapply(strsplit(variable, "_"), `[`, 2)), unlist(lapply(strsplit(constant, "_"), `[`, 2)))
         if(!all(species == species[1])){
-            stop(paste0("\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE SPECIES IN THE igblast_constant_ref_files AND igblast_variable_ref_files CONFIGURED IN nextflow.config FILE MUST BE THE SAME\nHERE ARE THE igblast_variable_ref_files:\n", paste(variable, collapse = "\n"), "\nHERE ARE THE igblast_constant_ref_files:\n", paste(constant, collapse = "\n"), "\n\n========\n\n"), call. = FALSE)
+            stop(paste0("\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nTHE SPECIES IN THE igblast_constant_ref_files AND igblast_variable_ref_files CONFIGURED IN nextflow.config FILE MUST BE THE SAME\\nHERE ARE THE igblast_variable_ref_files:\\n", paste(variable, collapse = "\\n"), "\\nHERE ARE THE igblast_constant_ref_files:\\n", paste(constant, collapse = "\\n"), "\\n\\n========\\n\\n"), call. = FALSE)
         }
         if(species[1] != organism){
-            stop(paste0("\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE SPECIES IN THE igblast_constant_ref_files AND igblast_variable_ref_files CONFIGURED IN nextflow.config FILE MUST BE THE SAME AS THE organism PARAMETER CONGIGURED IN nextflow.config\nHERE ARE THE igblast_variable_ref_files:\n", paste(variable, collapse = "\n"), "\nHERE ARE THE igblast_constant_ref_files:\n", paste(constant, collapse = "\n"), "\nTHE organism PARAMETER IS SET TO : ", organism, "\n\n========\n\n"), call. = FALSE)
+            stop(paste0("\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nTHE SPECIES IN THE igblast_constant_ref_files AND igblast_variable_ref_files CONFIGURED IN nextflow.config FILE MUST BE THE SAME AS THE organism PARAMETER CONGIGURED IN nextflow.config\\nHERE ARE THE igblast_variable_ref_files:\\n", paste(variable, collapse = "\\n"), "\\nHERE ARE THE igblast_constant_ref_files:\\n", paste(constant, collapse = "\\n"), "\\nTHE organism PARAMETER IS SET TO : ", organism, "\\n\\n========\\n\\n"), call. = FALSE)
         }
         # Check the coherence between the loci mentioned in the files (KL, KJ, HJ...)
         extract_locus <- function(x) {
@@ -150,7 +150,7 @@ process igblast_data_check { // cannot be igblast_data_check outside of process 
         }
         loci <- c(sapply(variable, extract_locus), sapply(constant, extract_locus))
         if(any(grepl("^H", loci)) && any(grepl("^[KL]", loci))){
-            stop(paste0("\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID VALUES OF igblast_variable_ref_files AND igblast_constant_ref_files CONFIGURED IN nextflow.config FILE:\nIGH WAS FOUND ALONG WITH IGL OR IGK\n!! LIGHT CHAIN AND HEAVY CHAIN LOCI CANNOT BE ANALYZED SIMULTANEOUSLY !!\n\nHERE ARE THE igblast_variable_ref_files:\n", paste(variable, collapse = "\n"), "\nHERE ARE THE igblast_constant_ref_files:\n", paste(constant, collapse = "\n"), "\n\n========\n\n"), call. = FALSE)
+            stop(paste0("\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID VALUES OF igblast_variable_ref_files AND igblast_constant_ref_files CONFIGURED IN nextflow.config FILE:\\nIGH WAS FOUND ALONG WITH IGL OR IGK\\n!! LIGHT CHAIN AND HEAVY CHAIN LOCI CANNOT BE ANALYZED SIMULTANEOUSLY !!\\n\\nHERE ARE THE igblast_variable_ref_files:\\n", paste(variable, collapse = "\\n"), "\\nHERE ARE THE igblast_constant_ref_files:\\n", paste(constant, collapse = "\\n"), "\\n\\n========\\n\\n"), call. = FALSE)
         }
         
         valid_combinations <- list(
@@ -160,7 +160,7 @@ process igblast_data_check { // cannot be igblast_data_check outside of process 
             c("KJ", "KV", "KC", "LJ", "LV", "LC")
         )
         if(!any(sapply(valid_combinations, function(valid) identical(sort(unique(loci)), sort(valid))))){
-            stop(paste0("\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID VALUES OF igblast_variable_ref_files AND igblast_constant_ref_files CONFIGURED IN nextflow.config FILE:\n\nHERE ARE THE igblast_variable_ref_files:\n", paste(variable, collapse = "\n"), "\nHERE ARE THE igblast_constant_ref_files:\n", paste(constant, collapse = "\n"), "\n\nINDICATIONS : \nIF K AND L FILES ARE ENTERED FOR A CASSETTE, THEN BOTH MUST BE ENTERED FOR THE OTHER CASSETTE AND THE CONSTANT REGION AS WELL\nTHERE CANNOT BE A IGLD OR IGKD FILE, AS THE LIGHT CHAIN DOES NOT HAVE A D CASSETTE\nHEAVY CHAIN ANALYSIS MUST INCLUDE IGHV, IGHD, IGHJ and IGHC FILES\n\n========\n\n"), call. = FALSE)
+            stop(paste0("\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID VALUES OF igblast_variable_ref_files AND igblast_constant_ref_files CONFIGURED IN nextflow.config FILE:\\n\\nHERE ARE THE igblast_variable_ref_files:\\n", paste(variable, collapse = "\\n"), "\\nHERE ARE THE igblast_constant_ref_files:\\n", paste(constant, collapse = "\\n"), "\\n\\nINDICATIONS : \\nIF K AND L FILES ARE ENTERED FOR A CASSETTE, THEN BOTH MUST BE ENTERED FOR THE OTHER CASSETTE AND THE CONSTANT REGION AS WELL\\nTHERE CANNOT BE A IGLD OR IGKD FILE, AS THE LIGHT CHAIN DOES NOT HAVE A D CASSETTE\\nHEAVY CHAIN ANALYSIS MUST INCLUDE IGHV, IGHD, IGHJ and IGHC FILES\\n\\n========\\n\\n"), call. = FALSE)
         }
     '
 
