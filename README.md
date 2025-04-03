@@ -84,6 +84,9 @@ Installation of:<br />
 Optional installation (to avoid reccurent message) of:<br />
 [Gocryptfs](https://github.com/rfjakob/gocryptfs), `sudo apt install gocryptfs` for Linux ubuntu<br /> 
 
+Itol key:<br />
+You must freely register at https://itol.embl.de/itol_account.cgi to get your own itol key. Once registered, go to https://itol.embl.de/userInfo.cgi and click on the Toggle API access button. Then, add the key in the `phylo_tree_itolkey` parameter of the *nextflow.config* file.
+
 <br />
 
 ### 2. Local running (personal computer)
@@ -207,6 +210,18 @@ Use chmod to change the user rights. Example linked to files in the bin folder:
 chmod 755 bin/*.*
 ```
 
+#### Message 4
+
+```
+ERROR ~ Error executing process > 'ITOL (2)'
+
+Caused by:
+  Process `ITOL (2)` terminated with an error exit status (1)
+  
+INFO:    underlay of /etc/localtime required more than 50 (83) bind mounts
+```
+
+Register at Itol as explained in the [Prerequisite](#1.-Prerequisite) section above.
 
 <br /><br />
 ## OUTPUT
