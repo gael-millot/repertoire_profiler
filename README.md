@@ -231,8 +231,8 @@ Mandatory elements:
 | **seq_distance.pdf** | Distribution of the distances between the two nearest sequences (see the *nearest_distance* column in the *clone_assigned_seq.tsv* file). |
 | **donuts.pdf** | donut plots showing the frequency of sequences per clonal groups, among:<br /><ul><li>all: all the clone-assigned sequences (*clone_assigned_seq.tsv* output file).<br /></li><li>annotated: as the "all" donut but using all the clone-assigned sequences that have been annotated using the meta_name_replacement parameter of the nextflow.config file if not "NULL".<br /></li><li>trees: all the sequences used for germline trees (*germ_tree_seq.tsv* output file).</li> |
 | **\*_repertoire.pdf** | heatmap of the files from the *repertoires* folder (see above), showing the frequency of alleles and genes used among all the all clone-assigned sequences ("all"), non empty cells ("non-zero") and "annotated" sequences (if metadata are provided). Non-zero means that unused alleles are removed from the heatmap (empty row or column). Warning: to build the repertoire contingencies, the script currently takes the first annotation of the imgt annotation if several are presents in the v_call, j_call or c_call columns of the *clone_assigned_seq.tsv* file (see the *clone_assigned_seq_several_annot_igmt.tsv* file below) |
-| **germ_tree.pdf** | Phylogenic trees of the sequences that belong to a clonal (supposedly germline) group made of at least n sequences, n being set by the nb_seq_per_clone parameter in the nextflow.config file (one page per clonal group). Warning: clonal group full names are those given by dowser::formatClones, i.e., those from germinal_v_call and germinal_j_call from the *clone_assigned_seq.tsv* file. |
-| **germ_no_tree.pdf** | All the clonal groups with less than n sequences, n being set by the nb_seq_per_clone parameter in the nextflow.config file (one page per clonal group). Clonal group information is recapitulated in each page. |
+| **germ_tree.pdf** | Phylogenic trees of the sequences that belong to a clonal (supposedly germline) group made of at least n sequences, n being set by the clone_nb_seq parameter in the nextflow.config file (one page per clonal group). Warning: clonal group full names are those given by dowser::formatClones, i.e., those from germinal_v_call and germinal_j_call from the *clone_assigned_seq.tsv* file. |
+| **germ_no_tree.pdf** | All the clonal groups with less than n sequences, n being set by the clone_nb_seq parameter in the nextflow.config file (one page per clonal group). Clonal group information is recapitulated in each page. |
 | **donut_stat.tsv** | stats associated to the *donuts.pdf* file. |
 | **igblast_unaligned_seq_name.tsv** | Names of sequences that failed to be annotated by igblast (empty file if all the sequences are annotated). |
 | **igblast_aligned_seq_name.tsv** | Names of sequences annotated by igblast (more precisely by MakeDb.py igblast). If empty, generate a subsequent nextflow failure. The number lines in *igblast_unaligned_seq_name.tsv* and *igblast_aligned_seq_name.tsv* is equal to the number of submitted .fasta files. |
@@ -241,10 +241,10 @@ Mandatory elements:
 | **clone_assigned_seq_several_annot_igmt.tsv** | Sequences from the *clone_assigned_seq.tsv* file with several annotation in the v_call and j_call columns, because several alleles had the best alignment using imgt blast (same ) |
 | **unproductive_seq.tsv** | Sequences that failed productive annotations by igblast (empty file if all the sequences are productively annotated). |
 | **non_clone_assigned_sequence.tsv** | Productive sequences that failed to be assigned to a clone ID by the DefineClones.py function (empty file if all the sequences are assigned). See https://changeo.readthedocs.io/en/latest/methods/clustering.html but failure reasons are not explained.|
-| **germ_tree_clone_id.tsv** | Clonal group IDs used in the germline tree analysis (clonal group with at least n sequences, n being set by the nb_seq_per_clone parameter of the *nextflow.config* file). |
-| **germ_tree_dismissed_clone_id.tsv** | Clonal group IDs not used in the germline tree analysis (clonal group with less than n sequences, n being set by the nb_seq_per_clone parameter of the *nextflow.config* file). |
+| **germ_tree_clone_id.tsv** | Clonal group IDs used in the germline tree analysis (clonal group with at least n sequences, n being set by the clone_nb_seq parameter of the *nextflow.config* file). |
+| **germ_tree_dismissed_clone_id.tsv** | Clonal group IDs not used in the germline tree analysis (clonal group with less than n sequences, n being set by the clone_nb_seq parameter of the *nextflow.config* file). |
 | **germ_tree_seq.tsv** | Sequences of the *clone_assigned_seq.tsv* file used in the germline tree analysis (clonal group with at least n sequences, n being set by the clone_nb_seq parameter of the *nextflow.config* file). Additionnal germline_[*vdj*]_gene columns. |
-| **germ_tree_dismissed_seq.tsv** | Sequences of the *clone_assigned_seq.tsv* file not used in the germline tree analysis (clonal group with less than n sequences, n being set by the nb_seq_per_clone parameter of the *nextflow.config* file). |
+| **germ_tree_dismissed_seq.tsv** | Sequences of the *clone_assigned_seq.tsv* file not used in the germline tree analysis (clonal group with less than n sequences, n being set by the clone_nb_seq parameter of the *nextflow.config* file). |
 | **germ_tree_dup_seq_not_displayed.tsv** | Sequences file used in the germline tree analysis but not displayed in the graph, (1) because strictly identical to another sequence already in the tree and (2) because the tree_duplicate_seq parameter of the *nextflow.config* file has been set to "FALSE". |
 
 
@@ -322,6 +322,10 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 
 <br /><br />
 ## WHAT'S NEW IN
+
+#### v16.3
+
+- Precisions on K and L loci incorporated in donuts and repertoires for light chain analysis
 
 #### v16.2
 
