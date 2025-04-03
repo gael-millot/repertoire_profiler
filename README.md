@@ -210,6 +210,18 @@ Use chmod to change the user rights. Example linked to files in the bin folder:
 chmod 755 bin/*.*
 ```
 
+#### Message 4
+
+```
+ERROR ~ Error executing process > 'ITOL (2)'
+
+Caused by:
+  Process `ITOL (2)` terminated with an error exit status (1)
+  
+INFO:    underlay of /etc/localtime required more than 50 (83) bind mounts
+```
+
+Register at Itol as explained in the [Prerequisite](#1.-Prerequisite) section above.
 
 <br /><br />
 ## OUTPUT
