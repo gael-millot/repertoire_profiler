@@ -271,7 +271,7 @@ Mandatory elements:
 | **phylo** | Folder containing amino-acid sequences in fasta files. Each fasta file regroups the amino-acid sequences that come from the same V\|J recombination. |
 | **\*_align.fasta.treefile** | Phylogenic trees in newick format for each sequence group in the phylo file. This tree is not constructed when there are less than 4 sequences in 1 group. |
 | **\*_align.fasta.log** | Contains execution information of IQTree, used for constructing the phylogenic trees. Useful for troubleshooting. |
-| **\*_align.fasta_itol_url.txt** | URL access to each phylogenic tree (*\*_align.fasta.treefile*) uploaded on iTOL. |
+| **\*_align.fasta_itol_url.txt** | URL access to each phylogenic tree (*\*_align.fasta.treefile*) uploaded on iTOL. On each graph, the scale is the number of mutation per position. |
 
 <br /><br />
 Optional elements only returned if the igblast_aa parameter is 'false' and if the input fasta are nucleotide sequences:
