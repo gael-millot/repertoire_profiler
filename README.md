@@ -221,7 +221,7 @@ Caused by:
 INFO:    underlay of /etc/localtime required more than 50 (83) bind mounts
 ```
 
-Register at Itol as explained in the [Prerequisite](#1.-Prerequisite) section above.
+Register at Itol as explained in the [Prerequisite](#1-prerequisite) section above.
 
 <br /><br />
 ## OUTPUT
