@@ -338,6 +338,10 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 <br /><br />
 ## WHAT'S NEW IN
 
+#### v16.5
+
+- Bug fix in print_report for larger data input
+
 #### v16.4
 
 - Display improved in repertoires
