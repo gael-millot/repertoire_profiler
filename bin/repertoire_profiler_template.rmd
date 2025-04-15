@@ -89,6 +89,8 @@ Total : ```r params$nb_seq_aligned + params$nb_seq_not_aligned```
 
 Success ratio : ```r base::round(params$nb_seq_aligned / (params$nb_seq_aligned + params$nb_seq_not_aligned), 2)```
 
+
+
 <br>
 
 ### Productive sequences

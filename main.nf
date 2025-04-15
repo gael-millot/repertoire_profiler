@@ -1359,6 +1359,22 @@ process NbSequences {
     """
 }
 
+process PrintAlignment{
+    label 'goalign'
+    publishDir path: "${out_path}/alignments", mode: 'copy'
+
+    input:
+    path filtered_fasta
+
+    output:
+    path "*.png", emit : alignment_png
+
+    script:
+    """
+    goalign draw png -i ${filtered_fasta} -o ${filtered_fasta.baseName}.png
+    """
+}
+
 process Tree {
     publishDir path: "${out_path}/phylo", mode: 'copy', pattern: "{.treefile}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
@@ -1412,9 +1428,6 @@ process ITOL{
     """
     gotree upload itol --project gotree_uploads --user-id $phylo_tree_itolkey -i $tree $meta > ${tree.baseName}_itol_url.txt 2>&1
     """
-
-
-
 }
 
 // The render function only creates the html file with the rmardown
@@ -2163,6 +2176,10 @@ workflow {
         )
         filtered = NbSequences.out.nb_out.filter{it[0].toInteger()>=3}.map{it->it[1]}
 
+        PrintAlignment(
+            filtered
+        )
+
         Tree(
             filtered,
             phylo_tree_model_file
@@ -2175,12 +2192,14 @@ workflow {
         )
         itolmeta = ProcessMeta.out.itol_out
 
+        // Commented because weird error with mouse test files
 
         ITOL(
             tree,
             itolmeta,
             phylo_tree_itolkey
         )
+        
     }else{
         heavy_chain = channel.of("FALSE")
     }
