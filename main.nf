@@ -1522,7 +1522,9 @@ workflow {
 
 
     //////// Checks
-
+    if( ! (system_exec == "local" || system_exec == "slurm")){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE system_exec PARAMETER IN THE nextflow.config FILE CAN ONLY BE \'local\' OR \'slurm\' \n\n========\n\n"
+    }
     //// check of the bin folder
     if( ! (file("${projectDir}/bin/donut.R").exists()) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE donut.R FILE MUST BE PRESENT IN THE ./bin FOLDER, WHERE THE main.nf file IS PRESENT\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
