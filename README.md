@@ -338,6 +338,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 <br /><br />
 ## WHAT'S NEW IN
 
+#### v16.4
+
+- Display improved in repertoires
+- Identical sequences must be kept in trees by default (germ_tree_duplicate_seq parameter in nextflow.config)
+
 #### v16.3
 
 - Precisions on K and L loci incorporated in donuts and repertoires for light chain analysis

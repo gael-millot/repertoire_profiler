@@ -611,7 +611,7 @@ process repertoire {
     output:
     path "*_repertoire.pdf"
     path "*.svg"
-    path "*.png", emit: repertoire_png
+    path "*.png", emit : repertoire_png_ch
     path "rep_*.tsv"
     path "repertoire.log"
 
@@ -1423,7 +1423,10 @@ process ITOL{
 //      nb_input : number of fasta sequences in initial input
 //      nb_seq_aligned : number of sequences that igblast could analyse
 //      nb_seq_not_aligned : number of sequences that igblast could not alayse
-//      donuts_png, repertoire_png : to make sure the report process is not called before processes that produces images it needs
+//      donuts_png : to make sure the report process is not called before processes that produces images it needs
+//      repertoire_constant_ch : names of the constant gene repertoire files to be displayed
+//      repertoire_vj_ch : names of the variable gene repertoire files to be displayed
+//      heavy_chain : to know if the analyzed data is VL or VH, because "Amino acid sequences phylogeny" section in html report is only displayed for VH
 // Outputs :
 //      "report.html" : finalized html report for a specific run
 //      "print_report.log" : will contain any error or warning messages produced by rmardown::render
@@ -1444,7 +1447,8 @@ process print_report{
     val nb_clone_assigned
     val nb_failed_clone
     path donuts_png
-    val repertoire_png
+    val repertoire_constant_ch
+    val repertoire_vj_ch
     val heavy_chain
 
     output:
@@ -1461,12 +1465,20 @@ process print_report{
     Rscript -e '
 
         # Find the constant and vj repertoires to be displayed in the html file (file names differ depending on light/heavy chain)
-        repertoire_files <- as.character("${repertoire_png}")
-        cleaned_repertoire <- gsub("^\\\\[\\\\[|\\\\]\\\\]\$", "", repertoire_files)
-        repertoire_paths <- strsplit(cleaned_repertoire, ",\\\\s*")[[1]]
-        repertoire_names <- basename(repertoire_paths)
-        constant_rep <- repertoire_names[grepl("^IG.C_.*gene_non-zero\\\\.png\$", repertoire_names)]
-        vj_rep <- repertoire_names[grepl("^rep_gene_IG.V_.*non-zero\\\\.png\$", repertoire_names)]
+        constant_files <- as.character("${repertoire_constant_ch}")
+        vj_files <- as.character("${repertoire_vj_ch}")
+        cleaned_repertoire_constant <- gsub("^\\\\[\\\\[|\\\\]\\\\]\$", "", constant_files)
+        cleaned_repertoire_vj <- gsub("^\\\\[\\\\[|\\\\]\\\\]\$", "", vj_files)
+        constant_paths <- strsplit(cleaned_repertoire_constant, ",\\\\s*")[[1]]
+        vj_paths <- strsplit(cleaned_repertoire_vj, ",\\\\s*")[[1]]
+        constant_names <- basename(constant_paths)
+        vj_names <- basename(vj_paths)
+        # Verification that the resulting file names are as expected
+        constant_rep <- constant_names[grepl("^IG.C_.*gene_non-zero\\\\.png\$", constant_names)]
+        vj_rep <- vj_names[grepl("^rep_gene_IG.V_.*non-zero\\\\.png\$", vj_names)]
+        if(length(constant_rep) == 0 || length(vj_rep) == 0){
+            stop(paste0("\\n\\n========\\n\\nERROR IN print_report PROCESS\\n\\nTHE REPERTOIRE PNG FILES TO BE DISPLAYED WERE NOT FOUND\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n"), call. = FALSE)
+        }
 
         rmarkdown::render(
         input = "report_file.rmd",
@@ -2173,7 +2185,18 @@ workflow {
         heavy_chain = channel.of("FALSE")
     }
 
-    
+
+    repertoire_constant_ch =repertoire.out.repertoire_png_ch
+        .flatten()
+        .filter { file -> 
+            file.name =~ /^.*IG.C_.*gene_non-zero\.png$/
+        }
+    repertoire_vj_ch = repertoire.out.repertoire_png_ch
+        .flatten()
+        .filter { file ->
+            file.name =~ /.*\/?(rep_gene_IG.V_.*non-zero\.png)$/
+        }
+
 
     print_report(
         template_rmd,
@@ -2185,7 +2208,8 @@ workflow {
         nb_clone_assigned,
         nb_failed_clone,
         donut.out.donuts_png.collect(),
-        repertoire.out.repertoire_png.toList(),
+        repertoire_constant_ch,
+        repertoire_vj_ch,
         heavy_chain
     )
 

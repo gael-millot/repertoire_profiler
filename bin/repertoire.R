@@ -580,35 +580,35 @@ if(!setequal(names(allele),names(gene))){
 if(all(c("IGKV", "IGLV") %in% names(allele))){
     if(all(c("IGKJ", "IGLJ") %in% names(allele))){
         if(all(c("IGKC", "IGLC") %in% names(allele))){
-        # unite the lists
-        allele$IGKV_IGLV <- c(allele$IGKV, allele$IGLV)
-        allele$IGKV <- NULL
-        allele$IGLV <- NULL
-        # Same operations for the "gene" list since it is already verified they have the same compartment names
-        gene$IGKV_IGLV <- c(gene$IGKV, gene$IGLV)
-        gene$IGKV <- NULL
-        gene$IGLV <- NULL
-
-        allele$IGKJ_IGLJ <- c(allele$IGKJ, allele$IGLJ)
-        allele$IGKJ <- NULL
-        allele$IGLJ <- NULL
-        gene$IGKJ_IGLJ <- c(gene$IGKJ, gene$IGLJ)
-        gene$IGKJ <- NULL
-        gene$IGLJ <- NULL
-
-        allele$IGKC_IGLC <- c(allele$IGKC, allele$IGLC)
-        allele$IGKC <- NULL
-        allele$IGLC <- NULL
-        gene$IGKC_IGLC <- c(gene$IGKC, gene$IGLC)
-        gene$IGKC <- NULL
-        gene$IGLC <- NULL
+            # unite the lists
+            allele$IGKV_IGLV <- c(allele$IGKV, allele$IGLV)
+            allele$IGKV <- NULL
+            allele$IGLV <- NULL
+            # Same operations for the "gene" list since it is already verified they have the same compartment names
+            gene$IGKV_IGLV <- c(gene$IGKV, gene$IGLV)
+            gene$IGKV <- NULL
+            gene$IGLV <- NULL
+            
+            allele$IGKJ_IGLJ <- c(allele$IGKJ, allele$IGLJ)
+            allele$IGKJ <- NULL
+            allele$IGLJ <- NULL
+            gene$IGKJ_IGLJ <- c(gene$IGKJ, gene$IGLJ)
+            gene$IGKJ <- NULL
+            gene$IGLJ <- NULL
+            
+            allele$IGKC_IGLC <- c(allele$IGKC, allele$IGLC)
+            allele$IGKC <- NULL
+            allele$IGLC <- NULL
+            gene$IGKC_IGLC <- c(gene$IGKC, gene$IGLC)
+            gene$IGKC <- NULL
+            gene$IGLC <- NULL
         }else{
             stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 4.6 IN repertoire.R:\nTHE ig_blast_constant_ref_files DO NOT CONTAIN LIGHT CHAIN FILES WHEREAS THE ignlast_variable_ref_files DO.\nIF THE variable_ref_files CONTAIN IGKV, IGLV IGKJ AND IGLJ, THEN THE constant_ref_files MUST CONTAIN IGKC AND IGLC\nHERE ARE ALL THE igblast_ref_files:\n:", paste(names(allele), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
         }
     }else{
         stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 4.7 IN repertoire.R:\nIF THE variable_ref_files CONTAIN IGKV and IGLV THEN IT MUST CONTAIN IGKJ AND IGLJ\nHERE ARE ALL THE igblast_ref_files:\n:", paste(names(allele), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
     }
-}
+} 
 
 
 # end processing of the imgt database files
@@ -767,18 +767,19 @@ for(i0 in type){
                     "Chain: ", paste(chain, collapse = " "), "\n",
                     "Total count: ", sum(tempo.table.gg$Count, na.rm = TRUE)
                 )
-                label.size <- -5/132 * nrow(tempo.table.gg) + 1081/66 # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
+                # label.size <- 25 / log2(nrow(tempo.table.gg) + 1) # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
+                label.size <- 25 - nrow(tempo.table.gg)*0.3 
                 final.plot <- fun_gg_heatmap2(
                     data1 = tempo.table.gg,
                     x = NULL,
                     y = i0,
                     z = "Count",
-                    label.size = ifelse(label.size <= 0, 1, label.size),
+                    label.size = ifelse(label.size <= 1, 1, label.size),
                     color.low = "white",
                     color.high = "blue",
                     zero.color = grey(0.95),
                     cell.value = TRUE,
-                    cell.value.size = ifelse(label.size <= 0, 1, label.size) / 2,
+                    cell.value.size = ifelse(label.size <= 0, 1, label.size) / 3,
                     title = tempo.title,
                     title.size = 12
                 )
@@ -823,8 +824,10 @@ for(i0 in type){
         if(sum(tempo.table3, na.rm = TRUE) > 0){
             if(nrow(tempo.table3) > 1 & ncol(tempo.table3) > 1){
                 tempo.table.gg <- as.data.frame(as.table(as.matrix(tempo.table3)))
+                label.size <- (25 - nrow(tempo.table3) * 0.3) / max(1, 0.5 * ncol(tempo.table3))
             }else{
                 tempo.table.gg <- data.frame(Var1 = rownames(tempo.table3), Var2 = colnames(tempo.table3), Freq = tempo.table3, row.names = NULL)
+                label.size <- 25 - nrow(tempo.table.gg) * 0.3
             }
             names(tempo.table.gg) <- c(names(check_concordance_imgt)[1], names(check_concordance_imgt)[2], "Count")
             tempo.table.gg$Count[tempo.table.gg$Count == 0] <- NA
@@ -835,18 +838,19 @@ for(i0 in type){
                 "Chain: ", paste(chain, collapse = " "), "\n",
                 "Total count: ", sum(tempo.table.gg$Count, na.rm = TRUE)
             )
-            label.size <- -5/132 * nrow(tempo.table.gg) + 1081/66 # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
+            #label.size <- -5/132 * nrow(tempo.table.gg) + 1081/66 # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
+            
             final.plot <- fun_gg_heatmap2(
                 data1 = tempo.table.gg,
                 x = names(check_concordance_imgt)[2],
                 y = names(check_concordance_imgt)[1],
                 z = "Count",
-                label.size = ifelse(label.size <= 0, 1, label.size),
+                label.size = ifelse(label.size <= 1, 1, label.size),
                 color.low = "white",
                 color.high = "blue",
                 zero.color = grey(0.95),
                 cell.value = TRUE,
-                cell.value.size = ifelse(label.size <= 0, 1, label.size) / 2,
+                cell.value.size = ifelse(label.size <= 0, 1, label.size) / 3,
                 title = tempo.title,
                 title.size = 12
             )
@@ -897,8 +901,10 @@ for(i0 in type){
             if(sum(tempo.table3, na.rm = TRUE) > 0){
                 if(nrow(tempo.table3) > 1 & ncol(tempo.table3) > 1){
                     tempo.table.gg <- as.data.frame(as.table(as.matrix(tempo.table3)))
+                    label.size <- (25 - nrow(tempo.table3) * 0.3) / max(1, 0.5 * ncol(tempo.table3))
                 }else{
                     tempo.table.gg <- data.frame(Var1 = rownames(tempo.table3), Var2 = colnames(tempo.table3), Freq = tempo.table3, row.names = NULL)
+                    label.size <- 25 - nrow(tempo.table.gg)*0.3 
                 }
                 names(tempo.table.gg) <- c(names(check_concordance_imgt)[1], names(check_concordance_imgt)[2], "Count")
                 tempo.table.gg$Count[tempo.table.gg$Count == 0] <- NA
@@ -909,18 +915,18 @@ for(i0 in type){
                     "Chain: ", paste(chain, collapse = " "), "\n",
                     "Total count: ", sum(tempo.table.gg$Count, na.rm = TRUE)
                 )
-                label.size <- -5/132 * nrow(tempo.table.gg) + 1081/66 # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
+                # label.size <- -5/132 * nrow(tempo.table.gg) + 1081/66 # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
                 final.plot <- fun_gg_heatmap2(
                     data1 = tempo.table.gg,
                     x = names(check_concordance_imgt)[2],
                     y = names(check_concordance_imgt)[1],
                     z = "Count",
-                    label.size = ifelse(label.size <= 0, 1, label.size),
+                    label.size = ifelse(label.size <= 1, 1, label.size),
                     color.low = "white",
                     color.high = "blue",
                     zero.color = grey(0.95),
                     cell.value = TRUE,
-                    cell.value.size = ifelse(label.size <= 0, 1, label.size) / 2,
+                    cell.value.size = ifelse(label.size <= 0, 1, label.size) / 3,
                     title = tempo.title,
                     title.size = 12
                 )
@@ -1013,3 +1019,4 @@ fun_report(data = paste0("\n\n################################ JOB END\n\nTIME: 
 
 
 ################################ End Main code
+
