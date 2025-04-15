@@ -1376,7 +1376,7 @@ process PrintAlignment{
 }
 
 process Tree {
-    publishDir path: "${out_path}/phylo", mode: 'copy', pattern: "{.treefile}", overwrite: false
+    publishDir path: "${out_path}/phylo", mode: 'copy', pattern: "{*.treefile}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
 
     label 'iqtree'
@@ -1439,6 +1439,7 @@ process ITOL{
 //      donuts_png : to make sure the report process is not called before processes that produces images it needs
 //      repertoire_constant_ch : names of the constant gene repertoire files to be displayed
 //      repertoire_vj_ch : names of the variable gene repertoire files to be displayed
+//      itol_subscription : nextflow.config parameter to know if user has paid the subscription to itol automated visualization of trees, process ITOL is only executed if TRUE
 //      heavy_chain : to know if the analyzed data is VL or VH, because "Amino acid sequences phylogeny" section in html report is only displayed for VH
 // Outputs :
 //      "report.html" : finalized html report for a specific run
@@ -1462,6 +1463,7 @@ process print_report{
     path donuts_png
     val repertoire_constant_ch
     val repertoire_vj_ch
+    val itol_subscription
     val heavy_chain
 
     output:
@@ -1506,6 +1508,7 @@ process print_report{
                         nb_failed_clone = ${nb_failed_clone},
                         constant_rep = constant_rep,
                         vj_rep = vj_rep,
+                        itol_subscription = ${itol_subscription},
                         heavy_chain = ${heavy_chain}),
         # output_dir = ".",
         # intermediates_dir = "./",
@@ -1772,6 +1775,11 @@ workflow {
     }
     if( ! (phylo_tree_itolkey in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID phylo_tree_itolkey PARAMETER IN repertoire_profiler.config FILE:\n${phylo_tree_itolkey}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }
+    if( ! (phylo_tree_itol_subscription in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID phylo_tree_itol_subscription PARAMETER IN repertoire_profiler.config FILE:\n${phylo_tree_itol_subscription}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (phylo_tree_itol_subscription == "TRUE" || phylo_tree_itol_subscription == "FALSE") ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID phylo_tree_itol_subscription PARAMETER IN repertoire_profiler.config FILE:\n${phylo_tree_itol_subscription}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
     if( ! (cute_path in String || cute_path in GString) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID cute_path PARAMETER IN repertoire_profiler.config FILE:\n${cute_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
@@ -2186,19 +2194,22 @@ workflow {
         )
         tree = Tree.out.tree_file
 
-
         ProcessMeta(
             meta_file
         )
         itolmeta = ProcessMeta.out.itol_out
 
-        // Commented because weird error with mouse test files
+        // The ITOL process can only be executed if user has paid the subsription for automated visualization
 
-        ITOL(
-            tree,
-            itolmeta,
-            phylo_tree_itolkey
-        )
+        if(phylo_tree_itol_subscription == "TRUE"){
+
+            ITOL(
+                tree,
+                itolmeta,
+                phylo_tree_itolkey
+            )
+
+        }
         
     }else{
         heavy_chain = channel.of("FALSE")
@@ -2229,6 +2240,7 @@ workflow {
         donut.out.donuts_png.collect(),
         repertoire_constant_ch,
         repertoire_vj_ch,
+        phylo_tree_itol_subscription,
         heavy_chain
     )
 

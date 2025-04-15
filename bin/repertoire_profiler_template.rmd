@@ -15,7 +15,8 @@ params:
   nb_failed_clone: -1
   constant_rep: ""
   vj_rep: ""
-  heavy_chain: FALSE
+  itol_subscription: "TRUE"
+  heavy_chain: "FALSE"
 ---
 
 \n\n<br /><br />\n\n
@@ -176,7 +177,8 @@ See also:<br /><ul><li>[germ_tree_seq.tsv](files/germ_tree_seq.tsv)<br /></li><l
 <br><br><br>
 
 `r  if(params$heavy_chain == "TRUE"){"### Amino acid sequences phylogeny \n\n **Only available for heavy chain analysis.**  "}`
-`r  if(params$heavy_chain == "TRUE"){"Open the different sequences_\\<SEQ_NAME\\>_align.fasta_itol_url.txt files in the [phylo](./phylo) folder and click on the link to see the trees."}`
+`r  if(params$heavy_chain == "TRUE" && params$itol_subscription == "TRUE"){"Open the different sequences_\\<SEQ_NAME\\>_align.fasta_itol_url.txt files in the [phylo](./phylo) folder and click on the link to see the trees."}`
+`r  if(params$heavy_chain == "TRUE" && params$itol_subscription == "FALSE"){"To see the trees, follow the link : https://itol.embl.de/upload.cgi. Choose a name for your tree (optional) and upload a '*.treefile' file from the [phylo](./phylo) folder. The trees will then be displayed by iTOL."}`
 <br><br>
 
 ###  Backup
