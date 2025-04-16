@@ -1367,11 +1367,11 @@ process PrintAlignment{
     path filtered_fasta
 
     output:
-    path "*.png", emit : alignment_png
+    path "*.html", emit : alignment_png
 
     script:
     """
-    goalign draw png -i ${filtered_fasta} -o ${filtered_fasta.baseName}.png
+    goalign draw biojs -i ${filtered_fasta} -o ${filtered_fasta.baseName}.html
     """
 }
 
