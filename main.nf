@@ -1079,7 +1079,6 @@ process germline_genes{
 }
 
 
-
 process germ_tree_vizu {
     label 'r_ext'
     publishDir path: "${out_path}/files", mode: 'copy', pattern: "{germ_tree.pdf}", overwrite: false
@@ -1140,6 +1139,55 @@ process germ_tree_vizu {
 "${meta_legend}" \
 "${cute_file}" \
 "germ_tree_vizu.log"
+    """
+}
+
+
+process tsv_to_fasta{
+    label 'r_ext'
+    cache 'true'
+    publishDir path: "${out_path}/cdr3_multi_alignments", mode: 'copy', pattern: "{*.fasta}", overwrite: false
+
+    input:
+    path germ_tree_ch
+    val clone_nb_seq
+    path cute_file
+
+    output:
+    path "*.fasta", emit : fasta_alignments, optional: true
+
+    script:
+    """
+    #!/bin/bash -ue
+
+    FILENAME=\$(basename -- ${germ_tree_ch}) # recover a file name without path
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a tsv_to_fasta.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a tsv_to_fasta.log
+
+    tsv2fasta.R \
+    "${germ_tree_ch}" \
+    "sequence_id" \
+    "junction" \
+    "${clone_nb_seq}" \
+    "${cute_file}" \
+    "tsv_to_fasta.log"
+    """
+}
+
+
+process PrintAlignmentCdr3{
+    label 'goalign'
+    publishDir path: "${out_path}/cdr3_multi_alignments", mode: 'copy', pattern: "{*.html}", overwrite: false
+
+    input:
+    path filtered_fasta
+
+    output:
+    path "*.html", emit : alignment_html
+
+    script:
+    """
+    goalign draw biojs -i ${filtered_fasta} -o ${filtered_fasta.baseName}.html
     """
 }
 
@@ -1359,15 +1407,15 @@ process NbSequences {
     """
 }
 
-process PrintAlignment{
+process PrintAlignmentAA{
     label 'goalign'
-    publishDir path: "${out_path}/alignments", mode: 'copy'
+    publishDir path: "${out_path}/full_aa_multi_alignments", mode: 'copy', pattern: "{*.html}", overwrite: false
 
     input:
     path filtered_fasta
 
     output:
-    path "*.html", emit : alignment_png
+    path "*.html", emit : alignment_html
 
     script:
     """
@@ -2037,6 +2085,7 @@ workflow {
         germ_tree_duplicate_seq,
         igphylm_exe_path
     )
+    
     get_germ_tree.out.rdata_germ_tree_ch.count().subscribe { n -> if ( n == 0 ){
         print("\n\nWARNING: EMPTY OUTPUT FOLLOWING THE get_germ_tree PROCESS -> NO TREE RETURNED\n\n")
     }}
@@ -2050,7 +2099,7 @@ workflow {
     no_germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 
     get_germ_tree.out.germ_tree_ch.count().subscribe { n -> if ( n == 0 ){
-        print("\n\nWARNING: NO SEQUENCES IN TREES FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_seq.tsv FILE RETURNED\n\n")
+        print("\n\nWARNING: NO SEQUENCES IN TREES FOLLOWING THE get_germ_tree PROCESS -> EMPTY seq_for_germ_tree.tsv FILE RETURNED\n\n")
     }}
     germ_tree_ch2 = get_germ_tree.out.germ_tree_ch.collectFile(name: "seq_for_germ_tree.tsv", skip: 1, keepHeader: true)
     // germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
@@ -2076,6 +2125,7 @@ workflow {
 
     germline_genes_ch2 = germline_genes.out.germline_genes_ch.collectFile(name: "germ_tree_seq.tsv", skip: 1, keepHeader: true)
     germline_genes_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
+
 
 
     germ_tree_vizu(
@@ -2104,6 +2154,23 @@ workflow {
     }
     germ_tree_dup_seq_not_displayed_ch2 = germ_tree_vizu.out.germ_tree_dup_seq_not_displayed_ch.flatten().collectFile(name: "germ_tree_dup_seq_not_displayed.tsv", skip: 1, keepHeader: true) // flatten split the list into several objects which is required by collectFile()
     germ_tree_dup_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
+
+
+    tsv_to_fasta(
+        get_germ_tree.out.germ_tree_ch,
+        clone_nb_seq,
+        cute_path
+    )
+
+
+
+    PrintAlignmentCdr3(
+        tsv_to_fasta.out.fasta_alignments
+    )
+    PrintAlignmentCdr3.out.alignment_html.ifEmpty{
+        print("\n\nWARNING: -> NO CDR3 ALIGNMENT FILE RETURNED\n\n")
+    }
+
 
     tempo1_ch = Channel.of("all", "annotated", "tree") // 1 channel with 3 values (not list)
     tempo2_ch = data_assembly.out.productive_ch.mix(data_assembly.out.productive_ch.mix(germline_genes_ch2)) // 1 channel with 3 paths (do not use flatten() -> not list)
@@ -2184,9 +2251,13 @@ workflow {
         )
         filtered = NbSequences.out.nb_out.filter{it[0].toInteger()>=3}.map{it->it[1]}
 
-        PrintAlignment(
+
+        PrintAlignmentAA(
             filtered
         )
+        PrintAlignmentAA.out.alignment_html.ifEmpty{
+            print("\n\nWARNING: -> NO AA ALIGNMENT FILE RETURNED\n\n")
+        }
 
         Tree(
             filtered,
