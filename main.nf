@@ -1167,7 +1167,7 @@ process tsv_to_fasta{
     tsv2fasta.R \
     "${germ_tree_ch}" \
     "sequence_id" \
-    "junction" \
+    "sequence_alignment" \
     "${clone_nb_seq}" \
     "${cute_file}" \
     "tsv_to_fasta.log"
@@ -1409,7 +1409,7 @@ process NbSequences {
 
 process PrintAlignmentAA{
     label 'goalign'
-    publishDir path: "${out_path}/full_aa_multi_alignments", mode: 'copy', pattern: "{*.html}", overwrite: false
+    publishDir path: "${out_path}/full_multi_alignments", mode: 'copy', pattern: "{*.html}", overwrite: false
 
     input:
     path filtered_fasta
