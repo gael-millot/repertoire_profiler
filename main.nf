@@ -1409,7 +1409,7 @@ process NbSequences {
 
 process PrintAlignmentAA{
     label 'goalign'
-    publishDir path: "${out_path}/full_multi_alignments", mode: 'copy', pattern: "{*.html}", overwrite: false
+    publishDir path: "${out_path}/phylo_full_multi_alignments", mode: 'copy', pattern: "{*.html}", overwrite: false
 
     input:
     path filtered_fasta

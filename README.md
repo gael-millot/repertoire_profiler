@@ -273,7 +273,7 @@ Mandatory elements:
 | **\*_align.fasta.treefile** | Phylogenic trees in newick format for each sequence group in the phylo file. This tree is not constructed when there are less than 4 sequences in 1 group. |
 | **\*_align.fasta.log** | Contains execution information of IQTree, used for constructing the phylogenic trees. Useful for troubleshooting. |
 | **\*_align.fasta_itol_url.txt** | URL access to each phylogenic tree (*\*_align.fasta.treefile*) uploaded on iTOL. On each graph, the scale is the number of mutation per position. |
-| **full_multi_alignments** | Folder containing html files displaying the alignments of the amino acid sequences in the phylo folder. |
+| **phylo_full_multi_alignments** | Folder containing html files displaying the alignments of the amino acid sequences in the phylo folder. |
 
 <br /><br />
 Optional elements only returned if the igblast_aa parameter is 'false' and if the input fasta are nucleotide sequences:
