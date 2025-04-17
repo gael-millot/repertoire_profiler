@@ -236,13 +236,13 @@ Mandatory elements:
 <br /><br />
 | repertoire_profiler_<UNIQUE_ID> folders and files | Description |
 | :--- | :--- |
-| **report.html** | HTML report presenting the main results of the data processing. Currently, the report is in its early implementation stage and only contains a few basic details. Its content will be gradually expanded to provide a more comprehensive analysis. |
+| **report.html** | HTML report presenting the main results of the data processing. Its content will be gradually expanded to provide a more comprehensive analysis. |
 | **reports** | Folder containing all the reports of the different processes, as well as the *nextflow.config* file used and the map of the processes execution (*nf_dag.png* file). |
 | **repertoires** | Folder containing the repertoires, i.e., contingency tables of the V, J and C (constant) allele and gene usage from the *clone_assigned_seq.tsv* file (see below). Warning: the script currently takes the first annotation of the imgt annotation if several are presents in the v_call, j_call and c_call columns of the *clone_assigned_seq.tsv* file. (e.g., v_call with IGKV1-39\*01,IGKV1D-39\*01), so that contingencies are identical to those from the donut frequencies, that use germline_v_call and germline_j_call columns (allele reassignment by the CreateGermlines.py tool of immcantation) |
 | **png** | Folder containing the graphs in png format. |
 | **svg** | Folder containing the graphs in svg vectorial format. |
 | **RData** | Folder containing, for each clonal group, objects that can be used in R to further analyze of plot the data:<br /><ul><li>db: tibble data frame resulting from the import by the alakazam::readChangeoDb() function<br /></li><li>clones: db in the airClone format<br /></li><li>trees: output of the dowser::getTrees() function using the clones object as input (igphylm tree)</li><br /><br />Also contains the all_trees.RData file that combine the trees R objects of the different files in a single trees object. |
-| **cdr3_multi_alignments** | Folder containing html files displaying the alignments of the nucleotidic sequences used for germ_trees. |
+| **cdr3_multi_alignments** | Folder containing html files displaying the alignments of the *"sequence_alignment"* column of the nucleotidic sequences used for germ_trees. |
 | **files** | Folder containing **all the files** described below : |
 | **seq_distance.pdf** | Distribution of the distances between the two nearest sequences (see the *nearest_distance* column in the *clone_assigned_seq.tsv* file). |
 | **donuts.pdf** | donut plots showing the frequency of sequences per clonal groups, among:<br /><ul><li>all: all the clone-assigned sequences (*clone_assigned_seq.tsv* output file).<br /></li><li>annotated: as the "all" donut but using all the clone-assigned sequences that have been annotated using the meta_name_replacement parameter of the nextflow.config file if not "NULL".<br /></li><li>trees: all the sequences used for germline trees (*germ_tree_seq.tsv* output file).</li> |
@@ -273,7 +273,7 @@ Mandatory elements:
 | **\*_align.fasta.treefile** | Phylogenic trees in newick format for each sequence group in the phylo file. This tree is not constructed when there are less than 4 sequences in 1 group. |
 | **\*_align.fasta.log** | Contains execution information of IQTree, used for constructing the phylogenic trees. Useful for troubleshooting. |
 | **\*_align.fasta_itol_url.txt** | URL access to each phylogenic tree (*\*_align.fasta.treefile*) uploaded on iTOL. On each graph, the scale is the number of mutation per position. |
-| **full_aa_multi_alignments** | Folder containing html files displaying the alignments of the amino acid sequences in the phylo folder. |
+| **full_multi_alignments** | Folder containing html files displaying the alignments of the amino acid sequences in the phylo folder. |
 
 <br /><br />
 Optional elements only returned if the igblast_aa parameter is 'false' and if the input fasta are nucleotide sequences:
@@ -339,6 +339,12 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 
 <br /><br />
 ## WHAT'S NEW IN
+
+
+#### v17.0
+
+- New config parameter added for ITOL subscription
+- New alignment folders displayed in html for cdr3 and aminoacid sequences
 
 #### v16.5
 
