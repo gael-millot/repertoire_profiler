@@ -1523,6 +1523,8 @@ process print_report{
     #!/bin/bash -ue
     cp ${template_rmd} report_file.rmd
     cp -r "${out_path}/png" .
+    cp "${out_path}/files/igblast_aligned_seq_name.tsv" .
+    cp "${out_path}/files/productive_seq.tsv" .
 
 
     Rscript -e '
@@ -1542,6 +1544,8 @@ process print_report{
         if(length(constant_rep) == 0 || length(vj_rep) == 0){
             stop(paste0("\\n\\n========\\n\\nERROR IN print_report PROCESS\\n\\nTHE REPERTOIRE PNG FILES TO BE DISPLAYED WERE NOT FOUND\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n"), call. = FALSE)
         }
+
+        install.packages("DT")
 
         rmarkdown::render(
         input = "report_file.rmd",

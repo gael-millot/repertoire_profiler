@@ -28,6 +28,7 @@ params:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(readr)
 library(knitr)
 ```
 
@@ -82,6 +83,7 @@ Number of initial input sequences : ```r params$nb_input```
 
 ### Igblast sequence annotation
 
+
 [Succes](files/igblast_aligned_seq_name.tsv) number of sequences : ```r params$nb_seq_aligned```
 
 [Failed](files/igblast_unaligned_seq_name.tsv) number of sequences : ```r params$nb_seq_not_aligned```
@@ -97,6 +99,16 @@ Success ratio : ```r base::round(params$nb_seq_aligned / (params$nb_seq_aligned 
 ### Productive sequences
 
 **Productive sequences** are sequences with: (1) an open reading frame (start and stop codon), (2) no defect in the start codon, splicing sites or regulatory elements, (3) no internal stop codons, (4) in-frame junction between regions. <br>
+
+<br>
+Z
+
+```{r tsv-to-md , echo=FALSE, results='asis'}
+df <- read_tsv("productive_seq.tsv", show_col_types = FALSE)
+kable(df, format = "markdown", row.names = FALSE)
+```
+
+<br>
 
 Number of [productive sequences](files/productive_seq.tsv) : ```r params$nb_productive```
 
