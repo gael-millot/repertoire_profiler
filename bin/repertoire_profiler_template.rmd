@@ -30,6 +30,34 @@ params:
 knitr::opts_chunk$set(echo = TRUE)
 library(readr)
 library(knitr)
+
+read_tsv_with_dummy <- function(file_path) {
+  # Vérifier si le fichier est vide
+  if (file.info(file_path)$size == 0) {
+    return("File is empty")
+  } else {
+    # Lire le fichier TSV
+    df <- read_tsv(file_path, show_col_types = FALSE)
+    # Si le tableau est vide après lecture, ajouter une ligne vide
+    if (nrow(df) == 0) {
+      dummy_row <- as.data.frame(matrix("", nrow = 1, ncol = ncol(df)))
+      colnames(dummy_row) <- colnames(df)
+      df <- rbind(df, dummy_row)
+    }
+    return(df)
+  }
+}
+
+render_table_with_details <- function(file_path, summary_text = "Afficher la table") {
+  df <- read_tsv_with_dummy(file_path)
+  cat(paste0(
+    '<details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">',
+    summary_text,
+    '</summary>\n\n'
+  ))
+  print(kable(df, format = "markdown", row.names = FALSE))
+  cat('\n</details>\n')
+}
 ```
 
 <script>
@@ -73,6 +101,10 @@ library(knitr)
 
 [comment]: <> (End of script to zoom on images)
 
+<style>
+details.inline {display:inline-block;}
+</style>
+
 
 
 ### Initial dataset
@@ -100,19 +132,22 @@ Success ratio : ```r base::round(params$nb_seq_aligned / (params$nb_seq_aligned 
 
 **Productive sequences** are sequences with: (1) an open reading frame (start and stop codon), (2) no defect in the start codon, splicing sites or regulatory elements, (3) no internal stop codons, (4) in-frame junction between regions. <br>
 
-<br>
-Z
 
-```{r tsv-to-md , echo=FALSE, results='asis'}
-df <- read_tsv("productive_seq.tsv", show_col_types = FALSE)
-kable(df, format = "markdown", row.names = FALSE)
+Number of productive sequences : ```r params$nb_productive``` &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
+```{r, echo=FALSE, results='asis'}
+df_productive <- read_tsv_with_dummy("files/productive_seq.tsv")
+kable(df_productive, format = "markdown", row.names = FALSE)
 ```
-
+</details>
+<br>
+Number of unproductive sequences : ```r params$nb_unproductive``` &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
+```{r, echo=FALSE, results='asis'}
+df_productive <- read_tsv_with_dummy("files/unproductive_seq.tsv")
+kable(df_productive, format = "markdown", row.names = FALSE)
+```
+</details>
 <br>
 
-Number of [productive sequences](files/productive_seq.tsv) : ```r params$nb_productive```
-
-Number of [unproductive sequences](files/unproductive_seq.tsv) : ```r params$nb_unproductive```
 
 Productiveness ratio : ```r base::round(params$nb_productive / (params$nb_productive + params$nb_unproductive), 2)```
 
@@ -168,14 +203,23 @@ See the [gene_repertoire.pdf](files/gene_repertoire.pdf) and [allele_repertoire.
 
 Some sequences from the productive file can **fail to be clone-assigned**, and will not be in the clone_assigned_seq.tsv file. 
 
-Number of [clone-assigned sequences](files/clone_assigned_seq.tsv) : ```r params$nb_clone_assigned```
-
+Number of clone-assigned sequences : ```r params$nb_clone_assigned```&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
+```{r, echo=FALSE, results='asis'}
+df_productive <- read_tsv_with_dummy("files/clone_assigned_seq.tsv")
+kable(df_productive, format = "markdown", row.names = FALSE)
+```
+</details>
 ```{r include = FALSE}
 nb_failed_clone <- ifelse(params$nb_failed_clone > 0, params$nb_failed_clone, 0)
 ```
-
-Number of [failed clone-assigned sequences](files/non_clone_assigned_sequence.tsv) : ```r nb_failed_clone```
-
+<br>
+Number of failed clone-assigned sequences : ```r nb_failed_clone```&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
+```{r, echo=FALSE, results='asis'}
+df_productive <- read_tsv_with_dummy("files/non_clone_assigned_sequence.tsv")
+kable(df_productive, format = "markdown", row.names = FALSE)
+```
+</details>
+<br>
 Passing ratio : ```r base::round(params$nb_clone_assigned / (params$nb_clone_assigned + nb_failed_clone), 2)```
 
 <br>
