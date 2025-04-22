@@ -5,6 +5,7 @@ nextflow.enable.dsl=2
 ##     main.nf of repertoire profiler                                  ##
 ##                                                                     ##
 ##     Gael A. Millot                                                  ##
+##     Chloe Taurel                                                    ##
 ##     Bioinformatics and Biostatistics Hub                            ##
 ##     Computational Biology Department                                ##
 ##     Institut Pasteur Paris                                          ##

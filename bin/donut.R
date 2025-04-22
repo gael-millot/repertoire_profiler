@@ -4,6 +4,7 @@
 ##     donut.R                                                         ##
 ##                                                                     ##
 ##     Gael A. Millot                                                  ##
+##     Chloe Taurel                                                    ##
 ##     Bioinformatics and Biostatistics Hub                            ##
 ##     Institut Pasteur Paris                                          ##
 ##                                                                     ##
