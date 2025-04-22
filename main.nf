@@ -1523,6 +1523,7 @@ process print_report{
     #!/bin/bash -ue
     cp ${template_rmd} report_file.rmd
     cp -r "${out_path}/png" .
+    cp -r "${out_path}/files" .
 
 
     Rscript -e '
