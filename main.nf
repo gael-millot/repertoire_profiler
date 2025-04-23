@@ -5,6 +5,7 @@ nextflow.enable.dsl=2
 ##     main.nf of repertoire profiler                                  ##
 ##                                                                     ##
 ##     Gael A. Millot                                                  ##
+##     Chloe Taurel                                                    ##
 ##     Bioinformatics and Biostatistics Hub                            ##
 ##     Computational Biology Department                                ##
 ##     Institut Pasteur Paris                                          ##
@@ -1523,6 +1524,7 @@ process print_report{
     #!/bin/bash -ue
     cp ${template_rmd} report_file.rmd
     cp -r "${out_path}/png" .
+    cp -r "${out_path}/files" .
 
 
     Rscript -e '

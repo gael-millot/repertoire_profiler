@@ -316,6 +316,8 @@ Version V10.3:
 
 [Frédéric Lemoine](), Bioinformatics and Biostatistics Hub, Institut Pasteur, Paris, France
 
+[Chloé Taurel](), University of Technology of Compiègne, Compiègne, France
+
 [Gael A. Millot](https://gitlab.pasteur.fr/gmillot), Bioinformatics and Biostatistics Hub, Institut Pasteur, Paris, France
 
 <br /><br />
