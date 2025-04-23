@@ -247,7 +247,7 @@ process igblast {
         exit 1
     fi
     sed 's/\\r\$//' ${fs_ch} > tempo_file.fasta # remove carriage returns
-    awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){gsub(/[ \\t.-]+/, "_", \$0) ; if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' tempo_file.fasta > \${FILE}.fa # remove \\n in the middle of the sequence # gsub(/[ \\t]+/, "_", \$0) replace spaces and tabs in the first line by a single underscore# \${FILENAME}.fa is a trick to do not use ${fs_ch} and modify the initial file due to the link in the nextflow work folder
+    awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){s=substr(\$0,1,1); rest=substr(\$0,2); gsub(/[^a-zA-Z0-9]/,"_",rest) ; if(NR>1){print "\\n"} ; if (length(rest) > 100){print s substr(rest,1,100)"\\n"}else{print s rest"\\n"}} else {print \$0 ; next}}END{print "\\n"}' tempo_file.fasta > \${FILE}.fa # remove \\n in the middle of the sequence # gsub(/[^a-zA-Z0-9]/,"_",rest) replace any weird chars in the first line by a single underscore# \${FILENAME}.fa is a trick to do not use ${fs_ch} and modify the initial file due to the link in the nextflow work folder
     TEMPO=\$(wc -l \${FILE}.fa | cut -f1 -d' ')
     if read -n 1 char <"\${FILE}.fa"; [[ \$char != ">" || \$TEMPO != 2 ]]; then
         echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID FASTA FILE IN THE sample_path OF THE repertoire_profiler.config FILE:\\n${fs_ch}\\nMUST BE A FASTA FILE (\'>\' AS FIRST CHARACTER) MADE OF A SINGLE SEQUENCE\\n\\n========\\n\\n"
@@ -258,18 +258,18 @@ process igblast {
     # Alignment <-> annotate sequence using VDJ info
     # See https://changeo.readthedocs.io/en/stable/tools/AssignGenes.html for the details
     if [[ "${igblast_aa}" == "false" ]] ; then
-        AssignGenes.py igblast -s \${FILE}.\${FILE_EXTENSION} -b /usr/local/share/igblast --organism ${igblast_organism} --loci ${igblast_loci} --format blast |& tee -a igblast_report.log
+        AssignGenes.py igblast -s \${FILE}.fa -b /usr/local/share/igblast --organism ${igblast_organism} --loci ${igblast_loci} --format blast |& tee -a igblast_report.log
     else
         # WARNING: does not work if the fasta file contains \\r (CR carriage return, instead or in addition of \\n, LF line feed) but ok here because removed above
-        awk -v var1=\${FILENAME} '{lineKind=(NR-1)%2;}lineKind==0{record=\$0 ; next}lineKind==1{if(\$0~/^[NATGC]*\$/){print "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nFASTA FILE\\n"var1"\\nMUST BE AN AMINO ACID SEQUENCE IF THE igblast_aa PARAMETER IS SET TO true\\nHERE IT SEEMS ONLY MADE OF NUCLEOTIDES:\\n"\$0"\\n\\n========\\n\\n" ; exit 1}}' \${FILE}.\${FILE_EXTENSION}
-        AssignGenes.py igblast-aa -s \${FILE}.\${FILE_EXTENSION} -b /usr/local/share/igblast --organism ${igblast_organism} --loci ${igblast_loci} |& tee -a igblast_report.log
+        awk -v var1=\${FILENAME} '{lineKind=(NR-1)%2;}lineKind==0{record=\$0 ; next}lineKind==1{if(\$0~/^[NATGC]*\$/){print "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nFASTA FILE\\n"var1"\\nMUST BE AN AMINO ACID SEQUENCE IF THE igblast_aa PARAMETER IS SET TO true\\nHERE IT SEEMS ONLY MADE OF NUCLEOTIDES:\\n"\$0"\\n\\n========\\n\\n" ; exit 1}}' \${FILE}.fa
+        AssignGenes.py igblast-aa -s \${FILE}.fa -b /usr/local/share/igblast --organism ${igblast_organism} --loci ${igblast_loci} |& tee -a igblast_report.log
     fi
     # convert to tsv
     # Also convert data from the web interface IMGT/HighV-QUEST
     if [[ "${igblast_aa}" == "false" ]] ; then
-        MakeDb.py igblast -i ./\${FILE}_igblast.fmt7 -s ./\${FILE}.\${FILE_EXTENSION} -r \${VDJ_FILES} --extended |& tee -a igblast_report.log
+        MakeDb.py igblast -i ./\${FILE}_igblast.fmt7 -s ./\${FILE}.fa -r \${VDJ_FILES} --extended |& tee -a igblast_report.log
     else
-        MakeDb.py igblast-aa -i ./\${FILE}_igblast.fmt7 -s ./\${FILE}.\${FILE_EXTENSION} -r \${VDJ_FILES} --extended |& tee -a igblast_report.log
+        MakeDb.py igblast-aa -i ./\${FILE}_igblast.fmt7 -s ./\${FILE}.fa -r \${VDJ_FILES} --extended |& tee -a igblast_report.log
     fi
     # printing if no tsv file made
     if [[ ! -f ./\${FILE}_igblast_db-pass.tsv ]] ; then
@@ -1962,8 +1962,8 @@ workflow {
         parseDb_filtering.out.select_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE parseDb_filtering PROCESS\n\n========\n\n"},
         igblast_aa
     )
-    translation.out.translation_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE translation PROCESS\n\n========\n\n"}
-    //translation.out.translation_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE translation PROCESS\n\n========\n\n"}}
+    translation.out.translation_ch.ifEmpty{error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE translation PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}
+    translation.out.translation_ch.count().subscribe { n -> if ( n == 1 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE translation PROCESS\n\n========\n\n"}}
     translation_ch2 = translation.out.translation_ch.collectFile(name: "translation.tsv", skip: 1, keepHeader: true) // productive file with column sequence_alignment_aa added
     aa_tsv_ch2 = translation.out.aa_tsv_ch.collectFile(name: "aa.tsv", skip: 1, keepHeader: true)
     aa_tsv_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
@@ -2219,7 +2219,7 @@ workflow {
 
     
     // The following processes are meant to be executed only if the analyzed sequences are heavy chains
-    if(igblast_variable_ref_files =~ /^.*IGHV.*$/){
+    if(igblast_variable_ref_files =~ /^.*IGHV.*$/ && ! igblast_variable_ref_files =~ /^.*IG(L|K)V.*$/){
         // Heavy chain detected
 
         heavy_chain = channel.of("TRUE")
