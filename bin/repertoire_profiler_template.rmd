@@ -16,7 +16,6 @@ params:
   constant_rep: ""
   vj_rep: ""
   itol_subscription: "TRUE"
-  heavy_chain: "FALSE"
 ---
 
 \n\n<br /><br />\n\n
@@ -138,7 +137,7 @@ Success ratio : ```r base::round(params$nb_seq_aligned / (params$nb_seq_aligned 
 
 
 Number of productive sequences : ```r params$nb_productive``` &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-<span style="color:green">*productive_seq.tsv file in the files folder*</span>
+<span style="color:green">*productive_seq.tsv file in the [files](./files) folder*</span>
 ```{r, echo=FALSE, results='asis'}
 df <- read_tsv_with_dummy("files/productive_seq.tsv")
 kable(df, format = "markdown", row.names = FALSE)
@@ -146,7 +145,7 @@ kable(df, format = "markdown", row.names = FALSE)
 </details>
 <br>
 Number of unproductive sequences : ```r params$nb_unproductive``` &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-<span style="color:green">*unproductive_seq.tsv file in the files folder*</span>
+<span style="color:green">*unproductive_seq.tsv file in the [files](./files) folder*</span>
 ```{r, echo=FALSE, results='asis'}
 df <- read_tsv_with_dummy("files/unproductive_seq.tsv")
 kable(df, format = "markdown", row.names = FALSE)
@@ -210,7 +209,7 @@ See the [gene_repertoire.pdf](files/gene_repertoire.pdf) and [allele_repertoire.
 Some sequences from the productive file can **fail to be clone-assigned**, and will not be in the clone_assigned_seq.tsv file. 
 
 Number of clone-assigned sequences : ```r params$nb_clone_assigned```&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-<span style="color:green">*clone_assigned_seq.tsv file in the files folder*</span>
+<span style="color:green">*clone_assigned_seq.tsv file in the [files](./files) folder*</span>
 ```{r, echo=FALSE, results='asis'}
 df <- read_tsv_with_dummy("files/clone_assigned_seq.tsv")
 kable(df, format = "markdown", row.names = FALSE)
@@ -221,7 +220,7 @@ nb_failed_clone <- ifelse(params$nb_failed_clone > 0, params$nb_failed_clone, 0)
 ```
 <br>
 Number of failed clone-assigned sequences : ```r nb_failed_clone```&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-<span style="color:green">*non_clone_assigned_sequence.tsv file in the files folder*</span>
+<span style="color:green">*non_clone_assigned_sequence.tsv file in the [files](./files) folder*</span>
 ```{r, echo=FALSE, results='asis'}
 df <- read_tsv_with_dummy("files/non_clone_assigned_sequence.tsv")
 kable(df, format = "markdown", row.names = FALSE)
@@ -232,7 +231,7 @@ Passing ratio : ```r base::round(params$nb_clone_assigned / (params$nb_clone_ass
 
 <br>
 
-See the [germ_tree.pdf](files/germ_tree.pdf) file in the files folder.
+See the [germ_tree.pdf](files/germ_tree.pdf) file in the [files](./files) folder.
 <br>
 
 See also:<br /><ul><li>
@@ -259,12 +258,13 @@ kable(df, format = "markdown", row.names = FALSE)
 
 <br><br><br>
 
-`r  if(params$heavy_chain == "TRUE"){"### Amino acid sequences phylogeny \n\n **Only available for heavy chain analysis.**  "}`
-`r  if(params$heavy_chain == "TRUE" && params$itol_subscription == "TRUE"){"Open the different sequences_\\<SEQ_NAME\\>_align.fasta_itol_url.txt files in the [phylo](./phylo) folder and click on the link to see the trees."}`
-`r  if(params$heavy_chain == "TRUE" && params$itol_subscription == "FALSE"){"To see the trees, follow the link : https://itol.embl.de/upload.cgi. Choose a name for your tree (optional) and upload a '*.treefile' file from the [phylo](./phylo) folder. The trees will then be displayed by iTOL."}`
+###  Amino acid sequences phylogeny 
 <br>
 
-`r  if(params$heavy_chain == "TRUE"){"Alignment visualization is available for each clonal group used in each tree, in the [phylo_full_multi_alignments](./phylo_full_multi_alignments) folder in html format."}`
+`r  if(params$itol_subscription == "TRUE"){"Open the different sequences_\\<SEQ_NAME\\>_align.fasta_itol_url.txt files in the [phylo](./phylo) folder and click on the link to see the trees."}`
+`r  if(params$itol_subscription == "FALSE"){"To see the trees, follow the link : https://itol.embl.de/upload.cgi. Choose a name for your tree (optional) and upload a '*.treefile' file from the [phylo](./phylo) folder. The trees will then be displayed by iTOL."}`
+
+Alignment visualization is available for each clonal group used in each tree, in the [phylo_full_multi_alignments](./phylo_full_multi_alignments) folder in html format.
 
 
 
