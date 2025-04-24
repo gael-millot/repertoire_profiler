@@ -253,8 +253,9 @@ kable(df, format = "markdown", row.names = FALSE)
 
 <br>
 
-**Sequence alignments** displays are available in the [cdr3_multi_alignments](./cdr3_multi_alignments) folder. The html files are the alignment display, and the fasta files are the clonal group's corresponding sequences.
-
+[comment]: <> (This text is commented because cdr3 alignments are in development)
+[comment]: <> (**Sequence alignment** displays are available in the [cdr3_multi_alignments](./cdr3_multi_alignments) folder. The HTML files present the alignment visualizations, while the FASTA files contain the corresponding sequences for each clonal group.)
+[comment]: <> (End cdr3 text)
 
 <br><br><br>
 
@@ -265,8 +266,6 @@ kable(df, format = "markdown", row.names = FALSE)
 `r  if(params$itol_subscription == "FALSE"){"To see the trees, follow the link : https://itol.embl.de/upload.cgi. Choose a name for your tree (optional) and upload a '*.treefile' file from the [phylo](./phylo) folder. The trees will then be displayed by iTOL."}`
 
 Alignment visualization is available for each clonal group used in each tree, in the [phylo_full_multi_alignments](./phylo_full_multi_alignments) folder in html format.
-
-
 
 <br><br>
 

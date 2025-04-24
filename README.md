@@ -343,6 +343,14 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 ## WHAT'S NEW IN
 
 
+#### v18.0
+
+- Tool adapted to any cluster job scheduler
+- *phylo_tree_heavy* parameter removed from config, chain type is now deduced from igblast_ref files
+- Processes *Reformat*, *Align*, *DefineGroups*, *NbSequences*, *Tree*, *ProcessMeta* and *ITOL* are no longer restricted to heavy chain analysis
+- cdr3 alignments removed (in development for later release)
+- tsv files better displayed in html report
+
 #### v17.0
 
 - New config parameter added for ITOL subscription
