@@ -250,7 +250,6 @@ kable(df, format = "markdown", row.names = FALSE)
 </details><br /></li>
 <li>[germ_tree_dismissed_clone_id.tsv](files/germ_tree_dismissed_clone_id.tsv)</li></ul>
 
-
 <br>
 
 [comment]: <> (This text is commented because cdr3 alignments are in development)
