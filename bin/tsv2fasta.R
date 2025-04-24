@@ -70,6 +70,7 @@ script <- "tsv2fasta"
 # path <- "https://zenodo.org/records/10844886/files/ig_sequences.xlsx" # single character string indicating the full path of the xlsx file. Example: path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/dataset/xlsx2fasta_test_2/ig_sequences.xlsx"
 # Name <- "Name" # single character string indicating the column name of the sequence names. Example: Name <- "Name"
 # Seq <- c("VH", "VL") # vector of character strings indicating the column names of the xlsx file containing sequences. Example: Seq <- c("VH", "VL")
+# Germline <- "germline_d_mask" # single character string indicating the column name of the germline sequence. This sequence will be the first used in the fasta file. Must be empty character string if not used
 
 
 #########################################################################
@@ -96,7 +97,8 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
     tempo.arg.names <- c(
         "path", 
         "Name", 
-        "Seq", 
+        "Seq",
+        "Germline",
         "clone_nb_seq",
         "cute", 
         "log"
@@ -137,7 +139,8 @@ param.list <- c(
     if(run.way == "SCRIPT"){"command"}, 
     "path", 
     "Name", 
-    "Seq", 
+    "Seq",
+    "Germline",
     "clone_nb_seq",
     "cute", 
     "log"
@@ -266,6 +269,7 @@ ee <- expression(arg.check <- c(arg.check, tempo$problem) , text.check <- c(text
 tempo <- fun_check(data = path, class = "vector", typeof = "character", length = 1) ; eval(ee)
 tempo <- fun_check(data = Name, class = "vector", typeof = "character", length = 1) ; eval(ee)
 tempo <- fun_check(data = Seq, class = "vector", typeof = "character") ; eval(ee)
+tempo <- fun_check(data = Germline, class = "vector", typeof = "character", length = 1) ; eval(ee)
 # cute already tested above
 tempo <- fun_check(data = log, class = "vector", typeof = "character", length = 1) ; eval(ee)
 if(any(arg.check) == TRUE){ # normally no NA
@@ -378,6 +382,10 @@ if( ! Name %in% names(obs)){
     stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nTHE Name PARAMETER MUST BE A COLUMN NAME OF THE IMPORTED FILE:\n", path, "\n\nHERE IT IS Name:\n", Name, "\n\nCOLUMN NAMES:\n", paste(names(obs), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
 }
 
+if( length(Germline) > 0 && ! Germline %in% names(obs)){
+    stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nTHE Germline PARAMETER MUST BE A COLUMN NAME OF THE IMPORTED FILE IF NOT EMPTY:\n", path, "\n\nHERE IT IS Name:\n", Germline, "\n\nCOLUMN NAMES:\n", paste(names(obs), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
+}
+
 if(any(duplicated(obs[, Name]))){
     stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nDUPLICATED VALUE NOT AUTHORIZED IN THE COLUMN OF THE Name PARAMETER\n\nDUPLICATED VALUES ARE:\n", obs[duplicated(obs[, Name]), Name], "\n\nIN POSITIONS:\n", paste(which(obs[ , Name] %in% obs[duplicated(obs[, Name]), Name]), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
 }
@@ -404,7 +412,6 @@ for(i0 in names(obs)){ # NA in xlsx file become "NA". Thus, has to be replaced b
 
 ############ main
 
-
 for(i0 in Seq){
     tempo.log <- is.na(obs[ , i0]) | obs[ , i0] == ""
     if(sum(!tempo.log, na.rm = TRUE) >= clone_nb_seq){
@@ -420,8 +427,30 @@ for(i0 in Seq){
             fun_report(data = tempo.cat, output = log, path = "./", overwrite = FALSE)
         }
         tempo.df <- obs[ ! tempo.log, ]
+        # Sequences in the same seq_for_germ_tree.tsv file belong to the same clonal group and should have the same values in columns relative to clonal groups
+        if(any(tempo.df$clone_id != tempo.df$clone_id[1])){
+            stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL clone_id VALUES SHOULD BE THE SAME IN A seq_for_germ_tree FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$clone_id, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
+        }
+        if(any(tempo.df$v_gene != tempo.df$v_gene[1])){
+            stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL v_gene VALUES SHOULD BE THE SAME IN A seq_for_germ_tree FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$v_gene, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
+        }
+        if(any(tempo.df$j_gene != tempo.df$j_gene[1])){
+            stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL j_gene VALUES SHOULD BE THE SAME IN A seq_for_germ_tree FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$j_gene, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
+        }
+        if(any(tempo.df$junction_length != tempo.df$junction_length[1])){
+            stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL v_gene VALUES SHOULD BE THE SAME IN A seq_for_germ_tree FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$junction_length, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
+        }
+        # End check of columns relative to clonal groups
+        if(length(Germline) > 0){
+            if(any(tempo.df[[Germline]] != tempo.df[1, Germline])){
+                stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nTHE VALUES INSIDE THE Germline COLUMN SHOULD ALL BE THE SAME, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df[[Germline]], collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
+            }
+            tempo.name <- paste0(i0, "_", tempo.df[1, "clone_id"], "_", tempo.df[1, "v_gene"], "_", tempo.df[1, "j_gene"], "_", tempo.df[1, "junction_length"], ".fasta") # These columns all have the same value for a clonal group, so it writes in the same file
+            tempo.cat <- paste0(">", "Germline_group_", tempo.df[1, "clone_id"], "\n", tempo.df[1, Germline], "\n")
+            cat(tempo.cat, file = paste0("./", tempo.name), append = TRUE)
+        }
         for(i1 in 1:nrow(tempo.df)){
-            tempo.name <- paste0(i0, "_", tempo.df[i1, "clone_id"], "_", tempo.df[i1, "v_gene"], "_", tempo.df[i1, "j_gene"], "_", tempo.df[i1, "junction_length"], ".fasta")
+            tempo.name <- paste0(i0, "_", tempo.df[i1, "clone_id"], "_", tempo.df[i1, "v_gene"], "_", tempo.df[i1, "j_gene"], "_", tempo.df[i1, "junction_length"], ".fasta") # These columns all have the same value for a clonal group, so it writes in the same file
             tempo.cat <- paste0(">", tempo.df[i1, Name], "\n", tempo.df[i1, i0], "\n")
             cat(tempo.cat, file = paste0("./", tempo.name), append = TRUE)
         }

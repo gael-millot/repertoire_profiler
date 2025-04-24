@@ -1144,6 +1144,8 @@ process germ_tree_vizu {
 }
 
 
+// Inactivated because currently in development
+/*
 process tsv_to_fasta{
     label 'r_ext'
     cache 'true'
@@ -1168,10 +1170,32 @@ process tsv_to_fasta{
     tsv2fasta.R \
     "${germ_tree_ch}" \
     "sequence_id" \
-    "sequence_alignment" \
+    "sequence" \
+    "germline_alignment_d_mask" \
     "${clone_nb_seq}" \
     "${cute_file}" \
     "tsv_to_fasta.log"
+    """
+}
+
+
+// This process is meant as a test for abalign, to check the coherence of the trees
+process AbalignTest{
+    label 'abalign'
+    publishDir path: "${out_path}/cdr3_multi_alignments", mode: 'copy', pattern: "{*_align.fasta}"
+    
+    input:
+    path fasta_alignments
+    val phylo_tree_heavy
+    
+    output:
+    path "*_align.fasta", emit : aligned_groups_ch
+    
+    script:
+    parms="-al"
+    if(phylo_tree_heavy){parms="-ah"}
+    """
+    /bin/Abalign_V2_Linux_Term/Abalign -n $fasta_alignments -p ${fasta_alignments.baseName}_align_aa.fasta ${parms} ${fasta_alignments.baseName}_align.fasta -sp MU || true
     """
 }
 
@@ -1191,7 +1215,7 @@ process PrintAlignmentCdr3{
     goalign draw biojs -i ${filtered_fasta} -o ${filtered_fasta.baseName}.html
     """
 }
-
+*/
 
 
 // Creates donut plots for the constant and variable region ; grouped by same allele or genes
@@ -1350,15 +1374,17 @@ process Align {
     label 'abalign'
     
     input:
-    path fasta
-    val phylo_tree_heavy
+    tuple path(fasta), val(heavy_chain)
     
     output:
     path "*_align.fasta", emit : aligned_groups_ch
     
     script:
+    if( ! (heavy_chain == "TRUE" || heavy_chain == "FALSE") ){
+        error "\n\n========\n\nERROR IN Align PROCESS\n\nINVALID heavy_chain PARAMETER:\n${heavy_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
+    }
     parms="-al"
-    if(phylo_tree_heavy){parms="-ah"}
+    if(heavy_chain == "TRUE"){parms="-ah"}
     """
     /bin/Abalign_V2_Linux_Term/Abalign -i $fasta ${parms} ${fasta.baseName}_align.fasta -sp MU || true
     """
@@ -1513,7 +1539,6 @@ process print_report{
     val repertoire_constant_ch
     val repertoire_vj_ch
     val itol_subscription
-    val heavy_chain
 
     output:
     file "report.html"
@@ -1558,8 +1583,7 @@ process print_report{
                         nb_failed_clone = ${nb_failed_clone},
                         constant_rep = constant_rep,
                         vj_rep = vj_rep,
-                        itol_subscription = ${itol_subscription},
-                        heavy_chain = ${heavy_chain}),
+                        itol_subscription = ${itol_subscription}),
         # output_dir = ".",
         # intermediates_dir = "./",
         # knit_root_dir = "./",
@@ -1809,11 +1833,6 @@ workflow {
         if( ! (donut_legend_width =~  /^((1)|(0)|(0\.[0-9]*))$/) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_limit PARAMETER IN repertoire_profiler.config FILE:\n${donut_legend_limit}\nMUST BE A POSITIVE PROPORTION VALUE IF NOT \"NULL\"\n\n========\n\n"
         }
-    }
-    if( ! (phylo_tree_heavy in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID phylo_tree_heavy PARAMETER IN repertoire_profiler.config FILE:\n${phylo_tree_heavy}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! (phylo_tree_heavy == "true" || phylo_tree_heavy == "false") ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID phylo_tree_heavy PARAMETER IN repertoire_profiler.config FILE:\n${phylo_tree_heavy}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
     if( ! (phylo_tree_model_path in String || phylo_tree_model_path in GString) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID phylo_tree_model_path PARAMETER IN repertoire_profiler.config FILE:\n${phylo_tree_model_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
@@ -2155,20 +2174,32 @@ workflow {
     germ_tree_dup_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 
 
+    // Inactivated because currently in development
+/*
     tsv_to_fasta(
         get_germ_tree.out.germ_tree_ch,
         clone_nb_seq,
         cute_path
     )
 
+    AbalignTest(
+        tsv_to_fasta.out.fasta_alignments,
+        phylo_tree_heavy
+    )
 
 
     PrintAlignmentCdr3(
         tsv_to_fasta.out.fasta_alignments
     )
+    
+    PrintAlignmentCdr3(
+        AbalignTest.out.aligned_groups_ch
+    )
     PrintAlignmentCdr3.out.alignment_html.ifEmpty{
         print("\n\nWARNING: -> NO CDR3 ALIGNMENT FILE RETURNED\n\n")
     }
+
+    */
 
 
     tempo1_ch = Channel.of("all", "annotated", "tree") // 1 channel with 3 values (not list)
@@ -2218,72 +2249,71 @@ workflow {
     donut_assembly.out.donut_assembly_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}}
 
     
-    // The following processes are meant to be executed only if the analyzed sequences are heavy chains
-    if(igblast_variable_ref_files =~ /^.*IGHV.*$/ && ! igblast_variable_ref_files =~ /^.*IG(L|K)V.*$/){
-        // Heavy chain detected
-
-        heavy_chain = channel.of("TRUE")
-
-        Reformat(
-            aa_tsv_ch2,
-            igblast_data_check.out.igblast_data_check_ch.collect()
-        )
-        fasta = Reformat.out.aa_fasta_ch
-
-
-        DefineGroups(
-            fasta,
-            select_ch2
-        )
-        fastagroups = DefineGroups.out.groups_ch.flatten()
-
-
-        Align(
-            fastagroups,
-            phylo_tree_heavy
-        )
-        align = Align.out.aligned_groups_ch
-
-
-        NbSequences(
-            align
-        )
-        filtered = NbSequences.out.nb_out.filter{it[0].toInteger()>=3}.map{it->it[1]}
-
-
-        PrintAlignmentAA(
-            filtered
-        )
-        PrintAlignmentAA.out.alignment_html.ifEmpty{
-            print("\n\nWARNING: -> NO AA ALIGNMENT FILE RETURNED\n\n")
-        }
-
-        Tree(
-            filtered,
-            phylo_tree_model_file
-        )
-        tree = Tree.out.tree_file
-
-        ProcessMeta(
-            meta_file
-        )
-        itolmeta = ProcessMeta.out.itol_out
-
-        // The ITOL process can only be executed if user has paid the subsription for automated visualization
-
-        if(phylo_tree_itol_subscription == "TRUE"){
-
-            ITOL(
-                tree,
-                itolmeta,
-                phylo_tree_itolkey
-            )
-
-        }
-        
+    if(igblast_variable_ref_files =~ /^.*IGHV.*$/){
+        heavy_chain = channel.of("TRUE") // Heavy chain detected
     }else{
-        heavy_chain = channel.of("FALSE")
+        heavy_chain = channel.of("FALSE") // No heavy chain detected means light chain
     }
+
+
+    Reformat(
+        aa_tsv_ch2,
+        igblast_data_check.out.igblast_data_check_ch.collect() // To make sure the igblast_ref files are in the right format before executing following processes
+    )
+    fasta = Reformat.out.aa_fasta_ch
+
+
+    DefineGroups(
+        fasta,
+        select_ch2
+    )
+    fastagroups = DefineGroups.out.groups_ch.flatten()
+    align_input = fastagroups.combine(heavy_chain)
+
+
+    Align(
+        align_input
+    )
+    align = Align.out.aligned_groups_ch
+
+
+    NbSequences(
+        align
+    )
+    filtered = NbSequences.out.nb_out.filter{it[0].toInteger()>=3}.map{it->it[1]}
+
+
+    PrintAlignmentAA(
+        filtered
+    )
+    PrintAlignmentAA.out.alignment_html.ifEmpty{
+        print("\n\nWARNING: -> NO AA ALIGNMENT FILE RETURNED\n\n")
+    }
+
+    Tree(
+        filtered,
+        phylo_tree_model_file
+    )
+    tree = Tree.out.tree_file
+
+    ProcessMeta(
+        meta_file
+    )
+    itolmeta = ProcessMeta.out.itol_out
+
+    // The ITOL process can only be executed if user has paid the subsription for automated visualization
+
+    if(phylo_tree_itol_subscription == "TRUE"){
+
+        ITOL(
+            tree,
+            itolmeta,
+            phylo_tree_itolkey
+        )
+
+    }
+        
+    
 
 
     repertoire_constant_ch =repertoire.out.repertoire_png_ch
@@ -2310,8 +2340,7 @@ workflow {
         donut.out.donuts_png.collect(),
         repertoire_constant_ch,
         repertoire_vj_ch,
-        phylo_tree_itol_subscription,
-        heavy_chain
+        phylo_tree_itol_subscription
     )
 
 
