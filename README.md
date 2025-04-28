@@ -344,6 +344,11 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 ## WHAT'S NEW IN
 
 
+#### v18.1
+
+- tsv files truncated to 10 lines in html report
+- Bug fixes for HPC use
+
 #### v18.0
 
 - Tool adapted to any cluster job scheduler
