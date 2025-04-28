@@ -74,31 +74,23 @@ library(readr)
 library(knitr)
 
 read_tsv_with_dummy <- function(file_path) {
-  # Vérifier si le fichier est vide
   if (file.info(file_path)$size == 0) {
     return("File is empty")
   } else {
-    # Lire le fichier TSV
     df <- read_tsv(file_path, show_col_types = FALSE)
-    # Si le tableau est vide après lecture, ajouter une ligne vide
+    truncated <- FALSE
+    # If the file is empty but has column names, add an empty line to make the column names readable
     if (nrow(df) == 0) {
       dummy_row <- as.data.frame(matrix("", nrow = 1, ncol = ncol(df)))
       colnames(dummy_row) <- colnames(df)
       df <- rbind(df, dummy_row)
+    }else if (nrow(df) > 10) {
+      df <- df[1:10, ]
+      truncated <- TRUE
     }
+    attr(df, "truncated") <- truncated
     return(df)
   }
-}
-
-render_table_with_details <- function(file_path, summary_text = "Afficher la table") {
-  df <- read_tsv_with_dummy(file_path)
-  cat(paste0(
-    '<details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">',
-    summary_text,
-    '</summary>\n\n'
-  ))
-  print(kable(df, format = "markdown", row.names = FALSE))
-  cat('\n</details>\n')
 }
 ```
 
@@ -140,6 +132,9 @@ Number of productive sequences : ```r params$nb_productive``` &nbsp; <details cl
 <span style="color:green">*productive_seq.tsv file in the [files](./files) folder*</span>
 ```{r, echo=FALSE, results='asis'}
 df <- read_tsv_with_dummy("files/productive_seq.tsv")
+if (is.data.frame(df) && attr(df, "truncated")) {
+  cat("\n**(Note: Table truncated to 10 rows. Full file available in the [files](./files) folder.)**\n\n")
+}
 kable(df, format = "markdown", row.names = FALSE)
 ```
 </details>
@@ -148,6 +143,9 @@ Number of unproductive sequences : ```r params$nb_unproductive``` &nbsp; <detail
 <span style="color:green">*unproductive_seq.tsv file in the [files](./files) folder*</span>
 ```{r, echo=FALSE, results='asis'}
 df <- read_tsv_with_dummy("files/unproductive_seq.tsv")
+if (is.data.frame(df) && attr(df, "truncated")) {
+  cat("\n**(Note: Table truncated to 10 rows. Full file available in the [files](./files) folder.)**\n\n")
+}
 kable(df, format = "markdown", row.names = FALSE)
 ```
 </details>
@@ -212,6 +210,9 @@ Number of clone-assigned sequences : ```r params$nb_clone_assigned```&nbsp; <det
 <span style="color:green">*clone_assigned_seq.tsv file in the [files](./files) folder*</span>
 ```{r, echo=FALSE, results='asis'}
 df <- read_tsv_with_dummy("files/clone_assigned_seq.tsv")
+if (is.data.frame(df) && attr(df, "truncated")) {
+  cat("\n**(Note: Table truncated to 10 rows. Full file available in the [files](./files) folder.)**\n\n")
+}
 kable(df, format = "markdown", row.names = FALSE)
 ```
 </details>
@@ -223,6 +224,9 @@ Number of failed clone-assigned sequences : ```r nb_failed_clone```&nbsp; <detai
 <span style="color:green">*non_clone_assigned_sequence.tsv file in the [files](./files) folder*</span>
 ```{r, echo=FALSE, results='asis'}
 df <- read_tsv_with_dummy("files/non_clone_assigned_sequence.tsv")
+if (is.data.frame(df) && attr(df, "truncated")) {
+  cat("\n**(Note: Table truncated to 10 rows. Full file available in the [files](./files) folder.)**\n\n")
+}
 kable(df, format = "markdown", row.names = FALSE)
 ```
 </details>
@@ -238,6 +242,9 @@ See also:<br /><ul><li>
 germ_tree_seq.tsv : &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
 ```{r, echo=FALSE, results='asis'}
 df <- read_tsv_with_dummy("files/germ_tree_seq.tsv")
+if (is.data.frame(df) && attr(df, "truncated")) {
+  cat("\n**(Note: Table truncated to 10 rows. Full file available in the [files](./files) folder.)**\n\n")
+}
 kable(df, format = "markdown", row.names = FALSE)
 ```
 </details><br /></li>
@@ -245,6 +252,9 @@ kable(df, format = "markdown", row.names = FALSE)
 germ_tree_dismissed_seq_seq.tsv : &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
 ```{r, echo=FALSE, results='asis'}
 df <- read_tsv_with_dummy("files/germ_tree_dismissed_seq.tsv")
+if (is.data.frame(df) && attr(df, "truncated")) {
+  cat("\n**(Note: Table truncated to 10 rows. Full file available in the [files](./files) folder.)**\n\n")
+}
 kable(df, format = "markdown", row.names = FALSE)
 ```
 </details><br /></li>
