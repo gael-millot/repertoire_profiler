@@ -1511,7 +1511,8 @@ process ITOL{
 //      nb_input : number of fasta sequences in initial input
 //      nb_seq_aligned : number of sequences that igblast could analyse
 //      nb_seq_not_aligned : number of sequences that igblast could not alayse
-//      donuts_png : to make sure the report process is not called before processes that produces images it needs
+//      donuts_png : provide links to the donut images needed in the rmd inside the work folder
+//      repertoire_png : provide links to the repertoire images needed in the rmd inside the work folder
 //      repertoire_constant_ch : names of the constant gene repertoire files to be displayed
 //      repertoire_vj_ch : names of the variable gene repertoire files to be displayed
 //      itol_subscription : nextflow.config parameter to know if user has paid the subscription to itol automated visualization of trees, process ITOL is only executed if TRUE
@@ -1536,6 +1537,7 @@ process print_report{
     val nb_clone_assigned
     val nb_failed_clone
     path donuts_png
+    path reperoire_png
     val repertoire_constant_ch
     val repertoire_vj_ch
     val itol_subscription
@@ -1548,7 +1550,6 @@ process print_report{
     """
     #!/bin/bash -ue
     cp ${template_rmd} report_file.rmd
-    cp -r "${out_path}/png" .
     cp -r "${out_path}/files" .
 
 
@@ -2329,6 +2330,7 @@ workflow {
         }
 
 
+
     print_report(
         template_rmd,
         nb_input,
@@ -2339,6 +2341,7 @@ workflow {
         nb_clone_assigned,
         nb_failed_clone,
         donut.out.donuts_png.collect(),
+        repertoire.out.repertoire_png_ch.collect(),
         repertoire_constant_ch,
         repertoire_vj_ch,
         phylo_tree_itol_subscription

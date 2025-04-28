@@ -167,14 +167,14 @@ Productiveness ratio : ```r base::round(params$nb_productive / (params$nb_produc
 
 
 <div class="image-container">
-  <img src="png/vj_gene_all_donutchart.png" onclick="toggleFullscreen(this)" />
-  <img src="png/vj_gene_annotated_donutchart.png" onclick="toggleFullscreen(this)" />
-  <img src="png/vj_gene_tree_donutchart.png" onclick="toggleFullscreen(this)" />
+  <img src="vj_gene_all_donutchart.png" onclick="toggleFullscreen(this)" />
+  <img src="vj_gene_annotated_donutchart.png" onclick="toggleFullscreen(this)" />
+  <img src="vj_gene_tree_donutchart.png" onclick="toggleFullscreen(this)" />
 </div>
 <div class="image-container">
-  <img src="png/c_gene_all_donutchart.png" onclick="toggleFullscreen(this)" />
-  <img src="png/c_gene_annotated_donutchart.png" onclick="toggleFullscreen(this)" />
-  <img src="png/c_gene_tree_donutchart.png" onclick="toggleFullscreen(this)" />
+  <img src="c_gene_all_donutchart.png" onclick="toggleFullscreen(this)" />
+  <img src="c_gene_annotated_donutchart.png" onclick="toggleFullscreen(this)" />
+  <img src="c_gene_tree_donutchart.png" onclick="toggleFullscreen(this)" />
 </div>
 
 <br><br>
@@ -188,8 +188,8 @@ See also the [donuts.pdf](files/donuts.pdf) file in the files folder.
 <br>
 
 <div class="image-container"> 
-  <img src="png/`r params$constant_rep`" onclick="toggleFullscreen(this)" style="border: 2px solid black; width: 25%;"/> 
-  <img src="png/`r params$vj_rep`" onclick="toggleFullscreen(this)" style="border: 2px solid black; width: 25%"/> 
+  <img src="`r params$constant_rep`" onclick="toggleFullscreen(this)" style="border: 2px solid black; width: 25%;"/> 
+  <img src="`r params$vj_rep`" onclick="toggleFullscreen(this)" style="border: 2px solid black; width: 25%"/> 
 </div>
 
 <br />
