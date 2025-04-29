@@ -1833,7 +1833,6 @@ workflow {
     }else if( ! (file(cute_path).exists()) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID cute_path PARAMETER IN repertoire_profiler.config FILE (DOES NOT EXIST): ${cute_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
     }
-
     if( ! (igphylm_exe_path in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igphylm_exe_path PARAMETER IN repertoire_profiler.config FILE:\n${igphylm_exe_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
@@ -1845,9 +1844,11 @@ workflow {
     //print("\n\nWARNING: PARAMETERS ALREADY INTERPRETED IN THE .config FILE:")
     //print("    system_exec: ${system_exec}")
     //print("    out_path: ${out_path_ini}")
-    if("${system_exec}" != "local"){
+    if("${system_exec}" == "slurm"){
         print("    queue: ${queue}")
         print("    qos: ${qos}")
+        print("    add_options: ${add_options}")
+    }else if("${system_exec}" != "local"){
         print("    add_options: ${add_options}")
     }
     if(igblast_variable_ref_files =~ /^.*IG(K|L)V.*$/){
