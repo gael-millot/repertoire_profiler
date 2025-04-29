@@ -16,7 +16,6 @@ params:
   constant_rep: ""
   vj_rep: ""
   itol_subscription: "TRUE"
-  heavy_chain: "FALSE"
 ---
 
 \n\n<br /><br />\n\n
@@ -75,31 +74,23 @@ library(readr)
 library(knitr)
 
 read_tsv_with_dummy <- function(file_path) {
-  # Vérifier si le fichier est vide
   if (file.info(file_path)$size == 0) {
     return("File is empty")
   } else {
-    # Lire le fichier TSV
     df <- read_tsv(file_path, show_col_types = FALSE)
-    # Si le tableau est vide après lecture, ajouter une ligne vide
+    truncated <- FALSE
+    # If the file is empty but has column names, add an empty line to make the column names readable
     if (nrow(df) == 0) {
       dummy_row <- as.data.frame(matrix("", nrow = 1, ncol = ncol(df)))
       colnames(dummy_row) <- colnames(df)
       df <- rbind(df, dummy_row)
+    }else if (nrow(df) > 10) {
+      df <- df[1:10, ]
+      truncated <- TRUE
     }
+    attr(df, "truncated") <- truncated
     return(df)
   }
-}
-
-render_table_with_details <- function(file_path, summary_text = "Afficher la table") {
-  df <- read_tsv_with_dummy(file_path)
-  cat(paste0(
-    '<details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">',
-    summary_text,
-    '</summary>\n\n'
-  ))
-  print(kable(df, format = "markdown", row.names = FALSE))
-  cat('\n</details>\n')
 }
 ```
 
@@ -138,17 +129,23 @@ Success ratio : ```r base::round(params$nb_seq_aligned / (params$nb_seq_aligned 
 
 
 Number of productive sequences : ```r params$nb_productive``` &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-<span style="color:green">*productive_seq.tsv file in the files folder*</span>
+<span style="color:green">*productive_seq.tsv file in the [files](./files) folder*</span>
 ```{r, echo=FALSE, results='asis'}
 df <- read_tsv_with_dummy("files/productive_seq.tsv")
+if (is.data.frame(df) && attr(df, "truncated")) {
+  cat("\n**(Note: Table truncated to 10 rows. Full file available in the [files](./files) folder.)**\n\n")
+}
 kable(df, format = "markdown", row.names = FALSE)
 ```
 </details>
 <br>
 Number of unproductive sequences : ```r params$nb_unproductive``` &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-<span style="color:green">*unproductive_seq.tsv file in the files folder*</span>
+<span style="color:green">*unproductive_seq.tsv file in the [files](./files) folder*</span>
 ```{r, echo=FALSE, results='asis'}
 df <- read_tsv_with_dummy("files/unproductive_seq.tsv")
+if (is.data.frame(df) && attr(df, "truncated")) {
+  cat("\n**(Note: Table truncated to 10 rows. Full file available in the [files](./files) folder.)**\n\n")
+}
 kable(df, format = "markdown", row.names = FALSE)
 ```
 </details>
@@ -170,14 +167,14 @@ Productiveness ratio : ```r base::round(params$nb_productive / (params$nb_produc
 
 
 <div class="image-container">
-  <img src="png/vj_gene_all_donutchart.png" onclick="toggleFullscreen(this)" />
-  <img src="png/vj_gene_annotated_donutchart.png" onclick="toggleFullscreen(this)" />
-  <img src="png/vj_gene_tree_donutchart.png" onclick="toggleFullscreen(this)" />
+  <img src="vj_gene_all_donutchart.png" onclick="toggleFullscreen(this)" />
+  <img src="vj_gene_annotated_donutchart.png" onclick="toggleFullscreen(this)" />
+  <img src="vj_gene_tree_donutchart.png" onclick="toggleFullscreen(this)" />
 </div>
 <div class="image-container">
-  <img src="png/c_gene_all_donutchart.png" onclick="toggleFullscreen(this)" />
-  <img src="png/c_gene_annotated_donutchart.png" onclick="toggleFullscreen(this)" />
-  <img src="png/c_gene_tree_donutchart.png" onclick="toggleFullscreen(this)" />
+  <img src="c_gene_all_donutchart.png" onclick="toggleFullscreen(this)" />
+  <img src="c_gene_annotated_donutchart.png" onclick="toggleFullscreen(this)" />
+  <img src="c_gene_tree_donutchart.png" onclick="toggleFullscreen(this)" />
 </div>
 
 <br><br>
@@ -191,8 +188,8 @@ See also the [donuts.pdf](files/donuts.pdf) file in the files folder.
 <br>
 
 <div class="image-container"> 
-  <img src="png/`r params$constant_rep`" onclick="toggleFullscreen(this)" style="border: 2px solid black; width: 25%;"/> 
-  <img src="png/`r params$vj_rep`" onclick="toggleFullscreen(this)" style="border: 2px solid black; width: 25%"/> 
+  <img src="`r params$constant_rep`" onclick="toggleFullscreen(this)" style="border: 2px solid black; width: 25%;"/> 
+  <img src="`r params$vj_rep`" onclick="toggleFullscreen(this)" style="border: 2px solid black; width: 25%"/> 
 </div>
 
 <br />
@@ -210,9 +207,12 @@ See the [gene_repertoire.pdf](files/gene_repertoire.pdf) and [allele_repertoire.
 Some sequences from the productive file can **fail to be clone-assigned**, and will not be in the clone_assigned_seq.tsv file. 
 
 Number of clone-assigned sequences : ```r params$nb_clone_assigned```&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-<span style="color:green">*clone_assigned_seq.tsv file in the files folder*</span>
+<span style="color:green">*clone_assigned_seq.tsv file in the [files](./files) folder*</span>
 ```{r, echo=FALSE, results='asis'}
 df <- read_tsv_with_dummy("files/clone_assigned_seq.tsv")
+if (is.data.frame(df) && attr(df, "truncated")) {
+  cat("\n**(Note: Table truncated to 10 rows. Full file available in the [files](./files) folder.)**\n\n")
+}
 kable(df, format = "markdown", row.names = FALSE)
 ```
 </details>
@@ -221,9 +221,12 @@ nb_failed_clone <- ifelse(params$nb_failed_clone > 0, params$nb_failed_clone, 0)
 ```
 <br>
 Number of failed clone-assigned sequences : ```r nb_failed_clone```&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-<span style="color:green">*non_clone_assigned_sequence.tsv file in the files folder*</span>
+<span style="color:green">*non_clone_assigned_sequence.tsv file in the [files](./files) folder*</span>
 ```{r, echo=FALSE, results='asis'}
 df <- read_tsv_with_dummy("files/non_clone_assigned_sequence.tsv")
+if (is.data.frame(df) && attr(df, "truncated")) {
+  cat("\n**(Note: Table truncated to 10 rows. Full file available in the [files](./files) folder.)**\n\n")
+}
 kable(df, format = "markdown", row.names = FALSE)
 ```
 </details>
@@ -232,13 +235,16 @@ Passing ratio : ```r base::round(params$nb_clone_assigned / (params$nb_clone_ass
 
 <br>
 
-See the [germ_tree.pdf](files/germ_tree.pdf) file in the files folder.
+See the [germ_tree.pdf](files/germ_tree.pdf) file in the [files](./files) folder.
 <br>
 
 See also:<br /><ul><li>
 germ_tree_seq.tsv : &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
 ```{r, echo=FALSE, results='asis'}
 df <- read_tsv_with_dummy("files/germ_tree_seq.tsv")
+if (is.data.frame(df) && attr(df, "truncated")) {
+  cat("\n**(Note: Table truncated to 10 rows. Full file available in the [files](./files) folder.)**\n\n")
+}
 kable(df, format = "markdown", row.names = FALSE)
 ```
 </details><br /></li>
@@ -246,27 +252,29 @@ kable(df, format = "markdown", row.names = FALSE)
 germ_tree_dismissed_seq_seq.tsv : &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
 ```{r, echo=FALSE, results='asis'}
 df <- read_tsv_with_dummy("files/germ_tree_dismissed_seq.tsv")
+if (is.data.frame(df) && attr(df, "truncated")) {
+  cat("\n**(Note: Table truncated to 10 rows. Full file available in the [files](./files) folder.)**\n\n")
+}
 kable(df, format = "markdown", row.names = FALSE)
 ```
 </details><br /></li>
 <li>[germ_tree_dismissed_clone_id.tsv](files/germ_tree_dismissed_clone_id.tsv)</li></ul>
 
-
 <br>
 
-**Sequence alignments** displays are available in the [cdr3_multi_alignments](./cdr3_multi_alignments) folder. The html files are the alignment display, and the fasta files are the clonal group's corresponding sequences.
-
+[comment]: <> (This text is commented because cdr3 alignments are in development)
+[comment]: <> (**Sequence alignment** displays are available in the [cdr3_multi_alignments](./cdr3_multi_alignments) folder. The HTML files present the alignment visualizations, while the FASTA files contain the corresponding sequences for each clonal group.)
+[comment]: <> (End cdr3 text)
 
 <br><br><br>
 
-`r  if(params$heavy_chain == "TRUE"){"### Amino acid sequences phylogeny \n\n **Only available for heavy chain analysis.**  "}`
-`r  if(params$heavy_chain == "TRUE" && params$itol_subscription == "TRUE"){"Open the different sequences_\\<SEQ_NAME\\>_align.fasta_itol_url.txt files in the [phylo](./phylo) folder and click on the link to see the trees."}`
-`r  if(params$heavy_chain == "TRUE" && params$itol_subscription == "FALSE"){"To see the trees, follow the link : https://itol.embl.de/upload.cgi. Choose a name for your tree (optional) and upload a '*.treefile' file from the [phylo](./phylo) folder. The trees will then be displayed by iTOL."}`
+###  Amino acid sequences phylogeny 
 <br>
 
-`r  if(params$heavy_chain == "TRUE"){"Alignment visualization is available for each clonal group used in each tree, in the [phylo_full_multi_alignments](./phylo_full_multi_alignments) folder in html format."}`
+`r  if(params$itol_subscription == "TRUE"){"Open the different sequences_\\<SEQ_NAME\\>_align.fasta_itol_url.txt files in the [phylo](./phylo) folder and click on the link to see the trees."}`
+`r  if(params$itol_subscription == "FALSE"){"To see the trees, follow the link : https://itol.embl.de/upload.cgi. Choose a name for your tree (optional) and upload a '*.treefile' file from the [phylo](./phylo) folder. The trees will then be displayed by iTOL."}`
 
-
+Alignment visualization is available for each clonal group used in each tree, in the [phylo_full_multi_alignments](./phylo_full_multi_alignments) folder in html format.
 
 <br><br>
 
