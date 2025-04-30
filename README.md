@@ -343,6 +343,7 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 <br /><br />
 ## WHAT'S NEW IN
 
+
 #### v18.2
 
 - Bug fixes for gene names containing "/" character
