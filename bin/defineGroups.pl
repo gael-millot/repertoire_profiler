@@ -11,6 +11,7 @@ sub groups{
     my @cols = split(/,/,$igcall);
     for my $c (@cols){
 	$c=~s/\*.*$//;
+    $c =~ s/\//_/g; # replace any "/" characters by "_" because files will be named with this
 	$groups{$c}=1;
     }
     return %groups;
