@@ -1370,26 +1370,6 @@ process Reformat{
     
 }
 
-process Align {
-    label 'abalign'
-    
-    input:
-    tuple path(fasta), val(heavy_chain)
-    
-    output:
-    path "*_align.fasta", emit : aligned_groups_ch
-    
-    script:
-    if( ! (heavy_chain == "TRUE" || heavy_chain == "FALSE") ){
-        error "\n\n========\n\nERROR IN Align PROCESS\n\nINVALID heavy_chain PARAMETER:\n${heavy_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
-    }
-    parms="-al"
-    if(heavy_chain == "TRUE"){parms="-ah"}
-    """
-    /bin/Abalign_V2_Linux_Term/Abalign -i $fasta ${parms} ${fasta.baseName}_align.fasta -sp MU || true
-    """
-}
-
 // Groups input sequences (amino-acid ones) into same vj combination
 // Input : single fasta file containing several sequences & a tsv file containing V|J info to corresponding sequence id
 // Output : one fasta file PER group, containing said group sequences
@@ -1417,6 +1397,28 @@ process DefineGroups {
     done
     """
 }
+
+process Align {
+    label 'abalign'
+    
+    input:
+    tuple path(fasta), val(heavy_chain)
+    
+    output:
+    path "*_align.fasta", emit : aligned_groups_ch
+    
+    script:
+    if( ! (heavy_chain == "TRUE" || heavy_chain == "FALSE") ){
+        error "\n\n========\n\nERROR IN Align PROCESS\n\nINVALID heavy_chain PARAMETER:\n${heavy_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
+    }
+    parms="-al"
+    if(heavy_chain == "TRUE"){parms="-ah"}
+    """
+    /bin/Abalign_V2_Linux_Term/Abalign -i $fasta ${parms} ${fasta.baseName}_align.fasta -sp MU || true
+    """
+}
+
+
 
 // Extract the number of sequences from the input file
 process NbSequences {
@@ -1575,16 +1577,17 @@ process print_report{
         input = "report_file.rmd",
         output_file = "report.html",
         # list of the variables waiting to be replaced in the rmd file :
-        params =    list(nb_input = ${nb_input},
-                        nb_seq_aligned = ${nb_seq_aligned}, 
-                        nb_seq_not_aligned = ${nb_seq_not_aligned},
-                        nb_productive = ${nb_productive},
-                        nb_unproductive = ${nb_unproductive},
-                        nb_clone_assigned = ${nb_clone_assigned},
-                        nb_failed_clone = ${nb_failed_clone},
-                        constant_rep = constant_rep,
-                        vj_rep = vj_rep,
-                        itol_subscription = ${itol_subscription}),
+        params = list(nb_input = ${nb_input},
+            nb_seq_aligned = ${nb_seq_aligned}, 
+            nb_seq_not_aligned = ${nb_seq_not_aligned},
+            nb_productive = ${nb_productive},
+            nb_unproductive = ${nb_unproductive},
+            nb_clone_assigned = ${nb_clone_assigned},
+            nb_failed_clone = ${nb_failed_clone},
+            constant_rep = constant_rep,
+            vj_rep = vj_rep,
+            itol_subscription = ${itol_subscription}
+        ),
         # output_dir = ".",
         # intermediates_dir = "./",
         # knit_root_dir = "./",
