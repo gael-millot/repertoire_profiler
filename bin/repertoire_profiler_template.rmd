@@ -165,6 +165,9 @@ Productiveness ratio : ```r base::round(params$nb_productive / (params$nb_produc
 
 <br>
 
+See also the [donuts.pdf](files/donuts.pdf) file in the files folder.
+
+<br>
 
 <div class="image-container">
   <img src="vj_gene_all_donutchart.png" onclick="toggleFullscreen(this)" />
@@ -177,13 +180,13 @@ Productiveness ratio : ```r base::round(params$nb_productive / (params$nb_produc
   <img src="c_gene_tree_donutchart.png" onclick="toggleFullscreen(this)" />
 </div>
 
-<br><br>
-
-See also the [donuts.pdf](files/donuts.pdf) file in the files folder.
-
 <br><br><br>
 
 #### Heatmaps
+
+<br>
+
+See the [gene_repertoire.pdf](files/gene_repertoire.pdf) and [allele_repertoire.pdf](files/allele_repertoire.pdf) files in the files folder.
 
 <br>
 
@@ -194,7 +197,7 @@ See also the [donuts.pdf](files/donuts.pdf) file in the files folder.
 
 <br />
 
-See the [gene_repertoire.pdf](files/gene_repertoire.pdf) and [allele_repertoire.pdf](files/allele_repertoire.pdf) files in the files folder.
+
 
 <br><br><br>
 
@@ -240,6 +243,7 @@ See the [germ_tree.pdf](files/germ_tree.pdf) file in the [files](./files) folder
 
 See also:<br /><ul><li>
 germ_tree_seq.tsv : &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
+<span style="color:green">*germ_tree_seq.tsv file in the [files](./files) folder*</span>
 ```{r, echo=FALSE, results='asis'}
 df <- read_tsv_with_dummy("files/germ_tree_seq.tsv")
 if (is.data.frame(df) && attr(df, "truncated")) {
@@ -249,7 +253,8 @@ kable(df, format = "markdown", row.names = FALSE)
 ```
 </details><br /></li>
 <li>
-germ_tree_dismissed_seq_seq.tsv : &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
+germ_tree_dismissed_seq.tsv : &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
+<span style="color:green">*germ_tree_dismissed_seq.tsv file in the [files](./files) folder*</span>
 ```{r, echo=FALSE, results='asis'}
 df <- read_tsv_with_dummy("files/germ_tree_dismissed_seq.tsv")
 if (is.data.frame(df) && attr(df, "truncated")) {
@@ -271,7 +276,7 @@ kable(df, format = "markdown", row.names = FALSE)
 ###  Amino acid sequences phylogeny 
 <br>
 
-`r  if(params$itol_subscription == "TRUE"){"Open the different sequences_\\<SEQ_NAME\\>_align.fasta_itol_url.txt files in the [phylo](./phylo) folder and click on the link to see the trees."}`
+`r  if(params$itol_subscription == "TRUE"){"Open the different **sequences_\\<SEQ_NAME\\>_align.fasta_itol_url.txt** files in the [phylo](./phylo) folder and click on the link to see the trees."}`
 `r  if(params$itol_subscription == "FALSE"){"To see the trees, follow the link : https://itol.embl.de/upload.cgi. Choose a name for your tree (optional) and upload a '*.treefile' file from the [phylo](./phylo) folder. The trees will then be displayed by iTOL."}`
 
 Alignment visualization is available for each clonal group used in each tree, in the [phylo_full_multi_alignments](./phylo_full_multi_alignments) folder in html format.
