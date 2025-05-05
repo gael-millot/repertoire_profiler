@@ -586,7 +586,7 @@ if(length(tempo.list) == 0){
             "Clonal Group full name: ", ifelse(is.null(fun_get_message("clones$data[[i3]]@v_gene")) & is.null(fun_get_message("clones$data[[i3]]@j_gene")), paste0(clones$data[[i3]]@v_gene, "_", clones$data[[i3]]@j_gene), ""), "\n",
             "Clone ID: ", ifelse(is.null(fun_get_message("clones$clone_id[i3]")), clones$clone_id[i3], ""), "\n",
             "CDR3 junction length: ", ifelse(is.null(fun_get_message("clones$data[[i3]]@junc_len")), clones$data[[i3]]@junc_len, ""), "\n",
-            "Number of leafs (different sequences): ", ifelse(is.null(fun_get_message("clones$data[[i3]]@data")), nrow(clones$data[[i3]]@data), ""), "\n",
+            "Number of leafs", ifelse(germ_tree_duplicate_seq == TRUE, "", " (different sequences)"), ": ", ifelse(is.null(fun_get_message("clones$data[[i3]]@data")), nrow(clones$data[[i3]]@data), ""), "\n",
             "Number of sequences in the clonal group: ", ifelse(is.null(fun_get_message("nrow(db.list[[i3]])")), nrow(db.list[[i3]]), ""), "\n",
             "Minimal number of different sequences for tree (set by the clone_nb_seq parameter): ", clone_nb_seq
         )
