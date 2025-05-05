@@ -1145,7 +1145,7 @@ process germ_tree_vizu {
 
 
 // Inactivated because currently in development
-/*
+
 process tsv_to_fasta{
     label 'r_ext'
     cache 'true'
@@ -1170,32 +1170,11 @@ process tsv_to_fasta{
     tsv2fasta.R \
     "${germ_tree_ch}" \
     "sequence_id" \
-    "sequence" \
+    "sequence_alignment" \
     "germline_alignment_d_mask" \
     "${clone_nb_seq}" \
     "${cute_file}" \
     "tsv_to_fasta.log"
-    """
-}
-
-
-// This process is meant as a test for abalign, to check the coherence of the trees
-process AbalignTest{
-    label 'abalign'
-    publishDir path: "${out_path}/cdr3_multi_alignments", mode: 'copy', pattern: "{*_align.fasta}"
-    
-    input:
-    path fasta_alignments
-    val phylo_tree_heavy
-    
-    output:
-    path "*_align.fasta", emit : aligned_groups_ch
-    
-    script:
-    parms="-al"
-    if(phylo_tree_heavy){parms="-ah"}
-    """
-    /bin/Abalign_V2_Linux_Term/Abalign -n $fasta_alignments -p ${fasta_alignments.baseName}_align_aa.fasta ${parms} ${fasta_alignments.baseName}_align.fasta -sp MU || true
     """
 }
 
@@ -1215,7 +1194,7 @@ process PrintAlignmentCdr3{
     goalign draw biojs -i ${filtered_fasta} -o ${filtered_fasta.baseName}.html
     """
 }
-*/
+
 
 
 // Creates donut plots for the constant and variable region ; grouped by same allele or genes
@@ -2177,16 +2156,11 @@ workflow {
 
 
     // Inactivated because currently in development
-/*
+
     tsv_to_fasta(
         get_germ_tree.out.germ_tree_ch,
         clone_nb_seq,
         cute_path
-    )
-
-    AbalignTest(
-        tsv_to_fasta.out.fasta_alignments,
-        phylo_tree_heavy
     )
 
 
@@ -2194,14 +2168,11 @@ workflow {
         tsv_to_fasta.out.fasta_alignments
     )
     
-    PrintAlignmentCdr3(
-        AbalignTest.out.aligned_groups_ch
-    )
     PrintAlignmentCdr3.out.alignment_html.ifEmpty{
         print("\n\nWARNING: -> NO CDR3 ALIGNMENT FILE RETURNED\n\n")
     }
 
-    */
+    
 
 
     tempo1_ch = Channel.of("all", "annotated", "tree") // 1 channel with 3 values (not list)
