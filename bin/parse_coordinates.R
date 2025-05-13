@@ -36,6 +36,7 @@
 
 ################################ Initialization
 
+fun_report(data = paste0("######################Test d'erreur#######################\n###########################\n")), output = log, path = "./", overwrite = FALSE)
 
 # R version checking
 if(version$version.string != "R version 4.1.2 (2021-11-01)"){
@@ -73,7 +74,8 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
         stop(paste0("\n\n================\n\nERROR IN ", script, "\n\n\nTHE args OBJECT HAS NA\n\n================\n\n"), call. = FALSE)
     }
     tempo.arg.names <- c(
-        "file_name", 
+        "file_name",
+        "cute",
         "log"
     )
     if(length(args) != length(tempo.arg.names)){
@@ -132,7 +134,8 @@ param.list <- c(
     "run.way",
     "tempo.arg.names", 
     if(run.way == "SCRIPT"){"command"}, 
-    "file_name", 
+    "file_name",
+    "cute",
     "log"
 )
 if(any(duplicated(param.list))){
@@ -227,47 +230,6 @@ if( ! file.exists(file_name)){
     stop(paste0("\n\n================\n\n", tempo$text, "\n\n================\n\n"), call. = FALSE)
 }
 
-tempo <- fun_check(data = kind, options = c("all", "tree", "annotated"), length = 1) ; eval(ee)
-if(tempo$problem == TRUE){
-    stop(paste0("\n\n================\n\n", tempo$text, "\n\n================\n\n"), call. = FALSE)
-}
-tempo <- fun_check(data = col, options = c("vj_allele", "c_allele", "vj_gene", "c_gene"), length = 1) ; eval(ee)
-if(tempo$problem == TRUE){
-    stop(paste0("\n\n================\n\n", tempo$text, "\n\n================\n\n"), call. = FALSE)
-}
-
-# following parameter are those of the gg_donut() function and are checked by this one
-if(donut_palette == "NULL"){
-    donut_palette <- NULL
-}
-donut_hole_size <- as.numeric(donut_hole_size) # numeric string already checked by nextflow
-if( ! (length(donut_hole_text) == 1 & any(donut_hole_text %in% c("TRUE", "FALSE")))){ # positive numeric
-    tempo.cat <- paste0("ERROR IN ", script, ":\nTHE tree_label_size PARAMETER MUST BE \"TRUE\" OR \"FALSE\"\nHERE IT IS: \n", paste0(donut_hole_text, collapse = " "))
-    text.check2 <- c(text.check2, tempo.cat)
-    arg.check2 <- c(arg.check2, TRUE)
-}else if(donut_hole_text == "TRUE"){
-    donut_hole_text <- TRUE
-}else{
-    donut_hole_text <- FALSE
-}
-donut_hole_text_size <- as.numeric(donut_hole_text_size) # numeric string already checked by nextflow
-# nothing to check for donut_border_color
-donut_border_size <- as.numeric(donut_border_size) # numeric string already checked by nextflow
-donut_annotation_distance <- as.numeric(donut_annotation_distance) # numeric string already checked by nextflow
-donut_annotation_size <- as.numeric(donut_annotation_size) # numeric string already checked by nextflow
-donut_annotation_force <- as.numeric(donut_annotation_force) # numeric string already checked by nextflow
-donut_annotation_force_pull <- as.numeric(donut_annotation_force_pull) # numeric string already checked by nextflow
-donut_legend_width <- as.numeric(donut_legend_width) # numeric string already checked by nextflow
-donut_legend_text_size <- as.numeric(donut_legend_text_size) # numeric string already checked by nextflow
-donut_legend_box_size <- as.numeric(donut_legend_box_size) # numeric string already checked by nextflow
-donut_legend_box_space <- as.numeric(donut_legend_box_space) # numeric string already checked by nextflow
-if(donut_legend_limit == "NULL"){
-    donut_legend_limit <- NULL
-}else{
-    donut_legend_limit <- as.numeric(donut_legend_limit) # numeric string already checked by nextflow
-
-}
-# end following parameter are those of the gg_donut() function and are checked by this one
 
 # other checkings (not full checked because already checked in the .nf file)
 # reserved word checking
@@ -286,7 +248,7 @@ if(donut_legend_limit == "NULL"){
 ################ Ignition
 
 
-fun_report(data = paste0("\n\n################################################################ donut PROCESS\n\n"), output = log, path = "./", overwrite = FALSE)
+fun_report(data = paste0("\n\n################################################################ ParseCoordinates PROCESS\n\n"), output = log, path = "./", overwrite = FALSE)
 ini.date <- Sys.time()
 ini.time <- as.numeric(ini.date) # time of process begin, converted into seconds
 fun_report(data = paste0("\n\n################################ RUNNING DATE AND STARTING TIME\n\n"), output = log, path = "./", overwrite = FALSE)
@@ -295,3 +257,76 @@ fun_report(data = paste0("\n\n################################ RUNNING\n\n"), ou
 
 
 ################ End ignition
+
+lines <- readLines(file_name)
+
+# Test if "0 hits found" or "Query:" line is empty ; then no tsv is made (means no gene matches were found or no sequence_id visible)
+query_line_idx <- grep("^# Query:", lines)
+if (length(query_line_idx) == 0) { 
+    tempo.cat <- paste0("ERROR IN ", script, ":\nTHE file_name PARAMETER MUST BE IN THE igblast OUTPUT FORMAT AND THEREFORE SHOULD HAVE A LINE STARTING WITH \"# Query:\" (HERE IT IS NOT THE CASE) \nHERE IT IS: \n", paste0(lines, collapse = "\n"))
+    stop(tempo.cat, call. = FALSE)
+}
+sequence_id <- sub("^# Query: *", "", lines[query_line_idx])
+if (sequence_id == "") {
+    tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 4 IN ", script, ":\n\nTHE file_name PARAMETER MUST BE IN THE igblast OUTPUT FORMAT AND THEREFORE SHOULD HAVE A LINE STARTING WITH \"# Query:\" \n THE EXISTENCE OF THIS LINE HAS BEEN TESTED AND VERIFIED, BUT ITS POSITION INDEX COULD NOT BE FOUND. \nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n")
+    stop(tempo.cat, call. = FALSE)
+}
+if (length(grep("^# 0 hits found", lines)) > 0) {
+    fun_report(data = paste0("\n\nNO HITS WERE FOUND FOR THE ", sequence_id, "SEQUENCE, NO COORDINATES TO PARSE.\n"), output = log, path = "./", overwrite = FALSE)
+    quit(save="no", status=0)
+}
+
+# The wanted info is in the section after "# Alignment summary" column 
+start_idx <- grep("^# Alignment summary", lines)
+section_start <- start_idx + 1
+total_idx <- grep("^Total", lines)
+section_end <- min(total_idx[total_idx > section_start]) # Section ends at the first line starting with "Total" after "# Alignment summary", min will return "Inf" is total_idx is empty
+if(!is.integer(section_end)) { # Indicates that no line starting with "Total" was found. Then the section end is either the next empty line or the end of the file
+    empty_line <- which(lines == "")
+    empty_after_start <- empty_line[empty_line > section_start]
+    if(length(empty_after_start) > 0) {
+        section_end <- min(empty_after_start) - 1
+    } else {
+        section_end <- length(lines)
+    }
+} else {
+    section_end <- section_end - 1
+}
+
+align_lines <- lines[section_start:section_end] # Extract the wanted section
+align_lines <- align_lines[!grepl("^#|^$|^Total", align_lines)] # Last verification that no empty lines or line starting with "#" or "Total" remain
+if (length(align_lines) == 0) {
+    tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 5 IN ", script, ":\n\nTHE file_name PARAMETER MUST BE IN THE igblast OUTPUT FORMAT AND THEREFORE SHOULD HAVE AN \"# Alignment summary\" \n SECTION. SEVERAL TESTS WERE MADE TO ENSURE ITS EXISTENCE, BUT THE SECTION WAS FOUND EMPTY. \nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n")
+    stop(tempo.cat, call. = FALSE)
+}
+
+tab <- do.call(rbind, strsplit(align_lines, "\t"))
+
+# Named list for expected regions, in order and the tsv future column names
+regions <- c("FR1-IMGT", "CDR1-IMGT", "FR2-IMGT", "CDR2-IMGT", "FR3-IMGT", "CDR3-IMGT (germline)")
+wanted_labels <- c("FR1", "CDR1", "FR2", "CDR2", "FR3", "CDR3")
+
+if(!all(tab[,1]==regions)){
+    tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 6 IN ", script, ":\n\nTHE file_name PARAMETER MUST BE IN THE igblast OUTPUT FORMAT AND THEREFORE SHOULD HAVE AN \"# Alignment summary\" \n SECTION STARTING WITH THE FOLLOWING LINES: ", paste0(regions, collapse = " ; "), "HOWEVER, HERE ARE THE LINES IN THE ", file_name, "FILE : \n ", paste0(tab[,1], collapse = " ; "), " \nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n")
+    stop(tempo.cat, call. = FALSE)
+}
+
+coords <- list()
+for (i in 0:length(regions)) {
+    coords[[paste0(wanted_labels[i], "_start")]] <- as.integer(tab[i,2])
+    coords[[paste0(wanted_labels[i], "_end")]]   <- as.integer(tab[i,3])
+}
+
+
+df <- data.frame(sequence_id = sequence_id,
+                 FR1_start = coords$FR1_start, FR1_end = coords$FR1_end,
+                 CDR1_start = coords$CDR1_start, CDR1_end = coords$CDR1_end,
+                 FR2_start = coords$FR2_start, FR2_end = coords$FR2_end,
+                 CDR2_start = coords$CDR2_start, CDR2_end = coords$CDR2_end,
+                 FR3_start = coords$FR3_start, FR3_end = coords$FR3_end,
+                 CDR3_start = coords$CDR3_start, CDR3_end = coords$CDR3_end,
+                 stringsAsFactors = FALSE)
+
+
+tsv_file <- sub("\\.fmt7$", ".tsv", sequence_id)
+write.table(df, file = tsv_file, sep = "\t", quote = FALSE, row.names = FALSE)

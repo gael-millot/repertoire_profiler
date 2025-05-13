@@ -1185,83 +1185,26 @@ process tsv_to_fasta{
 //      - blast_info_tsv_ch : tsv contaning columns => sequence_id, FR1_start, FR1_end, CDR1_start, CDR1_end, FR2_start, FR2_end, CDR2_start, CDR2_end, FR3_start, FR3_end, CDR3_start, CDR3_end
 process ParseCoordinates{
     label 'r_ext'
+    cache 'true'
 
     input:
     path blast_info_ch // Parallelization
+    path cute_file
 
     output:
     path "*.tsv", emit: blast_info_tsv_ch, optional: true
+    path "parse_coordinates.log", emit: parse_coord_log_ch
 
     script:
     """
     #!/bin/bash -ue
-    Rscript -e '
-        file <- "${blast_info_ch}"
-        lines <- readLines(file)
-
-        # Test if "0 hits found" or "Query:" line is empty ; then no tsv is made (means no gene matches were found or no sequence_id visible)
-        query_line_idx <- grep("^# Query:", lines)
-        if (length(query_line_idx) == 0) { quit(save="no", status=0) }
-        sequence_id <- sub("^# Query: *", "", lines[query_line_idx])
-        if (sequence_id == "") { quit(save="no", status=0) }
-        if (length(grep("^# 0 hits found", lines)) > 0) { quit(save="no", status=0) }
-
-        # The wanted info is in the section after "# Alignment summary" column 
-        start_idx <- grep("^# Alignment summary", lines)
-        section_start <- start_idx + 1
-        section_end <- grep("^Total", lines)
-        if(length(section_end) == 0 || any(section_end <= section_start)) {
-            empty_line <- which(lines == "")
-            empty_after_start <- empty_line[empty_line > section_start]
-            if(length(empty_after_start) > 0) {
-                section_end <- min(empty_after_start) - 1
-            } else {
-                section_end <- length(lines)
-            }
-        } else {
-            section_end <- section_end - 1
-        }
-
-        align_lines <- lines[section_start:section_end]
-        align_lines <- align_lines[!grepl("^#|^\$|^Total", align_lines)]
-        if (length(align_lines) == 0) { quit(save="no", status=0) }
-
-        tab <- do.call(rbind, strsplit(align_lines, "\t"))
-        print(tab[,1])
-
-        # Named list for expected regions, in order and the tsv future column names
-        regions <- c("FR1-IMGT", "CDR1-IMGT", "FR2-IMGT", "CDR2-IMGT", "FR3-IMGT", "CDR3-IMGT (germline)")
-        wanted_labels <- c("FR1", "CDR1", "FR2", "CDR2", "FR3", "CDR3")
-
-        for(i in seq_along(regions)) {
-            w_idx <- which(tab[,1] == regions[i])
-            print(tab[w_idx,]) # pour voir ce que tu récupères
-        }
-
-        coords <- list()
-        for (i in seq_along(regions)) {
-            w_idx <- which(tab[,1] == regions[i])
-            if (length(w_idx) == 1) {
-                coords[[paste0(wanted_labels[i], "_start")]] <- as.integer(tab[w_idx,2])
-                coords[[paste0(wanted_labels[i], "_end")]]   <- as.integer(tab[w_idx,3])
-            } else {
-                coords[[paste0(wanted_labels[i], "_start")]] <- NA
-                coords[[paste0(wanted_labels[i], "_end")]]   <- NA
-            }
-        }
-
-        df <- data.frame(sequence_id = sequence_id,
-                        FR1_start = coords\$FR1_start, FR1_end = coords\$FR1_end,
-                        CDR1_start = coords\$CDR1_start, CDR1_end = coords\$CDR1_end,
-                        FR2_start = coords\$FR2_start, FR2_end = coords\$FR2_end,
-                        CDR2_start = coords\$CDR2_start, CDR2_end = coords\$CDR2_end,
-                        FR3_start = coords\$FR3_start, FR3_end = coords\$FR3_end,
-                        CDR3_start = coords\$CDR3_start, CDR3_end = coords\$CDR3_end,
-                        stringsAsFactors = FALSE)
-
-        tsv_file <- sub("\\\\.fmt7\$", ".tsv", basename(file))
-        write.table(df, file = tsv_file, sep = "\\t", quote = FALSE, row.names = FALSE)
-    '
+    FILENAME=\$(basename -- ${blast_info_ch}) # recover a file name without path
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a parse_coordinates.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a parse_coordinates.log
+    parse_coordinates.R \
+"${blast_info_ch}" \
+"${cute_file}" \
+"parse_coordinates.log"
     """
 }
 
@@ -2275,11 +2218,13 @@ workflow {
 
 
     ParseCoordinates(
-        igblast.out.blast_info_ch
+        igblast.out.blast_info_ch,
+        cute_path
     )
 
     file_coord = ParseCoordinates.out.blast_info_tsv_ch.collectFile(name: "igblast_coordinates.tsv", skip: 1, keepHeader: true)
     file_coord.subscribe{it -> it.copyTo("${out_path}/files")}
+    ParseCoordinates.out.parse_coord_log_ch.collectFile(name: "parse_coordinates_report.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
 
     PrintAlignmentCdr3(
