@@ -1198,13 +1198,15 @@ process ParseCoordinates{
     script:
     """
     #!/bin/bash -ue
+
     FILENAME=\$(basename -- ${blast_info_ch}) # recover a file name without path
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a parse_coordinates.log
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a parse_coordinates.log
+
     parse_coordinates.R \
-"${blast_info_ch}" \
-"${cute_file}" \
-"parse_coordinates.log"
+    "${blast_info_ch}" \
+    "${cute_file}" \
+    "parse_coordinates.log"
     """
 }
 
@@ -2152,7 +2154,6 @@ workflow {
     get_germ_tree.out.germ_tree_ch.count().subscribe { n -> if ( n == 0 ){
         print("\n\nWARNING: NO SEQUENCES IN TREES FOLLOWING THE get_germ_tree PROCESS -> EMPTY seq_for_germ_tree.tsv FILE RETURNED\n\n")
     }}
-    get_germ_tree.out.germ_tree_ch.count().view()
     germ_tree_ch2 = get_germ_tree.out.germ_tree_ch.collectFile(name: "seq_for_germ_tree.tsv", skip: 1, keepHeader: true)
     // germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 

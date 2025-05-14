@@ -36,7 +36,6 @@
 
 ################################ Initialization
 
-fun_report(data = paste0("######################Test d'erreur#######################\n###########################\n")), output = log, path = "./", overwrite = FALSE)
 
 # R version checking
 if(version$version.string != "R version 4.1.2 (2021-11-01)"){
@@ -328,5 +327,4 @@ df <- data.frame(sequence_id = sequence_id,
                  stringsAsFactors = FALSE)
 
 
-tsv_file <- sub("\\.fmt7$", ".tsv", sequence_id)
-write.table(df, file = tsv_file, sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(df, file = paste0(sequence_id, ".tsv"), sep = "\t", quote = FALSE, row.names = FALSE)
