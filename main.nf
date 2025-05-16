@@ -1146,37 +1146,6 @@ process germ_tree_vizu {
 }
 
 
-process tsv_to_fasta{
-    label 'r_ext'
-    cache 'true'
-    publishDir path: "${out_path}/cdr3_multi_alignments", mode: 'copy', pattern: "{*.fasta}", overwrite: false
-
-    input:
-    path germ_tree_ch
-    val clone_nb_seq
-    path cute_file
-
-    output:
-    path "*.fasta", emit : fasta_alignments, optional: true
-
-    script:
-    """
-    #!/bin/bash -ue
-
-    FILENAME=\$(basename -- ${germ_tree_ch}) # recover a file name without path
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a tsv_to_fasta.log
-    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a tsv_to_fasta.log
-
-    tsv2fasta.R \
-    "${germ_tree_ch}" \
-    "sequence_id" \
-    "sequence_alignment" \
-    "germline_alignment_d_mask" \
-    "${clone_nb_seq}" \
-    "${cute_file}" \
-    "tsv_to_fasta.log"
-    """
-}
 
 // Create a tsv with the coordinates info needed for the feature annotations in alignments (FR1, FR2, etc. start & end coordinates)
 // Input :
@@ -1211,40 +1180,136 @@ process ParseCoordinates{
 }
 
 
-
-
-/*
-process ParseCoordinates{
+// Makes a fasta file with several sequences based on the sequences present in the tsv input (germ_tree_ch)
+// Inputs :
+//      - TUPLE : tsv info files (germ_tree_ch) paired with its corresponding coordinates info file (blast_info_tsv_ch)
+//                this is a tuple because for each element in the channel, the paired files need to stay paired (but blast_info_tsv_ch is not actually used in this process)
+//      - clone_nb_seq : Minimun number of non-identical sequences per clonal group for tree plotting (defined in nextflow.config). It has to be checked beforehand that the elements in the germ_tree_ch channel contain more than clone_nb_seq rows of data, or the program will stop.
+//      - cute_file : Several functions used in the tsv2fasta.R script
+// Outputs :
+//      
+process tsv_to_fasta{
     label 'r_ext'
+    cache 'true'
+    publishDir path: "${out_path}/cdr3_multi_alignments", mode: 'copy', pattern: "{*.fasta}", overwrite: false
 
     input:
-    path blast_info_ch // No parallelization
-    path germ_tree_ch
+    tuple path(germ_tree_ch), path(blast_info_tsv_ch) // parallelization
+    val clone_nb_seq
+    path cute_file
 
     output:
-    tuple path("*.tsv") into tsv , path("*.gff") into gff
+    tuple path("*.fasta"), path("*.tsv"), emit: nuc_alignments_ch
 
     script:
     """
     #!/bin/bash -ue
 
+    FILENAME=\$(basename -- ${germ_tree_ch}) # recover a file name without path
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a tsv_to_fasta.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a tsv_to_fasta.log
+
+    tsv2fasta.R \
+    "${germ_tree_ch}" \
+    "sequence_id" \
+    "sequence_alignment" \
+    "germline_alignment_d_mask" \
+    "${clone_nb_seq}" \
+    "${cute_file}" \
+    "tsv_to_fasta.log"
     """
 }
-*/
+
+
+
+// Create a gff file from the tsv one containing region coordinates. Goalign tool takes feature information, but only from a gff format.
+// Input :
+//      - TUPLE : fasta files paired with files containing info about feature coordinates (see ParseCoordinates)
+// Output :
+//      - TUPLE : fasta files untouched since input, but feature coordinates now in gff files instead of tsv format
+process CreateGff{
+    label 'r_ext'
+    cache 'true'
+
+    input:
+    tuple path(fasta_alignments), path(blast_info_tsv_ch)
+
+    output:
+    tuple path("*.fasta"), path("*.gff"), emit: nuc_gff_alignments_ch
+
+    script:
+    """
+    #!/bin/bash -ue
+
+    Rscript -e '
+        df <- read.delim(input_tsv, stringsAsFactors=FALSE, check.names=FALSE)
+        df <- read.table("${germ_tree_ch2}", sep = "\\t", header = TRUE)
+
+        fa_lines <- readLines(${fasta_alignments})
+        header_lines <- grep("^>", fa_lines, value=TRUE)
+        if (length(header_lines) == 0) {
+            stop("\\n\\n================\\n\\nINTERNAL CODE ERROR 1 IN CreateGff PROCESS\\nNO SEQUENCES FOUND IN THE fasta_alignments INPUT FASTA FILE\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
+        }
+        first_header <- sub("^>", "", header_lines[1])
+        if (!startsWith(first_header, "Germline")) {
+            stop(paste0("\\n\\n================\\n\\nINTERNAL CODE ERROR 2 IN CreateGff PROCESS\\nTHE FIRST IS EXPECTED TO START WITH 'Germline' IS EXPECTED IN INPUT FASTA FILE. \\nFIRST HEADER FOUND: ", first_header, "\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n"), call. = FALSE)
+        }
+        germline_seq <- first_header
+
+        # 2. Read the main tsv file (should contain exactly one row of data)
+        df <- read.delim(input_tsv, stringsAsFactors=FALSE, check.names=FALSE)
+
+        # 3. Prepare the mapping of regions and their corresponding color
+        features <- c("FR1", "CDR1", "FR2", "CDR2", "FR3", "CDR3")
+        colors <- c("blue", "red", "yellow", "pink", "green", "purple") # all different
+
+        # 4. Set up columns in the right pairs and build GFF rows
+        gff_rows <- list()
+        for (i in seq_along(features)) {
+        feature <- features[i]
+        start_col <- paste0(feature, "_start")
+        end_col <- paste0(feature, "_end")
+        row <- c(
+            germline_seq,
+            ".",
+            "gene",
+            df[[start_col]],
+            df[[end_col]],
+            ".",
+            ".",
+            ".",
+            paste0("Name=", feature, ";Color=", colors[i])
+        )
+        gff_rows[[i]] <- row
+        }
+
+        # 5. Write to GFF file
+        gff_table <- do.call(rbind, gff_rows)
+        gff_lines <- apply(gff_table, 1, function(x) paste(x, collapse="\t"))
+        gff_lines <- c("##gff-version 3", gff_lines)
+
+        writeLines(gff_lines, con=output_gff)
+        cat("GFF file written to", output_gff, "\n")
+    ' |& tee -a creategff.log
+    """
+}
+
+
+
 
 process PrintAlignmentCdr3{
     label 'goalign'
     publishDir path: "${out_path}/cdr3_multi_alignments", mode: 'copy', pattern: "{*.html}", overwrite: false
 
     input:
-    path filtered_fasta
+    tuple path(fasta_alignments), path(gff)
 
     output:
     path "*.html", emit : alignment_html
 
     script:
     """
-    goalign draw biojs -i ${filtered_fasta} -o ${filtered_fasta.baseName}.html
+    goalign draw biojs -i ${fasta_alignments} -o ${fasta_alignments.baseName}.html
     """
 }
 
@@ -1602,7 +1667,7 @@ process print_report{
         constant_rep <- constant_names[grepl("^IG.C_.*gene_non-zero\\\\.png\$", constant_names)]
         vj_rep <- vj_names[grepl("^rep_gene_IG.V_.*non-zero\\\\.png\$", vj_names)]
         if(length(constant_rep) == 0 || length(vj_rep) == 0){
-            stop(paste0("\\n\\n========\\n\\nERROR IN print_report PROCESS\\n\\nTHE REPERTOIRE PNG FILES TO BE DISPLAYED WERE NOT FOUND\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n"), call. = FALSE)
+            stop(paste0("\\n\\n========\\n\\nERROR IN print_report PROCESS\\n\\nTHE REPERTOIRE PNG FILES TO BE DISPLAYED WERE NOT FOUND\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n"), call. = FALSE)
         }
 
         rmarkdown::render(
@@ -2212,8 +2277,6 @@ workflow {
     germ_tree_dup_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 
 
-    // Inactivated because currently in development
-
 
     ParseCoordinates(
         igblast.out.blast_info_ch,
@@ -2226,12 +2289,12 @@ workflow {
 
 
 
-    // Each clonal group tsv file (germ_tree_ch) must be joined with one of its matching gff info files ()
+
+    // Each clonal group tsv file (germ_tree_ch) must be joined with one of its matching coordinates info files (blast_info_tsv_ch)
     blast_info_indexed_ch = ParseCoordinates.out.blast_info_tsv_ch.map { file ->
         def seqid = file.baseName
         tuple(seqid, file)
     }
-
 
     filtered_germ_tree_ch = get_germ_tree.out.germ_tree_ch.filter { file ->
         def lines = file.text.readLines()
@@ -2262,24 +2325,33 @@ workflow {
     first_blast_per_germ_tree_ch = joined_ch
         .groupTuple()
         .map { file, blast_files -> tuple(file, blast_files[0]) } // Selects only the first blast file found for a same germ_tree file, because the coordinates are all the same for a same clonal group, therefore only one gff file is needed
+    
+    // End of tsv-blast_info joining
+
 
 
 
     tsv_to_fasta(
-        get_germ_tree.out.germ_tree_ch,
+        first_blast_per_germ_tree_ch,
         clone_nb_seq,
         cute_path
     )
 
 
+    CreateGff(
+        tsv_to_fasta.out.nuc_alignments_ch,
+
+    )
+
+/*
     PrintAlignmentCdr3(
-        tsv_to_fasta.out.fasta_alignments
+        CreateGff.out.nuc_gff_alignments_ch
     )
     
     PrintAlignmentCdr3.out.alignment_html.ifEmpty{
         print("\n\nWARNING: -> NO CDR3 ALIGNMENT FILE RETURNED\n\n")
     }
-
+*/
     
 
 
