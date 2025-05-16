@@ -1210,6 +1210,9 @@ process ParseCoordinates{
     """
 }
 
+
+
+
 /*
 process ParseCoordinates{
     label 'r_ext'
@@ -2211,12 +2214,6 @@ workflow {
 
     // Inactivated because currently in development
 
-    tsv_to_fasta(
-        get_germ_tree.out.germ_tree_ch,
-        clone_nb_seq,
-        cute_path
-    )
-
 
     ParseCoordinates(
         igblast.out.blast_info_ch,
@@ -2226,6 +2223,53 @@ workflow {
     file_coord = ParseCoordinates.out.blast_info_tsv_ch.collectFile(name: "igblast_coordinates.tsv", skip: 1, keepHeader: true)
     file_coord.subscribe{it -> it.copyTo("${out_path}/files")}
     ParseCoordinates.out.parse_coord_log_ch.collectFile(name: "parse_coordinates_report.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+
+
+
+    // Each clonal group tsv file (germ_tree_ch) must be joined with one of its matching gff info files ()
+    blast_info_indexed_ch = ParseCoordinates.out.blast_info_tsv_ch.map { file ->
+        def seqid = file.baseName
+        tuple(seqid, file)
+    }
+
+
+    filtered_germ_tree_ch = get_germ_tree.out.germ_tree_ch.filter { file ->
+        def lines = file.text.readLines()
+        lines.size() >= (clone_nb_seq.toInteger() + 1) // +1 to because first line = header
+    }
+
+    germ_tree_seqids_ch = filtered_germ_tree_ch.map { file ->
+        def lines = file.text.readLines()
+        def header = lines[0].split('\t')
+            .collect { it.trim().replaceAll('^"|"$', '') }
+        def seq_col_index = header.indexOf("sequence_id")
+        def initial_seq_col_index = header.indexOf("initial_sequence_id")
+        def target_col_index = initial_seq_col_index >= 0 ? initial_seq_col_index : seq_col_index // The sequence_id is in the initial_sequence_id column if it exists, otherwise it is in the sequence_id column. We need the original sequence id because that is the one mentionned in the gff files
+        def seqids = lines[1..-1]
+            .collect { it.split('\t')[target_col_index].trim().replaceAll('^"|"$', '') }
+            .unique()
+        tuple(file, seqids)
+    }
+
+    germ_tree_seqid_flat_ch = germ_tree_seqids_ch.flatMap { file, seqids ->
+        seqids.collect { seqid -> tuple(seqid, file) }
+    }
+
+    joined_ch = germ_tree_seqid_flat_ch.join(blast_info_indexed_ch, by: 0)
+        .map { seqid, file, blast_file -> tuple(file, blast_file) }
+
+
+    first_blast_per_germ_tree_ch = joined_ch
+        .groupTuple()
+        .map { file, blast_files -> tuple(file, blast_files[0]) } // Selects only the first blast file found for a same germ_tree file, because the coordinates are all the same for a same clonal group, therefore only one gff file is needed
+
+
+
+    tsv_to_fasta(
+        get_germ_tree.out.germ_tree_ch,
+        clone_nb_seq,
+        cute_path
+    )
 
 
     PrintAlignmentCdr3(
