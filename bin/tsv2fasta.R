@@ -441,17 +441,17 @@ for(i0 in Seq){
             stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL v_gene VALUES SHOULD BE THE SAME IN A seq_for_germ_tree FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$junction_length, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
         }
         # End check of columns relative to clonal groups
+        for(i1 in 1:nrow(tempo.df)){
+            tempo.name <- paste0(i0, "_", tempo.df[i1, "clone_id"], "_", tempo.df[i1, "v_gene"], "_", tempo.df[i1, "j_gene"], "_", tempo.df[i1, "junction_length"], ".fasta") # These columns all have the same value for a clonal group, so it writes in the same file
+            tempo.cat <- paste0(">", tempo.df[i1, Name], "\n", tempo.df[i1, i0], "\n")
+            cat(tempo.cat, file = paste0("./", tempo.name), append = TRUE)
+        }
         if(length(Germline) > 0){
             if(any(tempo.df[[Germline]] != tempo.df[1, Germline])){
                 stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nTHE VALUES INSIDE THE Germline COLUMN SHOULD ALL BE THE SAME, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df[[Germline]], collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
             }
             tempo.name <- paste0(i0, "_", tempo.df[1, "clone_id"], "_", tempo.df[1, "v_gene"], "_", tempo.df[1, "j_gene"], "_", tempo.df[1, "junction_length"], ".fasta") # These columns all have the same value for a clonal group, so it writes in the same file
             tempo.cat <- paste0(">", "Germline_group_", tempo.df[1, "clone_id"], "\n", tempo.df[1, Germline], "\n")
-            cat(tempo.cat, file = paste0("./", tempo.name), append = TRUE)
-        }
-        for(i1 in 1:nrow(tempo.df)){
-            tempo.name <- paste0(i0, "_", tempo.df[i1, "clone_id"], "_", tempo.df[i1, "v_gene"], "_", tempo.df[i1, "j_gene"], "_", tempo.df[i1, "junction_length"], ".fasta") # These columns all have the same value for a clonal group, so it writes in the same file
-            tempo.cat <- paste0(">", tempo.df[i1, Name], "\n", tempo.df[i1, i0], "\n")
             cat(tempo.cat, file = paste0("./", tempo.name), append = TRUE)
         }
     } else {

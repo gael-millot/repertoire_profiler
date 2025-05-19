@@ -1251,11 +1251,11 @@ process CreateGff{
         if (length(header_lines) == 0) {
             stop("\\n\\n================\\n\\nERROR IN CreateGff PROCESS\\nNO SEQUENCES FOUND IN THE fasta_alignments INPUT FASTA FILE\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
         }
-        first_header <- sub("^>", "", header_lines[1])
-        if (!startsWith(first_header, "Germline")) {
+        last_header <- sub("^>", "", header_lines[length(header_lines)])
+        if (!startsWith(last_header, "Germline")) {
             stop(paste0("\\n\\n================\\n\\nERROR IN CreateGff PROCESS\\nTHE FIRST IS EXPECTED TO START WITH 'Germline' IS EXPECTED IN INPUT FASTA FILE. \\nFIRST HEADER FOUND: ", first_header, "\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n"), call. = FALSE)
         }
-        germline_seq <- first_header
+        germline_seq <- last_header
 
         # Prepare the mapping of regions and their corresponding color
         features <- c("FR1", "CDR1", "FR2", "CDR2", "FR3", "CDR3")
