@@ -1191,7 +1191,7 @@ process ParseCoordinates{
 process tsv_to_fasta{
     label 'r_ext'
     cache 'true'
-    publishDir path: "${out_path}/cdr3_multi_alignments", mode: 'copy', pattern: "{*.fasta}", overwrite: false
+    publishDir path: "${out_path}/nucleotide_alignments", mode: 'copy', pattern: "{*.fasta}", overwrite: false
 
     input:
     tuple path(germ_tree_ch), path(blast_info_tsv_ch) // parallelization
@@ -1230,7 +1230,7 @@ process tsv_to_fasta{
 process CreateGff{
     label 'r_ext'
     cache 'true'
-    publishDir path: "${out_path}/cdr3_multi_alignments", mode: 'copy', pattern: "{*.gff}", overwrite: false
+    publishDir path: "${out_path}/nucleotide_alignments", mode: 'copy', pattern: "{*.gff}", overwrite: false
 
     input:
     tuple path(fasta_alignments), path(blast_info_tsv_ch)
@@ -1297,7 +1297,7 @@ process CreateGff{
 
 process PrintAlignmentCdr3{
     label 'goalign'
-    publishDir path: "${out_path}/cdr3_multi_alignments", mode: 'copy', pattern: "{*.html}", overwrite: false
+    publishDir path: "${out_path}/nucleotide_alignments", mode: 'copy', pattern: "{*.html}", overwrite: false
 
     input:
     tuple path(fasta_alignments), path(gff)
@@ -1469,7 +1469,7 @@ process Reformat{
 // Input : single fasta file containing several sequences & a tsv file containing V|J info to corresponding sequence id
 // Output : one fasta file PER group, containing said group sequences
 process DefineGroups {
-    publishDir path: "${out_path}/phylo", mode: 'copy'
+    publishDir path: "${out_path}/phylo_aa", mode: 'copy'
     
     label 'goalign'
     
@@ -1533,7 +1533,7 @@ process NbSequences {
 
 process PrintAlignmentAA{
     label 'goalign'
-    publishDir path: "${out_path}/phylo_full_multi_alignments", mode: 'copy', pattern: "{*.html}", overwrite: false
+    publishDir path: "${out_path}/aa_alignments", mode: 'copy', pattern: "{*.html}", overwrite: false
 
     input:
     path filtered_fasta
@@ -1548,7 +1548,7 @@ process PrintAlignmentAA{
 }
 
 process Tree {
-    publishDir path: "${out_path}/phylo", mode: 'copy', pattern: "{*.treefile}", overwrite: false
+    publishDir path: "${out_path}/phylo_aa", mode: 'copy', pattern: "{*.treefile}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
 
     label 'iqtree'
@@ -1584,7 +1584,7 @@ process ProcessMeta {
 
 
 process ITOL{
-    publishDir path: "${out_path}/phylo", mode: 'copy'
+    publishDir path: "${out_path}/phylo_aa", mode: 'copy'
 
     label 'gotree'
 
