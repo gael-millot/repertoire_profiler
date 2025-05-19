@@ -268,7 +268,7 @@ kable(df, format = "markdown", row.names = FALSE)
 <br>
 
 [comment]: <> (This text is commented because cdr3 alignments are in development)
-[comment]: <> (**Sequence alignment** displays are available in the [cdr3_multi_alignments](./cdr3_multi_alignments) folder. The HTML files present the alignment visualizations, while the FASTA files contain the corresponding sequences for each clonal group.)
+[comment]: <> (**Sequence alignment** displays are available in the [nucleotide_alignments](./nucleotide_alignments) folder. The HTML files present the alignment visualizations, while the FASTA files contain the corresponding sequences for each clonal group.)
 [comment]: <> (End cdr3 text)
 
 <br><br><br>
@@ -276,10 +276,10 @@ kable(df, format = "markdown", row.names = FALSE)
 ###  Amino acid sequences phylogeny 
 <br>
 
-`r  if(params$itol_subscription == "TRUE"){"Open the different **sequences_\\<SEQ_NAME\\>_align.fasta_itol_url.txt** files in the [phylo](./phylo) folder and click on the link to see the trees."}`
-`r  if(params$itol_subscription == "FALSE"){"To see the trees, follow the link : https://itol.embl.de/upload.cgi. Choose a name for your tree (optional) and upload a '*.treefile' file from the [phylo](./phylo) folder. The trees will then be displayed by iTOL."}`
+`r  if(params$itol_subscription == "TRUE"){"Open the different **sequences_\\<SEQ_NAME\\>_align.fasta_itol_url.txt** files in the [phylo_aa](./phylo_aa) folder and click on the link to see the trees."}`
+`r  if(params$itol_subscription == "FALSE"){"To see the trees, follow the link : https://itol.embl.de/upload.cgi. Choose a name for your tree (optional) and upload a '*.treefile' file from the [phylo_aa](./phylo_aa) folder. The trees will then be displayed by iTOL."}`
 
-Alignment visualization is available for each clonal group used in each tree, in the [phylo_full_multi_alignments](./phylo_full_multi_alignments) folder in html format.
+Alignment visualization is available for each clonal group used in each tree, in the [aa_alignments](./aa_alignments) folder in html format.
 
 <br><br>
 

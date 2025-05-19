@@ -455,10 +455,7 @@ for(i0 in Seq){
             cat(tempo.cat, file = paste0("./", tempo.name), append = TRUE)
         }
     } else {
-        tempo.warn <- paste0("NO FASTA FILE CREATED BECAUSE THE IMPORTED FILE:\n", path, "\nHAS MORE THAN ", clone_nb_seq, " EMPTY SEQUENCES (NA OR \"\") IN ", i0, "COLUMN\n")
-        cat(paste0("\nWARNING: ", tempo.warn, "\n\n"))
-        fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
-        warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
+        stop(paste0("NO FASTA FILE CREATED BECAUSE THE IMPORTED FILE:\n", path, "\nHAS MORE THAN ", clone_nb_seq, " EMPTY SEQUENCES (NA OR \"\") IN ", i0, "COLUMN\n"))
     }
 
 }

@@ -244,7 +244,9 @@ Mandatory elements:
 | **svg** | Folder containing the graphs in svg vectorial format. |
 | **RData** | Folder containing, for each clonal group, objects that can be used in R to further analyze of plot the data:<br /><ul><li>db: tibble data frame resulting from the import by the alakazam::readChangeoDb() function<br /></li><li>clones: db in the airClone format<br /></li><li>trees: output of the dowser::getTrees() function using the clones object as input (igphylm tree)</li><br /><br />Also contains the all_trees.RData file that combine the trees R objects of the different files in a single trees object. |
 | **cdr3_multi_alignments** | Folder containing html files displaying the alignments of the *"sequence_alignment"* column of the nucleotidic sequences used for germ_trees. |
+| **phylo_aa** | Folder containing amino-acid sequences in fasta files. Each fasta file regroups the amino-acid sequences that come from the same V\|J recombination.<br><br>Each fasta file may have the following related output files:<br><ul><li>**\*_align.fasta.treefile**: Phylogenetic tree in Newick format for each sequence group in the phylo file (not constructed for groups with fewer than 4 sequences).</li><li>**\*_align.fasta_itol_url.txt**: URL to the phylogenetic tree (*\*_align.fasta.treefile*) on iTOL; tree scale is the number of mutations per position.</li></ul>**\*_align.fasta.log** files can also be found in the *report* folder (execution log from IQTree, helpful for troubleshooting tree construction) |
 | **files** | Folder containing **all the files** described below : |
+| **aa_alignments** | Folder containing html files displaying the alignments of the amino acid sequences in the phylo_aa folder. |
 | **seq_distance.pdf** | Distribution of the distances between the two nearest sequences (see the *nearest_distance* column in the *clone_assigned_seq.tsv* file). |
 | **donuts.pdf** | donut plots showing the frequency of sequences per clonal groups, among:<br /><ul><li>all: all the clone-assigned sequences (*clone_assigned_seq.tsv* output file).<br /></li><li>annotated: as the "all" donut but using all the clone-assigned sequences that have been annotated using the meta_name_replacement parameter of the nextflow.config file if not "NULL".<br /></li><li>trees: all the sequences used for germline trees (*germ_tree_seq.tsv* output file).</li> |
 | **\*_repertoire.pdf** | heatmap of the files from the *repertoires* folder (see above), showing the frequency of alleles and genes used among all the all clone-assigned sequences ("all"), non empty cells ("non-zero") and "annotated" sequences (if metadata are provided). Non-zero means that unused alleles are removed from the heatmap (empty row or column). Warning: to build the repertoire contingencies, the script currently takes the first annotation of the imgt annotation if several are presents in the v_call, j_call or c_call columns of the *clone_assigned_seq.tsv* file (see the *clone_assigned_seq_several_annot_igmt.tsv* file below) |
@@ -264,17 +266,6 @@ Mandatory elements:
 | **germ_tree_dismissed_seq.tsv** | Sequences of the *clone_assigned_seq.tsv* file not used in the germline tree analysis (clonal group with less than n sequences, n being set by the clone_nb_seq parameter of the *nextflow.config* file). |
 | **germ_tree_dup_seq_not_displayed.tsv** | Sequences file used in the germline tree analysis but not displayed in the graph, (1) because strictly identical to another sequence already in the tree and (2) because the tree_duplicate_seq parameter of the *nextflow.config* file has been set to "FALSE". |
 
-
-<br /><br />
-*Elements only returned for **heavy chain** analysis:*
-<br />
-| repertoire_profiler_<UNIQUE_ID> folders and files | Description |
-| :--- | :--- |
-| **phylo** | Folder containing amino-acid sequences in fasta files. Each fasta file regroups the amino-acid sequences that come from the same V\|J recombination. |
-| **\*_align.fasta.treefile** | Phylogenic trees in newick format for each sequence group in the phylo file. This tree is not constructed when there are less than 4 sequences in 1 group. |
-| **\*_align.fasta.log** | Contains execution information of IQTree, used for constructing the phylogenic trees. Useful for troubleshooting. |
-| **\*_align.fasta_itol_url.txt** | URL access to each phylogenic tree (*\*_align.fasta.treefile*) uploaded on iTOL. On each graph, the scale is the number of mutation per position. |
-| **phylo_full_multi_alignments** | Folder containing html files displaying the alignments of the amino acid sequences in the phylo folder. |
 
 <br /><br />
 Optional elements only returned if the igblast_aa parameter is 'false' and if the input fasta are nucleotide sequences:
