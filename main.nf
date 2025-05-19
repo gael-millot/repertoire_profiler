@@ -1199,7 +1199,7 @@ process tsv_to_fasta{
     path cute_file
 
     output:
-    tuple path("*.fasta"), path("*.tsv"), emit: nuc_alignments_ch
+    tuple path("*.fasta"), path(blast_info_tsv_ch), emit: nuc_alignments_ch
 
     script:
     """
@@ -1230,66 +1230,64 @@ process tsv_to_fasta{
 process CreateGff{
     label 'r_ext'
     cache 'true'
+    publishDir path: "${out_path}/cdr3_multi_alignments", mode: 'copy', pattern: "{*.gff}", overwrite: false
 
     input:
     tuple path(fasta_alignments), path(blast_info_tsv_ch)
 
     output:
-    tuple path("*.fasta"), path("*.gff"), emit: nuc_gff_alignments_ch
+    tuple path(fasta_alignments), path("*.gff"), emit: nuc_gff_alignments_ch
 
     script:
     """
     #!/bin/bash -ue
 
     Rscript -e '
-        df <- read.delim(input_tsv, stringsAsFactors=FALSE, check.names=FALSE)
-        df <- read.table("${germ_tree_ch2}", sep = "\\t", header = TRUE)
+        df <- read.table("${blast_info_tsv_ch}", sep = "\\t", header = TRUE) # (should contain exactly one row of data)
+        fa_lines <- readLines("${fasta_alignments}")
 
-        fa_lines <- readLines(${fasta_alignments})
+        # Read the first header of the fasta file to put the gff features on corresponding name (should start with "Germline")
         header_lines <- grep("^>", fa_lines, value=TRUE)
         if (length(header_lines) == 0) {
-            stop("\\n\\n================\\n\\nINTERNAL CODE ERROR 1 IN CreateGff PROCESS\\nNO SEQUENCES FOUND IN THE fasta_alignments INPUT FASTA FILE\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
+            stop("\\n\\n================\\n\\nERROR IN CreateGff PROCESS\\nNO SEQUENCES FOUND IN THE fasta_alignments INPUT FASTA FILE\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
         }
         first_header <- sub("^>", "", header_lines[1])
         if (!startsWith(first_header, "Germline")) {
-            stop(paste0("\\n\\n================\\n\\nINTERNAL CODE ERROR 2 IN CreateGff PROCESS\\nTHE FIRST IS EXPECTED TO START WITH 'Germline' IS EXPECTED IN INPUT FASTA FILE. \\nFIRST HEADER FOUND: ", first_header, "\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n"), call. = FALSE)
+            stop(paste0("\\n\\n================\\n\\nERROR IN CreateGff PROCESS\\nTHE FIRST IS EXPECTED TO START WITH 'Germline' IS EXPECTED IN INPUT FASTA FILE. \\nFIRST HEADER FOUND: ", first_header, "\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n"), call. = FALSE)
         }
         germline_seq <- first_header
 
-        # 2. Read the main tsv file (should contain exactly one row of data)
-        df <- read.delim(input_tsv, stringsAsFactors=FALSE, check.names=FALSE)
-
-        # 3. Prepare the mapping of regions and their corresponding color
+        # Prepare the mapping of regions and their corresponding color
         features <- c("FR1", "CDR1", "FR2", "CDR2", "FR3", "CDR3")
-        colors <- c("blue", "red", "yellow", "pink", "green", "purple") # all different
+        colors <- c("blue", "red", "yellow", "pink", "green", "purple")
 
-        # 4. Set up columns in the right pairs and build GFF rows
+        # Set up columns in the right pairs and build GFF rows
         gff_rows <- list()
-        for (i in seq_along(features)) {
-        feature <- features[i]
-        start_col <- paste0(feature, "_start")
-        end_col <- paste0(feature, "_end")
-        row <- c(
-            germline_seq,
-            ".",
-            "gene",
-            df[[start_col]],
-            df[[end_col]],
-            ".",
-            ".",
-            ".",
-            paste0("Name=", feature, ";Color=", colors[i])
-        )
-        gff_rows[[i]] <- row
+        for (i in 1:length(features)) {
+            feature <- features[i]
+            start_col <- paste0(feature, "_start")
+            end_col <- paste0(feature, "_end")
+            row <- c(
+                germline_seq,
+                ".",
+                "gene",
+                df[[start_col]],
+                df[[end_col]],
+                ".",
+                ".",
+                ".",
+                paste0("Name=", feature, ";Color=", colors[i])
+            )
+            gff_rows[[i]] <- row
         }
 
-        # 5. Write to GFF file
+        # Write to GFF file
         gff_table <- do.call(rbind, gff_rows)
-        gff_lines <- apply(gff_table, 1, function(x) paste(x, collapse="\t"))
+        gff_lines <- apply(gff_table, 1, function(x) paste(x, collapse="\\t"))
         gff_lines <- c("##gff-version 3", gff_lines)
 
+        output_gff <- paste0(germline_seq, ".gff")
         writeLines(gff_lines, con=output_gff)
-        cat("GFF file written to", output_gff, "\n")
     ' |& tee -a creategff.log
     """
 }
@@ -2343,7 +2341,7 @@ workflow {
 
     )
 
-/*
+
     PrintAlignmentCdr3(
         CreateGff.out.nuc_gff_alignments_ch
     )
@@ -2351,7 +2349,7 @@ workflow {
     PrintAlignmentCdr3.out.alignment_html.ifEmpty{
         print("\n\nWARNING: -> NO CDR3 ALIGNMENT FILE RETURNED\n\n")
     }
-*/
+
     
 
 
