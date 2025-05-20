@@ -1764,8 +1764,8 @@ workflow {
     }
     if( ! (igblast_aa in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_aa PARAMETER IN repertoire_profiler.config FILE:\n${igblast_aa}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! (igblast_aa == "false" || igblast_aa == "true") ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_aa PARAMETER IN repertoire_profiler.config FILE:\n${igblast_aa}\nMUST BE EITHER \"true\" OR \"false\"\n\n========\n\n"
+    }else if( ! igblast_aa == "false"){ // }else if( ! (igblast_aa == "false" || igblast_aa == "true") ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_aa PARAMETER IN repertoire_profiler.config FILE:\n${igblast_aa}\nCAN ONLY BE \"false\"\n\n========\n\n"
     }
     if( ! (igblast_variable_ref_files in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_variable_ref_files PARAMETER IN repertoire_profiler.config FILE:\n${igblast_variable_ref_files}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
