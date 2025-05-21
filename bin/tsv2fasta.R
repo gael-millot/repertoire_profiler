@@ -20,7 +20,8 @@
 
 # The original aime of this program was to create all the fasta files from a .xlsx file.
 # It has been slightly modified to create fasta files from a .tsv file, instead of a .xlsx file.
-
+# It also now creates a gff file from the tsv one containing region coordinates. Goalign tool takes feature information, but only from a gff format.
+# Note that for the creation of the .gff the tsv file must contain following columns => sequence_id, fr1_start, fr1_end, cdr1_start, cdr1_end, fr2_start, fr2_end, cdr2_start, cdr2_end, fr3_start, fr3_end, cdr3_start, cdr3_end
 
 ################################ End Aim
 
@@ -60,24 +61,18 @@ script <- "tsv2fasta"
 
 
 
-#########################################################################
-##                                                                     ##
-##     Parameters that need to be set by the user                      ##
-##                                                                     ##
-#########################################################################
+##### Test
 
+# script <- "tsv2fasta"
+# cute <- "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v11.4.0/cute_little_R_functions.R"
+# clone_nb_seq <- 3
+# log <- "tsv2fasta.log"
+# Germline <- "germline_d_mask"
+# Seq <- "sequence_alignment"
+# Name <- "sequence_id"
+# path <- "seq_for_germ_tree.tsv"
 
-# path <- "https://zenodo.org/records/10844886/files/ig_sequences.xlsx" # single character string indicating the full path of the xlsx file. Example: path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/dataset/xlsx2fasta_test_2/ig_sequences.xlsx"
-# Name <- "Name" # single character string indicating the column name of the sequence names. Example: Name <- "Name"
-# Seq <- c("VH", "VL") # vector of character strings indicating the column names of the xlsx file containing sequences. Example: Seq <- c("VH", "VL")
-# Germline <- "germline_d_mask" # single character string indicating the column name of the germline sequence. This sequence will be the first used in the fasta file. Must be empty character string if not used
-
-
-#########################################################################
-##                                                                     ##
-##     End Parameters that need to be set by the user                  ##
-##                                                                     ##
-#########################################################################
+##### End test
 
 
 
@@ -351,21 +346,8 @@ fun_report(data = paste0("\n\n################################ RUNNING"), output
 
 ################ Data import
 
-if(grepl(x = path, pattern = "^http")){
-    tempo.name <- paste0("tmp_xlsx2fasta.R_", ini.time)
-    if(file.exists(tempo.name)){
-        stop(paste0("\n\n============\n\nERROR IN ", script, ".R\nTHE TEMPORARY FILE USED BY THE ", script, " SCRIPT ALREADY EXISTS:\n", file.path(tempo.name), "\n\n. PLEASE, RERUN.\n\n============\n\n"), call. = FALSE)
-    }else{
-        download.file(path, destfile = tempo.name, method="auto", quiet=TRUE)
-        path2 <- file.path(tempo.name)
-        obs <- read.table(path, header = TRUE, sep = "\t")
-        if(file.exists(path2)){
-            file.remove(path2) # idem file.remove(tempo.name)
-        }
-    }
-}else{
-    obs <- read.table(path, header = TRUE, sep = "\t")
-}
+
+obs <- read.table(path, header = TRUE, sep = "\t")
 
 
 ################ end Data import
@@ -412,6 +394,8 @@ for(i0 in names(obs)){ # NA in xlsx file become "NA". Thus, has to be replaced b
 
 ############ main
 
+## Create the fasta files :
+
 for(i0 in Seq){
     tempo.log <- is.na(obs[ , i0]) | obs[ , i0] == ""
     if(sum(!tempo.log, na.rm = TRUE) >= clone_nb_seq){
@@ -451,7 +435,8 @@ for(i0 in Seq){
                 stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nTHE VALUES INSIDE THE Germline COLUMN SHOULD ALL BE THE SAME, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df[[Germline]], collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
             }
             tempo.name <- paste0(i0, "_", tempo.df[1, "clone_id"], "_", tempo.df[1, "v_gene"], "_", tempo.df[1, "j_gene"], "_", tempo.df[1, "junction_length"], ".fasta") # These columns all have the same value for a clonal group, so it writes in the same file
-            tempo.cat <- paste0(">", "Germline_group_", tempo.df[1, "clone_id"], "\n", tempo.df[1, Germline], "\n")
+            germ_seq_name <- paste0("Germline_group_", tempo.df[1, "clone_id"])
+            tempo.cat <- paste0(">", germ_seq_name, "\n", tempo.df[1, Germline], "\n")
             cat(tempo.cat, file = paste0("./", tempo.name), append = TRUE)
         }
     } else {
@@ -459,6 +444,69 @@ for(i0 in Seq){
     }
 
 }
+
+
+## Enf of creating the fasta files
+
+## Create the gff file :
+
+features <- c("fr1", "cdr1", "fr2", "cdr2", "fr3", "cdr3")
+colors <- c("blue", "red", "yellow", "pink", "green", "purple")
+
+## Convert all column names in obs to lowercase for comparison
+colnames_lc <- tolower(colnames(obs))
+
+## Check that all expected columns (case-insensitive) exist
+for (feature in features) {
+    for (suf in c("_start", "_end")) {
+        col_candidate <- paste0(feature, suf)
+        if (!(col_candidate %in% colnames_lc)) {
+            stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nONE OR MORE COORDINATE COLUMNS MISSING FROM THE IMPORTED FILE:\n", path, "\nHERE IS THE MISSING COLUMN : ", col_candidate, "\n\n================\n\n"), call. = FALSE)
+        }
+    }
+}
+
+## For each feature column, check that all rows are identical in value (region coordinates must be the same for each sequence of a clonal group)
+for (feature in features) {
+    for (suf in c("_start", "_end")) {
+        ## Find the actual column name (preserve case)
+        lc_col <- paste0(feature, suf)
+        actual_col <- colnames(obs)[tolower(colnames(obs)) == lc_col]
+        unique_vals <- unique(obs[[actual_col]])
+        if (length(unique_vals) != 1) {
+            stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL DATA ROWS IN IMPORTED FILE : \n", path, " SHOULD HAVE THE SAME VALUES FOR EACH REGION COORDINATES COLUMN.\nREGION COORDINATES SHOULD BE THE SAME FOR EACH SEQUENCE OF A CLONAL GROUP\n\n================\n\n"), call. = FALSE)
+        }
+    }
+}
+
+gff_rows <- list()
+for (i in 1:length(features)) {
+    feature <- features[i]
+    row <- c(
+        germ_seq_name,
+        ".",
+        "gene",
+        unique(obs[[colnames(obs)[tolower(colnames(obs)) == paste0(feature, "_start")]]]), # unique value
+        unique(obs[[colnames(obs)[tolower(colnames(obs)) == paste0(feature, "_end")]]]),   # unique value
+        ".",
+        ".",
+        ".",
+        paste0("Name=", feature, ";Color=", colors[i])
+    )
+    gff_rows[[i]] <- row
+}
+
+# gff_rows is a list of GFF row vectors, as before.
+
+# Write to GFF file
+gff_table <- do.call(rbind, gff_rows)
+gff_lines <- apply(gff_table, 1, function(x) paste(x, collapse="\\t"))
+gff_lines <- c("##gff-version 3", gff_lines)
+
+output_gff <- paste0(germ_seq_name, ".gff")
+writeLines(gff_lines, con=output_gff)
+
+## End of creating the gff file
 
 fun_report(data = paste0("\n\n################################ RUNNING END"), output = log, path = "./", overwrite = FALSE)
 
