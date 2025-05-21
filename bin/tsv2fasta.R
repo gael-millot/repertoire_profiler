@@ -500,7 +500,7 @@ for (i in 1:length(features)) {
 
 # Write to GFF file
 gff_table <- do.call(rbind, gff_rows)
-gff_lines <- apply(gff_table, 1, function(x) paste(x, collapse="\\t"))
+gff_lines <- apply(gff_table, 1, function(x) paste(x, collapse="\t"))
 gff_lines <- c("##gff-version 3", gff_lines)
 
 output_gff <- paste0(germ_seq_name, ".gff")

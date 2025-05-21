@@ -1202,6 +1202,7 @@ process FastaGff{
     label 'r_ext'
     cache 'true'
     publishDir path: "${out_path}/nucleotide_alignments", mode: 'copy', pattern: "{*.fasta}", overwrite: false
+    publishDir path: "${out_path}/nucleotide_alignments", mode: 'copy', pattern: "{*.gff}", overwrite: false
 
     input:
     path germ_tree_ch // parallelization
