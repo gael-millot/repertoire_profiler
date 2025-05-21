@@ -51,7 +51,7 @@
 
 | Required files |
 | :--- |
-| A folder (zipped or not) containing nucleotide fasta files, each containing a single sequence. Use xlsx2fasta.R ([https://github.com/gael-millot/xlsx2fasta](https://github.com/gael-millot/xlsx2fasta)) if sequences are in a .xlsx file. . In each fasta file, sequences can be in a several lines (\n and or \r separated). In addition, spaces and tabs can be present in the header (they will be replaced by an underscore). |
+| A folder (zipped or not) containing nucleotide fasta files, each containing a single sequence. Use table2fasta.R ([https://github.com/gael-millot/table2fasta](https://github.com/gael-millot/table2fasta)) if sequences are in a .table file. . In each fasta file, sequences can be in a several lines (\n and or \r separated). In addition, spaces and tabs can be present in the header (they will be replaced by an underscore). |
 | A metadata file (optional) for adding informations in the results. |
 
 <br />
