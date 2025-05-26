@@ -73,7 +73,8 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
         stop(paste0("\n\n================\n\nERROR IN ", script, "\n\n\nTHE args OBJECT HAS NA\n\n================\n\n"), call. = FALSE)
     }
     tempo.arg.names <- c(
-        "file_name",
+        "tsv_name",
+        "fmt7_name",
         "cute",
         "log"
     )
@@ -96,32 +97,10 @@ rm(tempo.cat)
 
 ################################ End Config import
 
-################################ Test
+### Test
 
-# setwd("C:/Users/gael/Documents/Git_projects/19532_marbouty/dataset/test")
-# file_name = "./caca.tsv"
-# kind = "all"
-# col = "vj_allele"
-# donut_palette = "NULL" 
-# donut_hole_size = "0.5" 
-# donut_hole_text = "TRUE" 
-# donut_hole_text_size = "14" 
-# donut_border_color = "gray50" 
-# donut_border_size = "0.1" 
-# donut_annotation_distance = "0" 
-# donut_annotation_size = "3" 
-# donut_annotation_force = "1" 
-# donut_annotation_force_pull = "100" 
-# donut_legend_width = "0.25"
-# donut_legend_text_size = "10" 
-# donut_legend_box_size = "5" 
-# donut_legend_box_space = "2" 
-# donut_legend_limit = "0.1"
-# cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.2.0/cute_little_R_functions.R"
-# log = "all_donut.log"
-
-
-################################ end Test
+# setwd("C:/Users/ctaurel/Documents/Rtest")
+# file <- "VH_8997.fmt7"
 
 ################################ Recording of the initial parameters
 
@@ -133,7 +112,8 @@ param.list <- c(
     "run.way",
     "tempo.arg.names", 
     if(run.way == "SCRIPT"){"command"}, 
-    "file_name",
+    "tsv_name",
+    "fmt7_name",
     "cute",
     "log"
 )
@@ -224,8 +204,12 @@ warn <- NULL
 # warn.count <- 0 # not required
 # end warning initiation
 # other checkings (not full checked because already checked in the .nf file)
-if( ! file.exists(file_name)){
-    tempo.cat <- paste0("ERROR IN ", script, ":\nTHE file_name PARAMETER MUST BE A VALID PATH OF A FILE IS NOT \"NULL\"\nHERE IT IS: \n", paste0(file_name, collapse = " "))
+if( ! file.exists(fmt7_name)){
+    tempo.cat <- paste0("ERROR IN ", script, ":\nTHE fmt7_name PARAMETER MUST BE A VALID PATH OF A FILE IS NOT \"NULL\"\nHERE IT IS: \n", paste0(fmt7_name, collapse = " "))
+    stop(paste0("\n\n================\n\n", tempo$text, "\n\n================\n\n"), call. = FALSE)
+}
+if( ! file.exists(tsv_name)){
+    tempo.cat <- paste0("ERROR IN ", script, ":\nTHE tsv_name PARAMETER MUST BE A VALID PATH OF A FILE IS NOT \"NULL\"\nHERE IT IS: \n", paste0(tsv_name, collapse = " "))
     stop(paste0("\n\n================\n\n", tempo$text, "\n\n================\n\n"), call. = FALSE)
 }
 
@@ -257,26 +241,32 @@ fun_report(data = paste0("\n\n################################ RUNNING\n\n"), ou
 
 ################ End ignition
 
-lines <- readLines(file_name)
+lines <- readLines(fmt7_name)
+tsv <- read.table(tsv_name, sep = "\t", header = TRUE)
 
 # Test if "0 hits found" or "Query:" line is empty ; then no tsv is made (means no gene matches were found or no sequence_id visible)
 query_line_idx <- grep("^# Query:", lines)
 if (length(query_line_idx) == 0) { 
-    tempo.cat <- paste0("ERROR IN ", script, ":\nTHE file_name PARAMETER MUST BE IN THE igblast OUTPUT FORMAT AND THEREFORE SHOULD HAVE A LINE STARTING WITH \"# Query:\" (HERE IT IS NOT THE CASE) \nHERE IT IS: \n", paste0(lines, collapse = "\n"))
+    tempo.cat <- paste0("ERROR IN ", script, ":\nTHE fmt7_name PARAMETER MUST BE IN THE igblast OUTPUT FORMAT AND THEREFORE SHOULD HAVE A LINE STARTING WITH \"# Query:\" (HERE IT IS NOT THE CASE) \nHERE IT IS: \n", paste0(lines, collapse = "\n"))
     stop(tempo.cat, call. = FALSE)
 }
 sequence_id <- sub("^# Query: *", "", lines[query_line_idx])
 if (sequence_id == "") {
-    tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 4 IN ", script, ":\n\nTHE file_name PARAMETER MUST BE IN THE igblast OUTPUT FORMAT AND THEREFORE SHOULD HAVE A LINE STARTING WITH \"# Query:\" \n THE EXISTENCE OF THIS LINE HAS BEEN TESTED AND VERIFIED, BUT ITS POSITION INDEX COULD NOT BE FOUND. \nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n")
+    tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 4 IN ", script, ":\n\nTHE fmt7_name PARAMETER MUST BE IN THE igblast OUTPUT FORMAT AND THEREFORE SHOULD HAVE A LINE STARTING WITH \"# Query:\" \n THE EXISTENCE OF THIS LINE HAS BEEN TESTED AND VERIFIED, BUT ITS POSITION INDEX COULD NOT BE FOUND. \nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n")
     stop(tempo.cat, call. = FALSE)
 }
 if (length(grep("^# 0 hits found", lines)) > 0) {
-    fun_report(data = paste0("\n\nNO HITS WERE FOUND FOR THE ", sequence_id, "SEQUENCE, NO COORDINATES TO PARSE.\n"), output = log, path = "./", overwrite = FALSE)
-    quit(save="no", status=0)
+    tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 5 IN ", script, ":\n\nNO HITS WERE FOUND FOR THE ", sequence_id, " SEQUENCE, THEREFORE THERE ARE NO COORDINATES TO PARSE.\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n")
+    stop(tempo.cat, call. = FALSE)
 }
 
 # The wanted info is in the section after "# Alignment summary" column 
 start_idx <- grep("^# Alignment summary", lines)
+if (length(start_idx) == 0 ){
+    tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 6 IN ", script, ":\n\nNO \"# Alignment summary\" SECTION FOUND IN THE .fmt7 INPUT FILE, THEREFORE THERE ARE NO COORDINATES TO PARSE.\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n")
+    stop(tempo.cat, call. = FALSE)
+}
+tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 7 IN ", script, ":\n\nTHE fmt7_name PARAMETER MUST BE IN THE igblast OUTPUT FORMAT AND THEREFORE SHOULD HAVE A LINE STARTING WITH \"# Query:\" \n THE EXISTENCE OF THIS LINE HAS BEEN TESTED AND VERIFIED, BUT ITS POSITION INDEX COULD NOT BE FOUND. \nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n")
 section_start <- start_idx + 1
 total_idx <- grep("^Total", lines)
 section_end <- min(total_idx[total_idx > section_start]) # Section ends at the first line starting with "Total" after "# Alignment summary", min will return "Inf" is total_idx is empty
@@ -295,7 +285,7 @@ if(!is.integer(section_end)) { # Indicates that no line starting with "Total" wa
 align_lines <- lines[section_start:section_end] # Extract the wanted section
 align_lines <- align_lines[!grepl("^#|^$|^Total", align_lines)] # Last verification that no empty lines or line starting with "#" or "Total" remain
 if (length(align_lines) == 0) {
-    tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 5 IN ", script, ":\n\nTHE file_name PARAMETER MUST BE IN THE igblast OUTPUT FORMAT AND THEREFORE SHOULD HAVE AN \"# Alignment summary\" \n SECTION. SEVERAL TESTS WERE MADE TO ENSURE ITS EXISTENCE, BUT THE SECTION WAS FOUND EMPTY. \nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n")
+    tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 8 IN ", script, ":\n\nTHE fmt7_name PARAMETER MUST BE IN THE igblast OUTPUT FORMAT AND THEREFORE SHOULD HAVE AN \"# Alignment summary\" \n SECTION. SEVERAL TESTS WERE MADE TO ENSURE ITS EXISTENCE, BUT THE SECTION WAS FOUND EMPTY. \nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n")
     stop(tempo.cat, call. = FALSE)
 }
 
@@ -306,7 +296,7 @@ regions <- c("FR1-IMGT", "CDR1-IMGT", "FR2-IMGT", "CDR2-IMGT", "FR3-IMGT", "CDR3
 wanted_labels <- c("FR1", "CDR1", "FR2", "CDR2", "FR3", "CDR3")
 
 if(!all(tab[,1]==regions)){
-    tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 6 IN ", script, ":\n\nTHE file_name PARAMETER MUST BE IN THE igblast OUTPUT FORMAT AND THEREFORE SHOULD HAVE AN \"# Alignment summary\" \n SECTION STARTING WITH THE FOLLOWING LINES: ", paste0(regions, collapse = " ; "), "HOWEVER, HERE ARE THE LINES IN THE ", file_name, "FILE : \n ", paste0(tab[,1], collapse = " ; "), " \nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n")
+    tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 9 IN ", script, ":\n\nTHE fmt7_name PARAMETER MUST BE IN THE igblast OUTPUT FORMAT AND THEREFORE SHOULD HAVE AN \"# Alignment summary\" \n SECTION STARTING WITH THE FOLLOWING LINES: ", paste0(regions, collapse = " ; "), "HOWEVER, HERE ARE THE LINES IN THE ", fmt7_name, "FILE : \n ", paste0(tab[,1], collapse = " ; "), " \nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n")
     stop(tempo.cat, call. = FALSE)
 }
 
@@ -326,5 +316,6 @@ df <- data.frame(sequence_id = sequence_id,
                  CDR3_start = coords$CDR3_start, CDR3_end = coords$CDR3_end,
                  stringsAsFactors = FALSE)
 
+tsv2 <- merge(tsv, df, by = "sequence_id", all.x = TRUE)
 
-write.table(df, file = paste0(sequence_id, ".tsv"), sep = "\t", quote = FALSE, row.names = FALSE)
+write.table(tsv2, file = paste0(sequence_id, "_coord_all_igblast_db-pass.tsv"), sep = "\t", quote = FALSE, row.names = FALSE)
