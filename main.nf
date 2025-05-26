@@ -381,8 +381,8 @@ process parseDb_filtering {
 // Translate the nucleotidic sequences into amino acid sequences
 process translation {
     label 'seqkit'
-    publishDir path: "${out_path}", mode: 'copy', pattern: "aa/*.fasta", overwrite: false
-    publishDir path: "${out_path}", mode: 'copy', pattern: "aligned_seq/*.fasta", overwrite: false
+    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_aa/*.fasta", overwrite: false
+    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_nuc/*.fasta", overwrite: false
     cache 'true'
 
     input:
@@ -391,15 +391,17 @@ process translation {
 
     output:
     path "translation.tsv", optional: true, emit: translation_ch // productive file with column sequence_alignment_aa added
-    path "aligned_seq/*.*", optional: true
+    path "productive_nuc/*.*", optional: true
     path "aa.tsv", optional: true, emit: aa_tsv_ch
-    path "aa/*.*", optional: true
+    path "productive_aa/*.*", optional: true
     path "translation.log", optional: true, emit: translation_log_ch
 
     script:
     """
     #!/bin/bash -ue
-    translation.sh ${select_ch} ${igblast_aa} # |& tee -a translation.log not used because in translation.sh 
+    translation.sh ${select_ch} ${igblast_aa} # |& tee -a translation.log not used because in translation.sh
+    mv aa productive_aa
+    mv aligned_seq productive_nuc
     """
 }
 
@@ -643,8 +645,8 @@ process metadata_check { // cannot be in germ_tree_vizu because I have to use th
 process repertoire {
     label 'r_ext'
     publishDir path: "${out_path}/files", mode: 'copy', pattern: "{*_repertoire.pdf}", overwrite: false
-    publishDir path: "${out_path}/png", mode: 'copy', pattern: "{*.png}", overwrite: false
-    publishDir path: "${out_path}/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
+    publishDir path: "${out_path}/figures/png", mode: 'copy', pattern: "{*.png}", overwrite: false
+    publishDir path: "${out_path}/figures/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
     publishDir path: "${out_path}/repertoires", mode: 'copy', pattern: "{rep_*.tsv}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{repertoire.log}", overwrite: false
     cache 'true'
@@ -710,8 +712,8 @@ process distToNearest {
 
 process distance_hist {
     label 'immcantation'
-    publishDir path: "${out_path}/png", mode: 'copy', pattern: "{*.png}", overwrite: false
-    publishDir path: "${out_path}/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
+    publishDir path: "${out_path}/figures/png", mode: 'copy', pattern: "{*.png}", overwrite: false
+    publishDir path: "${out_path}/figures/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{distance_hist.log}", overwrite: false
     cache 'true'
 
@@ -1129,8 +1131,8 @@ process germ_tree_vizu {
     label 'r_ext'
     publishDir path: "${out_path}/files", mode: 'copy', pattern: "{germ_tree.pdf}", overwrite: false
     publishDir path: "${out_path}/files", mode: 'copy', pattern: "{germ_no_tree.pdf}", overwrite: false
-    publishDir path: "${out_path}/png", mode: 'copy', pattern: "{*.png}", overwrite: false
-    publishDir path: "${out_path}/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
+    publishDir path: "${out_path}/figures/png", mode: 'copy', pattern: "{*.png}", overwrite: false
+    publishDir path: "${out_path}/figures/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
     publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{all_trees.RData}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{germ_tree_vizu.log}", overwrite: false
     cache 'true'
@@ -1201,8 +1203,8 @@ process germ_tree_vizu {
 process FastaGff{
     label 'r_ext'
     cache 'true'
-    publishDir path: "${out_path}/nucleotide_alignments", mode: 'copy', pattern: "{*.fasta}", overwrite: false
-    publishDir path: "${out_path}/nucleotide_alignments", mode: 'copy', pattern: "{*.gff}", overwrite: false
+    publishDir path: "${out_path}/fasta/aligned_nuc", mode: 'copy', pattern: "{*.fasta}", overwrite: false
+    publishDir path: "${out_path}/phylo/nuc", mode: 'copy', pattern: "{*.gff}", overwrite: false
 
     input:
     path germ_tree_ch // parallelization
@@ -1233,9 +1235,9 @@ process FastaGff{
 
 
 
-process PrintAlignmentCdr3{
+process PrintAlignmentNuc{
     label 'goalign'
-    publishDir path: "${out_path}/nucleotide_alignments", mode: 'copy', pattern: "{*.html}", overwrite: false
+    publishDir path: "${out_path}/phylo/nuc", mode: 'copy', pattern: "{*.html}", overwrite: false
 
     input:
     tuple path(fasta_alignments), path(gff)
@@ -1263,8 +1265,8 @@ process donut {
     label 'r_ext'
     //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
     //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.pdf}", overwrite: false
-    publishDir path: "${out_path}/png", mode: 'copy', pattern: "{*.png}", overwrite: false
-    publishDir path: "${out_path}/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
+    publishDir path: "${out_path}/figures/png", mode: 'copy', pattern: "{*.png}", overwrite: false
+    publishDir path: "${out_path}/figures/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
     cache 'true'
 
@@ -1407,7 +1409,7 @@ process Reformat{
 // Input : single fasta file containing several sequences & a tsv file containing V|J info to corresponding sequence id
 // Output : one fasta file PER group, containing said group sequences
 process DefineGroups {
-    publishDir path: "${out_path}/phylo_aa", mode: 'copy'
+    publishDir path: "${out_path}/fasta/aligned_aa", mode: 'copy'
     
     label 'goalign'
     
@@ -1471,7 +1473,7 @@ process NbSequences {
 
 process PrintAlignmentAA{
     label 'goalign'
-    publishDir path: "${out_path}/aa_alignments", mode: 'copy', pattern: "{*.html}", overwrite: false
+    publishDir path: "${out_path}/phylo/aa", mode: 'copy', pattern: "{*.html}", overwrite: false
 
     input:
     path filtered_fasta
@@ -1486,7 +1488,7 @@ process PrintAlignmentAA{
 }
 
 process Tree {
-    publishDir path: "${out_path}/phylo_aa", mode: 'copy', pattern: "{*.treefile}", overwrite: false
+    publishDir path: "${out_path}/phylo/aa", mode: 'copy', pattern: "{*.treefile}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
 
     label 'iqtree'
@@ -1522,7 +1524,7 @@ process ProcessMeta {
 
 
 process ITOL{
-    publishDir path: "${out_path}/phylo_aa", mode: 'copy'
+    publishDir path: "${out_path}/phylo/aa", mode: 'copy'
 
     label 'gotree'
 
@@ -2237,11 +2239,11 @@ workflow {
     )
 
 
-    PrintAlignmentCdr3(
+    PrintAlignmentNuc(
         FastaGff.out.nuc_alignments_ch
     )
     
-    PrintAlignmentCdr3.out.alignment_html.ifEmpty{
+    PrintAlignmentNuc.out.alignment_html.ifEmpty{
         print("\n\nWARNING: -> NO CDR3 ALIGNMENT FILE RETURNED\n\n")
     }
 

@@ -276,10 +276,10 @@ kable(df, format = "markdown", row.names = FALSE)
 ###  Amino acid sequences phylogeny 
 <br>
 
-`r  if(params$itol_subscription == "TRUE"){"Open the different **sequences_\\<SEQ_NAME\\>_align.fasta_itol_url.txt** files in the [phylo_aa](./phylo_aa) folder and click on the link to see the trees."}`
-`r  if(params$itol_subscription == "FALSE"){"To see the trees, follow the link : https://itol.embl.de/upload.cgi. Choose a name for your tree (optional) and upload a '*.treefile' file from the [phylo_aa](./phylo_aa) folder. The trees will then be displayed by iTOL."}`
+`r  if(params$itol_subscription == "TRUE"){"Open the different **sequences_\\<SEQ_NAME\\>_align.fasta_itol_url.txt** files in the [phylo/aa](./phylo/aa) folder and click on the link to see the trees."}`
+`r  if(params$itol_subscription == "FALSE"){"To see the trees, follow the link : https://itol.embl.de/upload.cgi. Choose a name for your tree (optional) and upload a '*.treefile' file from the [phylo/aa](./phylo/aa) folder. The trees will then be displayed by iTOL."}`
 
-Alignment visualization is available for each clonal group used in each tree, in the [aa_alignments](./aa_alignments) folder in html format.
+Alignment visualization is available for each clonal group used in each tree, in the [phylo/aa](./phylo_aa) folder in html format.
 
 <br><br>
 
