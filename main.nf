@@ -1301,7 +1301,7 @@ process donut {
     """
     #!/bin/bash -ue
     FILENAME=\$(basename -- ${data}) # recover a file name without path
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a ${kind}_donut.log
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\nKIND : ${kind}\\nCOL : ${col}\\n\\n################################\\n\\n" |& tee -a ${kind}_donut.log
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a ${kind}_donut.log
     donut.R \
 "${data}" \
@@ -2124,7 +2124,9 @@ workflow {
     )
     closest_germline.out.closest_log_ch.collectFile(name: "closest_germline.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
 
-
+    closest_germline_filtered = closest_germline.out.closest_ch.filter{ file -> file.countLines() > clone_nb_seq.toInteger() } // Only keep clonal groups that have a number of sequences superior to clone_nb_seq (variable defined in nextflow.config)
+    closest_germline_filtered_ch2 = closest_germline_filtered.collectFile(name : "closest_germline_filtered.tsv", skip: 1, keepHeader: true)
+    closest_germline_filtered_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 
     mutation_load(
         closest_germline.out.closest_ch,
@@ -2139,6 +2141,16 @@ workflow {
     nb_clone_assigned = clone_assigned_seq.countLines() - 1 // Minus 1 because 1st line = column names
     clone_assigned_seq.subscribe{it -> it.copyTo("${out_path}/files")}
 
+    mutation_load_filtered = mutation_load.out.mutation_load_ch.filter{ file -> file.countLines() > clone_nb_seq.toInteger() } // Only keep clonal groups that have a number of sequences superior to clone_nb_seq (variable defined in nextflow.config)
+
+    
+    germline_genes(
+        mutation_load_filtered
+    )
+
+    germline_genes_ch2 = germline_genes.out.germline_genes_ch.collectFile(name: "germ_tree_seq.tsv", skip: 1, keepHeader: true)
+    germline_genes_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
+
 
 
     repertoire(
@@ -2147,6 +2159,8 @@ workflow {
         cute_file
     )
 
+
+    /*
 
     get_germ_tree(
         mutation_load.out.mutation_load_ch,
@@ -2191,14 +2205,6 @@ workflow {
     get_germ_tree.out.get_germ_tree_log_ch.collectFile(name: "get_germ_tree.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
 
 
-    germline_genes(
-        germ_tree_ch2
-    )
-
-    germline_genes_ch2 = germline_genes.out.germline_genes_ch.collectFile(name: "germ_tree_seq.tsv", skip: 1, keepHeader: true)
-    germline_genes_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
-
-
 
     germ_tree_vizu(
         rdata_germ_tree_ch2,
@@ -2229,11 +2235,11 @@ workflow {
 
 
 
-
+    */
 
 
     FastaGff(
-        germ_tree_ch3,
+        closest_germline_filtered,
         clone_nb_seq,
         cute_path
     )
@@ -2255,7 +2261,7 @@ workflow {
     tempo3_ch = tempo1_ch.merge(tempo2_ch) // 3 lists
     tempo4_ch = Channel.of("vj_allele", "c_allele", "vj_gene", "c_gene")
     tempo5_ch = tempo3_ch.combine(tempo4_ch) // 12 tuples
-    // tempo5_ch.view()
+
 
     donut(
         tempo5_ch,

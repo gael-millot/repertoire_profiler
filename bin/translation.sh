@@ -23,11 +23,11 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
     # exit 1
 # fi
 
-# make fasta files of the aligned sequences
+# make fasta files of the filtered sequences (only productive ones because this process is called after the productive filtering)
 
 
     if [[ "${igblast_aa}" == "false" ]] ; then
-        TEMPO_NAME="sequence_alignment"
+        TEMPO_NAME="sequence"
     else 
         TEMPO_NAME="sequence_aa_alignment"
     fi
@@ -59,7 +59,7 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
             print ">"$COL_NAME"\n"$COL_SEQ > "./aligned_seq/"$COL_NAME".fasta" # make fasta files of the aligned nuc sequences
         }
     }' ${select_ch} |& tee -a translation.log
-    # end make fasta files of the aligned sequences
+    # end make fasta files of the productive sequences
 
 
     if [[ "${igblast_aa}" == "false" ]] ; then
@@ -107,7 +107,7 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
             }
         ' aa.tsv ${select_ch} |& tee -a translation.log
         # end add the aa seq into the translation.tsv
-        sed -i '1i sequence_id\tsequence_alignment' aa.tsv |& tee -a translation.log # header added
+        sed -i '1i sequence_id\tsequence_aa' aa.tsv |& tee -a translation.log # header added
         # echo -e "sequence_id\tsequence_alignment\n" | cat aa.tsv > caca.tsv 
     else
         cat ${select_ch} > translation.tsv |& tee -a translation.log
