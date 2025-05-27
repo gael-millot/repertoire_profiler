@@ -68,7 +68,7 @@ script <- "tsv2fasta"
 # clone_nb_seq <- 3
 # log <- "tsv2fasta.log"
 # Germline <- "germline_d_mask"
-# Seq <- "sequence_alignment"
+# Seq <- "sequence,sequence_aa"
 # Name <- "sequence_id"
 # path <- "seq_for_germ_tree.tsv"
 
@@ -270,6 +270,8 @@ tempo <- fun_check(data = log, class = "vector", typeof = "character", length = 
 if(any(arg.check) == TRUE){ # normally no NA
     stop(paste0("\n\n================\n\n", paste(text.check[arg.check], collapse = "\n"), "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between == #
 }
+Seq <- unlist(strsplit(Seq, ",")) # To create a vector from the string
+
 # end argument primary checking
 # second round of checking and data preparation
 # management of NA arguments
@@ -425,19 +427,21 @@ for(i0 in Seq){
             stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL v_gene VALUES SHOULD BE THE SAME IN A seq_for_germ_tree FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$junction_length, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
         }
         # End check of columns relative to clonal groups
+        dir_name <- paste0("./", i0)
+        dir.create(dir_name, showWarnings = FALSE, recursive = TRUE)
         for(i1 in 1:nrow(tempo.df)){
             tempo.name <- paste0(i0, "_", tempo.df[i1, "clone_id"], "_", tempo.df[i1, "v_gene"], "_", tempo.df[i1, "j_gene"], "_", tempo.df[i1, "junction_length"], ".fasta") # These columns all have the same value for a clonal group, so it writes in the same file
             tempo.cat <- paste0(">", tempo.df[i1, Name], "\n", tempo.df[i1, i0], "\n")
-            cat(tempo.cat, file = paste0("./", tempo.name), append = TRUE)
+            cat(tempo.cat, file = file.path(dir_name, tempo.name), append = TRUE)
         }
         if(length(Germline) > 0){
             if(any(tempo.df[[Germline]] != tempo.df[1, Germline])){
                 stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nTHE VALUES INSIDE THE Germline COLUMN SHOULD ALL BE THE SAME, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df[[Germline]], collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
             }
             tempo.name <- paste0(i0, "_", tempo.df[1, "clone_id"], "_", tempo.df[1, "v_gene"], "_", tempo.df[1, "j_gene"], "_", tempo.df[1, "junction_length"], ".fasta") # These columns all have the same value for a clonal group, so it writes in the same file
-            germ_seq_name <- paste0("Germline_group_", tempo.df[1, "clone_id"])
+            germ_seq_name <- paste0("germline_d_mask_cloneid_", tempo.df[1, "clone_id"])
             tempo.cat <- paste0(">", germ_seq_name, "\n", tempo.df[1, Germline], "\n")
-            cat(tempo.cat, file = paste0("./", tempo.name), append = TRUE)
+            cat(tempo.cat, file = paste0("./", i0, "/", tempo.name), append = TRUE)
         }
     } else {
         stop(paste0("NO FASTA FILE CREATED BECAUSE THE IMPORTED FILE:\n", path, "\nHAS MORE THAN ", clone_nb_seq, " EMPTY SEQUENCES (NA OR \"\") IN ", i0, "COLUMN\n"))

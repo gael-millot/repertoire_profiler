@@ -400,8 +400,6 @@ process translation {
     """
     #!/bin/bash -ue
     translation.sh ${select_ch} ${igblast_aa} # |& tee -a translation.log not used because in translation.sh
-    mv aa productive_aa
-    mv aligned_seq productive_nuc
     """
 }
 
@@ -1192,44 +1190,51 @@ process germ_tree_vizu {
 
 
 
-// Makes a fasta file with several sequences based on the sequences present in the tsv input (germ_tree_ch)
-// Makes a gff file from the coordinates info contained inside the tsv and pairs it with the fasta
+// Makes a fasta file with several sequences based on the sequences present in the tsv input in BOTH nucleotidic format and amino-acidic format
+// The tsv input is expected to already only contain sequences of one same clonal group. For each clonal group, both nuc and aa fastas will be emitted paired up.
+// Makes a gff file from the coordinates info contained inside the tsv and pairs it with the fastas
 // Inputs :
-//      - germ_tree_ch : tsv info files containing sequences (used to create fasta files) + region coordinates info (used to create gff)
+//      - closest_germline_filtered : tsv info files containing a "sequence" column (used to create nuc fasta file), a "sequence_aa" column (used to create aa fasta file) + region coordinates info (used to create gff)
 //      - clone_nb_seq : Minimun number of non-identical sequences per clonal group for tree plotting (defined in nextflow.config). It has to be checked beforehand that the elements in the germ_tree_ch channel contain more than clone_nb_seq rows of data, or the program will stop.
 //      - cute_file : Several functions used in the tsv2fasta.R script
 // Outputs :
-//      - TUPLE : nuc_alignments_ch : sequences in fasta files, joined with their corresponding gff files indicating region coordinates
+//      - TUPLE : nuc_alignments_ch : - 1st element : sequences in fasta files, in nucleotidic format
+//                                    - 2nd element : sequences in fasta files, in amino-acidic format
+//                                    - 3rd element : joined with their corresponding gff files indicating region coordinates
 process FastaGff{
     label 'r_ext'
     cache 'true'
-    publishDir path: "${out_path}/fasta/aligned_nuc", mode: 'copy', pattern: "{*.fasta}", overwrite: false
+    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{sequences_full_trees_nuc/*.fasta}", overwrite: false 
+    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{sequences_full_trees_aa/*.fasta}", overwrite: false
     publishDir path: "${out_path}/phylo/nuc", mode: 'copy', pattern: "{*.gff}", overwrite: false
 
     input:
-    path germ_tree_ch // parallelization
+    path closest_germline_filtered // parallelization
     val clone_nb_seq
     path cute_file
 
     output:
-    tuple path("*.fasta"), path("*.gff"), emit: nuc_alignments_ch
+    tuple path("sequences_full_trees_nuc/*.fasta"), path("sequences_full_trees_aa/*.fasta"), path("*.gff"), emit: nuc_alignments_ch
 
     script:
     """
     #!/bin/bash -ue
 
-    FILENAME=\$(basename -- ${germ_tree_ch}) # recover a file name without path
+    FILENAME=\$(basename -- ${closest_germline_filtered}) # recover a file name without path
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a tsv_to_fasta.log
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a tsv_to_fasta.log
 
     tsv2fasta.R \
-    "${germ_tree_ch}" \
+    "${closest_germline_filtered}" \
     "sequence_id" \
-    "sequence_alignment" \
+    "sequence,sequence_aa" \
     "germline_alignment_d_mask" \
     "${clone_nb_seq}" \
     "${cute_file}" \
     "tsv_to_fasta.log"
+
+    mv sequence sequences_full_trees_nuc
+    mv sequence_aa sequences_full_trees_aa
     """
 }
 
@@ -1385,7 +1390,7 @@ process backup {
 
 
 // Converts a tsv file containing several amino acid sequences into fasta file
-// Inputs : aatsv : tsv file (columns sequence_id (CL4184329_VH) and sequence_alignment (QVQLQQSGAXELARPGASVK...))
+// Inputs : aatsv : tsv file (columns sequence_id (CL4184329_VH) and sequence_aa (QVQLQQSGAXELARPGASVK...))
 //          igblast_data_check_ch : not actually needed by this process, this input's only purpose is to make sure the ig_blast_data_check process is completed before Reformat begins ; so that any errors in the igblast_variable/constant_ref_files defined in the nextflow.config are caught before Reformat is executed
 //                                  Reformat, ALign, DefineGroups, NbSequences, Tree, ProcessMeta and ITOL are processes all dependant on Reformat and they can only be called on heavy chains
 // Output : same data converted into a fasta file
