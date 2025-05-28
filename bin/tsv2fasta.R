@@ -61,18 +61,23 @@ script <- "tsv2fasta"
 
 
 
-##### Test
+################################ EXAMPLES FOR TEST AND EXPLANATION OF ARGUMENTS
 
 # script <- "tsv2fasta"
-# cute <- "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v11.4.0/cute_little_R_functions.R"
-# clone_nb_seq <- 3
-# log <- "tsv2fasta.log"
-# Germline <- "germline_d_mask"
-# Seq <- "sequence,sequence_aa"
-# Name <- "sequence_id"
-# path <- "seq_for_germ_tree.tsv"
 
-##### End test
+### Arguments : 
+# path <- "seq_for_germ_tree.tsv"      # tsv file containing data. needs to have all columns in Name, Seq and Germline
+# Name <- "sequence_id"                # name of the column containing the sequence ids
+# Seq <- "sequence,sequence_aa"        # name of the columns containing the sequences to put in the fasta file (can be a single string or several strings seperated by "," if several columns are needed. the fastas will then be created in different folders)
+# Germline <- "germline_alignment_d_mask,germline_d_mask_aa_no_gaps"    # name of the columns containing corresponding germlines of the previously mentionned sequences. Need to be in the same order as the Seq argument
+# clone_nb_seq <- 3                    # Minimum number of rows in the tsv file. The program expects this to be respected, otherwise raises an error.
+# cute <- "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v11.4.0/cute_little_R_functions.R"
+# log <- "tsv2fasta.log"
+
+
+
+
+################################# End test
 
 
 
@@ -270,7 +275,14 @@ tempo <- fun_check(data = log, class = "vector", typeof = "character", length = 
 if(any(arg.check) == TRUE){ # normally no NA
     stop(paste0("\n\n================\n\n", paste(text.check[arg.check], collapse = "\n"), "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between == #
 }
+
 Seq <- unlist(strsplit(Seq, ",")) # To create a vector from the string
+Germline <- unlist(strsplit(Germline, ","))
+
+if (length(Seq) != length(Germline)){
+    tempo.cat <- paste0("ERROR IN ", script, ".R:\nTHE Seq ARGUMENT MUST CONTAIN THE SAME NUMBER OF ELEMENTS AS THE Germline ARGUMENT\nHERE, THE Seq ARGUMENT CONTAINS FOLLOWING STRINGS (EXPECTED TO BE COLUMN NAMES) : \n", paste0(Seq, collapse = "\n"),"\nTHE Germline ARGUMENT CONTAINS FOLLOWING STRINGS (EXPECTED TO BE COLUMN NAMES) : \n", paste0(Germline, collapse = "\n"))
+    stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE)
+}
 
 # end argument primary checking
 # second round of checking and data preparation
@@ -366,8 +378,8 @@ if( ! Name %in% names(obs)){
     stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nTHE Name PARAMETER MUST BE A COLUMN NAME OF THE IMPORTED FILE:\n", path, "\n\nHERE IT IS Name:\n", Name, "\n\nCOLUMN NAMES:\n", paste(names(obs), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
 }
 
-if( length(Germline) > 0 && ! Germline %in% names(obs)){
-    stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nTHE Germline PARAMETER MUST BE A COLUMN NAME OF THE IMPORTED FILE IF NOT EMPTY:\n", path, "\n\nHERE IT IS Name:\n", Germline, "\n\nCOLUMN NAMES:\n", paste(names(obs), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
+if( ! all(Germline %in% names(obs))){
+    stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nTHE Germline PARAMETER MUST BE COLUMN NAMES OF THE IMPORTED FILE:\n", path, "\n\nHERE IT IS Name:\n", paste(Germline, collapse = "\n"), "\n\nCOLUMN NAMES:\n", paste(names(obs), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
 }
 
 if(any(duplicated(obs[, Name]))){
@@ -398,7 +410,10 @@ for(i0 in names(obs)){ # NA in xlsx file become "NA". Thus, has to be replaced b
 
 ## Create the fasta files :
 
+count = 0
+
 for(i0 in Seq){
+    count = count + 1
     tempo.log <- is.na(obs[ , i0]) | obs[ , i0] == ""
     if(sum(!tempo.log, na.rm = TRUE) >= clone_nb_seq){
         # Only create fasta files with at least <clone_nb_seq> sequences (Minimun number of non-identical sequences per clonal group for tree plotting)
@@ -434,15 +449,15 @@ for(i0 in Seq){
             tempo.cat <- paste0(">", tempo.df[i1, Name], "\n", tempo.df[i1, i0], "\n")
             cat(tempo.cat, file = file.path(dir_name, tempo.name), append = TRUE)
         }
-        if(length(Germline) > 0){
-            if(any(tempo.df[[Germline]] != tempo.df[1, Germline])){
-                stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nTHE VALUES INSIDE THE Germline COLUMN SHOULD ALL BE THE SAME, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df[[Germline]], collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
-            }
-            tempo.name <- paste0(i0, "_", tempo.df[1, "clone_id"], "_", tempo.df[1, "v_gene"], "_", tempo.df[1, "j_gene"], "_", tempo.df[1, "junction_length"], ".fasta") # These columns all have the same value for a clonal group, so it writes in the same file
-            germ_seq_name <- paste0("germline_d_mask_cloneid_", tempo.df[1, "clone_id"])
-            tempo.cat <- paste0(">", germ_seq_name, "\n", tempo.df[1, Germline], "\n")
-            cat(tempo.cat, file = paste0("./", i0, "/", tempo.name), append = TRUE)
+        # Germline addition to the fasta
+        germ = Germline[count]
+        if(any(tempo.df[[germ]] != tempo.df[1, germ])){
+            stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nTHE VALUES INSIDE EACH OF THE Germline COLUMN SHOULD ALL BE THE SAME, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df[[germ]], collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
         }
+        tempo.name <- paste0(i0, "_", tempo.df[1, "clone_id"], "_", tempo.df[1, "v_gene"], "_", tempo.df[1, "j_gene"], "_", tempo.df[1, "junction_length"], ".fasta") # These columns all have the same value for a clonal group, so it writes in the same file
+        germ_seq_name <- paste0("germline_d_mask_cloneid_", tempo.df[1, "clone_id"])
+        tempo.cat <- paste0(">", germ_seq_name, "\n", tempo.df[1, germ], "\n")
+        cat(tempo.cat, file = paste0("./", i0, "/", tempo.name), append = TRUE)
     } else {
         stop(paste0("NO FASTA FILE CREATED BECAUSE THE IMPORTED FILE:\n", path, "\nHAS MORE THAN ", clone_nb_seq, " EMPTY SEQUENCES (NA OR \"\") IN ", i0, "COLUMN\n"))
     }
