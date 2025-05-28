@@ -2357,13 +2357,13 @@ workflow {
     AlignAa(
         align_input
     )
-    aligned_aa_only_ch = AlignAA.out.aligned_aa_ch.map { x, y, z -> y }
+    aligned_aa_only_ch = AlignAa.out.aligned_aa_ch.map { x, y, z -> y }
 
 
     AlignNuc(
         AlignAa.out.aligned_aa_ch
     )
-    aligned_nuc_only_ch = AlignNuc.out.aligned_all_ch.map { x, y, z -> x, z }
+    aligned_nuc_only_ch = AlignNuc.out.aligned_all_ch.map { x, y, z -> tuple(x, z) }
 
 
 
