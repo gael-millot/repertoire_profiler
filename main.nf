@@ -1450,6 +1450,7 @@ process AlignAa {
     
     output:
     tuple path(fasta_nuc), path("*_align_aa.fasta"), path(gff) , emit : aligned_aa_ch
+    path "AlignAA.log", emit: alignaa_log_ch
     
     script:
     if( ! (heavy_chain == "TRUE" || heavy_chain == "FALSE") ){
@@ -1458,7 +1459,11 @@ process AlignAa {
     parms="-al"
     if(heavy_chain == "TRUE"){parms="-ah"}
     """
-    /bin/Abalign_V2_Linux_Term/Abalign -i $fasta ${parms} ${fasta_nuc.baseName}_align_aa.fasta -sp MU || true
+    #!/bin/bash -ue
+    FILENAME=\$(basename -- ${fasta_aa}) # recover a file name without path
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a AlignAA.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a AlignAA.log
+    /bin/Abalign_V2_Linux_Term/Abalign -i ${fasta_aa} ${parms} ${fasta_aa.baseName}_align_aa.fasta -sp MU |& tee -a AlignAA.log || true
     """
 }
 
@@ -2351,7 +2356,7 @@ workflow {
         clone_nb_seq,
         cute_path
     )
-    align_input = FastaGff.out.fasta_gff_ch.flatten().combine(heavy_chain)
+    align_input = FastaGff.out.fasta_gff_ch.combine(heavy_chain)
 
 
     AlignAa(
