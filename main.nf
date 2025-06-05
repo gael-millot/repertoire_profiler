@@ -926,6 +926,43 @@ process closest_germline {
 
 
 
+// This process adds the germline sequences for each v,d,j gene specified in the germline_._call columns present in the tsv file
+// Inputs :
+//      - closest_ch : tsv file containing at least germline_._call column (otherwise error), sequences already regrouped in clonal groups
+//      - igblast_organism : value specified in nextflow.config
+//      - igblast_variable_ref_files : also specified in nextflow.config, contains germline ref sequences of IMGT database
+//                                     allele names already contained in the tsv will be used to search in thos files for the corresponding sequence
+// Outputs :
+//      - add_germ_ch : same tsv file as closest_ch, with the addition of the new germline_._seq columns
+process AddGermlineSequences{
+    label 'immcantation'
+    cache 'true'
+
+    input:
+    path closest_ch // parallelization per clonal group
+    val igblast_organism
+    val igblast_variable_ref_files
+
+    output:
+    path "*_germ-seq.tsv", emit: add_germ_ch
+    path "*.log", emit: add_germ_log_ch
+
+    script:
+    """
+    #!/bin/bash -ue
+    FILENAME=\$(basename -- ${closest_ch}) # recover a file name without path
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a AddGermlineSequences.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a AddGermlineSequences.log
+
+    REPO_PATH="/usr/local/share/germlines/imgt/${igblast_organism}/vdj" # path where the imgt_human_IGHV.fasta, imgt_human_IGHD.fasta and imgt_human_IGHJ.fasta files are in the docker container
+    VDJ_FILES=\$(awk -v var1="${igblast_variable_ref_files}" -v var2="\${REPO_PATH}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}')
+
+    GermlineSequences.py -i \$FILENAME -r \${VDJ_FILES} |& tee -a GermlineSequences.log
+    """
+}
+
+
+
 
 // This process takes the germline_alignment_d_mask column, removes the gaps and adds a column to the tsv
 // It then adds to the tsv the translation in amino-acids of the germline_d_mask without gaps
@@ -2158,9 +2195,17 @@ workflow {
     closest_germline.out.closest_log_ch.collectFile(name: "closest_germline.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
 
+    AddGermlineSequences(
+        closest_germline.out.closest_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE closest_germline PROCESS\n\n========\n\n"},
+        igblast_organism, 
+        igblast_variable_ref_files
+    )
+    AddGermlineSequences.out.add_germ_log_ch.collectFile(name: "AddGermlineSequences.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+
+
 
     TranslateGermline {
-        closest_germline.out.closest_ch
+        AddGermlineSequences.out.add_germ_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE AddGermlineSequences PROCESS\n\n========\n\n"}
     }
     TranslateGermline.out.translate_germ_log_ch.collectFile(name: "TranslateGermline.log").subscribe{it -> it.copyTo("${out_path}/reports")}
     translate_germline_filtered = TranslateGermline.out.translate_germ_ch.filter{ file -> file.countLines() > clone_nb_seq.toInteger() } // Only keep clonal groups that have a number of sequences superior to clone_nb_seq (variable defined in nextflow.config)
