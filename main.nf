@@ -1903,10 +1903,10 @@ workflow {
     //print("    system_exec: ${system_exec}")
     //print("    out_path: ${out_path_ini}")
     if("${system_exec}" == "slurm"){
-        print("    queue: ${queue}")
-        print("    qos: ${qos}")
-        print("    add_options: ${add_options}")
-    }else if("${system_exec}" != "local"){
+        print("    queue: ${slurm_queue}")
+        print("    qos: ${slurm_qos}")
+    }
+    if("${system_exec}" != "local"){
         print("    add_options: ${add_options}")
     }
     if(igblast_variable_ref_files =~ /^.*IG(K|L)V.*$/){
