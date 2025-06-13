@@ -422,6 +422,10 @@ fun_report(data = paste0("\n\n################################ RUNNING\n\n"), ou
 
 obs <- read.table(file_name, sep = "\t", header = TRUE, comment.char = "")
 
+tempo.cat <- paste0("\n\nREPERTOIRENAMES : ", repertoire_names_ch, "\n\n")
+fun_report(data = tempo.cat, output = log, path = "./", overwrite = FALSE)
+cat(tempo.cat)
+
 ################ End Data import
 
 ################ data modification

@@ -238,32 +238,7 @@ Passing ratio : ```r base::round(params$nb_clone_assigned / (params$nb_clone_ass
 
 <br>
 
-See the [germ_tree.pdf](files/germ_tree.pdf) file in the [files](./files) folder.
-<br>
 
-See also:<br /><ul><li>
-germ_tree_seq.tsv : &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-<span style="color:green">*germ_tree_seq.tsv file in the [files](./files) folder*</span>
-```{r, echo=FALSE, results='asis'}
-df <- read_tsv_with_dummy("files/germ_tree_seq.tsv")
-if (is.data.frame(df) && attr(df, "truncated")) {
-  cat("\n**(Note: Table truncated to 10 rows. Full file available in the [files](./files) folder.)**\n\n")
-}
-kable(df, format = "markdown", row.names = FALSE)
-```
-</details><br /></li>
-<li>
-germ_tree_dismissed_seq.tsv : &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-<span style="color:green">*germ_tree_dismissed_seq.tsv file in the [files](./files) folder*</span>
-```{r, echo=FALSE, results='asis'}
-df <- read_tsv_with_dummy("files/germ_tree_dismissed_seq.tsv")
-if (is.data.frame(df) && attr(df, "truncated")) {
-  cat("\n**(Note: Table truncated to 10 rows. Full file available in the [files](./files) folder.)**\n\n")
-}
-kable(df, format = "markdown", row.names = FALSE)
-```
-</details><br /></li>
-<li>[germ_tree_dismissed_clone_id.tsv](files/germ_tree_dismissed_clone_id.tsv)</li></ul>
 
 <br>
 

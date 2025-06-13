@@ -400,8 +400,6 @@ process translation {
     """
     #!/bin/bash -ue
     translation.sh ${select_ch} ${igblast_aa} # |& tee -a translation.log not used because in translation.sh
-    mv aa productive_aa
-    mv aligned_seq productive_nuc
     """
 }
 
@@ -927,6 +925,108 @@ process closest_germline {
 }
 
 
+
+// This process adds the germline sequences for each v,d,j gene specified in the germline_._call columns present in the tsv file
+// Inputs :
+//      - closest_ch : tsv file containing at least germline_._call column (otherwise error), sequences already regrouped in clonal groups
+//      - igblast_organism : value specified in nextflow.config
+//      - igblast_variable_ref_files : also specified in nextflow.config, contains germline ref sequences of IMGT database
+//                                     allele names already contained in the tsv will be used to search in thos files for the corresponding sequence
+// Outputs :
+//      - add_germ_ch : same tsv file as closest_ch, with the addition of the new germline_._seq columns
+process AddGermlineSequences{
+    label 'immcantation'
+    cache 'true'
+
+    input:
+    path closest_ch // parallelization per clonal group
+    val igblast_organism
+    val igblast_variable_ref_files
+
+    output:
+    path "*_germ-seq.tsv", emit: add_germ_ch
+    path "*.log", emit: add_germ_log_ch
+
+    script:
+    """
+    #!/bin/bash -ue
+    FILENAME=\$(basename -- ${closest_ch}) # recover a file name without path
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a AddGermlineSequences.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a AddGermlineSequences.log
+
+    REPO_PATH="/usr/local/share/germlines/imgt/${igblast_organism}/vdj" # path where the imgt_human_IGHV.fasta, imgt_human_IGHD.fasta and imgt_human_IGHJ.fasta files are in the docker container
+    VDJ_FILES=\$(awk -v var1="${igblast_variable_ref_files}" -v var2="\${REPO_PATH}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}')
+
+    GermlineSequences.py -i \$FILENAME -r \${VDJ_FILES} |& tee -a GermlineSequences.log
+    """
+}
+
+
+
+
+// This process takes the germline_alignment_d_mask column, removes the gaps and adds a column to the tsv
+// It then adds to the tsv the translation in amino-acids of the germline_d_mask without gaps
+process TranslateGermline {
+    label 'r_ext'
+
+    input:
+    path add_germ_ch // parallelization per clonal group
+
+    output:
+    path "translate_germline_group_*.tsv", emit: translate_germ_ch
+    path "*.log", emit: translate_germ_log_ch
+
+    script:
+    """
+    FILENAME=\$(basename -- ${add_germ_ch}) # recover a file name without path
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a TranslateGermline.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a TranslateGermline.log
+
+
+    Rscript -e '
+        file_name <- "${add_germ_ch}"
+        df <- read.table(file_name, sep = "\\t", header = TRUE)
+
+        germ_nuc <- df[["germline_alignment_d_mask"]]
+        # Make sure all germline sequences are the same (which they are supposed to be since this is a single clonal group)
+        if(any(germ_nuc != germ_nuc[1])){
+            stop(paste0("\\n\\n================\\n\\nERROR IN ", script, ".R\\nTHE VALUES INSIDE THE Germline COLUMN SHOULD ALL BE THE SAME, BUT THEY ARE NOT.\\nHERE THEY ARE : ", paste0(tempo.df[[Germline]], collapse = "\\n"),"\\n\\n================\\n\\n"), call. = FALSE)
+        }
+        germ_without_gaps <- gsub("\\\\.", "", germ_nuc[1])
+
+        df[["germline_d_mask_no_gaps"]] <- germ_without_gaps
+
+        length_no_gaps <- nchar(germ_without_gaps)
+        if(length_no_gaps %% 3 != 0){
+            cat(paste0("\\nWARNING: THE germline_alignment_d_mask COLUMN CONTAINS ", length_no_gaps, " CHARACTERS WHEN GAPS ARE REMOVED, WHICH IS NOT A MULTIPLE OF 3. \\n"), file = "TranslateGermline.log", append = TRUE)
+        }
+
+        germ_dna <- Biostrings::DNAString(germ_without_gaps)
+
+        # Catch a warning in the log file if raised
+        withCallingHandlers(
+            expr = {
+                germ_aa <- Biostrings::translate(germ_dna, if.fuzzy.codon="X")
+            },
+            warning = function(w) {
+                cat("WARNING OF Biostrings::translate FUNCTION : ", conditionMessage(w), "\\n", file = "TranslateGermline.log", append = TRUE)
+                invokeRestart("muffleWarning")
+            }
+        )
+
+        df[["germline_d_mask_aa_no_gaps"]] <- toString(germ_aa)
+        new_file_name <- paste0("translate_germline_group_", df[1, "clone_id"], ".tsv")
+        write.table(df, file = paste0("./", new_file_name), row.names = FALSE, col.names = TRUE, sep = "\\t")
+
+    '|& tee -a TranslateGermline.log
+
+    """
+
+}
+
+
+
+
 process mutation_load {
     label 'immcantation'
     //publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
@@ -934,7 +1034,7 @@ process mutation_load {
     cache 'true'
 
     input:
-    path closest_ch // parallelization expected
+    path translate_germ_ch // parallelization expected
     path meta_file
     val meta_legend
 
@@ -946,8 +1046,8 @@ process mutation_load {
     script:
     """
     #!/bin/bash -ue
-    FILENAME=\$(basename -- ${closest_ch}) # recover a file name without path
-    cp -Lr ${closest_ch} "./TEMPO.tsv" # to have the hard file, not the symlink, because modifications will be performed inside
+    FILENAME=\$(basename -- ${translate_germ_ch}) # recover a file name without path
+    cp -Lr ${translate_germ_ch} "./TEMPO.tsv" # to have the hard file, not the symlink, because modifications will be performed inside
     chmod 777 TEMPO.tsv
     rm \$FILENAME # remove the initial file to avoid to send it into the channel
     cp -rp TEMPO.tsv "\$FILENAME" # -p for preserve permissions
@@ -1031,6 +1131,7 @@ process mutation_load {
     # rm tempo_shm-pass.tsv
     """
 }
+
 
 
 process get_germ_tree {
@@ -1192,62 +1293,51 @@ process germ_tree_vizu {
 
 
 
-// Makes a fasta file with several sequences based on the sequences present in the tsv input (germ_tree_ch)
-// Makes a gff file from the coordinates info contained inside the tsv and pairs it with the fasta
+// Makes a fasta file with several sequences based on the sequences present in the tsv input in BOTH nucleotidic format and amino-acidic format
+// The tsv input is expected to already only contain sequences of one same clonal group. For each clonal group, both nuc and aa fastas will be emitted paired up.
+// Makes a gff file from the coordinates info contained inside the tsv and pairs it with the fastas
 // Inputs :
-//      - germ_tree_ch : tsv info files containing sequences (used to create fasta files) + region coordinates info (used to create gff)
+//      - translate_germline_filtered : tsv info files containing a "sequence" column (used to create nuc fasta file), a "sequence_aa" column (used to create aa fasta file) + region coordinates info (used to create gff)
 //      - clone_nb_seq : Minimun number of non-identical sequences per clonal group for tree plotting (defined in nextflow.config). It has to be checked beforehand that the elements in the germ_tree_ch channel contain more than clone_nb_seq rows of data, or the program will stop.
 //      - cute_file : Several functions used in the tsv2fasta.R script
 // Outputs :
-//      - TUPLE : nuc_alignments_ch : sequences in fasta files, joined with their corresponding gff files indicating region coordinates
+//      - TUPLE : nuc_alignments_ch : - 1st element : sequences in fasta files, in nucleotidic format
+//                                    - 2nd element : sequences in fasta files, in amino-acidic format
+//                                    - 3rd element : joined with their corresponding gff files indicating region coordinates
 process FastaGff{
     label 'r_ext'
     cache 'true'
-    publishDir path: "${out_path}/fasta/aligned_nuc", mode: 'copy', pattern: "{*.fasta}", overwrite: false
+    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{sequences_full_trees_nuc/*.fasta}", overwrite: false 
+    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{sequences_full_trees_aa/*.fasta}", overwrite: false
     publishDir path: "${out_path}/phylo/nuc", mode: 'copy', pattern: "{*.gff}", overwrite: false
 
     input:
-    path germ_tree_ch // parallelization
+    path translate_germline_filtered // parallelization
     val clone_nb_seq
     path cute_file
 
     output:
-    tuple path("*.fasta"), path("*.gff"), emit: nuc_alignments_ch
+    tuple path("sequences_full_trees_nuc/*.fasta"), path("sequences_full_trees_aa/*.fasta"), path("*.gff"), emit: fasta_gff_ch
 
     script:
     """
     #!/bin/bash -ue
 
-    FILENAME=\$(basename -- ${germ_tree_ch}) # recover a file name without path
+    FILENAME=\$(basename -- ${translate_germline_filtered}) # recover a file name without path
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a tsv_to_fasta.log
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a tsv_to_fasta.log
 
     tsv2fasta.R \
-    "${germ_tree_ch}" \
+    "${translate_germline_filtered}" \
     "sequence_id" \
-    "sequence_alignment" \
-    "germline_alignment_d_mask" \
+    "sequence,sequence_aa" \
+    "germline_d_mask_no_gaps,germline_d_mask_aa_no_gaps" \
     "${clone_nb_seq}" \
     "${cute_file}" \
     "tsv_to_fasta.log"
-    """
-}
 
-
-
-process PrintAlignmentNuc{
-    label 'goalign'
-    publishDir path: "${out_path}/phylo/nuc", mode: 'copy', pattern: "{*.html}", overwrite: false
-
-    input:
-    tuple path(fasta_alignments), path(gff)
-
-    output:
-    path "*.html", emit : alignment_html
-
-    script:
-    """
-    goalign draw biojs -i ${fasta_alignments} -o ${fasta_alignments.baseName}.html
+    mv sequence sequences_full_trees_nuc
+    mv sequence_aa sequences_full_trees_aa
     """
 }
 
@@ -1301,7 +1391,7 @@ process donut {
     """
     #!/bin/bash -ue
     FILENAME=\$(basename -- ${data}) # recover a file name without path
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a ${kind}_donut.log
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\nKIND : ${kind}\\nCOL : ${col}\\n\\n################################\\n\\n" |& tee -a ${kind}_donut.log
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a ${kind}_donut.log
     donut.R \
 "${data}" \
@@ -1384,106 +1474,110 @@ process backup {
 
 
 
-// Converts a tsv file containing several amino acid sequences into fasta file
-// Inputs : aatsv : tsv file (columns sequence_id (CL4184329_VH) and sequence_alignment (QVQLQQSGAXELARPGASVK...))
-//          igblast_data_check_ch : not actually needed by this process, this input's only purpose is to make sure the ig_blast_data_check process is completed before Reformat begins ; so that any errors in the igblast_variable/constant_ref_files defined in the nextflow.config are caught before Reformat is executed
-//                                  Reformat, ALign, DefineGroups, NbSequences, Tree, ProcessMeta and ITOL are processes all dependant on Reformat and they can only be called on heavy chains
-// Output : same data converted into a fasta file
-process Reformat{
-    
-    input:
-    path aatsv
-    path igblast_data_check_ch
-    
-    output:
-    path "*.fasta", emit : aa_fasta_ch
-    
-    script:
-    """
-    cat $aatsv | tail -n+2 | awk '{print ">"\$1; print \$2}' > ${aatsv.baseName}.fasta
-    """
-    
-}
-
-// Groups input sequences (amino-acid ones) into same vj combination
-// Input : single fasta file containing several sequences & a tsv file containing V|J info to corresponding sequence id
-// Output : one fasta file PER group, containing said group sequences
-process DefineGroups {
-    publishDir path: "${out_path}/fasta/aligned_aa", mode: 'copy'
-    
-    label 'goalign'
-    
-    input:
-    path fasta
-    path productivetsv
-    
-    output:
-    path "sequences_*.fasta", emit : groups_ch
-    
-    script:
-    """
-    # On prend toutes les combinaisons existantes de V|J
-    defineGroups.pl $productivetsv > groups.txt
-    # for each defined group
-    for vj in \$(cut -f 2 groups.txt | sort -u)
-    do
-	# we take from the fasta the sequences corresponding to that group
-        goalign subset --unaligned -i aa.fasta -f <(grep -e "\$vj" groups.txt | cut -f 1) > sequences_\${vj}.fasta
-    done
-    """
-}
-
-process Align {
+// Align the amino-acidic sequences that are already in fasta files (grouped by clonal groups)
+// Input :
+//  - TUPLE :   this is a tuple input because the aa fasta files need to be kept with their respective nucleotide files for future processes.
+//              these nucleotide fasta files need to be kept with their corresponding gff files (containing region coordinates)
+//              heavy_chain is TRUE if the input files are of heavy chains, and it is FALSE if the input files are light chains
+process AlignAa {
     label 'abalign'
     
     input:
-    tuple path(fasta), val(heavy_chain)
+    tuple path(fasta_nuc), path(fasta_aa), path(gff), val(heavy_chain)
+    val igblast_organism
     
     output:
-    path "*_align.fasta", emit : aligned_groups_ch
+    tuple path(fasta_nuc), path("*_restored_align_aa.fasta"), path(gff) , emit : aligned_aa_ch
+    path "AlignAa.log", emit: alignaa_log_ch
     
     script:
     if( ! (heavy_chain == "TRUE" || heavy_chain == "FALSE") ){
-        error "\n\n========\n\nERROR IN Align PROCESS\n\nINVALID heavy_chain PARAMETER:\n${heavy_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
+        error "\n\n========\n\nERROR IN AlignAa PROCESS\n\nINVALID heavy_chain PARAMETER:\n${heavy_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
     parms="-al"
     if(heavy_chain == "TRUE"){parms="-ah"}
+    // Choose the species parameter for abalign
+    switch (igblast_organism) {
+        case "mouse":
+            species = "MU"
+            break
+        case "human":
+            species = "HS"
+            break
+        case "rabbit":
+            species = "OC"
+            break
+        case "rat":
+            species = "MM"
+            break
+        case "rhesus_monkey":
+            species = "RM"
+            break
+        default:
+            error "\n\n========\n\nERROR IN AlignAa PROCESS\n\nINVALID igblast_organism PARAMETER:\n${igblast_organism}\nMUST BE EITHER \"mouse\" OR \"human\" OR \"rabbit\" OR \"rat\" OR \"rhesus_monkey\"\n\n========\n\n"
+    }
     """
-    /bin/Abalign_V2_Linux_Term/Abalign -i $fasta ${parms} ${fasta.baseName}_align.fasta -sp MU || true
+    #!/bin/bash -ue
+    FILENAME=\$(basename -- ${fasta_aa}) # recover a file name without path
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a AlignAa.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a AlignAa.log
+    /bin/Abalign_V2_Linux_Term/Abalign -i ${fasta_aa} ${parms} ${fasta_aa.baseName}_align_aa.fasta -sp ${species} |& tee -a AlignAa.log || true
+    
+    # Abalign puts fasta headers in all caps. next script is meant to put those headers back to how they originally were
+    restore_headers.sh ${fasta_aa} ${fasta_aa.baseName}_align_aa.fasta ${fasta_aa.baseName}_restored_align_aa.fasta AlignAa.log
     """
 }
 
 
-
-// Extract the number of sequences from the input file
-process NbSequences {
+// This process aligns the nucleotidic fasta files by transfering amino-acidic alignments onto the nucleotidic ones
+process AlignNuc {
     label 'goalign'
 
     input:
-    path fasta
+    tuple path(fasta_nuc), path(aligned_aa), path(gff)
 
     output:
-    tuple stdout, path(fasta), emit : nb_out
+    tuple path("*_aligned_nuc.fasta"), path(aligned_aa), path(gff), emit : aligned_all_ch
 
     script:
     """
-    printf \$(goalign stats nseq --unaligned -i $fasta)
+    goalign codonalign -i ${aligned_aa} -f ${fasta_nuc} -o ${fasta_nuc.baseName}_aligned_nuc.fasta
     """
 }
 
-process PrintAlignmentAA{
+
+
+
+process PrintAlignmentNuc{
     label 'goalign'
-    publishDir path: "${out_path}/phylo/aa", mode: 'copy', pattern: "{*.html}", overwrite: false
+    publishDir path: "${out_path}/phylo/nuc", mode: 'copy', pattern: "{*.html}", overwrite: false
 
     input:
-    path filtered_fasta
+    tuple path(fasta_nuc_alignments), path(gff)
 
     output:
     path "*.html", emit : alignment_html
 
     script:
     """
-    goalign draw biojs -i ${filtered_fasta} -o ${filtered_fasta.baseName}.html
+    goalign draw biojs -i ${fasta_nuc_alignments} -o ${fasta_nuc_alignments.baseName}.html
+    """
+}
+
+
+process PrintAlignmentAA{
+    label 'goalign'
+    publishDir path: "${out_path}/phylo/aa", mode: 'copy', pattern: "{*.html}", overwrite: false
+
+    input:
+    path aligned_aa_only_ch
+
+    output:
+    path "*.html", emit : alignment_html
+
+    script:
+    """
+    goalign draw biojs -i ${aligned_aa_only_ch} -o ${aligned_aa_only_ch.baseName}.html
     """
 }
 
@@ -2122,12 +2216,30 @@ workflow {
         igblast_organism, 
         igblast_variable_ref_files
     )
-    closest_germline.out.closest_log_ch.collectFile(name: "closest_germline.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
+    closest_germline.out.closest_log_ch.collectFile(name: "closest_germline.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+
+
+    AddGermlineSequences(
+        closest_germline.out.closest_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE closest_germline PROCESS\n\n========\n\n"},
+        igblast_organism, 
+        igblast_variable_ref_files
+    )
+    AddGermlineSequences.out.add_germ_log_ch.collectFile(name: "AddGermlineSequences.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+
+
+
+    TranslateGermline(
+        AddGermlineSequences.out.add_germ_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE AddGermlineSequences PROCESS\n\n========\n\n"}
+    )
+    TranslateGermline.out.translate_germ_log_ch.collectFile(name: "TranslateGermline.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+    translate_germline_filtered = TranslateGermline.out.translate_germ_ch.filter{ file -> file.countLines() > clone_nb_seq.toInteger() } // Only keep clonal groups that have a number of sequences superior to clone_nb_seq (variable defined in nextflow.config)
+    translate_germline_filtered_ch2 = translate_germline_filtered.collectFile(name : "translate_germline_filtered.tsv", skip: 1, keepHeader: true)
+    translate_germline_filtered_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 
 
 
     mutation_load(
-        closest_germline.out.closest_ch,
+        TranslateGermline.out.translate_germ_ch,
         meta_file, 
         meta_legend
     )
@@ -2139,6 +2251,16 @@ workflow {
     nb_clone_assigned = clone_assigned_seq.countLines() - 1 // Minus 1 because 1st line = column names
     clone_assigned_seq.subscribe{it -> it.copyTo("${out_path}/files")}
 
+    mutation_load_filtered = mutation_load.out.mutation_load_ch.filter{ file -> file.countLines() > clone_nb_seq.toInteger() } // Only keep clonal groups that have a number of sequences superior to clone_nb_seq (variable defined in nextflow.config)
+
+    
+    germline_genes(
+        mutation_load_filtered
+    )
+
+    germline_genes_ch2 = germline_genes.out.germline_genes_ch.collectFile(name: "germ_tree_seq.tsv", skip: 1, keepHeader: true)
+    germline_genes_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
+
 
 
     repertoire(
@@ -2147,6 +2269,8 @@ workflow {
         cute_file
     )
 
+
+    /*
 
     get_germ_tree(
         mutation_load.out.mutation_load_ch,
@@ -2191,14 +2315,6 @@ workflow {
     get_germ_tree.out.get_germ_tree_log_ch.collectFile(name: "get_germ_tree.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
 
 
-    germline_genes(
-        germ_tree_ch2
-    )
-
-    germline_genes_ch2 = germline_genes.out.germline_genes_ch.collectFile(name: "germ_tree_seq.tsv", skip: 1, keepHeader: true)
-    germline_genes_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
-
-
 
     germ_tree_vizu(
         rdata_germ_tree_ch2,
@@ -2229,23 +2345,7 @@ workflow {
 
 
 
-
-
-
-    FastaGff(
-        germ_tree_ch3,
-        clone_nb_seq,
-        cute_path
-    )
-
-
-    PrintAlignmentNuc(
-        FastaGff.out.nuc_alignments_ch
-    )
-    
-    PrintAlignmentNuc.out.alignment_html.ifEmpty{
-        print("\n\nWARNING: -> NO CDR3 ALIGNMENT FILE RETURNED\n\n")
-    }
+    */
 
     
 
@@ -2255,7 +2355,7 @@ workflow {
     tempo3_ch = tempo1_ch.merge(tempo2_ch) // 3 lists
     tempo4_ch = Channel.of("vj_allele", "c_allele", "vj_gene", "c_gene")
     tempo5_ch = tempo3_ch.combine(tempo4_ch) // 12 tuples
-    // tempo5_ch.view()
+
 
     donut(
         tempo5_ch,
@@ -2304,7 +2404,7 @@ workflow {
         heavy_chain = channel.of("FALSE") // No heavy chain detected means light chain
     }
 
-
+/*
     Reformat(
         aa_tsv_ch2,
         igblast_data_check.out.igblast_data_check_ch.collect() // To make sure the igblast_ref files are in the right format before executing following processes
@@ -2318,29 +2418,49 @@ workflow {
     )
     fastagroups = DefineGroups.out.groups_ch.flatten()
     align_input = fastagroups.combine(heavy_chain)
+*/
 
-
-    Align(
-        align_input
+    FastaGff(
+        translate_germline_filtered,
+        clone_nb_seq,
+        cute_path
     )
-    align = Align.out.aligned_groups_ch
+    align_input = FastaGff.out.fasta_gff_ch.combine(heavy_chain)
 
 
-    NbSequences(
-        align
+    AlignAa(
+        align_input,
+        igblast_organism
     )
-    filtered = NbSequences.out.nb_out.filter{it[0].toInteger()>=3}.map{it->it[1]}
+    aligned_aa_only_ch = AlignAa.out.aligned_aa_ch.map { x, y, z -> y }
+
+
+    AlignNuc(
+        AlignAa.out.aligned_aa_ch
+    )
+    aligned_nuc_only_ch = AlignNuc.out.aligned_all_ch.map { x, y, z -> tuple(x, z) }
+
+
+
+    PrintAlignmentNuc(
+        aligned_nuc_only_ch
+    )
+    
+    PrintAlignmentNuc.out.alignment_html.ifEmpty{
+        print("\n\nWARNING: -> NO NUCLEOTIDIC ALIGNMENT FILE RETURNED\n\n")
+    }
+
 
 
     PrintAlignmentAA(
-        filtered
+        aligned_aa_only_ch
     )
     PrintAlignmentAA.out.alignment_html.ifEmpty{
         print("\n\nWARNING: -> NO AA ALIGNMENT FILE RETURNED\n\n")
     }
 
     Tree(
-        filtered,
+        aligned_aa_only_ch,
         phylo_tree_model_file
     )
     tree = Tree.out.tree_file
