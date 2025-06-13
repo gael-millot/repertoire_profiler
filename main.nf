@@ -970,7 +970,7 @@ process TranslateGermline {
     label 'r_ext'
 
     input:
-    path closest_ch // parallelization per clonal group
+    path add_germ_ch // parallelization per clonal group
 
     output:
     path "translate_germline_group_*.tsv", emit: translate_germ_ch
@@ -978,13 +978,13 @@ process TranslateGermline {
 
     script:
     """
-    FILENAME=\$(basename -- ${closest_ch}) # recover a file name without path
+    FILENAME=\$(basename -- ${add_germ_ch}) # recover a file name without path
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a TranslateGermline.log
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a TranslateGermline.log
 
 
     Rscript -e '
-        file_name <- "${closest_ch}"
+        file_name <- "${add_germ_ch}"
         df <- read.table(file_name, sep = "\\t", header = TRUE)
 
         germ_nuc <- df[["germline_alignment_d_mask"]]
@@ -1034,7 +1034,7 @@ process mutation_load {
     cache 'true'
 
     input:
-    path closest_ch // parallelization expected
+    path translate_germ_ch // parallelization expected
     path meta_file
     val meta_legend
 
@@ -1046,8 +1046,8 @@ process mutation_load {
     script:
     """
     #!/bin/bash -ue
-    FILENAME=\$(basename -- ${closest_ch}) # recover a file name without path
-    cp -Lr ${closest_ch} "./TEMPO.tsv" # to have the hard file, not the symlink, because modifications will be performed inside
+    FILENAME=\$(basename -- ${translate_germ_ch}) # recover a file name without path
+    cp -Lr ${translate_germ_ch} "./TEMPO.tsv" # to have the hard file, not the symlink, because modifications will be performed inside
     chmod 777 TEMPO.tsv
     rm \$FILENAME # remove the initial file to avoid to send it into the channel
     cp -rp TEMPO.tsv "\$FILENAME" # -p for preserve permissions
@@ -1486,7 +1486,7 @@ process AlignAa {
     tuple path(fasta_nuc), path(fasta_aa), path(gff), val(heavy_chain)
     
     output:
-    tuple path(fasta_nuc), path("*_align_aa.fasta"), path(gff) , emit : aligned_aa_ch
+    tuple path(fasta_nuc), path("*_restored_align_aa.fasta"), path(gff) , emit : aligned_aa_ch
     path "AlignAA.log", emit: alignaa_log_ch
     
     script:
@@ -1501,6 +1501,7 @@ process AlignAa {
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a AlignAA.log
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a AlignAA.log
     /bin/Abalign_V2_Linux_Term/Abalign -i ${fasta_aa} ${parms} ${fasta_aa.baseName}_align_aa.fasta -sp MU |& tee -a AlignAA.log || true
+    restore_headers.sh ${fasta_aa} ${fasta_aa.baseName}_align_aa.fasta ${fasta_aa.baseName}_restored_align_aa.fasta
     """
 }
 
@@ -1536,7 +1537,7 @@ process PrintAlignmentNuc{
 
     script:
     """
-    goalign draw biojs -i ${fasta_alignments} -o ${fasta_alignments.baseName}.html
+    goalign draw biojs -i ${fasta_nuc_alignments} -o ${fasta_nuc_alignments.baseName}.html
     """
 }
 
@@ -2204,9 +2205,9 @@ workflow {
 
 
 
-    TranslateGermline {
+    TranslateGermline(
         AddGermlineSequences.out.add_germ_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE AddGermlineSequences PROCESS\n\n========\n\n"}
-    }
+    )
     TranslateGermline.out.translate_germ_log_ch.collectFile(name: "TranslateGermline.log").subscribe{it -> it.copyTo("${out_path}/reports")}
     translate_germline_filtered = TranslateGermline.out.translate_germ_ch.filter{ file -> file.countLines() > clone_nb_seq.toInteger() } // Only keep clonal groups that have a number of sequences superior to clone_nb_seq (variable defined in nextflow.config)
     translate_germline_filtered_ch2 = translate_germline_filtered.collectFile(name : "translate_germline_filtered.tsv", skip: 1, keepHeader: true)
@@ -2435,7 +2436,7 @@ workflow {
     }
 
     Tree(
-        PrintAlignmentAA.out.alignment_html,
+        aligned_aa_only_ch,
         phylo_tree_model_file
     )
     tree = Tree.out.tree_file

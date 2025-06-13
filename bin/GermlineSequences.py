@@ -50,12 +50,10 @@ def addGermlineSequences(tsv_file, references, gaps, nogaps):
         raise ValueError(f"\n\n================\n\nERROR IN ", {__name__}, "\nTsv input file : ", {tsv_file}, " \ndoes not contain any column name matching pattern \"germline_._call\"\n\n================\n\n")
 
     for col in matching_cols:
-        # Extract the gene
         x = col[len("germline") : -len("_call")]
         seq_col = f"germline{x}_seq"
         seq_col_nogap = f"germline{x}_seq_no_gaps"
 
-        # Identify missing keys before mapping
         unique_vals = df[col].dropna().unique()
         missing = [val for val in unique_vals if val not in dict_ref]
         if missing:
@@ -66,14 +64,13 @@ def addGermlineSequences(tsv_file, references, gaps, nogaps):
             )
 
         mapped_with_gaps = df[col].map(dict_ref)
-        has_gaps = any((isinstance(seq, str) and '.' in seq) for seq in mapped_with_gaps)
-
         if gaps:
             df[seq_col] = mapped_with_gaps
 
-        if nogaps and has_gaps:
-            # Create new columns for sequences without gaps
+        if nogaps:
+            # Remove all '.' even if none exist (harmless)
             df[seq_col_nogap] = mapped_with_gaps.apply(lambda s: s.replace('.', '') if isinstance(s, str) else s)
+
 
 
     dir_name = os.path.dirname(tsv_file)
@@ -124,11 +121,10 @@ def getArgParser():
                         help='''List of imgt folders and/or fasta files (with .fasta, .fna or .fa
                          extension) with germline sequences. Ex : imgt_mouse_IGHJ.fasta''')
     group.add_argument('-g', '--gaps', action='store_true', help='''Create new 'germline_._seq' columns containing the germline sequences with alignment gaps ('.') as present in the IMGT database.
-                         If both --gaps and --nogaps are specified, both types of columns are added if relevant.
+                         If both --gaps and --nogaps are specified, both types of columns are added.
                          If neither --gaps nor --nogaps is specified, both types of columns are added by default.''')
     group.add_argument('-n', '--nogaps', action='store_true', help='''Create new 'germline_._seq_no_gaps' columns containing the germline sequences with all alignment gaps ('.') removed.
-                         These columns are only added if the corresponding germline sequences contain gaps in the IMGT database.
-                         If both --gaps and --nogaps are specified, both types of columns are added if relevant.
+                         If both --gaps and --nogaps are specified, both types of columns are added.
                          If neither --gaps nor --nogaps is specified, both types of columns are added by default.''')
     return parser
 
