@@ -1484,24 +1484,47 @@ process AlignAa {
     
     input:
     tuple path(fasta_nuc), path(fasta_aa), path(gff), val(heavy_chain)
+    val igblast_organism
     
     output:
     tuple path(fasta_nuc), path("*_restored_align_aa.fasta"), path(gff) , emit : aligned_aa_ch
-    path "AlignAA.log", emit: alignaa_log_ch
+    path "AlignAa.log", emit: alignaa_log_ch
     
     script:
     if( ! (heavy_chain == "TRUE" || heavy_chain == "FALSE") ){
-        error "\n\n========\n\nERROR IN Align PROCESS\n\nINVALID heavy_chain PARAMETER:\n${heavy_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
+        error "\n\n========\n\nERROR IN AlignAa PROCESS\n\nINVALID heavy_chain PARAMETER:\n${heavy_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
     parms="-al"
     if(heavy_chain == "TRUE"){parms="-ah"}
+    // Choose the species parameter for abalign
+    switch (igblast_organism) {
+        case "mouse":
+            species = "MU"
+            break
+        case "human":
+            species = "HS"
+            break
+        case "rabbit":
+            species = "OC"
+            break
+        case "rat":
+            species = "MM"
+            break
+        case "rhesus_monkey":
+            species = "RM"
+            break
+        default:
+            error "\n\n========\n\nERROR IN AlignAa PROCESS\n\nINVALID igblast_organism PARAMETER:\n${igblast_organism}\nMUST BE EITHER \"mouse\" OR \"human\" OR \"rabbit\" OR \"rat\" OR \"rhesus_monkey\"\n\n========\n\n"
+    }
     """
     #!/bin/bash -ue
     FILENAME=\$(basename -- ${fasta_aa}) # recover a file name without path
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a AlignAA.log
-    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a AlignAA.log
-    /bin/Abalign_V2_Linux_Term/Abalign -i ${fasta_aa} ${parms} ${fasta_aa.baseName}_align_aa.fasta -sp MU |& tee -a AlignAA.log || true
-    restore_headers.sh ${fasta_aa} ${fasta_aa.baseName}_align_aa.fasta ${fasta_aa.baseName}_restored_align_aa.fasta
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a AlignAa.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a AlignAa.log
+    /bin/Abalign_V2_Linux_Term/Abalign -i ${fasta_aa} ${parms} ${fasta_aa.baseName}_align_aa.fasta -sp ${species} |& tee -a AlignAa.log || true
+    
+    # Abalign puts fasta headers in all caps. next script is meant to put those headers back to how they originally were
+    restore_headers.sh ${fasta_aa} ${fasta_aa.baseName}_align_aa.fasta ${fasta_aa.baseName}_restored_align_aa.fasta AlignAa.log
     """
 }
 
@@ -2406,7 +2429,8 @@ workflow {
 
 
     AlignAa(
-        align_input
+        align_input,
+        igblast_organism
     )
     aligned_aa_only_ch = AlignAa.out.aligned_aa_ch.map { x, y, z -> y }
 
