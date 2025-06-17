@@ -1612,6 +1612,12 @@ process ProcessMeta {
 
     script:
     """
+    if [ "\$(basename ${meta})" = "NULL" ]; then
+        echo "No metadata provided; skipping iTOL annotation" > skip.iTOL.txt
+        touch iTOL.empty
+        exit 0
+    fi
+
     table2itol.R -i ${meta_seq_names} ${meta}
     """
 }
@@ -1632,9 +1638,15 @@ process ITOL{
 
     script:
     """
-    gotree upload itol --project gotree_uploads --user-id $phylo_tree_itolkey -i $tree $meta > ${tree.baseName}_itol_url.txt 2>&1
+    # Check if meta_file is an empty file (meta_path = "NULL")
+    if [ ! -s ${meta} ]; then
+        gotree upload itol --project gotree_uploads --user-id $phylo_tree_itolkey -i $tree > ${tree.baseName}_itol_url.txt 2>&1
+    else
+        gotree upload itol --project gotree_uploads --user-id $phylo_tree_itolkey -i $tree $meta > ${tree.baseName}_itol_url.txt 2>&1
+    fi
     """
 }
+
 
 // The render function only creates the html file with the rmardown
 // Inputs :
