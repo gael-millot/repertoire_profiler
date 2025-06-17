@@ -333,6 +333,9 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 <br /><br />
 ## WHAT'S NEW IN
 
+#### v18.4
+
+- goalign version updated for correct running in *nextflow.config*
 
 #### v18.3
 
