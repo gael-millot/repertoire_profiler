@@ -2245,8 +2245,8 @@ workflow {
     )
     TranslateGermline.out.translate_germ_log_ch.collectFile(name: "TranslateGermline.log").subscribe{it -> it.copyTo("${out_path}/reports")}
     translate_germline_filtered = TranslateGermline.out.translate_germ_ch.filter{ file -> file.countLines() > clone_nb_seq.toInteger() } // Only keep clonal groups that have a number of sequences superior to clone_nb_seq (variable defined in nextflow.config)
-    translate_germline_filtered_ch2 = translate_germline_filtered.collectFile(name : "translate_germline_filtered.tsv", skip: 1, keepHeader: true)
-    translate_germline_filtered_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
+    //translate_germline_filtered_ch2 = translate_germline_filtered.collectFile(name : "translate_germline_filtered.tsv", skip: 1, keepHeader: true)
+    //translate_germline_filtered_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 
 
 
