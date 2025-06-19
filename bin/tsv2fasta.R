@@ -501,6 +501,19 @@ for (feature in features) {
 gff_rows <- list()
 for (i in 1:length(features)) {
     feature <- features[i]
+    # Find actual column names (preserve original case)
+    start_col <- colnames(obs)[tolower(colnames(obs)) == paste0(feature, "_start")]
+    end_col   <- colnames(obs)[tolower(colnames(obs)) == paste0(feature, "_end")]
+
+    start_val <- unique(obs[[start_col]])
+    end_val   <- unique(obs[[end_col]])
+
+    # Skip this feature if either coordinate is NA
+    if (is.na(start_val) || is.na(end_val)) {
+        tempo.cat <- paste0("Skipping feature '", feature, "' due to missing coordinates: start = ", start_val, ", end = ", end_val, "\n")
+        cat(tempo.cat, file = log, append = TRUE)
+        next  # Don't add anything to gff_rows
+    }
     row <- c(
         germ_seq_name,
         ".",
@@ -512,7 +525,7 @@ for (i in 1:length(features)) {
         ".",
         paste0("Name=", feature, ";Color=", colors[i])
     )
-    gff_rows[[i]] <- row
+    gff_rows[[length(gff_rows) + 1]] <- row
 }
 
 # gff_rows is a list of GFF row vectors, as before.

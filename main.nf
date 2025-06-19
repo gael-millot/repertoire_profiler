@@ -1521,7 +1521,7 @@ process AlignAa {
     FILENAME=\$(basename -- ${fasta_aa}) # recover a file name without path
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a AlignAa.log
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a AlignAa.log
-    /bin/Abalign_V2_Linux_Term/Abalign -i ${fasta_aa} ${parms} ${fasta_aa.baseName}_align_aa.fasta -sp ${species} |& tee -a AlignAa.log || true
+    /bin/Abalign_V2_Linux_Term/Abalign -i ${fasta_aa} ${parms} ${fasta_aa.baseName}_align_aa.fasta -sp ${species} -lc FR1_length.txt -lg 1 -lc CDR1_length.txt -lg 2 |& tee -a AlignAa.log || true
     
     # Abalign puts fasta headers in all caps. next script is meant to put those headers back to how they originally were
     restore_headers.sh ${fasta_aa} ${fasta_aa.baseName}_align_aa.fasta ${fasta_aa.baseName}_restored_align_aa.fasta AlignAa.log
