@@ -355,8 +355,8 @@ process parseDb_filtering {
         ParseDb.py select -d ${blast_info_tsv_ch} -f v_call j_call -u ".+" --regex --logic any |& tee -a ParseDb_filtering.log #means look inside the -f v_call j_call fields of the input and return any lines that are non empty for at least one field(--logic any) # should be identical to cp ${blast_info_tsv_ch} "\${FILE}_parse-select.tsv" |& tee -a ParseDb_filtering.log
         echo -n "" > unproductive_seq.tsv |& tee -a ParseDb_filtering.log
     elif [[ -s ${blast_info_tsv_ch} ]]; then # -s means "exists and non empty". Thus, return FALSE is the file does not exists or is empty
-        ParseDb.py select -d ${blast_info_tsv_ch} -f productive -u TRUE |& tee -a ParseDb_filtering.log
-        ParseDb.py split -d ${blast_info_tsv_ch} -f productive |& tee -a ParseDb_filtering.log
+        ParseDb.py select -d ${blast_info_tsv_ch} -f productive -u TRUE T |& tee -a ParseDb_filtering.log
+        ParseDb.py split -d ${blast_info_tsv_ch} -f productive |& tee -a ParseDb_filtering.log  # Used to create a file if the FALSE F value is found in the field (select command only creates a select file if values specifies in -u flag are found, in this case TRUE or T)
         if [ -f *_parse-select.tsv ]; then
             cp *_parse-select.tsv productive_seq_init.tsv |& tee -a ParseDb_filtering.log # can be empty file (only header)
         else
@@ -365,6 +365,8 @@ process parseDb_filtering {
         fi
         if [ -s *_productive-F.tsv ]; then # see above for -s
             cp *_productive-F.tsv unproductive_seq.tsv |& tee -a ParseDb_filtering.log
+        elif [ -s *_productive-FALSE.tsv ]; then # if not TRUE or T, the value in the "productive" field can be either F or FALSE
+            cp *_productive-FALSE.tsv unproductive_seq.tsv |& tee -a ParseDb_filtering.log
         else
             echo -e "\n\nWARNING: EMPTY unproductive_seq.tsv FILE RETURNED FOLLOWING THE parseDb_filtering PROCESS\n\n" |& tee -a ParseDb_filtering.log
             # echo -n "" | cat > unproductive_seq.tsv
