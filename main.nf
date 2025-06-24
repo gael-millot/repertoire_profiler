@@ -115,58 +115,6 @@ process igblast_data_check { // cannot be igblast_data_check outside of process 
     """
     #!/bin/bash -ue
 
-    # Check that the reference files are in the right format
-
-    Rscript -e '
-        organism <- "${igblast_organism}"
-
-        variable <- unlist(strsplit("${igblast_variable_ref_files}", " "))
-        constant <- unlist(strsplit("${igblast_constant_ref_files}", " "))
-        valid_species <- c("human", "mouse") # "rabbit" "rat" "rhesus_monkey" could be added but are not currently supported by the repertoire process
-
-        if(length(variable) < 2 || length(variable) > 4){
-            stop(paste0("\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nigblast_variable_ref_files CONFIGURED IN nextflow.config CAN ONLY CONTAIN 2, 3 OR 4 FILES.\\nHERE IT CONTAINS ", length(variable), " FILES\\nHERE ARE THE igblast_variable_ref_files : \\n", paste(variable, collapse = "\\n"), "\\n\\n========\\n\\n"), call. = FALSE)
-        }
-        if(length(constant) != 1 && length(constant) != 2){
-            stop(paste0("\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nigblast_constant_ref_files CONFIGURED IN nextflow.config CAN ONLY CONTAIN 1 OR 2 FILES.\\nHERE IT CONTAINS ", length(constant), " FILES\\nHERE ARE THE igblast_constant_ref_files : \\n", paste(constant, collapse = "\\n"), "\\n\\n========\\n\\n"), call. = FALSE)
-        }
-        if(!all(grepl(x = variable, pattern = "^imgt_([a-z_]+)_IG[KL][VJ].fasta\$")) && !all(grepl(x = variable, pattern = "^imgt_([a-z_]+)_IGH[VDJ].fasta\$"))){
-            stop(paste0("\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID FORMAT FOR ONE OR SEVERAL OF THE FOLLOWING igblast_variable_ref_files CONFIGURED IN nextflow.config FILE:\\n", paste(variable, collapse = "\\n"), "\\nVALID FORMAT FOR EACH FILE WOULD BE: imgt_<species>_IG[HKL][VDJ].fasta\\nWARNING: THE repertoire PROCESS CURRENTLY ONLY SUPPORTS IG REFERENCE FILES AND 'mouse' OR 'human' SPECIES\\n\\n========\\n\\n"), call. = FALSE)
-        }
-        if(!all(grepl(x = constant, pattern = "^imgt_([a-z_]+)_IG[HKL]C.fasta\$"))){
-            stop(paste0("\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID FORMAT FOR ONE OR SEVERAL OF THE FOLLOWING igblast_constant_ref_files CONFIGURED IN nextflow.config FILE:\\n", paste(constant, collapse = "\\n"), "\\nVALID FORMAT FOR EACH FILE WOULD BE: imgt_<species>_IG[HKL]C.fasta\\nWARNING: THE repertoire PROCESS CURRENTLY ONLY SUPPORTS IG REFERENCE FILES AND 'mouse' OR 'human' SPECIES\\n\\n========\\n\\n"), call. = FALSE)
-        }
-        species <- c(unlist(lapply(strsplit(variable, "_"), `[`, 2)), unlist(lapply(strsplit(constant, "_"), `[`, 2)))
-        if(!all(species == species[1])){
-            stop(paste0("\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nTHE SPECIES IN THE igblast_constant_ref_files AND igblast_variable_ref_files CONFIGURED IN nextflow.config FILE MUST BE THE SAME\\nHERE ARE THE igblast_variable_ref_files:\\n", paste(variable, collapse = "\\n"), "\\nHERE ARE THE igblast_constant_ref_files:\\n", paste(constant, collapse = "\\n"), "\\n\\n========\\n\\n"), call. = FALSE)
-        }
-        if(species[1] != organism){
-            stop(paste0("\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nTHE SPECIES IN THE igblast_constant_ref_files AND igblast_variable_ref_files CONFIGURED IN nextflow.config FILE MUST BE THE SAME AS THE organism PARAMETER CONGIGURED IN nextflow.config\\nHERE ARE THE igblast_variable_ref_files:\\n", paste(variable, collapse = "\\n"), "\\nHERE ARE THE igblast_constant_ref_files:\\n", paste(constant, collapse = "\\n"), "\\nTHE organism PARAMETER IS SET TO : ", organism, "\\n\\n========\\n\\n"), call. = FALSE)
-        }
-        # Check the coherence between the loci mentioned in the files (KL, KJ, HJ...)
-        extract_locus <- function(x) {
-            parts <- strsplit(x, "_")[[1]]
-            ig_part <- parts[grepl("^IG[A-Z]{2}", parts)]
-            return(substr(ig_part, 3, 4))
-        }
-        loci <- c(sapply(variable, extract_locus), sapply(constant, extract_locus))
-        if(any(grepl("^H", loci)) && any(grepl("^[KL]", loci))){
-            stop(paste0("\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID VALUES OF igblast_variable_ref_files AND igblast_constant_ref_files CONFIGURED IN nextflow.config FILE:\\nIGH WAS FOUND ALONG WITH IGL OR IGK\\n!! LIGHT CHAIN AND HEAVY CHAIN LOCI CANNOT BE ANALYZED SIMULTANEOUSLY !!\\n\\nHERE ARE THE igblast_variable_ref_files:\\n", paste(variable, collapse = "\\n"), "\\nHERE ARE THE igblast_constant_ref_files:\\n", paste(constant, collapse = "\\n"), "\\n\\n========\\n\\n"), call. = FALSE)
-        }
-        
-        valid_combinations <- list(
-            c("HJ", "HV", "HD", "HC"),
-            c("KJ", "KV", "KC"),
-            c("LJ", "LV", "LC"),
-            c("KJ", "KV", "KC", "LJ", "LV", "LC")
-        )
-        if(!any(sapply(valid_combinations, function(valid) identical(sort(unique(loci)), sort(valid))))){
-            stop(paste0("\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID VALUES OF igblast_variable_ref_files AND igblast_constant_ref_files CONFIGURED IN nextflow.config FILE:\\n\\nHERE ARE THE igblast_variable_ref_files:\\n", paste(variable, collapse = "\\n"), "\\nHERE ARE THE igblast_constant_ref_files:\\n", paste(constant, collapse = "\\n"), "\\n\\nINDICATIONS : \\nIF K AND L FILES ARE ENTERED FOR A CASSETTE, THEN BOTH MUST BE ENTERED FOR THE OTHER CASSETTE AND THE CONSTANT REGION AS WELL\\nTHERE CANNOT BE A IGLD OR IGKD FILE, AS THE LIGHT CHAIN DOES NOT HAVE A D CASSETTE\\nHEAVY CHAIN ANALYSIS MUST INCLUDE IGHV, IGHD, IGHJ and IGHC FILES\\n\\n========\\n\\n"), call. = FALSE)
-        }
-    '
-
-    # End of format checking for the reference files
-
     REPO_PATH_VAR="/usr/local/share/germlines/imgt/${igblast_organism}/vdj" # path where the imgt .fasta reference seq files are in the docker container
     REPO_PATH_CONST="/usr/local/share/germlines/imgt/${igblast_organism}/constant" # path where the imgt .fasta reference seq files are in the docker container
     VDJ_FILES=\$(awk -v var1="${igblast_variable_ref_files}" -v var2="\${REPO_PATH_VAR}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}') # assemble files with their path
@@ -1804,6 +1752,8 @@ workflow {
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_organism PARAMETER IN repertoire_profiler.config FILE:\n${igblast_organism}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (igblast_organism =~ /^(mouse|human|rabbit|rat|rhesus_monkey)$/) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_organism PARAMETER IN repertoire_profiler.config FILE:\n${igblast_organism}\nMUST BE EITHER \"mouse\", \"human\", \"rabbit\", \"rat\" OR \"rhesus_monkey\"\n\n========\n\n"
+    }else if( ! (igblast_organism =~ /^(mouse|human)$/)){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_organism PARAMETER IN repertoire_profiler.config FILE : ${igblast_organism}\n\nTHE repertoire PROCESS CURRENTLY ONLY SUPPORTS mouse AND human SPECIES\nTHEREFORE igblast_organism MUST BE EITHER \"mouse\" OR \"human\"\n\n========\n\n"
     }
     if( ! (igblast_loci in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_loci PARAMETER IN repertoire_profiler.config FILE:\n${igblast_loci}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
@@ -1811,16 +1761,39 @@ workflow {
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_loci PARAMETER IN repertoire_profiler.config FILE:\n${igblast_loci}\nMUST BE EITHER \"ig\" OR \"tr\"\n\n========\n\n"
     }
     if( ! (igblast_aa in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_aa PARAMETER IN repertoire_profiler.config FILE:\n${igblast_aa}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+        error "\n\n========\n\nER  ROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_aa PARAMETER IN repertoire_profiler.config FILE:\n${igblast_aa}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! igblast_aa == "false"){ // }else if( ! (igblast_aa == "false" || igblast_aa == "true") ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_aa PARAMETER IN repertoire_profiler.config FILE:\n${igblast_aa}\nCAN ONLY BE \"false\"\n\n========\n\n"
     }
-    if( ! (igblast_variable_ref_files in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_variable_ref_files PARAMETER IN repertoire_profiler.config FILE:\n${igblast_variable_ref_files}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    } // path not checked here but below because inside a container
-    if( ! (igblast_constant_ref_files in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_constant_ref_files PARAMETER IN repertoire_profiler.config FILE:\n${igblast_constant_ref_files}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    } // path not checked here but below because inside a container
+    if( ! (igblast_heavy_chain in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_heavy_chain PARAMETER IN repertoire_profiler.config FILE:\n${igblast_heavy_chain}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (igblast_heavy_chain == "TRUE" || igblast_heavy_chain == "FALSE" || igblast_heavy_chain == "true" ||igblast_heavy_chain == "false") ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_heavy_chain PARAMETER IN repertoire_profiler.config FILE:\n${igblast_heavy_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\" (OR \"true\" OR \"false\") \n\n========\n\n"
+    }
+    if( ! (igblast_lambda_chain in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_lambda_chain PARAMETER IN repertoire_profiler.config FILE:\n${igblast_lambda_chain}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (igblast_lambda_chain == "TRUE" || igblast_lambda_chain == "FALSE" || igblast_lambda_chain == "true" ||igblast_lambda_chain == "false") ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_lambda_chain PARAMETER IN repertoire_profiler.config FILE:\n${igblast_lambda_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\" (OR \"true\" OR \"false\") \n\n========\n\n"
+    }
+    if( ! (igblast_kappa_chain in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_kappa_chain PARAMETER IN repertoire_profiler.config FILE:\n${igblast_kappa_chain}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (igblast_kappa_chain == "TRUE" || igblast_kappa_chain == "FALSE" || igblast_kappa_chain == "true" ||igblast_kappa_chain == "false") ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_kappa_chain PARAMETER IN repertoire_profiler.config FILE:\n${igblast_kappa_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\" (OR \"true\" OR \"false\") \n\n========\n\n"
+    }
+    // Checking of studied chain coherence
+    heavy = igblast_heavy_chain == "TRUE" || igblast_heavy_chain == "true"
+    lambda = igblast_lambda_chain == "TRUE" || igblast_lambda_chain == "true"
+    kappa  = igblast_kappa_chain == "TRUE" || igblast_kappa_chain == "true"
+    if (heavy && (lambda || kappa)) {
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID PARAMETERS IN repertoire_profiler.config FILE:\nHEAVY (igblast_heavy_chain) AND LIGHT (igblast_lambda_chain, igblast_kappa_chain) CHAIN LOCI CANNOT BOTH BE TRUE\nHERE ARE THEIR CURRENT VALUES : \nigblast_heavy_chain : ${igblast_heavy_chain}\nigblast_lambda_chain : ${igblast_lambda_chain}\nigblast_kappa_chain : ${igblast_kappa_chain}\n\n========\n\n"
+    }
+    if (!heavy && !lambda && !kappa) {
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID PARAMETERS IN repertoire_profiler.config FILE:\nAT LEAST ONE OF igblast_heavy_chain, igblast_lambda_chain OR igblast_kappa_chain MUST BE TRUE\nHERE ARE THEIR CURRENT VALUES : \nigblast_heavy_chain : ${igblast_heavy_chain}\nigblast_lambda_chain : ${igblast_lambda_chain}\nigblast_kappa_chain : ${igblast_kappa_chain}\n\n========\n\n"
+    }
+    if ([heavy, lambda, kappa].count { it } > 2) {
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID PARAMETERS IN repertoire_profiler.config FILE:\nONLY ONE OF igblast_heavy_chain AND LIGHT CHAINS (igblast_lambda_chain, igblast_kappa_chain) CAN BE TRUE AT A TIME\nHERE ARE THEIR CURRENT VALUES : \nigblast_heavy_chain : ${igblast_heavy_chain}\nigblast_lambda_chain : ${igblast_lambda_chain}\nigblast_kappa_chain : ${igblast_kappa_chain}\n\n========\n\n"
+    }
+
     if( ! (clone_nb_seq in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_nb_seq PARAMETER IN repertoire_profiler.config FILE:\n${clone_nb_seq}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ( ! (clone_nb_seq =~/^\d+$/)) || clone_nb_seq.toInteger() < 3 ){
@@ -2017,9 +1990,9 @@ workflow {
     if("${system_exec}" != "local"){
         print("    add_options: ${add_options}")
     }
-    if(igblast_variable_ref_files =~ /^.*IG(K|L)V.*$/){
-        print("\n\nWARNING:\nLIGHT CHAIN DETECTED IN THE igblast_variable_ref_files parameter.\nBUT CLONAL GROUPING IS GENERALLY RESTRICTED TO HEAVY CHAIN SEQUENCES, AS THE DIVERSITY OF LIGHT CHAINS IS NOT SUFFICIENT TO DISTINGUISH CLONES WITH REASONABLE CERTAINTY")
-    }
+    // if(igblast_variable_ref_files =~ /^.*IG(K|L)V.*$/){
+    //     print("\n\nWARNING:\nLIGHT CHAIN DETECTED IN THE igblast_variable_ref_files parameter.\nBUT CLONAL GROUPING IS GENERALLY RESTRICTED TO HEAVY CHAIN SEQUENCES, AS THE DIVERSITY OF LIGHT CHAINS IS NOT SUFFICIENT TO DISTINGUISH CLONES WITH REASONABLE CERTAINTY")
+    // }
     print("\n\nWARNING:\nTHE REPERTOIRE PROCESS CURRENTLY ONLY SUPPORTS ig REFERENCE FILES AND 'mouse' OR 'human' SPECIES")
     print("\n\nWARNING:\nTO MAKE THE REPERTOIRES AND DONUTS, THE SCRIPT CURRENTLY TAKES THE FIRST ANNOTATION OF THE IMGT ANNOTATION IF SEVERAL ARE PRESENTS IN THE v_call, j_call OR c_call COLUMN OF THE productive_seq.tsv FILE")
     print("\n\n")
@@ -2031,6 +2004,41 @@ workflow {
 
 
     //////// Variable modification
+
+    // CONSTRUCTION OF THE igblast REFERENCE FILES PATHS
+    // heavy, lambda and kappa were defined earlier in the "Checking of chain coherence section"
+
+    igblast_variable_ref_files = ""
+    igblast_constant_ref_files = ""
+
+    def var_files = []
+    def const_files = []
+
+    if (heavy) {
+        var_files += [
+            "imgt_${igblast_organism}_IGHV.fasta",
+            "imgt_${igblast_organism}_IGHD.fasta",
+            "imgt_${igblast_organism}_IGHJ.fasta"
+        ]
+        const_files += "imgt_${igblast_organism}_IGHC.fasta"
+    }
+    if (lambda) {
+        var_files += [
+            "imgt_${igblast_organism}_IGLV.fasta",
+            "imgt_${igblast_organism}_IGLJ.fasta"
+        ]
+        const_files += "imgt_${igblast_organism}_IGLC.fasta"
+    }
+    if (kappa) {
+        var_files += [
+            "imgt_${igblast_organism}_IGKV.fasta",
+            "imgt_${igblast_organism}_IGKJ.fasta"
+        ]
+        const_files += "imgt_${igblast_organism}_IGKC.fasta"
+    }
+
+    igblast_variable_ref_files = var_files.join(' ').toString()
+    igblast_constant_ref_files = const_files.join(' ').toString()
 
 
     //////// end Variable modification
