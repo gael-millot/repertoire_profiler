@@ -439,7 +439,7 @@ for(i0 in Seq){
             stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL j_gene VALUES SHOULD BE THE SAME IN A seq_for_germ_tree FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$j_gene, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
         }
         if(any(tempo.df$junction_length != tempo.df$junction_length[1])){
-            stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL v_gene VALUES SHOULD BE THE SAME IN A seq_for_germ_tree FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$junction_length, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
+            stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL junction_length VALUES SHOULD BE THE SAME IN A seq_for_germ_tree FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$junction_length, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
         }
         # End check of columns relative to clonal groups
         dir_name <- paste0("./", i0)
@@ -455,7 +455,7 @@ for(i0 in Seq){
             stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nTHE VALUES INSIDE EACH OF THE Germline COLUMN SHOULD ALL BE THE SAME, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df[[germ]], collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
         }
         tempo.name <- paste0(i0, "_", tempo.df[1, "clone_id"], "_", tempo.df[1, "v_gene"], "_", tempo.df[1, "j_gene"], "_", tempo.df[1, "junction_length"], ".fasta") # These columns all have the same value for a clonal group, so it writes in the same file
-        germ_seq_name <- paste0("germline_d_mask_cloneid_", tempo.df[1, "clone_id"])
+        germ_seq_name <- paste0("germline_d_mask_clone_id_", tempo.df[1, "clone_id"])
         tempo.cat <- paste0(">", germ_seq_name, "\n", tempo.df[1, germ], "\n")
         cat(tempo.cat, file = paste0("./", i0, "/", tempo.name), append = TRUE)
     } else {
@@ -486,17 +486,38 @@ for (feature in features) {
 }
 
 ## For each feature column, check that all rows are identical in value (region coordinates must be the same for each sequence of a clonal group)
+non_unique_cols <- character()
 for (feature in features) {
     for (suf in c("_start", "_end")) {
         ## Find the actual column name (preserve case)
         lc_col <- paste0(feature, suf)
         actual_col <- colnames(obs)[tolower(colnames(obs)) == lc_col]
+
+        if (length(actual_col) == 0 || all(is.na(obs[[actual_col]]))) {
+            next  # Skip if column is missing or entirely NA
+        }
+
         unique_vals <- unique(obs[[actual_col]])
+
         if (length(unique_vals) != 1) {
-            stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL DATA ROWS IN IMPORTED FILE : \n", path, " SHOULD HAVE THE SAME VALUES FOR EACH REGION COORDINATES COLUMN.\nREGION COORDINATES SHOULD BE THE SAME FOR EACH SEQUENCE OF A CLONAL GROUP\n\n================\n\n"), call. = FALSE)
+            non_unique_cols <- c(non_unique_cols, lc_col)
         }
     }
 }
+if (length(non_unique_cols) > 0) {
+    tempo.cat <- paste0(
+        "\n\n================\n\nWARNING : ", script, ".R\n",
+        "ALL DATA ROWS IN IMPORTED FILE : ", path, "\n",
+        "SHOULD HAVE THE SAME VALUES FOR EACH REGION COORDINATES COLUMN.\n",
+        "REGION COORDINATES SHOULD BE THE SAME FOR EACH SEQUENCE OF A CLONAL GROUP.\n",
+        "THE MOST FREQUENT VALUE WAS TAKEN FOR THESE COLUMNS:\n  - ",
+        paste(non_unique_cols, collapse = "\n  - "),
+        "\n\n================\n\n"
+    )
+    cat(tempo.cat, file = log, append = TRUE)
+    cat(tempo.cat, file = "warning.txt", append = TRUE)
+}
+
 
 gff_rows <- list()
 for (i in 1:length(features)) {
@@ -505,8 +526,17 @@ for (i in 1:length(features)) {
     start_col <- colnames(obs)[tolower(colnames(obs)) == paste0(feature, "_start")]
     end_col   <- colnames(obs)[tolower(colnames(obs)) == paste0(feature, "_end")]
 
-    start_val <- unique(obs[[start_col]])
-    end_val   <- unique(obs[[end_col]])
+    # Take the most frequent value for coordinate if not unique, and handle the case when all values are NA in a column
+    if (all(is.na(obs[[start_col]]))) {
+        start_val <- NA
+    } else {
+        start_val <- names(which.max(table(obs[[start_col]])))
+    }
+    if (all(is.na(obs[[end_col]]))) {
+        end_val <- NA
+    } else {
+        end_val <- names(which.max(table(obs[[end_col]])))
+    }
 
     # Skip this feature if either coordinate is NA
     if (is.na(start_val) || is.na(end_val)) {
@@ -591,8 +621,6 @@ fun_report(data = paste0("\n\n################################ JOB END\n\n\nTIME
 
 
 ################################ End Main code
-
-
 
 
 

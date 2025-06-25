@@ -1284,6 +1284,7 @@ process FastaGff{
 
     output:
     tuple path("sequences_full_trees_nuc/*.fasta"), path("sequences_full_trees_aa/*.fasta"), path("*.gff"), emit: fasta_gff_ch
+    path "warning.txt", emit: warning_ch, optional: true    
 
     script:
     """
@@ -2464,6 +2465,13 @@ workflow {
         cute_path
     )
     align_input = FastaGff.out.fasta_gff_ch.combine(heavy_chain)
+    fastagff_warn = FastaGff.out.warning_ch
+
+    fastagff_warn.filter { file(it). exists() }
+                .map {file -> 
+                    file.text  // Print the warning message on the terminal
+                }
+                .view()
 
 
     AlignAa(
