@@ -524,9 +524,25 @@ process data_assembly {
         sub_v <- sapply(X = tempo_v, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; paste0(unique(y), collapse = ",")})
         tempo_j <- strsplit(db3\$j_call, ",")
         sub_j <- sapply(X = tempo_j, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; paste0(unique(y), collapse = ",")})
-        tempo_subclass <- strsplit(db3\$c_call, ",")
-        subclass <- sapply(X = tempo_subclass, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; paste0(unique(y), collapse = ",")})
-        class <- sapply(X = tempo_subclass, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; y <- substr(y, 1, 4) ; paste0(unique(y), collapse = ",")})
+        # The c_call column must be handled with more care because it can have empty values
+        subclass <- sapply(db3\$c_call, function(x) {
+            if (is.na(x) || x == "") { # The c_call column can have empty values if the sequences are too short
+                return(NA)  # Si NA ou "", on affecte NA
+            } else {
+                # Traitement normal : suppression des suffixes après *
+                y <- sub(pattern = "\\\\*.*", replacement = "", x = unlist(strsplit(x, ",")))
+                return(paste0(unique(y), collapse = ","))
+            }
+        })
+        class <- sapply(X = subclass, FUN = function(x) {
+            if (is.na(x)) {
+                return(NA)  # Si x est NA, on garde NA
+            } else {
+                y <- sub(pattern = "\\\\*.*", replacement = "", x = x) 
+                y <- substr(y, 1, 4)
+                return(paste0(unique(y), collapse = ","))
+            }
+        })
         db4 <- data.frame(db3, v_gene = sub_v, j_gene = sub_j, isotype_class = class, c_gene = subclass)
 
         #### end remove allele info
