@@ -661,7 +661,10 @@ if(productive_seq == "productive_seq.tsv"){
     tempo.several.annot.log <- logical(length = nrow(df)) # only false
     tempo <- c(allele_obs, gene_obs)
     for(i1 in 1:length(tempo)){
-        tempo.nb <- sapply(strsplit(df[ , names(df) == tempo[i1]], split = ","), FUN = function(x){length(x)})
+        col_data <- df[ , names(df) == tempo[i1]]
+        tempo.nb <- sapply(strsplit(as.character(col_data), split = ","), FUN = function(x){
+            if (all(is.na(x))) return(0) else return(length(x))
+        })
         tempo.several.annot.log[tempo.nb > 1] <- TRUE
     }
     if(any(tempo.several.annot.log)){
@@ -670,10 +673,14 @@ if(productive_seq == "productive_seq.tsv"){
         write.table("", file = paste0("./productive_seq_several_annot_igmt.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
     }
     for(i1 in 1:length(tempo)){
-        df[ , names(df) == tempo[i1]] <- sapply(strsplit(df[ , names(df) == tempo[i1]], split = ","), FUN = function(x){x[1]})
+        col_data <- df[ , names(df) == tempo[i1]]
+        df[ , names(df) == tempo[i1]] <- sapply(strsplit(as.character(col_data), split = ","), FUN = function(x){
+            if (all(is.na(x))) return(NA) else return(x[1])
+        })
     }
 }
 # end take the first annotation if several in the tempo column
+
 
 ######## observed data
 
