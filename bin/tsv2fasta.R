@@ -75,8 +75,6 @@ script <- "tsv2fasta"
 # log <- "tsv2fasta.log"
 
 
-
-
 ################################# End test
 
 
@@ -260,6 +258,8 @@ ini.time <- as.numeric(ini.date) # time of process begin, converted into seconds
 
 
 # reserved words
+warn_file <- "warning.txt" # warning that will be displayed on the terminal
+
 # end reserved words
 # argument primary checking
 arg.check <- NULL #
@@ -343,7 +343,7 @@ fun_source_test(path = path, script = script)
 ################ Ignition
 
 
-fun_report(data = paste0("\n\n################################################################ ", script, " PROCESS\n\n"), output = log, path = "./", overwrite = TRUE)
+fun_report(data = paste0("\n\n################################################################ ", script, ".R SCRIPT\n\n"), output = log, path = "./", overwrite = FALSE)
 fun_report(data = paste0("\n\n################################ RUNNING DATE AND STARTING TIME"), output = log, path = "./", overwrite = FALSE)
 fun_report(data = paste0(ini.date, "\n\n"), output = log, path = "./", overwrite = FALSE)
 fun_report(data = paste0("\n\n################################ RUNNING"), output = log, path = "./", overwrite = FALSE)
@@ -411,6 +411,8 @@ for(i0 in names(obs)){ # NA in xlsx file become "NA". Thus, has to be replaced b
 ## Create the fasta files :
 
 count = 0
+multiple_v_genes <- FALSE
+multiple_j_genes <- FALSE
 
 for(i0 in Seq){
     count = count + 1
@@ -432,36 +434,109 @@ for(i0 in Seq){
         if(any(tempo.df$clone_id != tempo.df$clone_id[1])){
             stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL clone_id VALUES SHOULD BE THE SAME IN A seq_for_germ_tree FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$clone_id, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
         }
-        if(any(tempo.df$v_gene != tempo.df$v_gene[1])){
-            stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL v_gene VALUES SHOULD BE THE SAME IN A seq_for_germ_tree FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$v_gene, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
+        if (any(tempo.df$v_gene != tempo.df$v_gene[1])) {
+            warning_message <- paste0(
+                "\n\n================\n\nWARNING IN ", script, ".R\n",
+                "Different genes for the V cassette were found in this clonal group\n",
+                "Here they are:\n", paste0(tempo.df$v_gene, collapse = "\n"),
+                "\nSet clone_strategy = \"first\" in nextflow.config to avoid this.\n",
+                "\n\n================\n\n"
+            )
+            cat(warning_message, file = log, append = TRUE)
+            multiple_v_genes <- TRUE
         }
-        if(any(tempo.df$j_gene != tempo.df$j_gene[1])){
-            stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL j_gene VALUES SHOULD BE THE SAME IN A seq_for_germ_tree FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$j_gene, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
+
+        if (any(tempo.df$j_gene != tempo.df$j_gene[1])) {
+            warning_message <- paste0(
+                "\n\n================\n\nWARNING IN ", script, ".R\n",
+                "Different genes for the V cassette were found this clonal group\n",
+                "Here they are:\n", paste0(tempo.df$j_gene, collapse = "\n"),
+                "\nSet clone_strategy = \"first\" in nextflow.config to avoid this.\n",
+                "\n\n================\n\n"
+            )
+            cat(warning_message, file = log, append = TRUE)
+            multiple_j_genes <- TRUE
         }
+        # if(any(tempo.df$v_gene != tempo.df$v_gene[1])){
+        #     stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL v_gene VALUES SHOULD BE THE SAME IN A seq_for_germ_tree FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$v_gene, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
+        # }
+        # if(any(tempo.df$j_gene != tempo.df$j_gene[1])){
+        #     stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL j_gene VALUES SHOULD BE THE SAME IN A seq_for_germ_tree FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$j_gene, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
+        # }
         if(any(tempo.df$junction_length != tempo.df$junction_length[1])){
             stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL junction_length VALUES SHOULD BE THE SAME IN A seq_for_germ_tree FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$junction_length, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
         }
         # End check of columns relative to clonal groups
+
+        # Creation of the fasta file
         dir_name <- paste0("./", i0)
         dir.create(dir_name, showWarnings = FALSE, recursive = TRUE)
-        for(i1 in 1:nrow(tempo.df)){
-            tempo.name <- paste0(i0, "_", tempo.df[i1, "clone_id"], "_", tempo.df[i1, "v_gene"], "_", tempo.df[i1, "j_gene"], "_", tempo.df[i1, "junction_length"], ".fasta") # These columns all have the same value for a clonal group, so it writes in the same file
+        # Extract all different values of v_genes and j_genes in the clonal group (different genes for a same cassette can be present in a clonal group if the clone_strategy = "set" in nextflow.config)
+        # If several genes in a column, they are separated by a comma (",")
+        v_genes_all <- unique(unlist(strsplit(tempo.df$v_gene, ",")))
+        j_genes_all <- unique(unlist(strsplit(tempo.df$j_gene, ",")))
+        # Replace the "," characters by "-" to have appropriate file names
+        v_gene_clean <- paste(sort(v_genes_all), collapse = "-") 
+        j_gene_clean <- paste(sort(j_genes_all), collapse = "-")
+
+        tempo.name <- paste0(i0, "_", tempo.df[1, "clone_id"], "_", v_gene_clean, "_", j_gene_clean, "_", ".fasta") # Create the name of the file
+        for(i1 in 1:nrow(tempo.df)) {
             tempo.cat <- paste0(">", tempo.df[i1, Name], "\n", tempo.df[i1, i0], "\n")
             cat(tempo.cat, file = file.path(dir_name, tempo.name), append = TRUE)
         }
+
         # Germline addition to the fasta
+        # Sort the dataframe by the column specified in Name
         germ = Germline[count]
-        if(any(tempo.df[[germ]] != tempo.df[1, germ])){
-            stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nTHE VALUES INSIDE EACH OF THE Germline COLUMN SHOULD ALL BE THE SAME, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df[[germ]], collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
+        tempo.df <- tempo.df[order(tempo.df[[Name]]), ]
+
+        # Get the germline values and compute frequencies
+        germ_values <- tempo.df[[germ]]
+        germ_table <- table(germ_values)
+        max_freq <- max(germ_table)
+        most_frequent_germs <- names(germ_table[germ_table == max_freq])
+
+        # Choose the first matching germline by order in tempo.df (sorted by Name)
+        selected_index <- which(tempo.df[[germ]] %in% most_frequent_germs)[1]
+        selected_germline <- tempo.df[selected_index, germ]
+
+        # Get cleaned v_gene and j_gene values for the chosen germline row
+        germ_v_gene <- gsub(",", "-", tempo.df[selected_index, "germline_v_gene"])
+        germ_j_gene <- gsub(",", "-", tempo.df[selected_index, "germline_j_gene"])
+
+        # Write germline to the same fasta file as above
+        germ_seq_name <- paste0("germline_d_mask_clone_id_", tempo.df[1, "clone_id"], "_", germ_v_gene, "_", germ_j_gene)
+        tempo.cat <- paste0(">", germ_seq_name, "\n", selected_germline, "\n")
+        cat(tempo.cat, file = file.path(dir_name, tempo.name), append = TRUE)
+
+        # If germlines differ in the group, issue a warning
+        if (length(unique(germ_values)) > 1) {
+            warning_message <- paste0(
+                "WARNING: Multiple germline sequences found for clone_id ", tempo.df[1, "clone_id"], ".\n",
+                "Selected germline from sequence: ", tempo.df[selected_index, Name], "\n",
+                "Associated germline_v_gene: ", tempo.df[selected_index, "germline_v_gene"], "\n",
+                "Associated germline_j_gene: ", tempo.df[selected_index, "germline_j_gene"], "\n",
+                "Associated v_gene: ", tempo.df[selected_index, "v_gene"], "\n",
+                "Associated j_gene: ", tempo.df[selected_index, "j_gene"], "\n",
+                "Used germline sequence: ", selected_germline, "\n\n"
+            )
+            cat(warning_message, file = log, append = TRUE)
         }
-        tempo.name <- paste0(i0, "_", tempo.df[1, "clone_id"], "_", tempo.df[1, "v_gene"], "_", tempo.df[1, "j_gene"], "_", tempo.df[1, "junction_length"], ".fasta") # These columns all have the same value for a clonal group, so it writes in the same file
-        germ_seq_name <- paste0("germline_d_mask_clone_id_", tempo.df[1, "clone_id"])
-        tempo.cat <- paste0(">", germ_seq_name, "\n", tempo.df[1, germ], "\n")
-        cat(tempo.cat, file = paste0("./", i0, "/", tempo.name), append = TRUE)
+
     } else {
         stop(paste0("NO FASTA FILE CREATED BECAUSE THE IMPORTED FILE:\n", path, "\nHAS MORE THAN ", clone_nb_seq, " EMPTY SEQUENCES (NA OR \"\") IN ", i0, "COLUMN\n"))
     }
 
+}
+
+if (multiple_j_genes || multiple_v_genes){
+    warning_message <- paste0(
+        "\n================\n\nWARNING IN ", script, ".R\n",
+        "\n[WARNING] Multiple V or J genes detected in a clonal group. ",
+        "\nSet clone_strategy = \"first\" in nextflow.config to avoid this.\n",
+        "\n\n================\n\n"
+    )
+    cat(warning_message, file = warn_file, append = TRUE)
 }
 
 
@@ -506,16 +581,15 @@ for (feature in features) {
 }
 if (length(non_unique_cols) > 0) {
     tempo.cat <- paste0(
-        "\n\n================\n\nWARNING : ", script, ".R\n",
-        "ALL DATA ROWS IN IMPORTED FILE : ", path, "\n",
-        "SHOULD HAVE THE SAME VALUES FOR EACH REGION COORDINATES COLUMN.\n",
-        "REGION COORDINATES SHOULD BE THE SAME FOR EACH SEQUENCE OF A CLONAL GROUP.\n",
+        "\n================\n\nWARNING : ", script, ".R\n",
+        "DATA ROWS IN IMPORTED FILE : ", path, "\n",
+        "HAVE DIFFERENT VALUES FOR THE FOLLOWING REGION COORDINATES COLUMN\n",
         "THE MOST FREQUENT VALUE WAS TAKEN FOR THESE COLUMNS:\n  - ",
         paste(non_unique_cols, collapse = "\n  - "),
-        "\n\n================\n\n"
+        "\n\n================\n"
     )
     cat(tempo.cat, file = log, append = TRUE)
-    cat(tempo.cat, file = "warning.txt", append = TRUE)
+    cat(tempo.cat, file = warn_file, append = TRUE)
 }
 
 
@@ -621,7 +695,6 @@ fun_report(data = paste0("\n\n################################ JOB END\n\n\nTIME
 
 
 ################################ End Main code
-
 
 
 

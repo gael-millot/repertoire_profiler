@@ -741,6 +741,7 @@ process clone_assignment {
     val clone_model
     val clone_normalize
     val clone_distance
+    val clone_strategy
     path meta_file
     val meta_legend
 
@@ -753,7 +754,7 @@ process clone_assignment {
     """
     #!/bin/bash -ue
     if [[ -s ${productive_ch} ]]; then # see above for -s
-        DefineClones.py -d ${productive_ch} --act set --model ${clone_model} --norm ${clone_normalize} --dist ${clone_distance} --fail |& tee -a clone_assignment.log
+        DefineClones.py -d ${productive_ch} --act ${clone_strategy} --model ${clone_model} --norm ${clone_normalize} --dist ${clone_distance} --fail |& tee -a clone_assignment.log
         Rscript -e '
             args = commandArgs(trailingOnly=TRUE)
             db <- read.table(args[1], sep = "\\t", header = TRUE)
@@ -939,7 +940,7 @@ process TranslateGermline {
     path add_germ_ch // parallelization per clonal group
 
     output:
-    path "translate_germline_group_*.tsv", emit: translate_germ_ch
+    path "*-trans_germ-pass.tsv", emit: translate_germ_ch
     path "*.log", emit: translate_germ_log_ch
 
     script:
@@ -981,7 +982,8 @@ process TranslateGermline {
         )
 
         df[["germline_d_mask_aa_no_gaps"]] <- toString(germ_aa)
-        new_file_name <- paste0("translate_germline_group_", df[1, "clone_id"], ".tsv")
+        file_base <- tools::file_path_sans_ext(basename(file_name))
+        new_file_name <- paste0(file_base, "-trans_germ-pass.tsv")
         write.table(df, file = paste0("./", new_file_name), row.names = FALSE, col.names = TRUE, sep = "\\t")
 
     '|& tee -a TranslateGermline.log
@@ -1070,7 +1072,7 @@ process mutation_load {
                                     nproc=1)
 
         VDJ_db <- dplyr::arrange(VDJ_db, clone_id)
-        # write.table(VDJ_db, file = paste0("./", file_name, "_shm-pass.tsv"), row.names = FALSE, sep = "\\t")
+        # write.table(VDJ_db, file = paste0("./", tools::file_path_sans_ext(file_name), "_shm-pass.tsv"), row.names = FALSE, sep = "\\t")
 
         # Reposition the column starting with "initial_" to the second position
         initial_col <- grep("^initial_", names(VDJ_db), value = TRUE)
@@ -1090,7 +1092,7 @@ process mutation_load {
             }
         }
         # end Check if a column equal to meta_legend in lowercase exists in 'data'
-        write.table(VDJ_db, file = paste0("./", file_name, "_shm-pass.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
+        write.table(VDJ_db, file = paste0("./", tools::file_path_sans_ext(file_name), "_shm-pass.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
 
     ' "\${FILENAME}" |& tee -a mutation_load.log
     # cp ./tempo_shm-pass.tsv \${FILENAME}_shm-pass.tsv
@@ -1145,7 +1147,7 @@ process get_germ_tree {
 
 
 // Adds germline_v_gene and germline_j_gene columns to the get_germ_tree tsv output files
-process germline_genes{
+process GermlineGenes{
     label 'r_ext'
     cache 'true'
 
@@ -1153,7 +1155,7 @@ process germline_genes{
     path germ_tree_ch2
 
     output:
-    path "get_germ_tree_with_germline_genes.tsv", emit : germline_genes_ch
+    path "*-germ_genes-pass*.tsv", emit : germline_genes_ch
 
     script:
     """
@@ -1187,8 +1189,11 @@ process germline_genes{
         if( !all(required_outputs %in% names(df)) ){
             stop(paste0("\\n\\n========\\n\\nERROR IN THE NEXTFLOW EXECUTION OF THE germline_genes PROCESS\\nMISSING germline_v_call, germline_d_call OR germline_j_call FOLLOWING THE get_germ_tree PROCESS (OUTPUT germ_tree_ch)\\n\\n========\\n\\n"), call. = FALSE)
         }
-
-        df <- write.table(df, file = "get_germ_tree_with_germline_genes.tsv", row.names = FALSE, col.names = TRUE, sep = "\\t")
+        
+        file_base <- tools::file_path_sans_ext(basename("${germ_tree_ch2}"))
+        file_name <- paste0(file_base, "-germ_genes-pass_group_", df[1, "clone_id"], ".tsv")
+        
+        df <- write.table(df, file = file_name, row.names = FALSE, col.names = TRUE, sep = "\\t")
     '
     """
 }
@@ -1263,7 +1268,7 @@ process germ_tree_vizu {
 // The tsv input is expected to already only contain sequences of one same clonal group. For each clonal group, both nuc and aa fastas will be emitted paired up.
 // Makes a gff file from the coordinates info contained inside the tsv and pairs it with the fastas
 // Inputs :
-//      - translate_germline_filtered : tsv info files containing a "sequence" column (used to create nuc fasta file), a "sequence_aa" column (used to create aa fasta file) + region coordinates info (used to create gff)
+//      - germline_genes_filtered : tsv info files containing a "sequence" column (used to create nuc fasta file), a "sequence_aa" column (used to create aa fasta file), a "germline_d_mask_no_gaps" column, a "germline_d_mask_aa_no_gaps" column, "germline_v_gene" and "germline_j_gene" columns + region coordinates info (used to create gff) + "clone_id", "junction_length"
 //      - clone_nb_seq : Minimun number of non-identical sequences per clonal group for tree plotting (defined in nextflow.config). It has to be checked beforehand that the elements in the germ_tree_ch channel contain more than clone_nb_seq rows of data, or the program will stop.
 //      - cute_file : Several functions used in the tsv2fasta.R script
 // Outputs :
@@ -1278,30 +1283,31 @@ process FastaGff{
     publishDir path: "${out_path}/phylo/nuc", mode: 'copy', pattern: "{*.gff}", overwrite: false
 
     input:
-    path translate_germline_filtered // parallelization
+    path germline_genes_filtered // parallelization
     val clone_nb_seq
     path cute_file
 
     output:
     tuple path("sequences_full_trees_nuc/*.fasta"), path("sequences_full_trees_aa/*.fasta"), path("*.gff"), emit: fasta_gff_ch
-    path "warning.txt", emit: warning_ch, optional: true    
+    path "FastaGff.log", emit: fasta_gff_log_ch
+    path "warning.txt", emit: warning_ch, optional: true
 
     script:
     """
     #!/bin/bash -ue
 
-    FILENAME=\$(basename -- ${translate_germline_filtered}) # recover a file name without path
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a tsv_to_fasta.log
-    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a tsv_to_fasta.log
+    FILENAME=\$(basename -- ${germline_genes_filtered}) # recover a file name without path
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a FastaGff.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a FastaGff.log
 
     tsv2fasta.R \
-    "${translate_germline_filtered}" \
+    "${germline_genes_filtered}" \
     "sequence_id" \
     "sequence,sequence_aa" \
     "germline_d_mask_no_gaps,germline_d_mask_aa_no_gaps" \
     "${clone_nb_seq}" \
     "${cute_file}" \
-    "tsv_to_fasta.log"
+    "FastaGff.log"
 
     mv sequence sequences_full_trees_nuc
     mv sequence_aa sequences_full_trees_aa
@@ -1811,6 +1817,11 @@ workflow {
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID PARAMETERS IN repertoire_profiler.config FILE:\nONLY ONE OF igblast_heavy_chain AND LIGHT CHAINS (igblast_lambda_chain, igblast_kappa_chain) CAN BE TRUE AT A TIME\nHERE ARE THEIR CURRENT VALUES : \nigblast_heavy_chain : ${igblast_heavy_chain}\nigblast_lambda_chain : ${igblast_lambda_chain}\nigblast_kappa_chain : ${igblast_kappa_chain}\n\n========\n\n"
     }
 
+    if( ! (clone_strategy in String) ){
+                error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_strategy PARAMETER IN repertoire_profiler.config FILE:\n${clone_strategy}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (clone_strategy == "first" || clone_strategy == "set") ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_strategy PARAMETER IN repertoire_profiler.config FILE:\n${clone_strategy}\nMUST BE EITHER \"first\" OR \"set\"\n\n========\n\n"
+    }
     if( ! (clone_nb_seq in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_nb_seq PARAMETER IN repertoire_profiler.config FILE:\n${clone_nb_seq}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ( ! (clone_nb_seq =~/^\d+$/)) || clone_nb_seq.toInteger() < 3 ){
@@ -2155,9 +2166,9 @@ workflow {
     nb1_b = select_ch2.countLines()
     nb2_b = unselect_ch2.countLines()
     nb1_b.subscribe { n -> if ( n == 1 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FOLLOWING THE parseDb_filtering PROCESS\nSEE THE EMPTY productive_seq.tsv FILE AND THE unproductive_seq.tsv FILE IN THE OUTPUT FOLDER\n\n========\n\n"}}
-    //nb1_b.view()
-    //nb2_b.view()
-    //tsv_ch2.countLines().view()
+    // nb1_b.map { "Nombre de lignes dans select_ch2 (productive_seq_init.tsv): $it (en comptant le header)" }.view()
+    // nb2_b.map { "Nombre de lignes dans unselect_ch2 (unproductive_seq.tsv): $it (en comptant le header)" }.view()
+    // tsv_ch2.countLines().map { "Nombre de lignes dans tsv_ch2 (all_igblast_seq.tsv): $it (en comptant le header)" }.view()
     tsv_ch2.countLines().combine(nb1_b).combine(nb2_b).subscribe{n,n1,n2 -> if(n != n1 + n2 - 1){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE productive_seq.tsv (${n1}) AND unproductive_seq.tsv (${n2} - 1) IS NOT EQUAL TO THE NUMBER OF FILES IN all_igblast_seq.tsv (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // n1 + n2 - 1 because header counted in both n1 and n2 while only one header in n
     parseDb_filtering.out.parseDb_filtering_log_ch.collectFile(name: "ParseDb_filtering.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
@@ -2236,6 +2247,7 @@ workflow {
         clone_model,
         clone_normalize,
         clone_distance,
+        clone_strategy,
         meta_file,
         meta_legend
     )
@@ -2271,10 +2283,6 @@ workflow {
         AddGermlineSequences.out.add_germ_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE AddGermlineSequences PROCESS\n\n========\n\n"}
     )
     TranslateGermline.out.translate_germ_log_ch.collectFile(name: "TranslateGermline.log").subscribe{it -> it.copyTo("${out_path}/reports")}
-    translate_germline_filtered = TranslateGermline.out.translate_germ_ch.filter{ file -> file.countLines() > clone_nb_seq.toInteger() } // Only keep clonal groups that have a number of sequences superior to clone_nb_seq (variable defined in nextflow.config)
-    //translate_germline_filtered_ch2 = translate_germline_filtered.collectFile(name : "translate_germline_filtered.tsv", skip: 1, keepHeader: true)
-    //translate_germline_filtered_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
-
 
 
     mutation_load(
@@ -2293,12 +2301,15 @@ workflow {
     mutation_load_filtered = mutation_load.out.mutation_load_ch.filter{ file -> file.countLines() > clone_nb_seq.toInteger() } // Only keep clonal groups that have a number of sequences superior to clone_nb_seq (variable defined in nextflow.config)
 
     
-    germline_genes(
+    GermlineGenes(
         mutation_load_filtered
     )
 
-    germline_genes_ch2 = germline_genes.out.germline_genes_ch.collectFile(name: "germ_tree_seq.tsv", skip: 1, keepHeader: true)
+    germline_genes_ch2 = GermlineGenes.out.germline_genes_ch.collectFile(name: "germ_tree_seq.tsv", skip: 1, keepHeader: true)
     germline_genes_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
+    germline_genes_filtered = GermlineGenes.out.germline_genes_ch.filter{ file -> file.countLines() > clone_nb_seq.toInteger() } // Only keep clonal groups that have a number of sequences superior to clone_nb_seq (variable defined in nextflow.config)
+    //germline_genes_filtered_ch2 = germline_genes_filtered.collectFile(name : "germline_genes_filtered.tsv", skip: 1, keepHeader: true)
+    //germline_genes_filtered_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 
 
 
@@ -2395,7 +2406,6 @@ workflow {
     tempo4_ch = Channel.of("vj_allele", "c_allele", "vj_gene", "c_gene")
     tempo5_ch = tempo3_ch.combine(tempo4_ch) // 12 tuples
 
-
     donut(
         tempo5_ch,
         donut_palette,
@@ -2435,7 +2445,6 @@ workflow {
     //donut_assembly.out.donut_assembly_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}
     donut_assembly.out.donut_assembly_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}}
 
-
     
     if(igblast_variable_ref_files =~ /^.*IGHV.*$/){
         heavy_chain = channel.of("TRUE") // Heavy chain detected
@@ -2459,20 +2468,24 @@ workflow {
     align_input = fastagroups.combine(heavy_chain)
 */
 
+
+
     FastaGff(
-        translate_germline_filtered,
+        germline_genes_filtered,
         clone_nb_seq,
         cute_path
     )
+
+    fasta_gff_log_ch2 = FastaGff.out.fasta_gff_log_ch.collectFile(name: "FastaGff.log")
+    fasta_gff_log_ch2.subscribe{it -> it.copyTo("${out_path}/reports")}
     align_input = FastaGff.out.fasta_gff_ch.combine(heavy_chain)
     fastagff_warn = FastaGff.out.warning_ch
 
     fastagff_warn.filter { file(it). exists() }
                 .map {file -> 
-                    file.text  // Print the warning message on the terminal
+                    file.text  // contenu du fichier
                 }
                 .view()
-
 
     AlignAa(
         align_input,
