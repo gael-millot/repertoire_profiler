@@ -305,11 +305,11 @@ Version V10.3:
 
 [Pascal Chappert](https://www.institut-necker-enfants-malades.fr/index.php?menu=team&rubric=teamtabs&idfac=mahevas#chart), INSERM U1151 Institut Necker Enfants Malades, Paris, France
 
-[Frédéric Lemoine](), Bioinformatics and Biostatistics Hub, Institut Pasteur, Paris, France
+[Frédéric Lemoine](), Institut Pasteur, Université Paris Cité, Bioinformatics and Biostatistics Hub, 75015 Paris, France
 
 [Chloé Taurel](), University of Technology of Compiègne, Compiègne, France
 
-[Gael A. Millot](https://gitlab.pasteur.fr/gmillot), Bioinformatics and Biostatistics Hub, Institut Pasteur, Paris, France
+[Gael A. Millot](https://gitlab.pasteur.fr/gmillot), Institut Pasteur, Université Paris Cité, Bioinformatics and Biostatistics Hub, 75015 Paris, France
 
 <br /><br />
 ## ACKNOWLEDGEMENTS
