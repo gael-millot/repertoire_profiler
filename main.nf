@@ -1456,19 +1456,20 @@ process AlignAa {
     label 'abalign'
     
     input:
-    tuple path(fasta_nuc), path(fasta_aa), path(gff), val(heavy_chain)
+    tuple path(fasta_nuc), path(fasta_aa), path(gff)
     val igblast_organism
+    val igblast_heavy_chain
     
     output:
     tuple path(fasta_nuc), path("*_restored_align_aa.fasta"), path(gff) , emit : aligned_aa_ch
     path "AlignAa.log", emit: alignaa_log_ch
     
     script:
-    if( ! (heavy_chain == "TRUE" || heavy_chain == "FALSE") ){
+    if( ! (igblast_heavy_chain == "TRUE" || igblast_heavy_chain == "FALSE") ){
         error "\n\n========\n\nERROR IN AlignAa PROCESS\n\nINVALID heavy_chain PARAMETER:\n${heavy_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
     parms="-al"
-    if(heavy_chain == "TRUE"){parms="-ah"}
+    if(igblast_heavy_chain == "TRUE"){parms="-ah"}
     // Choose the species parameter for abalign
     switch (igblast_organism) {
         case "mouse":
@@ -2445,13 +2446,6 @@ workflow {
     //donut_assembly.out.donut_assembly_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}
     donut_assembly.out.donut_assembly_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}}
 
-    
-    if(igblast_variable_ref_files =~ /^.*IGHV.*$/){
-        heavy_chain = channel.of("TRUE") // Heavy chain detected
-    }else{
-        heavy_chain = channel.of("FALSE") // No heavy chain detected means light chain
-    }
-
 /*
     Reformat(
         aa_tsv_ch2,
@@ -2478,18 +2472,21 @@ workflow {
 
     fasta_gff_log_ch2 = FastaGff.out.fasta_gff_log_ch.collectFile(name: "FastaGff.log")
     fasta_gff_log_ch2.subscribe{it -> it.copyTo("${out_path}/reports")}
-    align_input = FastaGff.out.fasta_gff_ch.combine(heavy_chain)
+    align_input = FastaGff.out.fasta_gff_ch
     fastagff_warn = FastaGff.out.warning_ch
 
+    // Print warnings on the terminal :
     fastagff_warn.filter { file(it). exists() }
                 .map {file -> 
                     file.text  // contenu du fichier
                 }
                 .view()
 
+
     AlignAa(
         align_input,
-        igblast_organism
+        igblast_organism,
+        igblast_heavy_chain
     )
     aligned_aa_only_ch = AlignAa.out.aligned_aa_ch.map { x, y, z -> y }
 
