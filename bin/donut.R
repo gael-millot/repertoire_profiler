@@ -502,48 +502,64 @@ if(nrow(obs) > 0){
             tempo.secondary <- NULL
         }
     }
-
+    
     # keep only the first allele or gene if igblast hesitated between several
-    tempo.primary <- unlist(lapply(tempo.primary, function(x) strsplit(x, ",")[[1]][1]))
-    tempo.secondary <- unlist(lapply(tempo.secondary, function(x) strsplit(x, ",")[[1]][1]))
+    tempo.primary <- unlist(lapply(tempo.primary, function(x) {
+        if (is.na(x)) return(NA) else return(strsplit(x, ",")[[1]][1])
+    }))
+    tempo.secondary <- unlist(lapply(tempo.secondary, function(x) {
+        if (is.na(x)) return(NA) else return(strsplit(x, ",")[[1]][1])
+    }))
     
     #inactivated because now chain can be both IGL and IGK
     # if(length(chain) != 1){
-        # stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 4 IN donut.R for kind ", kind, ": chain MUST BE A SINGLE VALUE.\nHERE IT IS: ", paste(chain, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) 
+    # stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 4 IN donut.R for kind ", kind, ": chain MUST BE A SINGLE VALUE.\nHERE IT IS: ", paste(chain, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) 
     # }else if(chain != unique(substr(tempo.v, 1, 3))){
-        # stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN donut.R for kind ", kind, ": CHAIN OF J DIFFERENT FROM CHAIN OF V.\nCHAIN OF V: ", paste(chain, collapse = " "), "\nCHAIN OF J: ", paste(unique(substr(tempo.v, 1, 3)), collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) 
+    # stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN donut.R for kind ", kind, ": CHAIN OF J DIFFERENT FROM CHAIN OF V.\nCHAIN OF V: ", paste(chain, collapse = " "), "\nCHAIN OF J: ", paste(unique(substr(tempo.v, 1, 3)), collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) 
     # }
-
-    if (!is.null(tempo.secondary)) { # if there is a secondary column (meaning we are looking at VJ alleles/genes) check that it is the same chain
+    
+    if (!is.null(tempo.secondary) && !all(is.na(tempo.secondary)) && !all(is.na(tempo.primary))) { # if there is a secondary column (meaning we are looking at VJ alleles/genes) check that it is the same chain
         check1 <- substr(tempo.primary, 1, 3)
         check2 <- substr(tempo.secondary, 1, 3)
         if( ! all(check1 == check2)){
             stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN donut.R for kind ", kind, ": CHAIN OF J DIFFERENT FROM CHAIN OF V.\nCHAIN OF V: ", paste(tempo.v[check1 != check2], collapse = " "), "\nCHAIN OF J: ", paste(tempo.j[check1 != check2], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) 
         }
     }
-
-    # remove "IGH" if heavy chain ; remove "IG" if light chain to keep the info about K or L locus
+    
+    # remove "IGH" if heavy chain ; remove "IG" if light chain to keep the info about K or L locus (if all values are NA it is correctly handled)
     third_character <- substr(tempo.primary, 3, 3)
-    third_character <- third_character[!is.na(third_character)]
-    if(!all(third_character == "H", na.rm = TRUE)){
+    third_character_non_na <- third_character[!is.na(third_character)]
+    if(length(third_character_non_na) == 0 || !all(third_character_non_na == "H")) {
         tronc <- 3
-    }else{
+    } else {
         tronc <- 4
     }
-    tempo.primary <- substring(tempo.primary, tronc)
+    tempo.primary <- ifelse(is.na(tempo.primary), NA, substring(tempo.primary, tronc))
     if (!is.null(tempo.secondary)) {
-        tempo.secondary <- substring(tempo.secondary, tronc)
+        tempo.secondary <- ifelse(is.na(tempo.secondary), NA, substring(tempo.secondary, tronc))
         clone.name <- paste0(tempo.primary, "_", tempo.secondary)
     } else {
         clone.name <- tempo.primary
     }
-
-
+    
+    
     obs2 <- data.frame(table(clone.name))
-    names(obs2)[1] <- col
-    obs2 <- data.frame(obs2, Prop = obs2$Freq / sum(obs2$Freq), kind = kind)
-    obs2[[col]] <- factor(obs2[[col]], levels = obs2[[col]][order(obs2$Prop, decreasing = TRUE)]) # reorder so that the donut is according to decreasing proportion starting at the top in a clockwise direction
-    obs2 <- obs2[order(as.numeric(obs2[[col]]), decreasing = FALSE), ] # obs2 with rows in decreasing order, according to Prop
+    if (nrow(obs2) > 0) {
+        names(obs2)[1] <- col
+        obs2 <- data.frame(obs2, Prop = obs2$Freq / sum(obs2$Freq), kind = kind)
+        obs2[[col]] <- factor(obs2[[col]], levels = obs2[[col]][order(obs2$Prop, decreasing = TRUE)]) # reorder so that the donut is according to decreasing proportion starting at the top in a clockwise direction
+        obs2 <- obs2[order(as.numeric(obs2[[col]]), decreasing = FALSE), ] # obs2 with rows in decreasing order, according to Prop
+    } else { # Handle the situation in which all values are NA in the original column
+        # structure vide avec les bonnes colonnes pour éviter les erreurs en aval
+        obs2 <- data.frame(
+            temp_col = character(0),
+            Freq = integer(0),
+            Prop = numeric(0),
+            kind = character(0)
+        )
+        names(obs2)[1] <- col
+        obs2[[col]] <- factor(obs2[[col]], levels = character(0))  # nécessaire pour éviter erreur au reorder
+    }
     # # warning: I can use all.annotation.log because I have duplicated the first column of the dataset in the second column, in order to change the name in the first column with metadata. If all(obs[ , 1] == obs[ , 2]) == TRUE, it means no annotation added
     if(grepl(x = names(obs)[2], pattern = "^initial_")){ # means that fonctional annotations are present
         annotation.log <- obs[ , 1] == obs[ , 2]
@@ -557,12 +573,12 @@ if(nrow(obs) > 0){
         tempo.data1 <- aggregate(tempo.labels ~ clone.name, FUN = function(x){paste(x, collapse = ",")})
         obs2 <- data.frame(obs2, labels = tempo.data1$tempo.labels[match(obs2[[col]], tempo.data1$clone.name)])
     }
-
-
+    
+    
     ################ End data modification
-
+    
     ################ Plotting
-
+    
     tempo.title <- paste0(
         tempo.title,
         "\nChain: ", paste(chain, collapse = " "), "\n",
@@ -574,13 +590,13 @@ if(nrow(obs) > 0){
             tempo.title <- paste0(tempo.title, "\nSome classes have been removed from the legend (donut_legend_limit = ", round(donut_legend_limit, 2), "). See the donut_stats.tsv file")
         }
     }
-
+    
     if(kind == "annotated" & all.annotation.log != TRUE){
         obs3 <- obs2[ ! is.na(obs2$labels) ,]
     }else{
         obs3 <- obs2
     }
-
+    
     if(length(obs3$Freq) != 0){
         if( ! (all(obs3$Freq == 0) | all(is.na(obs3$Freq)))){
             pdf(NULL) # used because I need plot = TRUE for return.gtable

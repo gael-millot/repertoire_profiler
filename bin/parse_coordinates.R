@@ -291,19 +291,30 @@ if (length(align_lines) == 0) {
 
 tab <- do.call(rbind, strsplit(align_lines, "\t"))
 
-# Named list for expected regions, in order and the tsv future column names
-regions <- c("FR1-IMGT", "CDR1-IMGT", "FR2-IMGT", "CDR2-IMGT", "FR3-IMGT", "CDR3-IMGT (germline)")
+# Named list for expected regions, the ones that are actually present in the fmt7 file and the tsv future column names
+expected_regions <- c("FR1-IMGT", "CDR1-IMGT", "FR2-IMGT", "CDR2-IMGT", "FR3-IMGT", "CDR3-IMGT (germline)")
+present_regions <- tab[,1] # First column of tab contains region names present in fmt7 file
 wanted_labels <- c("FR1", "CDR1", "FR2", "CDR2", "FR3", "CDR3")
 
-if(!all(tab[,1]==regions)){
-    tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 9 IN ", script, ":\n\nTHE fmt7_name PARAMETER MUST BE IN THE igblast OUTPUT FORMAT AND THEREFORE SHOULD HAVE AN \"# Alignment summary\" \n SECTION STARTING WITH THE FOLLOWING LINES: ", paste0(regions, collapse = " ; "), "HOWEVER, HERE ARE THE LINES IN THE ", fmt7_name, "FILE : \n ", paste0(tab[,1], collapse = " ; "), " \nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n")
+if(!all(expected_regions %in% present_regions)){
+    tempo.cat <- paste0("\n\n================\n\nWARNING :\n\nTHE fmt7_name PARAMETER MUST BE IN THE igblast OUTPUT FORMAT AND THEREFORE SHOULD HAVE AN \"# Alignment summary\" \n SECTION STARTING WITH THE FOLLOWING LINES: ", paste0(expected_regions, collapse = " ; "), "\nHOWEVER, HERE ARE THE LINES IN THE ", fmt7_name, "FILE : \n ", paste0(tab[,1], collapse = " ; "), " \nNA VALUES WERE PLACED IN THE COLUMNS TO THE CORRESPONDING MISSING LINES\n\n============\n\n")
+    cat(tempo.cat, file = log, append = TRUE)
+}
+if (!all(present_regions %in% expected_regions)){
+    tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 9 IN ", script, ":\n\n\"# Alignment summary\" \n SECTION IN THE fmt7_name PARAMETER CONTAINS A LINE STARTING WITH \"", present_regions[i], "\"\nTHIS SECTION SHOULD ONLY CONTAIN LINES STARTING WITH THE FOLLOWING STRINGS: ", paste0(expected_regions, collapse = " ; "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n============\n\n")
     stop(tempo.cat, call. = FALSE)
 }
 
 coords <- list()
-for (i in 0:length(regions)) {
-    coords[[paste0(wanted_labels[i], "_start")]] <- as.integer(tab[i,2])
-    coords[[paste0(wanted_labels[i], "_end")]]   <- as.integer(tab[i,3])
+for (i in seq_along(expected_regions)) {
+    match_index <- which(present_regions == expected_regions[i])
+    if (length(match_index) == 1) {
+        coords[[paste0(wanted_labels[i], "_start")]] <- as.integer(tab[match_index,2])
+        coords[[paste0(wanted_labels[i], "_end")]]   <- as.integer(tab[match_index,3])
+    } else {
+        coords[[paste0(wanted_labels[i], "_start")]] <- NA
+        coords[[paste0(wanted_labels[i], "_end")]]   <- NA
+    }
 }
 
 

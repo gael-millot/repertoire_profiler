@@ -242,10 +242,9 @@ Passing ratio : ```r base::round(params$nb_clone_assigned / (params$nb_clone_ass
 
 <br>
 
-[comment]: <> (This text is commented because cdr3 alignments are in development)
-[comment]: <> (**Sequence alignment** displays are available in the [nucleotide_alignments](./nucleotide_alignments) folder. The HTML files present the alignment visualizations, while the FASTA files contain the corresponding sequences for each clonal group.)
-[comment]: <> (End cdr3 text)
-
+**Sequence alignment** displays are available in the [phylo/nuc](./phylo/nuc) folder. The HTML files present the alignment visualizations, while the FASTA files contain the corresponding sequences for each clonal group. The *.gff* files contain the associated region coordinates per clonal group.<br>
+These alignments were performed using the input sequence and an algorithm based on its translated amino acids.<br>
+*For better visualization, it is recommended to used the "Nucleotide" color scheme.*<br>
 <br><br><br>
 
 ###  Amino acid sequences phylogeny 
@@ -254,7 +253,7 @@ Passing ratio : ```r base::round(params$nb_clone_assigned / (params$nb_clone_ass
 `r  if(params$itol_subscription == "TRUE"){"Open the different **sequences_\\<SEQ_NAME\\>_align.fasta_itol_url.txt** files in the [phylo/aa](./phylo/aa) folder and click on the link to see the trees."}`
 `r  if(params$itol_subscription == "FALSE"){"To see the trees, follow the link : https://itol.embl.de/upload.cgi. Choose a name for your tree (optional) and upload a '*.treefile' file from the [phylo/aa](./phylo/aa) folder. The trees will then be displayed by iTOL."}`
 
-Alignment visualization is available for each clonal group used in each tree, in the [phylo/aa](./phylo_aa) folder in html format.
+Alignment visualization is available for each clonal group used in each tree, in the [phylo/aa](./phylo/aa) folder in html format.
 
 <br><br>
 
