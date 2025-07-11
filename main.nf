@@ -1461,7 +1461,7 @@ process AlignAa {
     val igblast_heavy_chain
     
     output:
-    tuple path(fasta_nuc), path("*_restored_align_aa.fasta"), path(gff) , emit : aligned_aa_ch
+    tuple path(fasta_nuc), path("*_restored_aligned_aa.fasta"), path(gff) , emit : aligned_aa_ch
     path "AlignAa.log", emit: alignaa_log_ch
     
     script:
@@ -1498,7 +1498,7 @@ process AlignAa {
     /bin/Abalign_V2_Linux_Term/Abalign -i ${fasta_aa} ${parms} ${fasta_aa.baseName}_align_aa.fasta -sp ${species} -lc FR1_length.txt -lg 1 -lc CDR1_length.txt -lg 2 |& tee -a AlignAa.log || true
     
     # Abalign puts fasta headers in all caps. next script is meant to put those headers back to how they originally were
-    restore_headers.sh ${fasta_aa} ${fasta_aa.baseName}_align_aa.fasta ${fasta_aa.baseName}_restored_align_aa.fasta AlignAa.log
+    restore_headers.sh ${fasta_aa} ${fasta_aa.baseName}_align_aa.fasta ${fasta_aa.baseName}_restored_aligned_aa.fasta AlignAa.log
     """
 }
 
@@ -1556,22 +1556,25 @@ process PrintAlignmentAA{
 }
 
 process Tree {
-    publishDir path: "${out_path}/phylo/aa", mode: 'copy', pattern: "{*.treefile}", overwrite: false
+    publishDir path: "${out_path}/phylo/aa", mode: 'copy', pattern: "{*_aligned_aa.fasta.treefile}", overwrite: false
+    publishDir path: "${out_path}/phylo/nuc", mode: 'copy', pattern: "{*_aligned_nuc.fasta.treefile}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
 
     label 'iqtree'
 
     input:
-    path msa
+    tuple path(fasta_nuc_alignments), path(fasta_aa_alignments)
     path phylo_tree_model_file
 
     output:
-    path "*.treefile", emit : tree_file
+    path "*_aligned_aa.fasta.treefile", emit : tree_file_nuc
+    path "*_aligned_nuc.fasta.treefile", emit : tree_file_aa
     path "*.log"
 
     script:
     """
-    iqtree -nt ${task.cpus} -s ${msa} -m ${phylo_tree_model_file}+I+R6 --seed 123456789
+    iqtree -nt ${task.cpus} -s ${fasta_aa_alignments} -m ${phylo_tree_model_file}+I+R6 --seed 123456789
+    iqtree -nt ${task.cpus} -s ${fasta_nuc_alignments} -m ${phylo_tree_model_file}+GTR+I+R6 --seed 123456789
     """
 }
 
@@ -1598,8 +1601,6 @@ process ProcessMeta {
 
 
 process ITOL{
-    publishDir path: "${out_path}/phylo/aa", mode: 'copy'
-
     label 'gotree'
 
     input:
@@ -1608,7 +1609,8 @@ process ITOL{
     val phylo_tree_itolkey
 
     output:
-    path "*itol_url.txt"
+    path "*_aligned_aa.fasta_itol_url.txt", emit: itol_aa_ch, optional: true
+    path "*_aligned_nuc.fasta_itol_url.txt", emit: itol_nuc_ch, optional: true
 
     script:
     """
@@ -2494,12 +2496,11 @@ workflow {
     AlignNuc(
         AlignAa.out.aligned_aa_ch
     )
-    aligned_nuc_only_ch = AlignNuc.out.aligned_all_ch.map { x, y, z -> tuple(x, z) }
-
-
+    aligned_nuc_gff_only_ch = AlignNuc.out.aligned_all_ch.map { x, y, z -> tuple(x, z) }
+    aligned_nuc_aa_tuple_ch = AlignNuc.out.aligned_all_ch.map { x, y, z -> tuple(x, y) } // Nuc and aa aligned, without their gff
 
     PrintAlignmentNuc(
-        aligned_nuc_only_ch
+        aligned_nuc_gff_only_ch
     )
     
     PrintAlignmentNuc.out.alignment_html.ifEmpty{
@@ -2515,11 +2516,13 @@ workflow {
         print("\n\nWARNING: -> NO AA ALIGNMENT FILE RETURNED\n\n")
     }
 
+
     Tree(
-        aligned_aa_only_ch,
+        aligned_nuc_aa_tuple_ch,
         phylo_tree_model_file
     )
-    tree = Tree.out.tree_file
+    tree_aa = Tree.out.tree_file_aa
+    tree_nuc = Tree.out.tree_file_nuc
 
     ProcessMeta(
         meta_file
@@ -2530,11 +2533,19 @@ workflow {
 
     if(phylo_tree_itol_subscription == "TRUE"){
 
+        tree = tree_aa.concat(tree_nuc)
+
         ITOL(
             tree,
             itolmeta,
             phylo_tree_itolkey
         )
+
+        itol_aa_ch = ITOL.out.itol_aa_ch
+        itol_nuc_ch = ITOL.out.itol_nuc_ch
+
+        itol_aa_ch.subscribe{it -> it.copyTo("${out_path}/phylo/aa")}
+        itol_nuc_ch.subscribe{it -> it.copyTo("${out_path}/phylo/nuc")}
 
     }
         
