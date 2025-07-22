@@ -115,58 +115,6 @@ process igblast_data_check { // cannot be igblast_data_check outside of process 
     """
     #!/bin/bash -ue
 
-    # Check that the reference files are in the right format
-
-    Rscript -e '
-        organism <- "${igblast_organism}"
-
-        variable <- unlist(strsplit("${igblast_variable_ref_files}", " "))
-        constant <- unlist(strsplit("${igblast_constant_ref_files}", " "))
-        valid_species <- c("human", "mouse") # "rabbit" "rat" "rhesus_monkey" could be added but are not currently supported by the repertoire process
-
-        if(length(variable) < 2 || length(variable) > 4){
-            stop(paste0("\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nigblast_variable_ref_files CONFIGURED IN nextflow.config CAN ONLY CONTAIN 2, 3 OR 4 FILES.\\nHERE IT CONTAINS ", length(variable), " FILES\\nHERE ARE THE igblast_variable_ref_files : \\n", paste(variable, collapse = "\\n"), "\\n\\n========\\n\\n"), call. = FALSE)
-        }
-        if(length(constant) != 1 && length(constant) != 2){
-            stop(paste0("\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nigblast_constant_ref_files CONFIGURED IN nextflow.config CAN ONLY CONTAIN 1 OR 2 FILES.\\nHERE IT CONTAINS ", length(constant), " FILES\\nHERE ARE THE igblast_constant_ref_files : \\n", paste(constant, collapse = "\\n"), "\\n\\n========\\n\\n"), call. = FALSE)
-        }
-        if(!all(grepl(x = variable, pattern = "^imgt_([a-z_]+)_IG[KL][VJ].fasta\$")) && !all(grepl(x = variable, pattern = "^imgt_([a-z_]+)_IGH[VDJ].fasta\$"))){
-            stop(paste0("\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID FORMAT FOR ONE OR SEVERAL OF THE FOLLOWING igblast_variable_ref_files CONFIGURED IN nextflow.config FILE:\\n", paste(variable, collapse = "\\n"), "\\nVALID FORMAT FOR EACH FILE WOULD BE: imgt_<species>_IG[HKL][VDJ].fasta\\nWARNING: THE repertoire PROCESS CURRENTLY ONLY SUPPORTS IG REFERENCE FILES AND 'mouse' OR 'human' SPECIES\\n\\n========\\n\\n"), call. = FALSE)
-        }
-        if(!all(grepl(x = constant, pattern = "^imgt_([a-z_]+)_IG[HKL]C.fasta\$"))){
-            stop(paste0("\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID FORMAT FOR ONE OR SEVERAL OF THE FOLLOWING igblast_constant_ref_files CONFIGURED IN nextflow.config FILE:\\n", paste(constant, collapse = "\\n"), "\\nVALID FORMAT FOR EACH FILE WOULD BE: imgt_<species>_IG[HKL]C.fasta\\nWARNING: THE repertoire PROCESS CURRENTLY ONLY SUPPORTS IG REFERENCE FILES AND 'mouse' OR 'human' SPECIES\\n\\n========\\n\\n"), call. = FALSE)
-        }
-        species <- c(unlist(lapply(strsplit(variable, "_"), `[`, 2)), unlist(lapply(strsplit(constant, "_"), `[`, 2)))
-        if(!all(species == species[1])){
-            stop(paste0("\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nTHE SPECIES IN THE igblast_constant_ref_files AND igblast_variable_ref_files CONFIGURED IN nextflow.config FILE MUST BE THE SAME\\nHERE ARE THE igblast_variable_ref_files:\\n", paste(variable, collapse = "\\n"), "\\nHERE ARE THE igblast_constant_ref_files:\\n", paste(constant, collapse = "\\n"), "\\n\\n========\\n\\n"), call. = FALSE)
-        }
-        if(species[1] != organism){
-            stop(paste0("\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nTHE SPECIES IN THE igblast_constant_ref_files AND igblast_variable_ref_files CONFIGURED IN nextflow.config FILE MUST BE THE SAME AS THE organism PARAMETER CONGIGURED IN nextflow.config\\nHERE ARE THE igblast_variable_ref_files:\\n", paste(variable, collapse = "\\n"), "\\nHERE ARE THE igblast_constant_ref_files:\\n", paste(constant, collapse = "\\n"), "\\nTHE organism PARAMETER IS SET TO : ", organism, "\\n\\n========\\n\\n"), call. = FALSE)
-        }
-        # Check the coherence between the loci mentioned in the files (KL, KJ, HJ...)
-        extract_locus <- function(x) {
-            parts <- strsplit(x, "_")[[1]]
-            ig_part <- parts[grepl("^IG[A-Z]{2}", parts)]
-            return(substr(ig_part, 3, 4))
-        }
-        loci <- c(sapply(variable, extract_locus), sapply(constant, extract_locus))
-        if(any(grepl("^H", loci)) && any(grepl("^[KL]", loci))){
-            stop(paste0("\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID VALUES OF igblast_variable_ref_files AND igblast_constant_ref_files CONFIGURED IN nextflow.config FILE:\\nIGH WAS FOUND ALONG WITH IGL OR IGK\\n!! LIGHT CHAIN AND HEAVY CHAIN LOCI CANNOT BE ANALYZED SIMULTANEOUSLY !!\\n\\nHERE ARE THE igblast_variable_ref_files:\\n", paste(variable, collapse = "\\n"), "\\nHERE ARE THE igblast_constant_ref_files:\\n", paste(constant, collapse = "\\n"), "\\n\\n========\\n\\n"), call. = FALSE)
-        }
-        
-        valid_combinations <- list(
-            c("HJ", "HV", "HD", "HC"),
-            c("KJ", "KV", "KC"),
-            c("LJ", "LV", "LC"),
-            c("KJ", "KV", "KC", "LJ", "LV", "LC")
-        )
-        if(!any(sapply(valid_combinations, function(valid) identical(sort(unique(loci)), sort(valid))))){
-            stop(paste0("\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID VALUES OF igblast_variable_ref_files AND igblast_constant_ref_files CONFIGURED IN nextflow.config FILE:\\n\\nHERE ARE THE igblast_variable_ref_files:\\n", paste(variable, collapse = "\\n"), "\\nHERE ARE THE igblast_constant_ref_files:\\n", paste(constant, collapse = "\\n"), "\\n\\nINDICATIONS : \\nIF K AND L FILES ARE ENTERED FOR A CASSETTE, THEN BOTH MUST BE ENTERED FOR THE OTHER CASSETTE AND THE CONSTANT REGION AS WELL\\nTHERE CANNOT BE A IGLD OR IGKD FILE, AS THE LIGHT CHAIN DOES NOT HAVE A D CASSETTE\\nHEAVY CHAIN ANALYSIS MUST INCLUDE IGHV, IGHD, IGHJ and IGHC FILES\\n\\n========\\n\\n"), call. = FALSE)
-        }
-    '
-
-    # End of format checking for the reference files
-
     REPO_PATH_VAR="/usr/local/share/germlines/imgt/${igblast_organism}/vdj" # path where the imgt .fasta reference seq files are in the docker container
     REPO_PATH_CONST="/usr/local/share/germlines/imgt/${igblast_organism}/constant" # path where the imgt .fasta reference seq files are in the docker container
     VDJ_FILES=\$(awk -v var1="${igblast_variable_ref_files}" -v var2="\${REPO_PATH_VAR}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}') # assemble files with their path
@@ -355,8 +303,8 @@ process parseDb_filtering {
         ParseDb.py select -d ${blast_info_tsv_ch} -f v_call j_call -u ".+" --regex --logic any |& tee -a ParseDb_filtering.log #means look inside the -f v_call j_call fields of the input and return any lines that are non empty for at least one field(--logic any) # should be identical to cp ${blast_info_tsv_ch} "\${FILE}_parse-select.tsv" |& tee -a ParseDb_filtering.log
         echo -n "" > unproductive_seq.tsv |& tee -a ParseDb_filtering.log
     elif [[ -s ${blast_info_tsv_ch} ]]; then # -s means "exists and non empty". Thus, return FALSE is the file does not exists or is empty
-        ParseDb.py select -d ${blast_info_tsv_ch} -f productive -u TRUE |& tee -a ParseDb_filtering.log
-        ParseDb.py split -d ${blast_info_tsv_ch} -f productive |& tee -a ParseDb_filtering.log
+        ParseDb.py select -d ${blast_info_tsv_ch} -f productive -u TRUE T |& tee -a ParseDb_filtering.log
+        ParseDb.py split -d ${blast_info_tsv_ch} -f productive |& tee -a ParseDb_filtering.log  # Used to create a file if the FALSE F value is found in the field (select command only creates a select file if values specifies in -u flag are found, in this case TRUE or T)
         if [ -f *_parse-select.tsv ]; then
             cp *_parse-select.tsv productive_seq_init.tsv |& tee -a ParseDb_filtering.log # can be empty file (only header)
         else
@@ -365,6 +313,8 @@ process parseDb_filtering {
         fi
         if [ -s *_productive-F.tsv ]; then # see above for -s
             cp *_productive-F.tsv unproductive_seq.tsv |& tee -a ParseDb_filtering.log
+        elif [ -s *_productive-FALSE.tsv ]; then # if not TRUE or T, the value in the "productive" field can be either F or FALSE
+            cp *_productive-FALSE.tsv unproductive_seq.tsv |& tee -a ParseDb_filtering.log
         else
             echo -e "\n\nWARNING: EMPTY unproductive_seq.tsv FILE RETURNED FOLLOWING THE parseDb_filtering PROCESS\n\n" |& tee -a ParseDb_filtering.log
             # echo -n "" | cat > unproductive_seq.tsv
@@ -574,9 +524,25 @@ process data_assembly {
         sub_v <- sapply(X = tempo_v, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; paste0(unique(y), collapse = ",")})
         tempo_j <- strsplit(db3\$j_call, ",")
         sub_j <- sapply(X = tempo_j, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; paste0(unique(y), collapse = ",")})
-        tempo_subclass <- strsplit(db3\$c_call, ",")
-        subclass <- sapply(X = tempo_subclass, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; paste0(unique(y), collapse = ",")})
-        class <- sapply(X = tempo_subclass, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; y <- substr(y, 1, 4) ; paste0(unique(y), collapse = ",")})
+        # The c_call column must be handled with more care because it can have empty values
+        subclass <- sapply(db3\$c_call, function(x) {
+            if (is.na(x) || x == "") { # The c_call column can have empty values if the sequences are too short
+                return(NA)  # Si NA ou "", on affecte NA
+            } else {
+                # Traitement normal : suppression des suffixes après *
+                y <- sub(pattern = "\\\\*.*", replacement = "", x = unlist(strsplit(x, ",")))
+                return(paste0(unique(y), collapse = ","))
+            }
+        })
+        class <- sapply(X = subclass, FUN = function(x) {
+            if (is.na(x)) {
+                return(NA)  # Si x est NA, on garde NA
+            } else {
+                y <- sub(pattern = "\\\\*.*", replacement = "", x = x) 
+                y <- substr(y, 1, 4)
+                return(paste0(unique(y), collapse = ","))
+            }
+        })
         db4 <- data.frame(db3, v_gene = sub_v, j_gene = sub_j, isotype_class = class, c_gene = subclass)
 
         #### end remove allele info
@@ -775,6 +741,7 @@ process clone_assignment {
     val clone_model
     val clone_normalize
     val clone_distance
+    val clone_strategy
     path meta_file
     val meta_legend
 
@@ -787,7 +754,7 @@ process clone_assignment {
     """
     #!/bin/bash -ue
     if [[ -s ${productive_ch} ]]; then # see above for -s
-        DefineClones.py -d ${productive_ch} --act set --model ${clone_model} --norm ${clone_normalize} --dist ${clone_distance} --fail |& tee -a clone_assignment.log
+        DefineClones.py -d ${productive_ch} --act ${clone_strategy} --model ${clone_model} --norm ${clone_normalize} --dist ${clone_distance} --fail |& tee -a clone_assignment.log
         Rscript -e '
             args = commandArgs(trailingOnly=TRUE)
             db <- read.table(args[1], sep = "\\t", header = TRUE)
@@ -973,7 +940,7 @@ process TranslateGermline {
     path add_germ_ch // parallelization per clonal group
 
     output:
-    path "translate_germline_group_*.tsv", emit: translate_germ_ch
+    path "*-trans_germ-pass.tsv", emit: translate_germ_ch
     path "*.log", emit: translate_germ_log_ch
 
     script:
@@ -1015,7 +982,8 @@ process TranslateGermline {
         )
 
         df[["germline_d_mask_aa_no_gaps"]] <- toString(germ_aa)
-        new_file_name <- paste0("translate_germline_group_", df[1, "clone_id"], ".tsv")
+        file_base <- tools::file_path_sans_ext(basename(file_name))
+        new_file_name <- paste0(file_base, "-trans_germ-pass.tsv")
         write.table(df, file = paste0("./", new_file_name), row.names = FALSE, col.names = TRUE, sep = "\\t")
 
     '|& tee -a TranslateGermline.log
@@ -1104,7 +1072,7 @@ process mutation_load {
                                     nproc=1)
 
         VDJ_db <- dplyr::arrange(VDJ_db, clone_id)
-        # write.table(VDJ_db, file = paste0("./", file_name, "_shm-pass.tsv"), row.names = FALSE, sep = "\\t")
+        # write.table(VDJ_db, file = paste0("./", tools::file_path_sans_ext(file_name), "_shm-pass.tsv"), row.names = FALSE, sep = "\\t")
 
         # Reposition the column starting with "initial_" to the second position
         initial_col <- grep("^initial_", names(VDJ_db), value = TRUE)
@@ -1124,7 +1092,7 @@ process mutation_load {
             }
         }
         # end Check if a column equal to meta_legend in lowercase exists in 'data'
-        write.table(VDJ_db, file = paste0("./", file_name, "_shm-pass.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
+        write.table(VDJ_db, file = paste0("./", tools::file_path_sans_ext(file_name), "_shm-pass.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
 
     ' "\${FILENAME}" |& tee -a mutation_load.log
     # cp ./tempo_shm-pass.tsv \${FILENAME}_shm-pass.tsv
@@ -1179,7 +1147,7 @@ process get_germ_tree {
 
 
 // Adds germline_v_gene and germline_j_gene columns to the get_germ_tree tsv output files
-process germline_genes{
+process GermlineGenes{
     label 'r_ext'
     cache 'true'
 
@@ -1187,7 +1155,7 @@ process germline_genes{
     path germ_tree_ch2
 
     output:
-    path "get_germ_tree_with_germline_genes.tsv", emit : germline_genes_ch
+    path "*-germ_genes-pass*.tsv", emit : germline_genes_ch
 
     script:
     """
@@ -1221,8 +1189,11 @@ process germline_genes{
         if( !all(required_outputs %in% names(df)) ){
             stop(paste0("\\n\\n========\\n\\nERROR IN THE NEXTFLOW EXECUTION OF THE germline_genes PROCESS\\nMISSING germline_v_call, germline_d_call OR germline_j_call FOLLOWING THE get_germ_tree PROCESS (OUTPUT germ_tree_ch)\\n\\n========\\n\\n"), call. = FALSE)
         }
-
-        df <- write.table(df, file = "get_germ_tree_with_germline_genes.tsv", row.names = FALSE, col.names = TRUE, sep = "\\t")
+        
+        file_base <- tools::file_path_sans_ext(basename("${germ_tree_ch2}"))
+        file_name <- paste0(file_base, "-germ_genes-pass_group_", df[1, "clone_id"], ".tsv")
+        
+        df <- write.table(df, file = file_name, row.names = FALSE, col.names = TRUE, sep = "\\t")
     '
     """
 }
@@ -1297,7 +1268,7 @@ process germ_tree_vizu {
 // The tsv input is expected to already only contain sequences of one same clonal group. For each clonal group, both nuc and aa fastas will be emitted paired up.
 // Makes a gff file from the coordinates info contained inside the tsv and pairs it with the fastas
 // Inputs :
-//      - translate_germline_filtered : tsv info files containing a "sequence" column (used to create nuc fasta file), a "sequence_aa" column (used to create aa fasta file) + region coordinates info (used to create gff)
+//      - germline_genes_filtered : tsv info files containing a "sequence" column (used to create nuc fasta file), a "sequence_aa" column (used to create aa fasta file), a "germline_d_mask_no_gaps" column, a "germline_d_mask_aa_no_gaps" column, "germline_v_gene" and "germline_j_gene" columns + region coordinates info (used to create gff) + "clone_id", "junction_length"
 //      - clone_nb_seq : Minimun number of non-identical sequences per clonal group for tree plotting (defined in nextflow.config). It has to be checked beforehand that the elements in the germ_tree_ch channel contain more than clone_nb_seq rows of data, or the program will stop.
 //      - cute_file : Several functions used in the tsv2fasta.R script
 // Outputs :
@@ -1312,29 +1283,31 @@ process FastaGff{
     publishDir path: "${out_path}/phylo/nuc", mode: 'copy', pattern: "{*.gff}", overwrite: false
 
     input:
-    path translate_germline_filtered // parallelization
+    path germline_genes_filtered // parallelization
     val clone_nb_seq
     path cute_file
 
     output:
     tuple path("sequences_full_trees_nuc/*.fasta"), path("sequences_full_trees_aa/*.fasta"), path("*.gff"), emit: fasta_gff_ch
+    path "FastaGff.log", emit: fasta_gff_log_ch
+    path "warning.txt", emit: warning_ch, optional: true
 
     script:
     """
     #!/bin/bash -ue
 
-    FILENAME=\$(basename -- ${translate_germline_filtered}) # recover a file name without path
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a tsv_to_fasta.log
-    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a tsv_to_fasta.log
+    FILENAME=\$(basename -- ${germline_genes_filtered}) # recover a file name without path
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a FastaGff.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a FastaGff.log
 
     tsv2fasta.R \
-    "${translate_germline_filtered}" \
+    "${germline_genes_filtered}" \
     "sequence_id" \
     "sequence,sequence_aa" \
     "germline_d_mask_no_gaps,germline_d_mask_aa_no_gaps" \
     "${clone_nb_seq}" \
     "${cute_file}" \
-    "tsv_to_fasta.log"
+    "FastaGff.log"
 
     mv sequence sequences_full_trees_nuc
     mv sequence_aa sequences_full_trees_aa
@@ -1483,19 +1456,20 @@ process AlignAa {
     label 'abalign'
     
     input:
-    tuple path(fasta_nuc), path(fasta_aa), path(gff), val(heavy_chain)
+    tuple path(fasta_nuc), path(fasta_aa), path(gff)
     val igblast_organism
+    val igblast_heavy_chain
     
     output:
-    tuple path(fasta_nuc), path("*_restored_align_aa.fasta"), path(gff) , emit : aligned_aa_ch
+    tuple path(fasta_nuc), path("*_restored_aligned_aa.fasta"), path(gff) , emit : aligned_aa_ch
     path "AlignAa.log", emit: alignaa_log_ch
     
     script:
-    if( ! (heavy_chain == "TRUE" || heavy_chain == "FALSE") ){
+    if( ! (igblast_heavy_chain == "TRUE" || igblast_heavy_chain == "FALSE") ){
         error "\n\n========\n\nERROR IN AlignAa PROCESS\n\nINVALID heavy_chain PARAMETER:\n${heavy_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
     parms="-al"
-    if(heavy_chain == "TRUE"){parms="-ah"}
+    if(igblast_heavy_chain == "TRUE"){parms="-ah"}
     // Choose the species parameter for abalign
     switch (igblast_organism) {
         case "mouse":
@@ -1521,10 +1495,10 @@ process AlignAa {
     FILENAME=\$(basename -- ${fasta_aa}) # recover a file name without path
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a AlignAa.log
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a AlignAa.log
-    /bin/Abalign_V2_Linux_Term/Abalign -i ${fasta_aa} ${parms} ${fasta_aa.baseName}_align_aa.fasta -sp ${species} |& tee -a AlignAa.log || true
+    /bin/Abalign_V2_Linux_Term/Abalign -i ${fasta_aa} ${parms} ${fasta_aa.baseName}_align_aa.fasta -sp ${species} -lc FR1_length.txt -lg 1 -lc CDR1_length.txt -lg 2 |& tee -a AlignAa.log || true
     
     # Abalign puts fasta headers in all caps. next script is meant to put those headers back to how they originally were
-    restore_headers.sh ${fasta_aa} ${fasta_aa.baseName}_align_aa.fasta ${fasta_aa.baseName}_restored_align_aa.fasta AlignAa.log
+    restore_headers.sh ${fasta_aa} ${fasta_aa.baseName}_align_aa.fasta ${fasta_aa.baseName}_restored_aligned_aa.fasta AlignAa.log
     """
 }
 
@@ -1582,22 +1556,25 @@ process PrintAlignmentAA{
 }
 
 process Tree {
-    publishDir path: "${out_path}/phylo/aa", mode: 'copy', pattern: "{*.treefile}", overwrite: false
+    publishDir path: "${out_path}/phylo/aa", mode: 'copy', pattern: "{*_aligned_aa.fasta.treefile}", overwrite: false
+    publishDir path: "${out_path}/phylo/nuc", mode: 'copy', pattern: "{*_aligned_nuc.fasta.treefile}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
 
     label 'iqtree'
 
     input:
-    path msa
+    tuple path(fasta_nuc_alignments), path(fasta_aa_alignments)
     path phylo_tree_model_file
 
     output:
-    path "*.treefile", emit : tree_file
+    path "*_aligned_aa.fasta.treefile", emit : tree_file_nuc
+    path "*_aligned_nuc.fasta.treefile", emit : tree_file_aa
     path "*.log"
 
     script:
     """
-    iqtree -nt ${task.cpus} -s ${msa} -m ${phylo_tree_model_file}+I+R6 --seed 123456789
+    iqtree -nt ${task.cpus} -s ${fasta_aa_alignments} -m ${phylo_tree_model_file}+I+R6 --seed 123456789
+    iqtree -nt ${task.cpus} -s ${fasta_nuc_alignments} -m ${phylo_tree_model_file}+GTR+I+R6 --seed 123456789
     """
 }
 
@@ -1624,8 +1601,6 @@ process ProcessMeta {
 
 
 process ITOL{
-    publishDir path: "${out_path}/phylo/aa", mode: 'copy'
-
     label 'gotree'
 
     input:
@@ -1634,7 +1609,8 @@ process ITOL{
     val phylo_tree_itolkey
 
     output:
-    path "*itol_url.txt"
+    path "*_aligned_aa.fasta_itol_url.txt", emit: itol_aa_ch, optional: true
+    path "*_aligned_nuc.fasta_itol_url.txt", emit: itol_nuc_ch, optional: true
 
     script:
     """
@@ -1802,6 +1778,8 @@ workflow {
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_organism PARAMETER IN nextflow.config FILE:\n${igblast_organism}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (igblast_organism =~ /^(mouse|human|rabbit|rat|rhesus_monkey)$/) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_organism PARAMETER IN nextflow.config FILE:\n${igblast_organism}\nMUST BE EITHER \"mouse\", \"human\", \"rabbit\", \"rat\" OR \"rhesus_monkey\"\n\n========\n\n"
+    }else if( ! (igblast_organism =~ /^(mouse|human)$/)){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_organism PARAMETER IN nextflow.config FILE : ${igblast_organism}\n\nTHE repertoire PROCESS CURRENTLY ONLY SUPPORTS mouse AND human SPECIES\nTHEREFORE igblast_organism MUST BE EITHER \"mouse\" OR \"human\"\n\n========\n\n"
     }
     if( ! (igblast_loci in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_loci PARAMETER IN nextflow.config FILE:\n${igblast_loci}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
@@ -1813,12 +1791,40 @@ workflow {
     }else if( ! igblast_aa == "false"){ // }else if( ! (igblast_aa == "false" || igblast_aa == "true") ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_aa PARAMETER IN nextflow.config FILE:\n${igblast_aa}\nCAN ONLY BE \"false\"\n\n========\n\n"
     }
-    if( ! (igblast_variable_ref_files in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_variable_ref_files PARAMETER IN nextflow.config FILE:\n${igblast_variable_ref_files}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    } // path not checked here but below because inside a container
-    if( ! (igblast_constant_ref_files in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_constant_ref_files PARAMETER IN nextflow.config FILE:\n${igblast_constant_ref_files}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    } // path not checked here but below because inside a container
+    if( ! (igblast_heavy_chain in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_heavy_chain PARAMETER IN nextflow.config FILE:\n${igblast_heavy_chain}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (igblast_heavy_chain == "TRUE" || igblast_heavy_chain == "FALSE" || igblast_heavy_chain == "true" ||igblast_heavy_chain == "false") ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_heavy_chain PARAMETER IN nextflow.config FILE:\n${igblast_heavy_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\" (OR \"true\" OR \"false\") \n\n========\n\n"
+    }
+    if( ! (igblast_lambda_chain in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_lambda_chain PARAMETER IN nextflow.config FILE:\n${igblast_lambda_chain}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (igblast_lambda_chain == "TRUE" || igblast_lambda_chain == "FALSE" || igblast_lambda_chain == "true" ||igblast_lambda_chain == "false") ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_lambda_chain PARAMETER IN nextflow.config FILE:\n${igblast_lambda_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\" (OR \"true\" OR \"false\") \n\n========\n\n"
+    }
+    if( ! (igblast_kappa_chain in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_kappa_chain PARAMETER IN nextflow.config FILE:\n${igblast_kappa_chain}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (igblast_kappa_chain == "TRUE" || igblast_kappa_chain == "FALSE" || igblast_kappa_chain == "true" ||igblast_kappa_chain == "false") ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_kappa_chain PARAMETER IN nextflow.config FILE:\n${igblast_kappa_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\" (OR \"true\" OR \"false\") \n\n========\n\n"
+    }
+    // Checking of studied chain coherence
+    heavy = igblast_heavy_chain == "TRUE" || igblast_heavy_chain == "true"
+    lambda = igblast_lambda_chain == "TRUE" || igblast_lambda_chain == "true"
+    kappa  = igblast_kappa_chain == "TRUE" || igblast_kappa_chain == "true"
+    if (heavy && (lambda || kappa)) {
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID PARAMETERS IN nextflow.config FILE:\nHEAVY (igblast_heavy_chain) AND LIGHT (igblast_lambda_chain, igblast_kappa_chain) CHAIN LOCI CANNOT BOTH BE TRUE\nHERE ARE THEIR CURRENT VALUES : \nigblast_heavy_chain : ${igblast_heavy_chain}\nigblast_lambda_chain : ${igblast_lambda_chain}\nigblast_kappa_chain : ${igblast_kappa_chain}\n\n========\n\n"
+    }
+    if (!heavy && !lambda && !kappa) {
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID PARAMETERS IN nextflow.config FILE:\nAT LEAST ONE OF igblast_heavy_chain, igblast_lambda_chain OR igblast_kappa_chain MUST BE TRUE\nHERE ARE THEIR CURRENT VALUES : \nigblast_heavy_chain : ${igblast_heavy_chain}\nigblast_lambda_chain : ${igblast_lambda_chain}\nigblast_kappa_chain : ${igblast_kappa_chain}\n\n========\n\n"
+    }
+    if ([heavy, lambda, kappa].count { it } > 2) {
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID PARAMETERS IN nextflow.config FILE:\nONLY ONE OF igblast_heavy_chain AND LIGHT CHAINS (igblast_lambda_chain, igblast_kappa_chain) CAN BE TRUE AT A TIME\nHERE ARE THEIR CURRENT VALUES : \nigblast_heavy_chain : ${igblast_heavy_chain}\nigblast_lambda_chain : ${igblast_lambda_chain}\nigblast_kappa_chain : ${igblast_kappa_chain}\n\n========\n\n"
+    }
+
+    if( ! (clone_strategy in String) ){
+                error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_strategy PARAMETER IN nextflow.config FILE:\n${clone_strategy}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (clone_strategy == "first" || clone_strategy == "set") ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_strategy PARAMETER IN nextflow.config FILE:\n${clone_strategy}\nMUST BE EITHER \"first\" OR \"set\"\n\n========\n\n"
+    }
     if( ! (clone_nb_seq in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_nb_seq PARAMETER IN nextflow.config FILE:\n${clone_nb_seq}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ( ! (clone_nb_seq =~/^\d+$/)) || clone_nb_seq.toInteger() < 3 ){
@@ -2015,9 +2021,9 @@ workflow {
     if("${system_exec}" != "local"){
         print("    add_options: ${add_options}")
     }
-    if(igblast_variable_ref_files =~ /^.*IG(K|L)V.*$/){
-        print("\n\nWARNING:\nLIGHT CHAIN DETECTED IN THE igblast_variable_ref_files parameter.\nBUT CLONAL GROUPING IS GENERALLY RESTRICTED TO HEAVY CHAIN SEQUENCES, AS THE DIVERSITY OF LIGHT CHAINS IS NOT SUFFICIENT TO DISTINGUISH CLONES WITH REASONABLE CERTAINTY")
-    }
+    // if(igblast_variable_ref_files =~ /^.*IG(K|L)V.*$/){
+    //     print("\n\nWARNING:\nLIGHT CHAIN DETECTED IN THE igblast_variable_ref_files parameter.\nBUT CLONAL GROUPING IS GENERALLY RESTRICTED TO HEAVY CHAIN SEQUENCES, AS THE DIVERSITY OF LIGHT CHAINS IS NOT SUFFICIENT TO DISTINGUISH CLONES WITH REASONABLE CERTAINTY")
+    // }
     print("\n\nWARNING:\nTHE REPERTOIRE PROCESS CURRENTLY ONLY SUPPORTS ig REFERENCE FILES AND 'mouse' OR 'human' SPECIES")
     print("\n\nWARNING:\nTO MAKE THE REPERTOIRES AND DONUTS, THE SCRIPT CURRENTLY TAKES THE FIRST ANNOTATION OF THE IMGT ANNOTATION IF SEVERAL ARE PRESENTS IN THE v_call, j_call OR c_call COLUMN OF THE productive_seq.tsv FILE")
     print("\n\n")
@@ -2029,6 +2035,41 @@ workflow {
 
 
     //////// Variable modification
+
+    // CONSTRUCTION OF THE igblast REFERENCE FILES PATHS
+    // heavy, lambda and kappa were defined earlier in the "Checking of chain coherence section"
+
+    igblast_variable_ref_files = ""
+    igblast_constant_ref_files = ""
+
+    def var_files = []
+    def const_files = []
+
+    if (heavy) {
+        var_files += [
+            "imgt_${igblast_organism}_IGHV.fasta",
+            "imgt_${igblast_organism}_IGHD.fasta",
+            "imgt_${igblast_organism}_IGHJ.fasta"
+        ]
+        const_files += "imgt_${igblast_organism}_IGHC.fasta"
+    }
+    if (lambda) {
+        var_files += [
+            "imgt_${igblast_organism}_IGLV.fasta",
+            "imgt_${igblast_organism}_IGLJ.fasta"
+        ]
+        const_files += "imgt_${igblast_organism}_IGLC.fasta"
+    }
+    if (kappa) {
+        var_files += [
+            "imgt_${igblast_organism}_IGKV.fasta",
+            "imgt_${igblast_organism}_IGKJ.fasta"
+        ]
+        const_files += "imgt_${igblast_organism}_IGKC.fasta"
+    }
+
+    igblast_variable_ref_files = var_files.join(' ').toString()
+    igblast_constant_ref_files = const_files.join(' ').toString()
 
 
     //////// end Variable modification
@@ -2128,9 +2169,9 @@ workflow {
     nb1_b = select_ch2.countLines()
     nb2_b = unselect_ch2.countLines()
     nb1_b.subscribe { n -> if ( n == 1 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FOLLOWING THE parseDb_filtering PROCESS\nSEE THE EMPTY productive_seq.tsv FILE AND THE unproductive_seq.tsv FILE IN THE OUTPUT FOLDER\n\n========\n\n"}}
-    //nb1_b.view()
-    //nb2_b.view()
-    //tsv_ch2.countLines().view()
+    // nb1_b.map { "Nombre de lignes dans select_ch2 (productive_seq_init.tsv): $it (en comptant le header)" }.view()
+    // nb2_b.map { "Nombre de lignes dans unselect_ch2 (unproductive_seq.tsv): $it (en comptant le header)" }.view()
+    // tsv_ch2.countLines().map { "Nombre de lignes dans tsv_ch2 (all_igblast_seq.tsv): $it (en comptant le header)" }.view()
     tsv_ch2.countLines().combine(nb1_b).combine(nb2_b).subscribe{n,n1,n2 -> if(n != n1 + n2 - 1){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE productive_seq.tsv (${n1}) AND unproductive_seq.tsv (${n2} - 1) IS NOT EQUAL TO THE NUMBER OF FILES IN all_igblast_seq.tsv (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // n1 + n2 - 1 because header counted in both n1 and n2 while only one header in n
     parseDb_filtering.out.parseDb_filtering_log_ch.collectFile(name: "ParseDb_filtering.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
@@ -2209,6 +2250,7 @@ workflow {
         clone_model,
         clone_normalize,
         clone_distance,
+        clone_strategy,
         meta_file,
         meta_legend
     )
@@ -2244,10 +2286,6 @@ workflow {
         AddGermlineSequences.out.add_germ_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE AddGermlineSequences PROCESS\n\n========\n\n"}
     )
     TranslateGermline.out.translate_germ_log_ch.collectFile(name: "TranslateGermline.log").subscribe{it -> it.copyTo("${out_path}/reports")}
-    translate_germline_filtered = TranslateGermline.out.translate_germ_ch.filter{ file -> file.countLines() > clone_nb_seq.toInteger() } // Only keep clonal groups that have a number of sequences superior to clone_nb_seq (variable defined in nextflow.config)
-    //translate_germline_filtered_ch2 = translate_germline_filtered.collectFile(name : "translate_germline_filtered.tsv", skip: 1, keepHeader: true)
-    //translate_germline_filtered_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
-
 
 
     mutation_load(
@@ -2266,12 +2304,15 @@ workflow {
     mutation_load_filtered = mutation_load.out.mutation_load_ch.filter{ file -> file.countLines() > clone_nb_seq.toInteger() } // Only keep clonal groups that have a number of sequences superior to clone_nb_seq (variable defined in nextflow.config)
 
     
-    germline_genes(
+    GermlineGenes(
         mutation_load_filtered
     )
 
-    germline_genes_ch2 = germline_genes.out.germline_genes_ch.collectFile(name: "germ_tree_seq.tsv", skip: 1, keepHeader: true)
+    germline_genes_ch2 = GermlineGenes.out.germline_genes_ch.collectFile(name: "germ_tree_seq.tsv", skip: 1, keepHeader: true)
     germline_genes_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
+    germline_genes_filtered = GermlineGenes.out.germline_genes_ch.filter{ file -> file.countLines() > clone_nb_seq.toInteger() } // Only keep clonal groups that have a number of sequences superior to clone_nb_seq (variable defined in nextflow.config)
+    //germline_genes_filtered_ch2 = germline_genes_filtered.collectFile(name : "germline_genes_filtered.tsv", skip: 1, keepHeader: true)
+    //germline_genes_filtered_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 
 
 
@@ -2368,7 +2409,6 @@ workflow {
     tempo4_ch = Channel.of("vj_allele", "c_allele", "vj_gene", "c_gene")
     tempo5_ch = tempo3_ch.combine(tempo4_ch) // 12 tuples
 
-
     donut(
         tempo5_ch,
         donut_palette,
@@ -2408,14 +2448,6 @@ workflow {
     //donut_assembly.out.donut_assembly_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}
     donut_assembly.out.donut_assembly_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}}
 
-
-    
-    if(igblast_variable_ref_files =~ /^.*IGHV.*$/){
-        heavy_chain = channel.of("TRUE") // Heavy chain detected
-    }else{
-        heavy_chain = channel.of("FALSE") // No heavy chain detected means light chain
-    }
-
 /*
     Reformat(
         aa_tsv_ch2,
@@ -2432,17 +2464,31 @@ workflow {
     align_input = fastagroups.combine(heavy_chain)
 */
 
+
+
     FastaGff(
-        translate_germline_filtered,
+        germline_genes_filtered,
         clone_nb_seq,
         cute_path
     )
-    align_input = FastaGff.out.fasta_gff_ch.combine(heavy_chain)
+
+    fasta_gff_log_ch2 = FastaGff.out.fasta_gff_log_ch.collectFile(name: "FastaGff.log")
+    fasta_gff_log_ch2.subscribe{it -> it.copyTo("${out_path}/reports")}
+    align_input = FastaGff.out.fasta_gff_ch
+    fastagff_warn = FastaGff.out.warning_ch
+
+    // Print warnings on the terminal :
+    fastagff_warn.filter { file(it). exists() }
+                .map {file -> 
+                    file.text  // contenu du fichier
+                }
+                .view()
 
 
     AlignAa(
         align_input,
-        igblast_organism
+        igblast_organism,
+        igblast_heavy_chain
     )
     aligned_aa_only_ch = AlignAa.out.aligned_aa_ch.map { x, y, z -> y }
 
@@ -2450,12 +2496,11 @@ workflow {
     AlignNuc(
         AlignAa.out.aligned_aa_ch
     )
-    aligned_nuc_only_ch = AlignNuc.out.aligned_all_ch.map { x, y, z -> tuple(x, z) }
-
-
+    aligned_nuc_gff_only_ch = AlignNuc.out.aligned_all_ch.map { x, y, z -> tuple(x, z) }
+    aligned_nuc_aa_tuple_ch = AlignNuc.out.aligned_all_ch.map { x, y, z -> tuple(x, y) } // Nuc and aa aligned, without their gff
 
     PrintAlignmentNuc(
-        aligned_nuc_only_ch
+        aligned_nuc_gff_only_ch
     )
     
     PrintAlignmentNuc.out.alignment_html.ifEmpty{
@@ -2471,11 +2516,13 @@ workflow {
         print("\n\nWARNING: -> NO AA ALIGNMENT FILE RETURNED\n\n")
     }
 
+
     Tree(
-        aligned_aa_only_ch,
+        aligned_nuc_aa_tuple_ch,
         phylo_tree_model_file
     )
-    tree = Tree.out.tree_file
+    tree_aa = Tree.out.tree_file_aa
+    tree_nuc = Tree.out.tree_file_nuc
 
     ProcessMeta(
         meta_file
@@ -2486,11 +2533,19 @@ workflow {
 
     if(phylo_tree_itol_subscription == "TRUE"){
 
+        tree = tree_aa.concat(tree_nuc)
+
         ITOL(
             tree,
             itolmeta,
             phylo_tree_itolkey
         )
+
+        itol_aa_ch = ITOL.out.itol_aa_ch
+        itol_nuc_ch = ITOL.out.itol_nuc_ch
+
+        itol_aa_ch.subscribe{it -> it.copyTo("${out_path}/phylo/aa")}
+        itol_nuc_ch.subscribe{it -> it.copyTo("${out_path}/phylo/nuc")}
 
     }
         
