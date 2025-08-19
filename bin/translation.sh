@@ -19,41 +19,64 @@ select_ch=${1}
 mkdir productive_nuc
 mkdir productive_aa
 if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
+    SEQ="sequence" # name of the column containing the initial sequences
+    SEQ_ALIGN="sequence_alignment" # name of the column containing the aligned sequence by igblast
     # make fasta files of the filtered sequences (only productive ones because this process is called after the productive filtering)
-    TEMPO_NAME="sequence" # name of the column containing the initial sequences
-
-    awk -v var2=${TEMPO_NAME} 'BEGIN{FS="\t" ; ORS="\n" ; OFS="\t"}{
+    awk -v var1=${SEQ} -v var2=${SEQ_ALIGN} 'BEGIN{FS="\t" ; ORS="\n" ; OFS="\t"}{
         if(NR==1){
             COL_NAME="FALSE"
             COL_SEQ="FALSE"
+            COL_SEQ_ALIGN="FALSE"
             for(i4=1; i4<=NF; i4++){
                 if($i4=="sequence_id"){COL_NAME=i4}
-                if($i4==var2){COL_SEQ=i4}
+                if($i4==var1){COL_SEQ=i4}
+                if($i4==var2){COL_SEQ_ALIGN=i4}
             }
             if(COL_NAME=="FALSE"){
                 print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE translation PROCESS\n\nNO sequence_id COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
                 exit 1
             }
             if(COL_SEQ=="FALSE"){
+                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE translation PROCESS\n\nNO "var1" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                exit 1
+            }
+            if(COL_SEQ_ALIGN=="FALSE"){
                 print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE translation PROCESS\n\nNO "var2" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
                 exit 1
             }
         }else{
             if($COL_SEQ!~/^[-NATGC.]*$/){
-                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE translation PROCESS\n\n"var2" COLUMN NAME OF THE INPUT FILE MUST BE A NUCLEOTIDE SEQUENCE\nHERE IT MIGHT BE MADE OF AMINO ACIDS:\n"$COL_SEQ"\n\n========\n\n"
+                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE translation PROCESS\n\n"var1" COLUMN NAME OF THE INPUT FILE MUST BE A NUCLEOTIDE SEQUENCE\nHERE IT MIGHT BE MADE OF AMINO ACIDS:\n"$COL_SEQ"\n\n========\n\n"
                 exit 1
             }
-            print ">"$COL_NAME"\n"$COL_SEQ > "./productive_nuc/"$COL_NAME".fasta" # make fasta files of the nuc sequences
+            gsub(/\./, "", $COL_SEQ_ALIGN) # Remove dots from the sequence
+            if($COL_SEQ_ALIGN!~/^[NATGC]*$/){
+                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE translation PROCESS\n\n"var2" COLUMN NAME OF THE INPUT FILE MUST BE A NUCLEOTIDE SEQUENCE\nHERE IT MIGHT BE MADE OF AMINO ACIDS:\n"$COL_SEQ_ALIGN"\n\n========\n\n"
+                exit 1
+            }
+            print ">"$COL_NAME"\n"$COL_SEQ > $COL_NAME"_ini.fasta" # make fasta files of the nuc sequences
+            print ">"$COL_NAME"\n"$COL_SEQ_ALIGN > $COL_NAME"_align.fasta" # make fasta files of the nuc sequences
+            print $COL_NAME > "COL_NAME.txt" # name of the line in a file
         }
     }' ${select_ch} |& tee -a translation.log
     # end make fasta files of the productive sequences
 
-
-
+    # triming the initial nucleotide sequence (corresponding to the leader peptide before the FWR1 region)
+        # This assumes sequence B appears exactly once in sequence A. If there are multiple matches, it will use the last occurrence found.
+        # Get sequence B as string
+        COL_NAME=$(cat COL_NAME.txt) # recover the name of the line
+        SEQ_B=$(seqkit seq -s "$COL_NAME"_align.fasta)
+        echo $SEQ_B > caca1.txt
+        # Find start position of B in A
+        START_POS=$(seqkit locate -p "$SEQ_B" "$COL_NAME"_ini.fasta | tail -n 1 | cut -f5)
+        # Trim A from the start position onwards
+        echo $START_POS > caca2.txt
+        seqkit subseq -w 0 -r ${START_POS}:-1 "$COL_NAME"_ini.fasta > ./productive_nuc/"$COL_NAME"_trim.fasta
+    # end triming the initial nucleotide sequence (corresponding to the leader peptide before the FWR1 region)
     # translation into aa (for a potential second round of analysis) since analysis is performed at the nuc level
-    FILENAME=$(basename -- productive_nuc/*.*) # recover a file name without path. Here a single file
+    FILENAME=$(basename -- ./productive_nuc/*.*) # recover a file name without path. Here a single file
     # translate fasta files
-    seqkit translate -T 1 -f 1 --allow-unknown-codon productive_nuc/${FILENAME} > productive_aa/${FILENAME}_tempo |& tee -a translation.log
+    seqkit translate -T 1 -f 1 --allow-unknown-codon ./productive_nuc/${COL_NAME}_trim.fasta > ./productive_aa/${FILENAME}_tempo |& tee -a translation.log
         # no trim, no translate unknown code to 'X'
         # -T 1 : human genetic code
         # -f 1 : only the first frame is translated
