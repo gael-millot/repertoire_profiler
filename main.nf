@@ -149,7 +149,6 @@ process igblast_data_check { // cannot be igblast_data_check outside of process 
 
 
 // Compares input fasta files with reference files to determine which cassettes are present
-// The input fasta files can be nucleotidic or amino acid sequences (igblast_aa in nextflow.config)
 // Output :
 // - TUPLE db_pass_ch : *_igblast_db-pass.tsv : tsv files with the sequences aligned with the reference files (annotated by igblast)
 //                                              file used in the next process
@@ -168,7 +167,6 @@ process igblast {
     val igblast_variable_ref_files
     val igblast_organism
     val igblast_loci
-    val igblast_aa
 
     output:
     tuple path("*_igblast_db-pass.tsv"), path ("*.fmt7"), emit: db_pass_ch, optional: true
@@ -209,20 +207,11 @@ process igblast {
 
     # Alignment <-> annotate sequence using VDJ info
     # See https://changeo.readthedocs.io/en/stable/tools/AssignGenes.html for the details
-    if [[ "${igblast_aa}" == "false" ]] ; then
-        AssignGenes.py igblast -s \${FILE}.fa -b /usr/local/share/igblast --organism ${igblast_organism} --loci ${igblast_loci} --format blast |& tee -a igblast_report.log
-    else
-        # WARNING: does not work if the fasta file contains \\r (CR carriage return, instead or in addition of \\n, LF line feed) but ok here because removed above
-        awk -v var1=\${FILENAME} '{lineKind=(NR-1)%2;}lineKind==0{record=\$0 ; next}lineKind==1{if(\$0~/^[NATGC]*\$/){print "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nFASTA FILE\\n"var1"\\nMUST BE AN AMINO ACID SEQUENCE IF THE igblast_aa PARAMETER IS SET TO true\\nHERE IT SEEMS ONLY MADE OF NUCLEOTIDES:\\n"\$0"\\n\\n========\\n\\n" ; exit 1}}' \${FILE}.fa
-        AssignGenes.py igblast-aa -s \${FILE}.fa -b /usr/local/share/igblast --organism ${igblast_organism} --loci ${igblast_loci} |& tee -a igblast_report.log
-    fi
+    AssignGenes.py igblast -s \${FILE}.fa -b /usr/local/share/igblast --organism ${igblast_organism} --loci ${igblast_loci} --format blast |& tee -a igblast_report.log
     # convert to tsv
     # Also convert data from the web interface IMGT/HighV-QUEST
-    if [[ "${igblast_aa}" == "false" ]] ; then
-        MakeDb.py igblast -i ./\${FILE}_igblast.fmt7 -s ./\${FILE}.fa -r \${VDJ_FILES} --extended |& tee -a igblast_report.log
-    else
-        MakeDb.py igblast-aa -i ./\${FILE}_igblast.fmt7 -s ./\${FILE}.fa -r \${VDJ_FILES} --extended |& tee -a igblast_report.log
-    fi
+    MakeDb.py igblast -i ./\${FILE}_igblast.fmt7 -s ./\${FILE}.fa -r \${VDJ_FILES} --extended |& tee -a igblast_report.log
+
     # printing if no tsv file made
     if [[ ! -f ./\${FILE}_igblast_db-pass.tsv ]] ; then
         echo "\${FILENAME}" | cat > igblast_unaligned_seq_name.tsv
@@ -286,7 +275,6 @@ process parseDb_filtering {
 
     input:
     path blast_info_tsv_ch // parallelization expected
-    val igblast_aa
 
     output:
     path "productive_seq_init.tsv", emit: select_ch, optional: true
@@ -299,10 +287,7 @@ process parseDb_filtering {
     FILENAME=\$(basename -- "${blast_info_tsv_ch}") # recover a file name without path
     FILE=\${FILENAME%.*} # file name without extension
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a ParseDb_filtering.log
-    if [[ "${igblast_aa}" == "true" ]]; then # if igblast_aa is true, then the productive column is empty because aa sequences means productive ones
-        ParseDb.py select -d ${blast_info_tsv_ch} -f v_call j_call -u ".+" --regex --logic any |& tee -a ParseDb_filtering.log #means look inside the -f v_call j_call fields of the input and return any lines that are non empty for at least one field(--logic any) # should be identical to cp ${blast_info_tsv_ch} "\${FILE}_parse-select.tsv" |& tee -a ParseDb_filtering.log
-        echo -n "" > unproductive_seq.tsv |& tee -a ParseDb_filtering.log
-    elif [[ -s ${blast_info_tsv_ch} ]]; then # -s means "exists and non empty". Thus, return FALSE is the file does not exists or is empty
+    if [[ -s ${blast_info_tsv_ch} ]]; then # -s means "exists and non empty". Thus, return FALSE is the file does not exists or is empty
         ParseDb.py select -d ${blast_info_tsv_ch} -f productive -u TRUE T |& tee -a ParseDb_filtering.log
         ParseDb.py split -d ${blast_info_tsv_ch} -f productive |& tee -a ParseDb_filtering.log  # Used to create a file if the FALSE F value is found in the field (select command only creates a select file if values specifies in -u flag are found, in this case TRUE or T)
         if [ -f *_parse-select.tsv ]; then
@@ -337,7 +322,6 @@ process translation {
 
     input:
     path select_ch // parallelization expected
-    val igblast_aa
 
     output:
     path "translation.tsv", optional: true, emit: translation_ch // productive file with column sequence_alignment_aa added
@@ -349,7 +333,7 @@ process translation {
     script:
     """
     #!/bin/bash -ue
-    translation.sh ${select_ch} ${igblast_aa} # |& tee -a translation.log not used because in translation.sh
+    translation.sh ${select_ch} # |& tee -a translation.log not used because in translation.sh
     """
 }
 
@@ -649,7 +633,6 @@ process distToNearest {
 
     input:
     path translation_ch2 // no parallelization
-    val igblast_aa
     val clone_model
     val clone_normalize
 
@@ -663,10 +646,6 @@ process distToNearest {
     Rscript -e '
          # WEIRD stuf: if db alone is returned, and if distToNearest_ch is used for the clone_assignment process and followings, everything is fine. But if db3 is returned with db3 <- data.frame(db, dist_nearest = db2\$dist_nearest) or db3 <- data.frame(db, caca = db2\$dist_nearest) or data.frame(db, caca = db\$sequence_id) or db3 <- data.frame(db, caca = as.numeric(db2\$dist_nearest)) or db3 <- data.frame(db[1:3], caca = db\$sequence_id, db[4:length(db)]), the get_germ_tree process cannot make trees, while the productive.tsv seem identical at the end, between the use of db or db3, except that the clone_id order is not the same
         db <- read.table("${translation_ch2}", header = TRUE, sep = "\\t")
-        if("${clone_model}" != "aa" & "${igblast_aa}" == "true"){
-          tempo.cat <- paste0("\\n\\n========\\n\\nERROR IN THE NEXTFLOW EXECUTION OF THE distToNearest PROCESS\\nclone_model PARAMETER SHOULD BE \\"aa\\" IF AA FASTA FILES ARE USED (igblast_aa PARAMETER SET TO \\"true\\"). HERE:\\nclone_model: ${clone_model}\\n\\n========\\n\\n")
-          stop(tempo.cat)
-        }
         db2 <- shazam::distToNearest(db, sequenceColumn = "junction", locusColumn = "locus", model = "${clone_model}", normalize = "${clone_normalize}", nproc = 1)
         write.table(db2, file = paste0("./nearest_distance.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
     ' |& tee -a distToNearest.log
@@ -1278,8 +1257,8 @@ process germ_tree_vizu {
 process FastaGff{
     label 'r_ext'
     cache 'true'
-    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{sequences_full_trees_nuc/*.fasta}", overwrite: false 
-    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{sequences_full_trees_aa/*.fasta}", overwrite: false
+    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{trees_nuc/*.fasta}", overwrite: false 
+    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{trees_aa/*.fasta}", overwrite: false
     publishDir path: "${out_path}/phylo/nuc", mode: 'copy', pattern: "{*.gff}", overwrite: false
 
     input:
@@ -1288,7 +1267,7 @@ process FastaGff{
     path cute_file
 
     output:
-    tuple path("sequences_full_trees_nuc/*.fasta"), path("sequences_full_trees_aa/*.fasta"), path("*.gff"), emit: fasta_gff_ch
+    tuple path("trees_nuc/*.fasta"), path("trees_aa/*.fasta"), path("*.gff"), emit: fasta_gff_ch
     path "FastaGff.log", emit: fasta_gff_log_ch
     path "warning.txt", emit: warning_ch, optional: true
 
@@ -1309,8 +1288,8 @@ process FastaGff{
     "${cute_file}" \
     "FastaGff.log"
 
-    mv sequence sequences_full_trees_nuc
-    mv sequence_aa sequences_full_trees_aa
+    mv sequence trees_nuc
+    mv sequence_aa trees_aa
     """
 }
 
@@ -1786,11 +1765,6 @@ workflow {
     }else if( ! (igblast_loci == "ig" || igblast_loci == "tr") ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_loci PARAMETER IN nextflow.config FILE:\n${igblast_loci}\nMUST BE EITHER \"ig\" OR \"tr\"\n\n========\n\n"
     }
-    if( ! (igblast_aa in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_aa PARAMETER IN nextflow.config FILE:\n${igblast_aa}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! igblast_aa == "false"){ // }else if( ! (igblast_aa == "false" || igblast_aa == "true") ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_aa PARAMETER IN nextflow.config FILE:\n${igblast_aa}\nCAN ONLY BE \"false\"\n\n========\n\n"
-    }
     if( ! (igblast_heavy_chain in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_heavy_chain PARAMETER IN nextflow.config FILE:\n${igblast_heavy_chain}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (igblast_heavy_chain == "TRUE" || igblast_heavy_chain == "FALSE" || igblast_heavy_chain == "true" ||igblast_heavy_chain == "false") ){
@@ -2122,8 +2096,7 @@ workflow {
         fs_ch, 
         igblast_variable_ref_files, 
         igblast_organism, 
-        igblast_loci, 
-        igblast_aa
+        igblast_loci
     )
     tsv_ch1 = igblast.out.db_pass_ch.map { tuple -> tuple[0] } // Only the tsv files (without fmt7)
     tsv_ch1.count().subscribe{ n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE igblast PROCESS\n\nCHECK THAT THE igblast_organism, igblast_loci AND igblast_variable_ref_files ARE CORRECTLY SET IN THE nextflow.config FILE\n\n========\n\n"}}
@@ -2157,8 +2130,7 @@ workflow {
 
 
     parseDb_filtering(
-        ParseCoordinates.out.blast_info_tsv_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE ParseCoordinates PROCESS\n\n========\n\n"},
-        igblast_aa
+        ParseCoordinates.out.blast_info_tsv_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE ParseCoordinates PROCESS\n\n========\n\n"}
     )
     // parseDb_filtering.out.unproductive_ch.count().subscribe{n -> if ( n == 0 ){print "\n\nWARNING: EMPTY unproductive_seq.tsv FILE RETURNED FOLLOWING THE parseDb_filtering PROCESS\n\n"}else{it -> it.copyTo("${out_path}/unproductive_seq.tsv")}} // see https://www.nextflow.io/docs/latest/script.html?highlight=copyto#copy-files
     parseDb_filtering.out.select_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FILES FOLLOWING THE parseDb_filtering PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
@@ -2177,8 +2149,7 @@ workflow {
 
 
     translation(
-        parseDb_filtering.out.select_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE parseDb_filtering PROCESS\n\n========\n\n"},
-        igblast_aa
+        parseDb_filtering.out.select_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE parseDb_filtering PROCESS\n\n========\n\n"}
     )
     translation.out.translation_ch.ifEmpty{error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE translation PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}
     translation.out.translation_ch.count().subscribe { n -> if ( n == 1 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE translation PROCESS\n\n========\n\n"}}
@@ -2191,7 +2162,6 @@ workflow {
 
     distToNearest(
         translation_ch2.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE translation PROCESS\n\n========\n\n"},
-        igblast_aa,
         clone_model,
         clone_normalize
     )
@@ -2435,7 +2405,7 @@ workflow {
     donut_pdf_ch2 = donut.out.donut_pdf_ch.collect()
 
     donut.out.donut_tsv_ch.count().subscribe { n -> if ( n == 0 ){
-        print("\n\nWARNING: -> NO donut_stats.tsv FILE RETURNED\n\n")
+        print("\n\nWARNING: -> NO donut_stats.tsv FILE RETURNED FOLLOWING THE donut PROCESS\n\n")
     }}
     donut_tsv_ch2 = donut.out.donut_tsv_ch.collectFile(name: "donut_stats.tsv", skip: 1, keepHeader: true)
     donut_tsv_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
@@ -2504,7 +2474,7 @@ workflow {
     )
     
     PrintAlignmentNuc.out.alignment_html.ifEmpty{
-        print("\n\nWARNING: -> NO NUCLEOTIDIC ALIGNMENT FILE RETURNED\n\n")
+        print("\n\nWARNING: -> NO NUCLEOTIDIC ALIGNMENT FILE RETURNED FOLLOWING THE PrintAlignmentNuc PROCESS\n\n")
     }
 
 
@@ -2513,7 +2483,7 @@ workflow {
         aligned_aa_only_ch
     )
     PrintAlignmentAA.out.alignment_html.ifEmpty{
-        print("\n\nWARNING: -> NO AA ALIGNMENT FILE RETURNED\n\n")
+        print("\n\nWARNING: -> NO AA ALIGNMENT FILE RETURNED FOLLOWING THE PrintAlignmentAA PROCESS\n\n")
     }
 
 

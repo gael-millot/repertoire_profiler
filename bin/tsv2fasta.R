@@ -422,7 +422,7 @@ for(i0 in Seq){
         # NB : clone_nb_seq is defined in nextflow.config
         if(any(tempo.log)){
             tempo.warn <- paste0("IMPORTED FILE:\n", path, "\nHAS ", sum(tempo.log, na.rm = TRUE), " AMONG ", nrow(obs), " EMPTY SEQUENCES (NA OR \"\") IN THE ", i0, " COLUMN IN LINES:\n", paste(which(tempo.log), collapse = "\n"))
-            cat(paste0("\nWARNING: ", tempo.warn, "\n\n"))
+            cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
             fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
             warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
         }else{
@@ -435,26 +435,26 @@ for(i0 in Seq){
             stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL clone_id VALUES SHOULD BE THE SAME IN A seq_for_germ_tree FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$clone_id, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
         }
         if (any(tempo.df$v_gene != tempo.df$v_gene[1])) {
-            warning_message <- paste0(
-                "\n\n================\n\nWARNING IN ", script, ".R\n",
+            tempo.warn <- paste0(
                 "Different genes for the V cassette were found in this clonal group\n",
                 "Here they are:\n", paste0(tempo.df$v_gene, collapse = "\n"),
-                "\nSet clone_strategy = \"first\" in nextflow.config to avoid this.\n",
-                "\n\n================\n\n"
+                "\nSet clone_strategy = \"first\" in nextflow.config to avoid this."
             )
-            cat(warning_message, file = log, append = TRUE)
+            cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
+            fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+            warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
             multiple_v_genes <- TRUE
         }
 
         if (any(tempo.df$j_gene != tempo.df$j_gene[1])) {
-            warning_message <- paste0(
-                "\n\n================\n\nWARNING IN ", script, ".R\n",
+             tempo.warn <- paste0(
                 "Different genes for the V cassette were found this clonal group\n",
                 "Here they are:\n", paste0(tempo.df$j_gene, collapse = "\n"),
-                "\nSet clone_strategy = \"first\" in nextflow.config to avoid this.\n",
-                "\n\n================\n\n"
+                "\nSet clone_strategy = \"first\" in nextflow.config to avoid this."
             )
-            cat(warning_message, file = log, append = TRUE)
+            cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
+            fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+            warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
             multiple_j_genes <- TRUE
         }
         # if(any(tempo.df$v_gene != tempo.df$v_gene[1])){
@@ -511,32 +511,34 @@ for(i0 in Seq){
 
         # If germlines differ in the group, issue a warning
         if (length(unique(germ_values)) > 1) {
-            warning_message <- paste0(
-                "WARNING: Multiple germline sequences found for clone_id ", tempo.df[1, "clone_id"], ".\n",
+            tempo.warn <- paste0(
+                "Multiple germline sequences found for clone_id ", tempo.df[1, "clone_id"], ".\n",
                 "Selected germline from sequence: ", tempo.df[selected_index, Name], "\n",
                 "Associated germline_v_gene: ", tempo.df[selected_index, "germline_v_gene"], "\n",
                 "Associated germline_j_gene: ", tempo.df[selected_index, "germline_j_gene"], "\n",
                 "Associated v_gene: ", tempo.df[selected_index, "v_gene"], "\n",
                 "Associated j_gene: ", tempo.df[selected_index, "j_gene"], "\n",
-                "Used germline sequence: ", selected_germline, "\n\n"
+                "Used germline sequence: ", selected_germline
             )
-            cat(warning_message, file = log, append = TRUE)
+            cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
+            fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+            warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
         }
 
     } else {
-        stop(paste0("NO FASTA FILE CREATED BECAUSE THE IMPORTED FILE:\n", path, "\nHAS MORE THAN ", clone_nb_seq, " EMPTY SEQUENCES (NA OR \"\") IN ", i0, "COLUMN\n"))
+        stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nNO FASTA FILE CREATED BECAUSE THE IMPORTED FILE:\n", path, "\nHAS MORE THAN ", clone_nb_seq, " EMPTY SEQUENCES (NA OR \"\") IN ", i0, "COLUMN\n\n================\n\n"))
     }
 
 }
 
 if (multiple_j_genes || multiple_v_genes){
-    warning_message <- paste0(
-        "\n================\n\nWARNING IN ", script, ".R\n",
+    tempo.warn <- paste0(
         "\n[WARNING] Multiple V or J genes detected in a clonal group. ",
-        "\nSet clone_strategy = \"first\" in nextflow.config to avoid this.\n",
-        "\n\n================\n\n"
+        "\nSet clone_strategy = \"first\" in nextflow.config to avoid this."
     )
-    cat(warning_message, file = warn_file, append = TRUE)
+    cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
+    fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+    warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
 }
 
 
