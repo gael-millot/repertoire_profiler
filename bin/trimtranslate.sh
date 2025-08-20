@@ -2,7 +2,7 @@
 
 #########################################################################
 ##                                                                     ##
-##     translation.sh                                                  ##
+##     TrimTranslate.sh                                                  ##
 ##                                                                     ##
 ##     Gael A. Millot                                                  ##
 ##     Bioinformatics and Biostatistics Hub                            ##
@@ -33,32 +33,32 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
                 if($i4==var2){COL_SEQ_ALIGN=i4}
             }
             if(COL_NAME=="FALSE"){
-                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE translation PROCESS\n\nNO sequence_id COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO sequence_id COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
                 exit 1
             }
             if(COL_SEQ=="FALSE"){
-                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE translation PROCESS\n\nNO "var1" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO "var1" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
                 exit 1
             }
             if(COL_SEQ_ALIGN=="FALSE"){
-                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE translation PROCESS\n\nNO "var2" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO "var2" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
                 exit 1
             }
         }else{
             if($COL_SEQ!~/^[-NATGC.]*$/){
-                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE translation PROCESS\n\n"var1" COLUMN NAME OF THE INPUT FILE MUST BE A NUCLEOTIDE SEQUENCE\nHERE IT MIGHT BE MADE OF AMINO ACIDS:\n"$COL_SEQ"\n\n========\n\n"
+                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\n"var1" COLUMN NAME OF THE INPUT FILE MUST BE A NUCLEOTIDE SEQUENCE\nHERE IT MIGHT BE MADE OF AMINO ACIDS:\n"$COL_SEQ"\n\n========\n\n"
                 exit 1
             }
             gsub(/\./, "", $COL_SEQ_ALIGN) # Remove dots from the sequence
             if($COL_SEQ_ALIGN!~/^[NATGC]*$/){
-                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE translation PROCESS\n\n"var2" COLUMN NAME OF THE INPUT FILE MUST BE A NUCLEOTIDE SEQUENCE\nHERE IT MIGHT BE MADE OF AMINO ACIDS:\n"$COL_SEQ_ALIGN"\n\n========\n\n"
+                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\n"var2" COLUMN NAME OF THE INPUT FILE MUST BE A NUCLEOTIDE SEQUENCE\nHERE IT MIGHT BE MADE OF AMINO ACIDS:\n"$COL_SEQ_ALIGN"\n\n========\n\n"
                 exit 1
             }
             print ">"$COL_NAME"\n"$COL_SEQ > $COL_NAME"_ini.fasta" # make fasta files of the nuc sequences
             print ">"$COL_NAME"\n"$COL_SEQ_ALIGN > $COL_NAME"_align.fasta" # make fasta files of the nuc sequences
             print $COL_NAME > "COL_NAME.txt" # name of the line in a file
         }
-    }' ${select_ch} |& tee -a translation.log
+    }' ${select_ch} |& tee -a trimtranslate.log
     # end make fasta files of the productive sequences
 
     # triming the initial nucleotide sequence (corresponding to the leader peptide before the FWR1 region)
@@ -80,13 +80,13 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
     # translation into aa (for a potential second round of analysis) since analysis is performed at the nuc level
     FILENAME=$(basename -- ./productive_nuc/*.*) # recover a file name without path. Here a single file
     # translate fasta files
-    seqkit translate -T 1 -f 1 --allow-unknown-codon ./productive_nuc/${COL_NAME}_trim.fasta > ./productive_aa/${FILENAME}_tempo |& tee -a translation.log
+    seqkit translate -T 1 -f 1 --allow-unknown-codon ./productive_nuc/${COL_NAME}_trim.fasta > ./productive_aa/${FILENAME}_tempo |& tee -a trimtranslate.log
         # no trim, no translate unknown code to 'X'
         # -T 1 : human genetic code
         # -f 1 : only the first frame is translated
         # --allow-unknown-codon : convert unknown codon (for instance ...) to X
-    awk 'BEGIN{ORS=""}{if($0~/^>.*/){if(NR>1){print "\n"} ; print $0"\n"} else {print $0 ; next}}END{print "\n"}' productive_aa/${FILENAME}_tempo > productive_aa/${FILENAME} |& tee -a translation.log # remove \n
-    rm productive_aa/${FILENAME}_tempo |& tee -a translation.log
+    awk 'BEGIN{ORS=""}{if($0~/^>.*/){if(NR>1){print "\n"} ; print $0"\n"} else {print $0 ; next}}END{print "\n"}' productive_aa/${FILENAME}_tempo > productive_aa/${FILENAME} |& tee -a trimtranslate.log # remove \n
+    rm productive_aa/${FILENAME}_tempo |& tee -a trimtranslate.log
     # end translate fasta files
     # assemble name and productive_aa seq
     awk '{
@@ -98,10 +98,10 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
         if(lineKind==1){
             print $0 >> "seq.txt"
         }
-    }' productive_aa/${FILENAME} |& tee -a translation.log
-    paste --delimiters='\t' name.txt seq.txt > aa.tsv |& tee -a translation.log
+    }' productive_aa/${FILENAME} |& tee -a trimtranslate.log
+    paste --delimiters='\t' name.txt seq.txt > aa.tsv |& tee -a trimtranslate.log
     # end assemble name and aa seq
-    # add the aa seq into the translation.tsv
+    # add the aa seq into the trimtranslate.tsv
     awk -v var1=${SEQ} -v var2=${TRIM_SEQ} -v var3=${TRIM} 'BEGIN{FS="\t" ; ORS="" ; OFS=""}
         FNR==NR{ # means that work only on the first file
             a[$1] = $1 # a is name (sequence_id)
@@ -109,7 +109,7 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
             next
         }{ # mean that works only for the second file
             if(FNR==1){
-                print $0"\tsequence_ini\tis_sequence_trimmed\tsequence_aa\n" > "translation.tsv" # header added to translation.tsv
+                print $0"\tsequence_ini\tis_sequence_trimmed\tsequence_aa\n" > "trimtranslate.tsv" # header added to trimtranslate.tsv
                 for(i4=1; i4<=NF; i4++){
                     if($i4=="sequence_id"){COL_NAME=i4}
                     if($i4==var1){COL_SEQ=i4}
@@ -119,20 +119,20 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
                 if($COL_NAME in a){
                     for(i5=1; i5<=NF; i5++){ # instead of print $0 (to replace the initial sequence in the sequence column by the trimmed sequence
                         if($i5!=var1){
-                            print $i5 > "translation.tsv"
-                            if(i5!=FN){print "\t" > "translation.tsv"} # because of BEGIN
+                            print $i5 > "trimtranslate.tsv"
+                            if(i5!=FN){print "\t" > "trimtranslate.tsv"} # because of BEGIN
                         }else{
-                            print var2 > "translation.tsv" # trimmed sequence replace the initial sequence in the SEQ column (i.e., "sequence" column)
-                            if(i5!=FN){print "\t" > "translation.tsv"} # because of BEGIN
+                            print var2 > "trimtranslate.tsv" # trimmed sequence replace the initial sequence in the SEQ column (i.e., "sequence" column)
+                            if(i5!=FN){print "\t" > "trimtranslate.tsv"} # because of BEGIN
                         }
                     }
-                    print $COL_SEQ"\t"var3"\t"b[$COL_NAME]"\n" > "translation.tsv"
+                    print $COL_SEQ"\t"var3"\t"b[$COL_NAME]"\n" > "trimtranslate.tsv"
                 }
             }
         }
-    ' aa.tsv ${select_ch} |& tee -a translation.log
-    # end add the aa seq into the translation.tsv
-    sed -i '1i sequence_id\tsequence_aa' aa.tsv |& tee -a translation.log # header added to aa.tsv
+    ' aa.tsv ${select_ch} |& tee -a trimtranslate.log
+    # end add the aa seq into the trimtranslate.tsv
+    sed -i '1i sequence_id\tsequence_aa' aa.tsv |& tee -a trimtranslate.log # header added to aa.tsv
     # echo -e "sequence_id\tsequence_alignment\n" | cat aa.tsv > caca.tsv 
 fi
 
