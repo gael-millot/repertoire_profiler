@@ -80,15 +80,13 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
     # translation into aa (for a potential second round of analysis) since analysis is performed at the nuc level
     FILENAME=$(basename -- ./productive_nuc/*.*) # recover a file name without path. Here a single file
     # translate fasta files
-    seqkit translate -T 1 -f 1 --allow-unknown-codon ./productive_nuc/${COL_NAME}_trim.fasta > ./productive_aa/${FILENAME}_tempo |& tee -a trimtranslate.log
+    seqkit translate -T 1 -f 1 -w 0 --allow-unknown-codon ./productive_nuc/${COL_NAME}_trim.fasta > ./productive_aa/${FILENAME} |& tee -a trimtranslate.log
         # no trim, no translate unknown code to 'X'
         # -T 1 : human genetic code
         # -f 1 : only the first frame is translated
         # --allow-unknown-codon : convert unknown codon (for instance ...) to X
-    awk 'BEGIN{ORS=""}{if($0~/^>.*/){if(NR>1){print "\n"} ; print $0"\n"} else {print $0 ; next}}END{print "\n"}' productive_aa/${FILENAME}_tempo > productive_aa/${FILENAME} |& tee -a trimtranslate.log # remove \n
-    rm productive_aa/${FILENAME}_tempo |& tee -a trimtranslate.log
     # end translate fasta files
-    # assemble name and productive_aa seq
+    # assemble name and seq into aa.tsv 
     awk '{
         lineKind=(NR-1)%2 ; 
         if(lineKind==0){
@@ -100,7 +98,7 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
         }
     }' productive_aa/${FILENAME} |& tee -a trimtranslate.log
     paste --delimiters='\t' name.txt seq.txt > aa.tsv |& tee -a trimtranslate.log
-    # end assemble name and aa seq
+    # assemble name and seq into aa.tsv 
     # add the aa seq into the trimtranslate.tsv
     awk -v var1=${SEQ} -v var2=${TRIM_SEQ} -v var3=${TRIM} 'BEGIN{FS="\t" ; ORS="" ; OFS=""}
         FNR==NR{ # means that work only on the first file
@@ -109,6 +107,7 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
             next
         }{ # mean that works only for the second file
             if(FNR==1){
+                gsub(/\r/, "") # remove CR
                 print $0"\tsequence_ini\tis_sequence_trimmed\tsequence_aa\n" > "trimtranslate.tsv" # header added to trimtranslate.tsv
                 for(i4=1; i4<=NF; i4++){
                     if($i4=="sequence_id"){COL_NAME=i4}
@@ -117,8 +116,9 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
                 # no need the recheck as above because already done above
             }else{
                 if($COL_NAME in a){
+                    gsub(/\r/, "") # remove CR
                     for(i5=1; i5<=NF; i5++){ # instead of print $0 (to replace the initial sequence in the sequence column by the trimmed sequence
-                        if($i5!=var1){
+                        if(i5!=COL_SEQ){
                             print $i5 > "trimtranslate.tsv"
                             if(i5!=FN){print "\t" > "trimtranslate.tsv"} # because of BEGIN
                         }else{
