@@ -66,12 +66,16 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
         # Get sequence B as string
         COL_NAME=$(cat COL_NAME.txt) # recover the name of the line
         SEQ_B=$(seqkit seq -s "$COL_NAME"_align.fasta)
-        echo $SEQ_B > caca1.txt
         # Find start position of B in A
         START_POS=$(seqkit locate -p "$SEQ_B" "$COL_NAME"_ini.fasta | tail -n 1 | cut -f5)
         # Trim A from the start position onwards
-        echo $START_POS > caca2.txt
+        if (( $START_POS > 1 )) ; then
+            TRIM=TRUE
+        else
+            TRIM=FALSE # FALSE means no tream
+        fi
         seqkit subseq -w 0 -r ${START_POS}:-1 "$COL_NAME"_ini.fasta > ./productive_nuc/"$COL_NAME"_trim.fasta
+        TRIM_SEQ=$(sed -n '2p' ./productive_nuc/"$COL_NAME"_trim.fasta)
     # end triming the initial nucleotide sequence (corresponding to the leader peptide before the FWR1 region)
     # translation into aa (for a potential second round of analysis) since analysis is performed at the nuc level
     FILENAME=$(basename -- ./productive_nuc/*.*) # recover a file name without path. Here a single file
@@ -98,26 +102,37 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
     paste --delimiters='\t' name.txt seq.txt > aa.tsv |& tee -a translation.log
     # end assemble name and aa seq
     # add the aa seq into the translation.tsv
-    awk '
+    awk -v var1=${SEQ} -v var2=${TRIM_SEQ} -v var3=${TRIM} 'BEGIN{FS="\t" ; ORS="" ; OFS=""}
         FNR==NR{ # means that work only on the first file
-            var1=$1
-            a[var1] = var1 # a is name
-            b[var1] = $2 # b is sequence
+            a[$1] = $1 # a is name (sequence_id)
+            b[$1] = $2 # b is sequence
             next
         }{ # mean that works only for the second file
             if(FNR==1){
-                print $0"\tsequence_aa" > "translation.tsv"
+                print $0"\tsequence_ini\tis_sequence_trimmed\tsequence_aa\n" > "translation.tsv" # header added to translation.tsv
                 for(i4=1; i4<=NF; i4++){
                     if($i4=="sequence_id"){COL_NAME=i4}
+                    if($i4==var1){COL_SEQ=i4}
                 }
                 # no need the recheck as above because already done above
             }else{
-                if($COL_NAME in a){print $0"\t"b[$COL_NAME] > "translation.tsv"}
+                if($COL_NAME in a){
+                    for(i5=1; i5<=NF; i5++){ # instead of print $0 (to replace the initial sequence in the sequence column by the trimmed sequence
+                        if($i5!=var1){
+                            print $i5 > "translation.tsv"
+                            if(i5!=FN){print "\t" > "translation.tsv"} # because of BEGIN
+                        }else{
+                            print var2 > "translation.tsv" # trimmed sequence replace the initial sequence in the SEQ column (i.e., "sequence" column)
+                            if(i5!=FN){print "\t" > "translation.tsv"} # because of BEGIN
+                        }
+                    }
+                    print $COL_SEQ"\t"var3"\t"b[$COL_NAME]"\n" > "translation.tsv"
+                }
             }
         }
     ' aa.tsv ${select_ch} |& tee -a translation.log
     # end add the aa seq into the translation.tsv
-    sed -i '1i sequence_id\tsequence_aa' aa.tsv |& tee -a translation.log # header added
+    sed -i '1i sequence_id\tsequence_aa' aa.tsv |& tee -a translation.log # header added to aa.tsv
     # echo -e "sequence_id\tsequence_alignment\n" | cat aa.tsv > caca.tsv 
 fi
 

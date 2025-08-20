@@ -582,16 +582,15 @@ for (feature in features) {
     }
 }
 if (length(non_unique_cols) > 0) {
-    tempo.cat <- paste0(
-        "\n================\n\nWARNING : ", script, ".R\n",
+    tempo.warn <- paste0(
         "DATA ROWS IN IMPORTED FILE : ", path, "\n",
         "HAVE DIFFERENT VALUES FOR THE FOLLOWING REGION COORDINATES COLUMN\n",
         "THE MOST FREQUENT VALUE WAS TAKEN FOR THESE COLUMNS:\n  - ",
-        paste(non_unique_cols, collapse = "\n  - "),
-        "\n\n================\n"
+        paste(non_unique_cols, collapse = "\n  - ")
     )
-    cat(tempo.cat, file = log, append = TRUE)
-    cat(tempo.cat, file = warn_file, append = TRUE)
+    cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
+    fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+    warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
 }
 
 

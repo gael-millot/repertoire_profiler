@@ -313,8 +313,8 @@ process parseDb_filtering {
 }
 
 
-// Translate the nucleotidic sequences into amino acid sequences
-process translation {
+// Trim the 5' end of the sequence if required (to remove the leader peptide) and Translate the nucleotidic sequences into amino acid sequences
+process TrimTranslate {
     label 'seqkit'
     publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_aa/*.fasta", overwrite: false
     publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_nuc/*.fasta", overwrite: false
@@ -324,16 +324,16 @@ process translation {
     path select_ch // parallelization expected
 
     output:
-    path "translation.tsv", optional: true, emit: translation_ch // productive file with column sequence_alignment_aa added
+    path "trimtranslate.tsv", optional: true, emit: trimtranslate_ch // productive file with column sequence_alignment_aa added
     path "productive_nuc/*.*", optional: true
     path "aa.tsv", optional: true, emit: aa_tsv_ch
     path "productive_aa/*.*", optional: true
-    path "translation.log", optional: true, emit: translation_log_ch
+    path "trimtranslate.log", optional: true, emit: trimtranslate_log_ch
 
     script:
     """
     #!/bin/bash -ue
-    translation.sh ${select_ch} # |& tee -a translation.log not used because in translation.sh
+    trimtranslate.sh ${select_ch} # |& tee -a trimtranslate.log not used because in trimtranslate.sh
     """
 }
 
@@ -344,7 +344,7 @@ process seq_name_replacement {
     cache 'true'
 
     input:
-    path translation_ch // parallelization expected
+    path trimtranslate_ch // parallelization expected
     path meta_file
     val meta_seq_names
     val meta_name_replacement
@@ -357,7 +357,7 @@ process seq_name_replacement {
     script:
     """
     #!/bin/bash -ue
-    FILENAME=\$(basename -- ${translation_ch}) # recover a file name without path
+    FILENAME=\$(basename -- ${trimtranslate_ch}) # recover a file name without path
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a seq_name_replacement.log
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a seq_name_replacement.log
     # check first that the data file does not have the second column name starting by "initial_". Otherwise, with create unproper behavior in donut
@@ -366,18 +366,18 @@ process seq_name_replacement {
         echo -n "" > NULL # new hard file that can be sent into the channel
         chmod 777 NULL
         Rscript -e '
-            seq <- read.table("./${translation_ch}", sep = "\\t", header = TRUE)
+            seq <- read.table("./${trimtranslate_ch}", sep = "\\t", header = TRUE)
             if(grepl(x = names(seq)[2], pattern = "^initial_")){
                 stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_replacement PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS \\"NULL\\", THEN THE SECOND COLUMN OF THE DATA IN THE sample_path PARAMETER CANNOT HAVE THE NAME OF THE SECOND COLUNM STARTING BY \\"initial_\\"\\n\\n============\\n\\n"), call. = FALSE)
             }
         ' |& tee -a seq_name_replacement.log
         IFS='_' read -r -a TEMPO <<< "\${FILENAME}" # string split into array
-        cat ${translation_ch} > ./\${TEMPO[0]}_renamed_seq.tsv |& tee -a seq_name_replacement.log
+        cat ${trimtranslate_ch} > ./\${TEMPO[0]}_renamed_seq.tsv |& tee -a seq_name_replacement.log
     else
         # if [[ "${meta_file}" != "NULL" && "${meta_name_replacement}" != "NULL" ]] ; then # or [[ "${meta_file}" -ne "NULL" && "${meta_name_replacement}" -ne "NULL" ]], but not !=
         Rscript -e '
             meta <- read.table("./${meta_file}", sep = "\\t", header = TRUE)
-            seq <- read.table("./${translation_ch}", sep = "\\t", header = TRUE)
+            seq <- read.table("./${trimtranslate_ch}", sep = "\\t", header = TRUE)
             id <- seq[1, 1] # Extract the name of the colum one of seq
             if( ! "${meta_seq_names}" %in% names(meta)){
                 stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_replacement PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\", THEN THE meta_seq_names PARAMETER MUST BE A COLUMN NAME OF THE METADATA FILE.\\n\\n============\\n\\n"), call. = FALSE)
@@ -632,7 +632,7 @@ process distToNearest {
     cache 'true'
 
     input:
-    path translation_ch2 // no parallelization
+    path trimtranslate_ch2 // no parallelization
     val clone_model
     val clone_normalize
 
@@ -645,7 +645,7 @@ process distToNearest {
     #!/bin/bash -ue
     Rscript -e '
          # WEIRD stuf: if db alone is returned, and if distToNearest_ch is used for the clone_assignment process and followings, everything is fine. But if db3 is returned with db3 <- data.frame(db, dist_nearest = db2\$dist_nearest) or db3 <- data.frame(db, caca = db2\$dist_nearest) or data.frame(db, caca = db\$sequence_id) or db3 <- data.frame(db, caca = as.numeric(db2\$dist_nearest)) or db3 <- data.frame(db[1:3], caca = db\$sequence_id, db[4:length(db)]), the get_germ_tree process cannot make trees, while the productive.tsv seem identical at the end, between the use of db or db3, except that the clone_id order is not the same
-        db <- read.table("${translation_ch2}", header = TRUE, sep = "\\t")
+        db <- read.table("${trimtranslate_ch2}", header = TRUE, sep = "\\t")
         db2 <- shazam::distToNearest(db, sequenceColumn = "junction", locusColumn = "locus", model = "${clone_model}", normalize = "${clone_normalize}", nproc = 1)
         write.table(db2, file = paste0("./nearest_distance.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
     ' |& tee -a distToNearest.log
@@ -767,7 +767,7 @@ process clone_assignment {
             echo -n "" | cat > non_clone_assigned_sequence.tsv
         fi
     else
-        echo -e "\\n\\n========\\n\\nINTERNAL ERROR IN NEXTFLOW EXECUTION\\n\\nEMPTY FILE GENERATED BY THE translation PROCESS\\nCHECK THE clone_assignment.log AND *_productive-F.tsv FILES IN THE report FOLDER INSIDE THE OUTPUT FOLDER\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n"
+        echo -e "\\n\\n========\\n\\nINTERNAL ERROR IN NEXTFLOW EXECUTION\\n\\nEMPTY FILE GENERATED BY THE TrimTranslate PROCESS\\nCHECK THE clone_assignment.log AND *_productive-F.tsv FILES IN THE report FOLDER INSIDE THE OUTPUT FOLDER\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n"
         exit 1
     fi
     
@@ -1741,8 +1741,8 @@ workflow {
     if( ! (file("${projectDir}/bin/repertoire.R").exists()) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE repertoire.R FILE MUST BE PRESENT IN THE ./bin FOLDER, WHERE THE main.nf file IS PRESENT\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
     }
-    if( ! (file("${projectDir}/bin/translation.sh").exists()) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE translation.sh FILE MUST BE PRESENT IN THE ./bin FOLDER, WHERE THE main.nf file IS PRESENT\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
+    if( ! (file("${projectDir}/bin/trimtranslate.sh").exists()) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE trimtranslate.sh FILE MUST BE PRESENT IN THE ./bin FOLDER, WHERE THE main.nf file IS PRESENT\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
     }
     if( ! (file("${projectDir}/bin/defineGroups.pl").exists()) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE defineGroups.pl FILE MUST BE PRESENT IN THE ./bin FOLDER, WHERE THE main.nf file IS PRESENT\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
@@ -2148,20 +2148,20 @@ workflow {
     parseDb_filtering.out.parseDb_filtering_log_ch.collectFile(name: "ParseDb_filtering.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
 
-    translation(
+    TrimTranslate(
         parseDb_filtering.out.select_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE parseDb_filtering PROCESS\n\n========\n\n"}
     )
-    translation.out.translation_ch.ifEmpty{error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE translation PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}
-    translation.out.translation_ch.count().subscribe { n -> if ( n == 1 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE translation PROCESS\n\n========\n\n"}}
-    translation_ch2 = translation.out.translation_ch.collectFile(name: "translation.tsv", skip: 1, keepHeader: true) // productive file with column sequence_alignment_aa added
-    aa_tsv_ch2 = translation.out.aa_tsv_ch.collectFile(name: "aa.tsv", skip: 1, keepHeader: true)
+    TrimTranslate.out.trimtranslate_ch.ifEmpty{error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE TrimTranslate PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}
+    TrimTranslate.out.trimtranslate_ch.count().subscribe { n -> if ( n == 1 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE trimtranslate PROCESS\n\n========\n\n"}}
+    trimtranslate_ch2 = TrimTranslate.out.trimtranslate_ch.collectFile(name: "trimtranslate.tsv", skip: 1, keepHeader: true) // productive file with column sequence_alignment_aa added
+    aa_tsv_ch2 = TrimTranslate.out.aa_tsv_ch.collectFile(name: "aa.tsv", skip: 1, keepHeader: true)
     aa_tsv_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
-    translation.out.translation_log_ch.collectFile(name: "translation.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+    TrimTranslate.out.trimtranslate_log_ch.collectFile(name: "trimtranslate.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
 
 
     distToNearest(
-        translation_ch2.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE translation PROCESS\n\n========\n\n"},
+        trimtranslate_ch2.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE TrimTranslate PROCESS\n\n========\n\n"},
         clone_model,
         clone_normalize
     )
@@ -2186,7 +2186,7 @@ workflow {
 
  
    seq_name_replacement(
-        translation.out.translation_ch,
+        TrimTranslate.out.trimtranslate_ch,
         meta_file,
         meta_seq_names, 
         meta_name_replacement,
