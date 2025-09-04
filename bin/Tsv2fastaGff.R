@@ -2,7 +2,7 @@
 
 #########################################################################
 ##                                                                     ##
-##     tsv2fasta.R                                                     ##
+##     Tsv2fastaGff.R                                                     ##
 ##                                                                     ##
 ##     Gael A. Millot                                                  ##
 ##     Chloe Taurel                                                    ##
@@ -52,7 +52,7 @@ if(erase.objects == TRUE){
     erase.objects = TRUE
 }
 erase.graphs = TRUE # write TRUE to erase all the graphic windows in R before starting the algorithm and FALSE otherwise
-script <- "tsv2fasta"
+script <- "Tsv2fastaGff"
 #cute <- "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v11.4.0/cute_little_R_functions.R" # single character string indicating the path of the cute_little_R_functions.R file required for this script. Example: cute <- "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v11.4.0/cute_little_R_functions.R"
 #log <- "xlsx2fasta.log" # single character string indicating the name of the log file. Example: log <- "xlsx2fasta.log"
 
@@ -63,7 +63,7 @@ script <- "tsv2fasta"
 
 ################################ EXAMPLES FOR TEST AND EXPLANATION OF ARGUMENTS
 
-# script <- "tsv2fasta"
+# script <- "Tsv2fastaGff"
 
 ### Arguments : 
 # path <- "seq_for_germ_tree.tsv"      # tsv file containing data. needs to have all columns in Name, Seq and Germline
@@ -72,7 +72,7 @@ script <- "tsv2fasta"
 # Germline <- "germline_alignment_d_mask,germline_d_mask_aa_no_gaps"    # name of the columns containing corresponding germlines of the previously mentionned sequences. Need to be in the same order as the Seq argument
 # clone_nb_seq <- 3                    # Minimum number of rows in the tsv file. The program expects this to be respected, otherwise raises an error.
 # cute <- "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v11.4.0/cute_little_R_functions.R"
-# log <- "tsv2fasta.log"
+# log <- "Tsv2fastaGff.log"
 
 
 ################################# End test
@@ -471,6 +471,10 @@ for(i0 in Seq){
         # Creation of the fasta file
         dir_name <- paste0("./", i0)
         dir.create(dir_name, showWarnings = FALSE, recursive = TRUE)
+        if(i0 == "sequence"){
+            dir_name_var <- paste0("./var_", i0)
+            dir.create(dir_name_var, showWarnings = FALSE, recursive = TRUE)
+        }
         # Extract all different values of v_genes and j_genes in the clonal group (different genes for a same cassette can be present in a clonal group if the clone_strategy = "set" in nextflow.config)
         # If several genes in a column, they are separated by a comma (",")
         v_genes_all <- unique(unlist(strsplit(tempo.df$v_gene, ",")))
@@ -479,10 +483,17 @@ for(i0 in Seq){
         v_gene_clean <- paste(sort(v_genes_all), collapse = "-") 
         j_gene_clean <- paste(sort(j_genes_all), collapse = "-")
 
-        tempo.name <- paste0(i0, "_", tempo.df[1, "clone_id"], "_", v_gene_clean, "_", j_gene_clean, "_", ".fasta") # Create the name of the file
+        tempo.name <- paste0(i0, "_", tempo.df[1, "clone_id"], "_", v_gene_clean, "_", j_gene_clean, ".fasta") # Create the name of the file
+        tempo.name.var <- paste0(i0, "_var_", tempo.df[1, "clone_id"], "_", v_gene_clean, "_", j_gene_clean, ".fasta")
         for(i1 in 1:nrow(tempo.df)) {
             tempo.cat <- paste0(">", tempo.df[i1, Name], "\n", tempo.df[i1, i0], "\n")
             cat(tempo.cat, file = file.path(dir_name, tempo.name), append = TRUE)
+            if(i0 == "sequence"){
+                tempo_seq_var <- tempo.df[i1, "sequence_alignment"]
+                tempo_seq_var <- gsub(pattern = ".", replacement = "", x = tempo_seq_var,  fixed = TRUE) # removal of dots
+                tempo.cat <- paste0(">", tempo.df[i1, Name], "\n", tempo_seq_var, "\n")
+                cat(tempo.cat, file = file.path(dir_name_var, tempo.name.var), append = TRUE)
+            }
         }
 
         # Germline addition to the fasta
@@ -508,6 +519,9 @@ for(i0 in Seq){
         germ_seq_name <- paste0("germline_d_mask_clone_id_", tempo.df[1, "clone_id"], "_", germ_v_gene, "_", germ_j_gene)
         tempo.cat <- paste0(">", germ_seq_name, "\n", selected_germline, "\n")
         cat(tempo.cat, file = file.path(dir_name, tempo.name), append = TRUE)
+        if(i0 == "sequence"){
+            cat(tempo.cat, file = file.path(dir_name_var, tempo.name.var), append = TRUE)
+        }
 
         # If germlines differ in the group, issue a warning
         if (length(unique(germ_values)) > 1) {
@@ -526,7 +540,7 @@ for(i0 in Seq){
         }
 
     } else {
-        stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nNO FASTA FILE CREATED BECAUSE THE IMPORTED FILE:\n", path, "\nHAS MORE THAN ", clone_nb_seq, " EMPTY SEQUENCES (NA OR \"\") IN ", i0, "COLUMN\n\n================\n\n"))
+        stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nNO FASTA FILE CREATED BECAUSE THE IMPORTED FILE:\n", path, "\nHAS MORE THAN ", clone_nb_seq, " EMPTY SEQUENCES (NA OR \"\") IN THE ", i0, " COLUMN\n\n================\n\n"))
     }
 
 }

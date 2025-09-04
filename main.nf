@@ -841,7 +841,7 @@ process closest_germline {
     cache 'true'
 
     input:
-    path clone_split_ch // parallelization expected
+    path clone_split_ch // parallelization expected (by clonal groups)
     val igblast_organism
     val igblast_variable_ref_files
 
@@ -885,7 +885,7 @@ process AddGermlineSequences{
     cache 'true'
 
     input:
-    path closest_ch // parallelization per clonal group
+    path closest_ch // parallelization expected (by clonal groups)
     val igblast_organism
     val igblast_variable_ref_files
 
@@ -916,7 +916,7 @@ process TranslateGermline {
     label 'r_ext'
 
     input:
-    path add_germ_ch // parallelization per clonal group
+    path add_germ_ch // parallelization expected (by clonal groups)
 
     output:
     path "*-trans_germ-pass.tsv", emit: translate_germ_ch
@@ -981,7 +981,7 @@ process mutation_load {
     cache 'true'
 
     input:
-    path translate_germ_ch // parallelization expected
+    path translate_germ_ch // parallelization expected (by clonal groups)
     path meta_file
     val meta_legend
 
@@ -1131,7 +1131,7 @@ process GermlineGenes{
     cache 'true'
 
     input:
-    path germ_tree_ch2
+    path mutation_load_filtered_ch // parallelization expected (by clonal groups over clone_nb_seq sequences)
 
     output:
     path "*-germ_genes-pass*.tsv", emit : germline_genes_ch
@@ -1140,7 +1140,7 @@ process GermlineGenes{
     """
     #!/bin/bash -ue
     Rscript -e '
-        df <- read.table("${germ_tree_ch2}", sep = "\\t", header = TRUE)
+        df <- read.table("${mutation_load_filtered_ch}", sep = "\\t", header = TRUE)
 
         required_inputs <- c("germline_v_call", "germline_d_call", "germline_j_call")
 
@@ -1169,7 +1169,7 @@ process GermlineGenes{
             stop(paste0("\\n\\n========\\n\\nERROR IN THE NEXTFLOW EXECUTION OF THE germline_genes PROCESS\\nMISSING germline_v_call, germline_d_call OR germline_j_call FOLLOWING THE get_germ_tree PROCESS (OUTPUT germ_tree_ch)\\n\\n========\\n\\n"), call. = FALSE)
         }
         
-        file_base <- tools::file_path_sans_ext(basename("${germ_tree_ch2}"))
+        file_base <- tools::file_path_sans_ext(basename("${mutation_load_filtered_ch}"))
         file_name <- paste0(file_base, "-germ_genes-pass_group_", df[1, "clone_id"], ".tsv")
         
         df <- write.table(df, file = file_name, row.names = FALSE, col.names = TRUE, sep = "\\t")
@@ -1247,183 +1247,54 @@ process germ_tree_vizu {
 // The tsv input is expected to already only contain sequences of one same clonal group. For each clonal group, both nuc and aa fastas will be emitted paired up.
 // Makes a gff file from the coordinates info contained inside the tsv and pairs it with the fastas
 // Inputs :
-//      - germline_genes_filtered : tsv info files containing a "sequence" column (used to create nuc fasta file), a "sequence_aa" column (used to create aa fasta file), a "germline_d_mask_no_gaps" column, a "germline_d_mask_aa_no_gaps" column, "germline_v_gene" and "germline_j_gene" columns + region coordinates info (used to create gff) + "clone_id", "junction_length"
+//      - germline_genes_filtered_ch : tsv info files containing a "sequence" column (used to create nuc fasta file), a "sequence_aa" column (used to create aa fasta file), a "germline_d_mask_no_gaps" column, a "germline_d_mask_aa_no_gaps" column, "germline_v_gene" and "germline_j_gene" columns + region coordinates info (used to create gff) + "clone_id", "junction_length"
 //      - clone_nb_seq : Minimun number of non-identical sequences per clonal group for tree plotting (defined in nextflow.config). It has to be checked beforehand that the elements in the germ_tree_ch channel contain more than clone_nb_seq rows of data, or the program will stop.
-//      - cute_file : Several functions used in the tsv2fasta.R script
+//      - cute_file : Several functions used in the Tsv2fastaGff.R script
 // Outputs :
 //      - TUPLE : nuc_alignments_ch : - 1st element : sequences in fasta files, in nucleotidic format
 //                                    - 2nd element : sequences in fasta files, in amino-acidic format
 //                                    - 3rd element : joined with their corresponding gff files indicating region coordinates
-process FastaGff{
+process Tsv2fastaGff{
     label 'r_ext'
     cache 'true'
-    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{trees_nuc/*.fasta}", overwrite: false 
-    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{trees_aa/*.fasta}", overwrite: false
+    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{clonal_full_length_nuc/*.fasta}", overwrite: false
+    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{clonal_variable_nuc/*.fasta}", overwrite: false 
+    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{clonal_full_length_aa/*.fasta}", overwrite: false
     publishDir path: "${out_path}/phylo/nuc", mode: 'copy', pattern: "{*.gff}", overwrite: false
 
     input:
-    path germline_genes_filtered // parallelization
+    path germline_genes_filtered_ch // parallelization expected (by clonal groups over clone_nb_seq sequences)
     val clone_nb_seq
     path cute_file
 
     output:
-    tuple path("trees_nuc/*.fasta"), path("trees_aa/*.fasta"), path("*.gff"), emit: fasta_gff_ch
-    path "FastaGff.log", emit: fasta_gff_log_ch
+    tuple path("clonal_full_length_nuc/*.fasta"), path("clonal_full_length_aa/*.fasta"), path("*.gff"), path("clonal_variable_nuc/*.fasta"), emit: fasta_gff_ch
+    path "Tsv2fastaGff.log", emit: fasta_gff_log_ch
     path "warning.txt", emit: warning_ch, optional: true
 
     script:
     """
     #!/bin/bash -ue
 
-    FILENAME=\$(basename -- ${germline_genes_filtered}) # recover a file name without path
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a FastaGff.log
-    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a FastaGff.log
+    FILENAME=\$(basename -- ${germline_genes_filtered_ch}) # recover a file name without path
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a Tsv2fastaGff.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a Tsv2fastaGff.log
 
-    tsv2fasta.R \
-    "${germline_genes_filtered}" \
+    # note that both nuc and aa seq are sent into Tsv2fastaGff.R (comma separated)
+    Tsv2fastaGff.R \
+    "${germline_genes_filtered_ch}" \
     "sequence_id" \
     "sequence,sequence_aa" \
     "germline_d_mask_no_gaps,germline_d_mask_aa_no_gaps" \
     "${clone_nb_seq}" \
     "${cute_file}" \
-    "FastaGff.log"
+    "Tsv2fastaGff.log"
 
-    mv sequence trees_nuc
-    mv sequence_aa trees_aa
+    mv sequence clonal_full_length_nuc
+    mv var_sequence clonal_variable_nuc
+    mv sequence_aa clonal_full_length_aa
     """
 }
-
-
-
-// Creates donut plots for the constant and variable region ; grouped by same allele or genes
-// Inputs:
-//      - kind : kind of donut plot to display. can be "all", "annotated" or "tree"
-//      - data : tsv file containing the sequences to plot 
-//      - col : columns in the data file to take into account when plotting the donut (can be c_call if the donut should be grouped by same constant region alleles for instance)
-//      - donut_* : parameters for the display of the donut. These are entered in the nextflow.config file
-//      - cute_file : file containing R functions used in the donut.R script
-//      - igblast_variable_ref_files & igblast_constant_ref_files : only used to be certain that all studied loci are displayed in the donut's title (if we included IGL and IGK in the study but only one was found, both loci still need to be in the title)
-process donut {
-    label 'r_ext'
-    //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
-    //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.pdf}", overwrite: false
-    publishDir path: "${out_path}/figures/png", mode: 'copy', pattern: "{*.png}", overwrite: false
-    publishDir path: "${out_path}/figures/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
-    cache 'true'
-
-    input:
-    tuple val(kind), path(data), val(col) // 12 parallelization expected
-    val donut_palette
-    val donut_hole_size
-    val donut_hole_text
-    val donut_hole_text_size
-    val donut_border_color
-    val donut_border_size
-    val donut_annotation_distance
-    val donut_annotation_size
-    val donut_annotation_force
-    val donut_annotation_force_pull
-    val donut_legend_width
-    val donut_legend_text_size
-    val donut_legend_box_size
-    val donut_legend_box_space
-    val donut_legend_limit
-    path cute_file
-    path igblast_data_check_ch
-
-    output:
-    path "*.tsv", emit: donut_tsv_ch, optional: true
-    path "*.pdf", emit: donut_pdf_ch, optional: true
-    path "*.png", emit: donuts_png
-    path "*.svg"
-    path "*.log"
-
-    script:
-    """
-    #!/bin/bash -ue
-    FILENAME=\$(basename -- ${data}) # recover a file name without path
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\nKIND : ${kind}\\nCOL : ${col}\\n\\n################################\\n\\n" |& tee -a ${kind}_donut.log
-    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a ${kind}_donut.log
-    donut.R \
-"${data}" \
-"${kind}" \
-"${col}" \
-"${donut_palette}" \
-"${donut_hole_size}" \
-"${donut_hole_text}" \
-"${donut_hole_text_size}" \
-"${donut_border_color}" \
-"${donut_border_size}" \
-"${donut_annotation_distance}" \
-"${donut_annotation_size}" \
-"${donut_annotation_force}" \
-"${donut_annotation_force_pull}" \
-"${donut_legend_width}" \
-"${donut_legend_text_size}" \
-"${donut_legend_box_size}" \
-"${donut_legend_box_space}" \
-"${donut_legend_limit}" \
-"${cute_file}" \
-"${igblast_data_check_ch}" \
-"${kind}_donut.log"
-    """
-}
-
-process donut_assembly {
-    label 'r_ext'
-    publishDir path: "${out_path}/files", mode: 'copy', pattern: "{donuts.pdf}", overwrite: false
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{donut_assembly.log}", overwrite: false
-    cache 'true'
-
-    input:
-    path donut_pdf_ch2
-
-    output:
-    path "donuts.pdf", emit: donut_assembly_ch
-    path "donut_assembly.log"
-
-    script:
-    """
-    #!/bin/bash -ue
-    Rscript -e '
-        files <- list.files(path = ".", pattern = ".pdf\$")
-
-        sorted_files <- files[order(
-            !grepl("allele", files),  # Alleles will be displayed before genes
-            grepl("gene", files),     
-            !grepl("vj_", files)     # Amongst alleles and genes, vj will be displayed before c
-        )]
-
-        qpdf::pdf_combine(input = sorted_files, output = "./donuts.pdf")
-    ' |& tee -a donut_assembly.log
-    """
-}
-
-
-
-// Save the config file and the log file for a specific run
-process backup {
-    label 'bash'
-    publishDir "${out_path}/reports", mode: 'copy', overwrite: false // since I am in mode copy, all the output files will be copied into the publishDir. See \\wsl$\Ubuntu-20.04\home\gael\work\aa\a0e9a739acae026fb205bc3fc21f9b
-    cache 'false'
-
-    input:
-    path config_file
-    path log_file
-
-    output:
-    path "${config_file}" // warning message if we use path config_file
-    path "${log_file}" // warning message if we use path log_file
-    path "Log_info.txt"
-
-    script:
-    """
-    #!/bin/bash -ue
-    echo -e "full .nextflow.log is in: ${launchDir}\nThe one in the result folder is not complete (miss the end)" > Log_info.txt
-    """
-}
-
 
 
 // Align the amino-acidic sequences that are already in fasta files (grouped by clonal groups)
@@ -1435,12 +1306,12 @@ process AlignAa {
     label 'abalign'
     
     input:
-    tuple path(fasta_nuc), path(fasta_aa), path(gff)
+    tuple path(fasta_nuc), path(fasta_aa), path(gff), path(fasta_var_nuc) // parallelization expected (by clonal groups over clone_nb_seq sequences)
     val igblast_organism
     val igblast_heavy_chain
     
     output:
-    tuple path(fasta_nuc), path("*_restored_aligned_aa.fasta"), path(gff) , emit : aligned_aa_ch
+    tuple path(fasta_var_nuc), path("*_restored_aligned_aa.fasta"), path(gff), emit : aligned_aa_ch
     path "AlignAa.log", emit: alignaa_log_ch
     
     script:
@@ -1487,18 +1358,16 @@ process AlignNuc {
     label 'goalign'
 
     input:
-    tuple path(fasta_nuc), path(aligned_aa), path(gff)
+    tuple path(fasta_var_nuc), path(aligned_aa), path(gff) // parallelization expected (by clonal groups over clone_nb_seq sequences)
 
     output:
     tuple path("*_aligned_nuc.fasta"), path(aligned_aa), path(gff), emit : aligned_all_ch
 
     script:
     """
-    goalign codonalign -i ${aligned_aa} -f ${fasta_nuc} -o ${fasta_nuc.baseName}_aligned_nuc.fasta
+    goalign codonalign -i ${aligned_aa} -f ${fasta_var_nuc} -o ${fasta_var_nuc.baseName}_aligned_nuc.fasta
     """
 }
-
-
 
 
 process PrintAlignmentNuc{
@@ -1506,7 +1375,7 @@ process PrintAlignmentNuc{
     publishDir path: "${out_path}/phylo/nuc", mode: 'copy', pattern: "{*.html}", overwrite: false
 
     input:
-    tuple path(fasta_nuc_alignments), path(gff)
+    tuple path(fasta_nuc_alignments), path(gff) // parallelization expected (by clonal groups over clone_nb_seq sequences)
 
     output:
     path "*.html", emit : alignment_html
@@ -1523,7 +1392,7 @@ process PrintAlignmentAA{
     publishDir path: "${out_path}/phylo/aa", mode: 'copy', pattern: "{*.html}", overwrite: false
 
     input:
-    path aligned_aa_only_ch
+    path aligned_aa_only_ch // parallelization expected (by clonal groups over clone_nb_seq sequences)
 
     output:
     path "*.html", emit : alignment_html
@@ -1542,7 +1411,7 @@ process Tree {
     label 'iqtree'
 
     input:
-    tuple path(fasta_nuc_alignments), path(fasta_aa_alignments)
+    tuple path(fasta_nuc_alignments), path(fasta_aa_alignments) // parallelization expected (by clonal groups over clone_nb_seq sequences)
     path phylo_tree_model_file
 
     output:
@@ -1561,7 +1430,7 @@ process ProcessMeta {
     label 'tabletoitol'
 
     input:
-    path meta
+    path meta // no parallelization
 
     output:
     path "iTOL*", emit : itol_out
@@ -1692,6 +1561,135 @@ process print_report{
         clean = TRUE
         )
     ' |& tee -a print_report.log
+    """
+}
+
+// Creates donut plots for the constant and variable region ; grouped by same allele or genes
+// Inputs:
+//      - kind : kind of donut plot to display. can be "all", "annotated" or "tree"
+//      - data : tsv file containing the sequences to plot 
+//      - col : columns in the data file to take into account when plotting the donut (can be c_call if the donut should be grouped by same constant region alleles for instance)
+//      - donut_* : parameters for the display of the donut. These are entered in the nextflow.config file
+//      - cute_file : file containing R functions used in the donut.R script
+//      - igblast_variable_ref_files & igblast_constant_ref_files : only used to be certain that all studied loci are displayed in the donut's title (if we included IGL and IGK in the study but only one was found, both loci still need to be in the title)
+process donut {
+    label 'r_ext'
+    //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
+    //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.pdf}", overwrite: false
+    publishDir path: "${out_path}/figures/png", mode: 'copy', pattern: "{*.png}", overwrite: false
+    publishDir path: "${out_path}/figures/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
+    cache 'true'
+
+    input:
+    tuple val(kind), path(data), val(col) // 12 parallelization expected
+    val donut_palette
+    val donut_hole_size
+    val donut_hole_text
+    val donut_hole_text_size
+    val donut_border_color
+    val donut_border_size
+    val donut_annotation_distance
+    val donut_annotation_size
+    val donut_annotation_force
+    val donut_annotation_force_pull
+    val donut_legend_width
+    val donut_legend_text_size
+    val donut_legend_box_size
+    val donut_legend_box_space
+    val donut_legend_limit
+    path cute_file
+    path igblast_data_check_ch
+
+    output:
+    path "*.tsv", emit: donut_tsv_ch, optional: true
+    path "*.pdf", emit: donut_pdf_ch, optional: true
+    path "*.png", emit: donuts_png
+    path "*.svg"
+    path "*.log"
+
+    script:
+    """
+    #!/bin/bash -ue
+    FILENAME=\$(basename -- ${data}) # recover a file name without path
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\nKIND : ${kind}\\nCOL : ${col}\\n\\n################################\\n\\n" |& tee -a ${kind}_donut.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a ${kind}_donut.log
+    donut.R \
+"${data}" \
+"${kind}" \
+"${col}" \
+"${donut_palette}" \
+"${donut_hole_size}" \
+"${donut_hole_text}" \
+"${donut_hole_text_size}" \
+"${donut_border_color}" \
+"${donut_border_size}" \
+"${donut_annotation_distance}" \
+"${donut_annotation_size}" \
+"${donut_annotation_force}" \
+"${donut_annotation_force_pull}" \
+"${donut_legend_width}" \
+"${donut_legend_text_size}" \
+"${donut_legend_box_size}" \
+"${donut_legend_box_space}" \
+"${donut_legend_limit}" \
+"${cute_file}" \
+"${igblast_data_check_ch}" \
+"${kind}_donut.log"
+    """
+}
+
+process donut_assembly {
+    label 'r_ext'
+    publishDir path: "${out_path}/files", mode: 'copy', pattern: "{donuts.pdf}", overwrite: false
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{donut_assembly.log}", overwrite: false
+    cache 'true'
+
+    input:
+    path donut_pdf_ch2
+
+    output:
+    path "donuts.pdf", emit: donut_assembly_ch
+    path "donut_assembly.log"
+
+    script:
+    """
+    #!/bin/bash -ue
+    Rscript -e '
+        files <- list.files(path = ".", pattern = ".pdf\$")
+
+        sorted_files <- files[order(
+            !grepl("allele", files),  # Alleles will be displayed before genes
+            grepl("gene", files),     
+            !grepl("vj_", files)     # Amongst alleles and genes, vj will be displayed before c
+        )]
+
+        qpdf::pdf_combine(input = sorted_files, output = "./donuts.pdf")
+    ' |& tee -a donut_assembly.log
+    """
+}
+
+
+
+// Save the config file and the log file for a specific run
+process backup {
+    label 'bash'
+    publishDir "${out_path}/reports", mode: 'copy', overwrite: false // since I am in mode copy, all the output files will be copied into the publishDir. See \\wsl$\Ubuntu-20.04\home\gael\work\aa\a0e9a739acae026fb205bc3fc21f9b
+    cache 'false'
+
+    input:
+    path config_file
+    path log_file
+
+    output:
+    path "${config_file}" // warning message if we use path config_file
+    path "${log_file}" // warning message if we use path log_file
+    path "Log_info.txt"
+
+    script:
+    """
+    #!/bin/bash -ue
+    echo -e "full .nextflow.log is in: ${launchDir}\nThe one in the result folder is not complete (miss the end)" > Log_info.txt
     """
 }
 
@@ -2270,17 +2268,17 @@ workflow {
     nb_clone_assigned = clone_assigned_seq.countLines() - 1 // Minus 1 because 1st line = column names
     clone_assigned_seq.subscribe{it -> it.copyTo("${out_path}/files")}
 
-    mutation_load_filtered = mutation_load.out.mutation_load_ch.filter{ file -> file.countLines() > clone_nb_seq.toInteger() } // Only keep clonal groups that have a number of sequences superior to clone_nb_seq (variable defined in nextflow.config)
+    mutation_load_filtered_ch = mutation_load.out.mutation_load_ch.filter{ file -> file.countLines() > clone_nb_seq.toInteger() } // Only keep clonal groups that have a number of sequences superior to clone_nb_seq (variable defined in nextflow.config)
 
     
     GermlineGenes(
-        mutation_load_filtered
+        mutation_load_filtered_ch
     )
 
     germline_genes_ch2 = GermlineGenes.out.germline_genes_ch.collectFile(name: "germ_tree_seq.tsv", skip: 1, keepHeader: true)
     germline_genes_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
-    germline_genes_filtered = GermlineGenes.out.germline_genes_ch.filter{ file -> file.countLines() > clone_nb_seq.toInteger() } // Only keep clonal groups that have a number of sequences superior to clone_nb_seq (variable defined in nextflow.config)
-    //germline_genes_filtered_ch2 = germline_genes_filtered.collectFile(name : "germline_genes_filtered.tsv", skip: 1, keepHeader: true)
+    germline_genes_filtered_ch = GermlineGenes.out.germline_genes_ch.filter{ file -> file.countLines() > clone_nb_seq.toInteger() } // Only keep clonal groups that have a number of sequences superior to clone_nb_seq (variable defined in nextflow.config)
+    //germline_genes_filtered_ch2 = germline_genes_filtered_ch.collectFile(name : "germline_genes_filtered.tsv", skip: 1, keepHeader: true)
     //germline_genes_filtered_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
 
 
@@ -2434,17 +2432,15 @@ workflow {
 */
 
 
-
-    FastaGff(
-        germline_genes_filtered,
+    Tsv2fastaGff(
+        germline_genes_filtered_ch,
         clone_nb_seq,
         cute_path
     )
 
-    fasta_gff_log_ch2 = FastaGff.out.fasta_gff_log_ch.collectFile(name: "FastaGff.log")
+    fasta_gff_log_ch2 = Tsv2fastaGff.out.fasta_gff_log_ch.collectFile(name: "Tsv2fastaGff.log")
     fasta_gff_log_ch2.subscribe{it -> it.copyTo("${out_path}/reports")}
-    align_input = FastaGff.out.fasta_gff_ch
-    fastagff_warn = FastaGff.out.warning_ch
+    fastagff_warn = Tsv2fastaGff.out.warning_ch
 
     // Print warnings on the terminal :
     fastagff_warn.filter { file(it). exists() }
@@ -2455,7 +2451,7 @@ workflow {
 
 
     AlignAa(
-        align_input,
+        Tsv2fastaGff.out.fasta_gff_ch,
         igblast_organism,
         igblast_heavy_chain
     )
