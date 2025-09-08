@@ -66,7 +66,7 @@ script <- "Tsv2fastaGff"
 # script <- "Tsv2fastaGff"
 
 ### Arguments : 
-# path <- "seq_for_germ_tree.tsv"      # tsv file containing data. needs to have all columns in Name, Seq and Germline
+# path <- "1_productive_seq_clone-pass_germ-pass_germ-seq-trans_germ-pass_shm-pass-germ_genes-pass_group_1.tsv"      # tsv file containing data. needs to have all columns in Name, Seq and Germline
 # Name <- "sequence_id"                # name of the column containing the sequence ids
 # Seq <- "sequence,sequence_aa"        # name of the columns containing the sequences to put in the fasta file (can be a single string or several strings seperated by "," if several columns are needed. the fastas will then be created in different folders)
 # Germline <- "germline_alignment_d_mask,germline_d_mask_aa_no_gaps"    # name of the columns containing corresponding germlines of the previously mentionned sequences. Need to be in the same order as the Seq argument
@@ -561,7 +561,7 @@ if (multiple_j_genes || multiple_v_genes){
 ## Create the gff file :
 
 features <- c("fr1", "cdr1", "fr2", "cdr2", "fr3", "cdr3")
-colors <- c("blue", "red", "yellow", "pink", "green", "purple")
+colors <- c("yellow", "pink", "yellow", "pink", "yellow", "pink")
 
 ## Convert all column names in obs to lowercase for comparison
 colnames_lc <- tolower(colnames(obs))
@@ -609,11 +609,11 @@ if (length(non_unique_cols) > 0) {
 
 
 gff_rows <- list()
-for (i in 1:length(features)) {
-    feature <- features[i]
+gff_rows_convert <- list()
+for (i0 in 1:length(features)) {
     # Find actual column names (preserve original case)
-    start_col <- colnames(obs)[tolower(colnames(obs)) == paste0(feature, "_start")]
-    end_col   <- colnames(obs)[tolower(colnames(obs)) == paste0(feature, "_end")]
+    start_col <- colnames(obs)[tolower(colnames(obs)) == paste0(features[i0], "_start")]
+    end_col   <- colnames(obs)[tolower(colnames(obs)) == paste0(features[i0], "_end")]
 
     # Take the most frequent value for coordinate if not unique, and handle the case when all values are NA in a column
     if (all(is.na(obs[[start_col]]))) {
@@ -626,36 +626,60 @@ for (i in 1:length(features)) {
     } else {
         end_val <- names(which.max(table(obs[[end_col]])))
     }
-
     # Skip this feature if either coordinate is NA
     if (is.na(start_val) || is.na(end_val)) {
-        tempo.cat <- paste0("Skipping feature '", feature, "' due to missing coordinates: start = ", start_val, ", end = ", end_val, "\n")
+        tempo.cat <- paste0("Skipping feature '", features[i0], "' in nuc GFF due to missing coordinates: start = ", start_val, ", end = ", end_val, "\n")
         cat(tempo.cat, file = log, append = TRUE)
         next  # Don't add anything to gff_rows
+    }else{
+        tempo_start <- as.integer(unique(obs[[colnames(obs)[tolower(colnames(obs)) == paste0(features[i0], "_start")]]])) # unique value
+        tempo_end <- as.integer(unique(obs[[colnames(obs)[tolower(colnames(obs)) == paste0(features[i0], "_end")]]]))   # unique value
+        row <- c(
+            germ_seq_name,
+            ".",
+            "gene",
+            tempo_start, 
+            tempo_end, 
+            ".",
+            ".",
+            ".",
+            paste0("Name=", features[i0], ";Color=", colors[i0])
+        )
+        gff_rows[[length(gff_rows) + 1]] <- row
+        # tol <- .Machine$double.eps^0.5 ; abs(tempo_start %% 3) < tol to use if tempo_start is a double
+        if((tempo_start - 1) %% 3 == 0 && tempo_end %% 3 == 0){
+            row_aa <- c(
+                germ_seq_name,
+                ".",
+                "gene",
+                as.integer((tempo_start - 1) / 3 + 1), # unique value
+                as.integer(tempo_end / 3),   # unique value
+                ".",
+                ".",
+                ".",
+                paste0("Name=", features[i0], ";Color=", colors[i0])
+            )
+            gff_rows_convert[[length(gff_rows) + 1]] <- row_aa 
+        }else{
+            tempo.cat <- paste0("Skipping feature '", features[i0], "' in aa GFF file due to coordinates not multiple of three : start = ", tempo_start, ", end = ", tempo_end, "\n")
+            cat(tempo.cat, file = log, append = TRUE)
+        }
     }
-    row <- c(
-        germ_seq_name,
-        ".",
-        "gene",
-        unique(obs[[colnames(obs)[tolower(colnames(obs)) == paste0(feature, "_start")]]]), # unique value
-        unique(obs[[colnames(obs)[tolower(colnames(obs)) == paste0(feature, "_end")]]]),   # unique value
-        ".",
-        ".",
-        ".",
-        paste0("Name=", feature, ";Color=", colors[i])
-    )
-    gff_rows[[length(gff_rows) + 1]] <- row
 }
-
 # gff_rows is a list of GFF row vectors, as before.
 
 # Write to GFF file
 gff_table <- do.call(rbind, gff_rows)
 gff_lines <- apply(gff_table, 1, function(x) paste(x, collapse="\t"))
 gff_lines <- c("##gff-version 3", gff_lines)
+output_gff <- paste0(germ_seq_name, "_nuc.gff")
+writeLines(gff_lines, con = output_gff)
 
-output_gff <- paste0(germ_seq_name, ".gff")
-writeLines(gff_lines, con=output_gff)
+gff_table_convert <- do.call(rbind, gff_rows_convert)
+gff_lines_convert <- apply(gff_table_convert, 1, function(x) paste(x, collapse="\t"))
+gff_lines_convert <- c("##gff-version 3", gff_lines_convert)
+output_gff_convert <- paste0(germ_seq_name, "_aa.gff")
+writeLines(gff_lines_convert, con = output_gff_convert)
 
 ## End of creating the gff file
 

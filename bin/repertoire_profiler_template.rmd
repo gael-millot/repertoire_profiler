@@ -187,7 +187,7 @@ Only V, J and C genes are displayed here. See the [donuts.pdf](files/donuts.pdf)
 <br>
 Click on a figure to enlarge. Reclick to go back to the report.
 <br>
-Only V, J and C genes are displayed here. See the [gene_repertoire.pdf](files/gene_repertoire.pdf) and [allele_repertoire.pdf](files/allele_repertoire.pdf) files in the files folder for the complete results, including the alleles (different copies of a same gene) proportions.
+Only V, J and C genes are displayed here. See the [gene_repertoire.pdf](files/gene_repertoire.pdf) and [allele_repertoire.pdf](files/allele_repertoire.pdf) files in the files folder for the complete results, including the alleles (different copies of a same gene) counts.
 
 <br>
 
@@ -240,24 +240,26 @@ Passing ratio: ```r base::round(params$nb_clone_assigned / (params$nb_clone_assi
 <br>
 
 
-#### Alignments of the variable regions for each clonal group
+### Alignments of the variable regions for each clonal group
 
 <br>
 
-**Sequence alignment** are available in the [phylo/nuc](./phylo/nuc) folder for nucleotide alignments and in the [phylo/aa](./phylo/aa) folder for amino acids alignments. Folders include:<br /><ul><li>germline clustering (clone ID).<br /></li><li>allele reannotation (germinal_v_call and germinal_j_call columns).<br /></li><li>mutation load.<br /></li><li>distance and sequence nickname (annotation from the metadata file) added.<br></ul>
+**Sequence alignment** are available in the [alignments/nuc](./alignments/nuc) folder for nucleotide alignments and in the [alignments/aa](./alignments/aa) folder for amino acids alignments. Folders include:<br /><ul><li>germline clustering (clone ID).<br /></li><li>allele reannotation (germinal_v_call and germinal_j_call columns).<br /></li><li>mutation load.<br /></li><li>distance and sequence nickname (annotation from the metadata file) added.<br></ul>
 
 The HTML files present the alignment visualizations, while the FASTA files contain the corresponding sequences for each clonal group. The *.gff* files contain the associated region coordinates per clonal group.<br>
 These alignments were performed using the input sequence and an algorithm based on its translated amino acids.<br>
 *For better visualization, it is recommended to used the "Nucleotide" color scheme.*<br>
 <br><br><br>
 
-###  Amino acid sequences phylogeny for each clonal group
+###  Phylogeny
 <br>
 
 `r  if(params$itol_subscription == "TRUE"){"Open the different **sequences_\\<SEQ_NAME\\>_align.fasta_itol_url.txt** files in the [phylo/aa](./phylo/aa) folder and click on the link to see the trees."}`
 `r  if(params$itol_subscription == "FALSE"){"To see the trees, follow the link: https://itol.embl.de/upload.cgi. Choose a name for your tree (optional) and upload a '*.treefile' file from the [phylo/aa](./phylo/aa) folder. The trees will then be displayed by iTOL."}`
 
 Alignment visualization is available for each clonal group used in each tree, in the [phylo/aa](./phylo/aa) folder in html format.
+; tree scale is the number of mutations per position.
+
 
 <br><br>
 

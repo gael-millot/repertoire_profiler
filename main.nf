@@ -1260,7 +1260,8 @@ process Tsv2fastaGff{
     publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{clonal_full_length_nuc/*.fasta}", overwrite: false
     publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{clonal_variable_nuc/*.fasta}", overwrite: false 
     publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{clonal_full_length_aa/*.fasta}", overwrite: false
-    publishDir path: "${out_path}/phylo/nuc", mode: 'copy', pattern: "{*.gff}", overwrite: false
+    publishDir path: "${out_path}/alignments/nuc", mode: 'copy', pattern: "{*_nuc.gff}", overwrite: false
+    publishDir path: "${out_path}/alignments/aa", mode: 'copy', pattern: "{*_aa.gff}", overwrite: false
 
     input:
     path germline_genes_filtered_ch // parallelization expected (by clonal groups over clone_nb_seq sequences)
@@ -1311,7 +1312,7 @@ process AlignAa {
     val igblast_heavy_chain
     
     output:
-    tuple path(fasta_var_nuc), path("*_restored_aligned_aa.fasta"), path(gff), emit : aligned_aa_ch
+    tuple path(fasta_var_nuc), path("*_aligned_aa.fasta"), path(gff), emit : aligned_aa_ch
     path "AlignAa.log", emit: alignaa_log_ch
     
     script:
@@ -1348,7 +1349,7 @@ process AlignAa {
     /bin/Abalign_V2_Linux_Term/Abalign -i ${fasta_aa} ${parms} ${fasta_aa.baseName}_align_aa.fasta -sp ${species} -lc FR1_length.txt -lg 1 -lc CDR1_length.txt -lg 2 |& tee -a AlignAa.log || true
     
     # Abalign puts fasta headers in all caps. next script is meant to put those headers back to how they originally were
-    restore_headers.sh ${fasta_aa} ${fasta_aa.baseName}_align_aa.fasta ${fasta_aa.baseName}_restored_aligned_aa.fasta AlignAa.log
+    restore_headers.sh ${fasta_aa} ${fasta_aa.baseName}_align_aa.fasta ${fasta_aa.baseName}_aligned_aa.fasta AlignAa.log
     """
 }
 
@@ -1372,7 +1373,7 @@ process AlignNuc {
 
 process PrintAlignmentNuc{
     label 'goalign'
-    publishDir path: "${out_path}/phylo/nuc", mode: 'copy', pattern: "{*.html}", overwrite: false
+    publishDir path: "${out_path}/alignments/nuc", mode: 'copy', pattern: "{*.html}", overwrite: false
 
     input:
     tuple path(fasta_nuc_alignments), path(gff) // parallelization expected (by clonal groups over clone_nb_seq sequences)
@@ -1389,7 +1390,7 @@ process PrintAlignmentNuc{
 
 process PrintAlignmentAA{
     label 'goalign'
-    publishDir path: "${out_path}/phylo/aa", mode: 'copy', pattern: "{*.html}", overwrite: false
+    publishDir path: "${out_path}/alignments/aa", mode: 'copy', pattern: "{*.html}", overwrite: false
 
     input:
     path aligned_aa_only_ch // parallelization expected (by clonal groups over clone_nb_seq sequences)
