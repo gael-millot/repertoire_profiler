@@ -560,8 +560,8 @@ if (multiple_j_genes || multiple_v_genes){
 
 ## Create the gff file :
 
-features <- c("fr1", "cdr1", "fr2", "cdr2", "fr3", "cdr3")
-colors <- c("yellow", "pink", "yellow", "pink", "yellow", "pink")
+features <- c("fr1", "cdr1", "fr2", "cdr2", "fr3", "cdr3", "fr4")
+colors <- c("yellow", "pink", "yellow", "pink", "yellow", "pink", "yellow")
 
 ## Convert all column names in obs to lowercase for comparison
 colnames_lc <- tolower(colnames(obs))
