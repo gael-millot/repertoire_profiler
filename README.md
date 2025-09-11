@@ -326,6 +326,10 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 <br /><br />
 ## WHAT'S NEW IN
 
+#### v20.1
+
+-  Remain to finish the alignments and phylo. The rest (repertoires notably) are ok.
+
 #### v20.0
 
 -  Now the alignments are fixed and are on the variable region only

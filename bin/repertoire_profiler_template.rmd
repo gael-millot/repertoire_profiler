@@ -244,15 +244,15 @@ Passing ratio: ```r base::round(params$nb_clone_assigned / (params$nb_clone_assi
 
 <br>
 
-**Sequence Alignments** are available in the [alignments/nuc](./alignments/nuc) folder for nucleotide alignments and in the [alignments/aa](./alignments/aa) folder for amino acids alignments. Such alignments are performed using [Abalign](https://academic.oup.com/nar/article/51/W1/W17/7173809) (guided by well-characterized antibody numbering schemes such as IMGT, Kabat, Chothia and Martin).<br />Click on the html file to see the alignment:<br /><ul><li>Warning: use the horizontal scrollbar of the window + the right click of the mouse on the alignment to see the left part of the representation.<br /></li><li>To change the aligments colors ("Nucleotide" recommanded for nucleotides):<br><br><br><br>
+**Sequence Alignments** are available in the [alignments/nuc](./alignments/nuc) folder for nucleotide alignments and in the [alignments/aa](./alignments/aa) folder for amino acids alignments. Such alignments are performed using [Abalign](https://academic.oup.com/nar/article/51/W1/W17/7173809) (guided by well-characterized antibody numbering schemes such as IMGT, Kabat, Chothia and Martin).<br />Click on the html file to see the alignment:<br /><ul><li>Warning: use the horizontal scrollbar of the window + the right click of the mouse on the alignment to see the left part of the representation.<br /></li><li>To change the aligments colors ("Nucleotide" recommanded for nucleotides):<br><br><br>
 <div class="image-container">
   <img src="doc_images/color.png" onclick="toggleFullscreen(this)" />
 </div>
-<br /></li><li>To annotate the FR and CDR regions, use the .gff file in the same folder than the opened .html file:<br><br><br><br>
+<br /></li><li>To annotate the FR and CDR regions, use the .gff file in the same folder than the opened .html file:<br><br><br>
 <div class="image-container">
   <img src="doc_images/gff.png" onclick="toggleFullscreen(this)" />
 </div>
-<br />Schematic illustration of these regions:<br><br><br><br>
+<br />Schematic illustration of these regions:<br><br><br>
 <div class="image-container">
   <img src="doc_images/FR_CDR.png" onclick="toggleFullscreen(this)" />
 </div>
