@@ -236,7 +236,7 @@ An example of results obtained with the dataset is present at this address: http
 <br /><br />
 Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.docx (contact Gael Millot).
 <br /><br />
-Mandatory elements:
+Use the scrollbar at the bottom of the table if the text is cut.
 <br /><br />
 | repertoire_profiler_<UNIQUE_ID> folders and files | Description |
 | :--- | :--- |
@@ -326,25 +326,29 @@ Special acknowledgement to [Kenneth Hoehn](https://medicine.yale.edu/profile/ken
 <br /><br />
 ## WHAT'S NEW IN
 
+#### v20.2
+
+- Bugs fixed.
+
 #### v20.1
 
--  Remain to finish the alignments and phylo. The rest (repertoires notably) are ok.
+- Remain to finish the alignments and phylo. The rest (repertoires notably) are ok.
 
 #### v20.0
 
--  Now the alignments are fixed and are on the variable region only
+- Now the alignments are fixed and are on the variable region only
 
 #### v19.2
 
--  Bug fixed
+- Bug fixed
 
 #### v19.1
 
--  Bug fixed and README completed
+- Bug fixed and README completed
 
 #### v19.0
 
--  Now sequences are trimmed in 5' for the leader peptide if exists, and two new columns in productive_seq.tsv sequence_ini is_sequence_trimmed"
+- Now sequences are trimmed in 5' for the leader peptide if exists, and two new columns in productive_seq.tsv sequence_ini is_sequence_trimmed"
 
 #### v18.6
 

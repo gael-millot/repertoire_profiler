@@ -75,16 +75,6 @@ script <- "Tsv2fastaGff"
 # log <- "Tsv2fastaGff.log"
 
 
-path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1757445020/files/germ_tree_seq.tsv" # tsv file containing data. needs to have all columns in Name, Seq and Germline
-Name <- "sequence_id"                # name of the column containing the sequence ids
-Seq <- "sequence,sequence_aa"        # name of the columns containing the sequences to put in the fasta file (can be a single string or several strings seperated by "," if several columns are needed. the fastas will then be created in different folders)
-Germline <- "germline_alignment_d_mask,germline_d_mask_aa_no_gaps"    # name of the columns containing corresponding germlines of the previously mentionned sequences. Need to be in the same order as the Seq argument
-clone_nb_seq <- 3                    # Minimum number of rows in the tsv file. The program expects this to be respected, otherwise raises an error.
-cute <- "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v11.4.0/cute_little_R_functions.R"
-log <- "Tsv2fastaGff.log"
-
-
-
 ################################# End test
 
 
@@ -630,17 +620,19 @@ for(i0 in tempo_names){
         if (all(is.na(obs[[start_col]]))) {
             start_val <- NA
         } else {
-            start_val <- names(which.max(table(obs[[start_col]])))
+            start_val <- names(which.max(table(obs[[start_col]])))[1] # [1] in case of equality in max()
         }
         if (all(is.na(obs[[end_col]]))) {
             end_val <- NA
         } else {
-            end_val <- names(which.max(table(obs[[end_col]])))
+            end_val <- names(which.max(table(obs[[end_col]])))[1] # [1] in case of equality in max()
         }
         # Skip this feature if either coordinate is NA
         if (is.na(start_val) || is.na(end_val)) {
-            tempo.cat <- paste0("Skipping feature ", get(i0)[i1], " in nuc GFF of ", i0, ", due to missing coordinates: start = ", start_val, ", end = ", end_val, "\n")
-            cat(tempo.cat, file = log, append = TRUE)
+            tempo.warn <- paste0("Skipping feature ", get(i0)[i1], " in nuc GFF of ", i0, ", due to missing coordinates: start = ", start_val, ", end = ", end_val, "\n")
+            cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
+            fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+            warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
         }else{
             seq_name <- paste0("clone_id_", tempo.df[1, "clone_id"], "_", germ_v_gene, "_", germ_j_gene)
             tempo_start <- as.integer(start_val) # unique value
@@ -672,21 +664,31 @@ for(i0 in tempo_names){
                 )
                 gff_rows_convert[[length(gff_rows) + 1]] <- row_aa 
             }else{
-                tempo.cat <- paste0("Skipping feature ", get(i0)[i1], " in aa GFF of ", i0, ", due to due to coordinates not multiple of three : start = ", tempo_start, ", end = ", tempo_end, "\n")
-                cat(tempo.cat, file = log, append = TRUE)
+                tempo.warn <- paste0("Skipping feature ", get(i0)[i1], " in aa GFF of ", i0, ", due to due to coordinates not multiple of three : start = ", tempo_start, ", end = ", tempo_end, "\n")
+                cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
+                fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+                warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
             }
         }
     }
     # gff_rows is a list of GFF row vectors, as before.
     # Write to GFF file
     gff_table <- do.call(rbind, gff_rows)
-    gff_lines <- apply(gff_table, 1, function(x) paste(x, collapse="\t"))
+    if(length(gff_table) > 0){
+        gff_lines <- apply(gff_table, 1, function(x) paste(x, collapse="\t"))
+    }else{
+        gff_lines <- character()
+    }
     gff_lines <- c("##gff-version 3", gff_lines)
     output_gff <- paste0(seq_name, "_", i0, "_nuc.gff")
     writeLines(gff_lines, con = output_gff)
 
     gff_table_convert <- do.call(rbind, gff_rows_convert)
-    gff_lines_convert <- apply(gff_table_convert, 1, function(x) paste(x, collapse="\t"))
+    if(length(gff_table_convert) > 0){
+        gff_lines_convert <- apply(gff_table_convert, 1, function(x) paste(x, collapse="\t"))
+    }else{
+        gff_lines_convert <- character()
+    }
     gff_lines_convert <- c("##gff-version 3", gff_lines_convert)
     output_gff_convert <- paste0(seq_name, "_", i0, "_aa.gff")
     writeLines(gff_lines_convert, con = output_gff_convert)

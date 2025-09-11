@@ -812,7 +812,7 @@ process closest_germline {
     val igblast_variable_ref_files
 
     output:
-    path "*_germ-pass.tsv", emit: closest_ch
+    path "*_germ-pass.tsv", emit: closest_ch, optional: true
     path "*.log", emit: closest_log_ch
 
     script:
@@ -2190,7 +2190,7 @@ workflow {
     split_by_clones(
         clone_assignment.out.clone_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE clone_assignment PROCESS\n\n========\n\n"}
     )
-
+    tempo_test = split_by_clones.out.clone_split_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE split_by_clones PROCESS\n\n========\n\n"}
 
 
     closest_germline(
@@ -2217,7 +2217,7 @@ workflow {
 
 
     mutation_load(
-        TranslateGermline.out.translate_germ_ch,
+        TranslateGermline.out.translate_germ_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE TranslateGermline PROCESS\n\n========\n\n"},
         meta_file, 
         meta_legend
     )
