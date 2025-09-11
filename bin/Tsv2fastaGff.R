@@ -682,13 +682,13 @@ for(i0 in tempo_names){
     gff_table <- do.call(rbind, gff_rows)
     gff_lines <- apply(gff_table, 1, function(x) paste(x, collapse="\t"))
     gff_lines <- c("##gff-version 3", gff_lines)
-    output_gff <- paste0(i0, "_nuc.gff")
+    output_gff <- paste0(seq_name, "_", i0, "_nuc.gff")
     writeLines(gff_lines, con = output_gff)
 
     gff_table_convert <- do.call(rbind, gff_rows_convert)
     gff_lines_convert <- apply(gff_table_convert, 1, function(x) paste(x, collapse="\t"))
     gff_lines_convert <- c("##gff-version 3", gff_lines_convert)
-    output_gff_convert <- paste0(i0, "_aa.gff")
+    output_gff_convert <- paste0(seq_name, "_", i0, "_aa.gff")
     writeLines(gff_lines_convert, con = output_gff_convert)
 }
 

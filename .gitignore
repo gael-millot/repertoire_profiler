@@ -8,3 +8,4 @@ work/
 singularity/
 .nextflow*
 .mailmap
+commit*
