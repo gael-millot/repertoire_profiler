@@ -244,7 +244,7 @@ Passing ratio: ```r base::round(params$nb_clone_assigned / (params$nb_clone_assi
 
 <br>
 
-**Sequence Alignments** are available in the [alignments/nuc](./alignments/nuc) folder for nucleotide alignments and in the [alignments/aa](./alignments/aa) folder for amino acids alignments. Such alignments are performed using [Abalign](https://academic.oup.com/nar/article/51/W1/W17/7173809) (guided by well-characterized antibody numbering schemes such as IMGT, Kabat, Chothia and Martin).<br />Click on the html file to see the alignment:<br /><ul><li>Warning: use the horizontal scrollbar of the window + the right click of the mouse on the alignment to see the left part of the representation.<br /></li><li>To change the aligments colors ("Nucleotide" recommanded for nucleotides):<br><br><br>
+**Sequence Alignments** are available in the [alignments/nuc](./alignments/nuc) folder for nucleotide alignments and in the [alignments/aa](./alignments/aa) folder for amino acids alignments. Such alignments are performed using [Abalign](https://academic.oup.com/nar/article/51/W1/W17/7173809) (alignments guided by IMGT antibody numbering schemes).<br />Several options are possible to visualize and save as picture:<br /><ul><li>Click on the html file to see the alignment.<br /><ul><li>Warning: use the horizontal scrollbar of the window + the right click of the mouse on the alignment to see the left part of the representation.<br /></li><li>To change the aligments colors ("Nucleotide" recommanded for nucleotides):<br><br><br>
 <div class="image-container">
   <img src="doc_images/color.png" onclick="toggleFullscreen(this)" />
 </div>
@@ -259,9 +259,33 @@ Passing ratio: ```r base::round(params$nb_clone_assigned / (params$nb_clone_assi
 <div class="image-container">
   <img src="doc_images/collier_de_perle.png" onclick="toggleFullscreen(this)" />
 </div>
-<br /></li><li>To export the annotated alignment as picture:<br>
+<br /></li><li>Export as picture does not work well as part of the sequence not displayed are not exported (screenshot).<br><br><br>
+<ul><li>In [Jalview](https://www.jalview.org/download/).<br /><ul><li>import the .fasta file with the same name as the .html file:<br><br><br>
+<div class="image-container">
+  <img src="doc_images/jalview_open.png" onclick="toggleFullscreen(this)" />
+</div>
+<br /></li><li>Add colors:<br><br><br>
+<div class="image-container">
+  <img src="doc_images/jalview_color.png" onclick="toggleFullscreen(this)" />
+</div>
+<br /></li><li>Set a threshold to see the differences:<br><br><br>
+<div class="image-container">
+  <img src="doc_images/jalview_diff.png" onclick="toggleFullscreen(this)" />
+</div>
+<br /></li><li>A high threshold set all the columns with at least one difference in white:<br><br><br>
+<div class="image-container">
+  <img src="doc_images/jalview_diff_threshold_high.png" onclick="toggleFullscreen(this)" />
+</div>
+<br /></li><li>A low threshold set all the different minority events in each column in white:<br><br><br>
+<div class="image-container">
+  <img src="doc_images/jalview_diff_threshold_low.png" onclick="toggleFullscreen(this)" />
+</div>
+<br /></li><li>To export as .png for instance:<br><br><br>
+<div class="image-container">
+  <img src="doc_images/jalview_export.png" onclick="toggleFullscreen(this)" />
+</div>
 
-<br>
+<br><br><br>
 
 ###  Phylogeny
 <br>

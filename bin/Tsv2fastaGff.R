@@ -66,13 +66,15 @@ script <- "Tsv2fastaGff"
 # script <- "Tsv2fastaGff"
 
 ### Arguments : 
-# path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1757445020/files/germ_tree_seq.tsv"      # tsv file containing data. needs to have all columns in Name, Seq and Germline
+# path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/f7/daa059b87fb7ad05e1503cabcc7662/1_productive_seq_clone-pass_germ-pass_germ-seq-trans_germ-pass_shm-pass-germ_genes-pass_group_1b.tsv"      # tsv file containing data. needs to have all columns in Name, Seq and Germline
 # Name <- "sequence_id"                # name of the column containing the sequence ids
 # Seq <- "sequence,sequence_aa"        # name of the columns containing the sequences to put in the fasta file (can be a single string or several strings seperated by "," if several columns are needed. the fastas will then be created in different folders)
 # Germline <- "germline_alignment_d_mask,germline_d_mask_aa_no_gaps"    # name of the columns containing corresponding germlines of the previously mentionned sequences. Need to be in the same order as the Seq argument
 # clone_nb_seq <- 3                    # Minimum number of rows in the tsv file. The program expects this to be respected, otherwise raises an error.
 # cute <- "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v11.4.0/cute_little_R_functions.R"
 # log <- "Tsv2fastaGff.log"
+
+
 
 
 ################################# End test
@@ -580,10 +582,10 @@ for (suf in c("_start", "_end")) {
     for(i1 in tempo_names){
         for(i2 in get(i1)) {
             col <- paste0(i2, suf)
-            if (!(col %in% colnames(obs))) {
+            if (!(col %in% colnames(tempo.df))) {
                 missing_col <- c(missing_col, col)
             }else{
-                unique_vals <- unique(obs[[col]])
+                unique_vals <- unique(tempo.df[[col]])
                 if (length(unique_vals) != 1) {
                     non_unique_cols <- c(non_unique_cols, col)
                 }
@@ -613,19 +615,19 @@ for(i0 in tempo_names){
     gff_rows_convert <- list()
     for(i1 in 1:length(get(i0))){
         # Find actual column names (preserve original case)
-        start_col <- colnames(obs)[colnames(obs) == paste0(get(i0)[i1], "_start")]
-        end_col   <- colnames(obs)[colnames(obs) == paste0(get(i0)[i1], "_end")]
+        start_col <- colnames(tempo.df)[colnames(tempo.df) == paste0(get(i0)[i1], "_start")]
+        end_col   <- colnames(tempo.df)[colnames(tempo.df) == paste0(get(i0)[i1], "_end")]
 
         # Take the most frequent value for coordinate if not unique, and handle the case when all values are NA in a column
-        if (all(is.na(obs[[start_col]]))) {
+        if (all(is.na(tempo.df[[start_col]]))) {
             start_val <- NA
         } else {
-            start_val <- names(which.max(table(obs[[start_col]])))[1] # [1] in case of equality in max()
+            start_val <- names(which.max(table(tempo.df[[start_col]])))[1] # [1] in case of equality in max()
         }
-        if (all(is.na(obs[[end_col]]))) {
+        if (all(is.na(tempo.df[[end_col]]))) {
             end_val <- NA
         } else {
-            end_val <- names(which.max(table(obs[[end_col]])))[1] # [1] in case of equality in max()
+            end_val <- names(which.max(table(tempo.df[[end_col]])))[1] # [1] in case of equality in max()
         }
         # Skip this feature if either coordinate is NA
         if (is.na(start_val) || is.na(end_val)) {
