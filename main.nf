@@ -169,9 +169,8 @@ process igblast {
     val igblast_loci
 
     output:
-    path "*_igblast.tsv", emit: db_pass_ch, optional: true
-    path "igblast_unaligned_seq_name.tsv", emit: unaligned_seq_ch
-    path "igblast_aligned_seq_name.tsv", emit: aligned_seq_ch
+    path "*igblast_aligned_seq.tsv", emit: db_pass_ch
+    path "*igblast_unaligned_seq.tsv", emit: db_unpass_ch
     path "*.log", emit: log_ch, optional: true
 
     script:
@@ -206,20 +205,34 @@ process igblast {
 
     # Alignment <-> annotate sequence using VDJ info
     # See https://changeo.readthedocs.io/en/stable/tools/AssignGenes.html for the details
-    AssignGenes.py igblast -s \${FILE}.fa -b /usr/local/share/igblast --organism ${igblast_organism} --loci ${igblast_loci} --format blast |& tee -a igblast_report.log
-    AssignGenes.py igblast -s \${FILE}.fa -b /usr/local/share/igblast --organism ${igblast_organism} --loci ${igblast_loci} --format airr |& tee -a igblast_report.log
-    # convert to tsv
-    # Also convert data from the web interface IMGT/HighV-QUEST
-    MakeDb.py igblast -i ./\${FILE}_igblast.fmt7 -s ./\${FILE}.fa -r \${VDJ_FILES} --extended |& tee -a igblast_report.log
-
-    # printing if no _igblast_db-pass.tsv file made
-    if [[ ! -f ./\${FILE}_igblast_db-pass.tsv ]] ; then
-        echo "\${FILENAME}" | cat > igblast_unaligned_seq_name.tsv
-        echo -n "" | cat > igblast_aligned_seq_name.tsv
-    else
-        echo "\${FILENAME}" | cat > igblast_aligned_seq_name.tsv
-        echo -n "" | cat > igblast_unaligned_seq_name.tsv
+    # AssignGenes.py igblast -s \${FILE}.fa -b /usr/local/share/igblast --organism ${igblast_organism} --loci ${igblast_loci} --format blast |& tee -a igblast_report.log # *_igblast.fmt7
+    AssignGenes.py igblast -s \${FILE}.fa -b /usr/local/share/igblast --organism ${igblast_organism} --loci ${igblast_loci} --format airr |& tee -a igblast_report.log # output is *_igblast.tsv
+    # test that the AssignGenes.py igblast --format airr is ok
+    read -r firstline < ./\${FILE}_igblast.tsv
+    expected="sequence_id	sequence	sequence_aa	locus	stop_codon	vj_in_frame	v_frameshift	productive	rev_comp	complete_vdj	d_frame	v_call	d_call	j_call	c_call	sequence_alignment	germline_alignment	sequence_alignment_aa	germline_alignment_aa	v_alignment_start	v_alignment_end	d_alignment_start	d_alignment_end	j_alignment_start	j_alignment_end	c_alignment_start	c_alignment_end	v_sequence_alignment	v_sequence_alignment_aa	v_germline_alignment	v_germline_alignment_aa	d_sequence_alignment	d_sequence_alignment_aa	d_germline_alignment	d_germline_alignment_aa	j_sequence_alignment	j_sequence_alignment_aa	j_germline_alignment	j_germline_alignment_aa	c_sequence_alignment	c_sequence_alignment_aa	c_germline_alignment	c_germline_alignment_aa	fwr1	fwr1_aa	cdr1	cdr1_aa	fwr2	fwr2_aa	cdr2	cdr2_aa	fwr3	fwr3_aa	fwr4	fwr4_aa	cdr3	cdr3_aa	junction	junction_length	junction_aa	junction_aa_length	v_score	d_score	j_score	c_score	v_cigar	d_cigar	j_cigar	c_cigar	v_support	d_support	j_support	c_support	v_identity	d_identity	j_identity	c_identity	v_sequence_start	v_sequence_end	v_germline_start	v_germline_end	d_sequence_start	d_sequence_end	d_germline_start	d_germline_end	j_sequence_start	j_sequence_end	j_germline_start	j_germline_end	c_sequence_start	c_sequence_end	c_germline_start	c_germline_end	fwr1_start	fwr1_end	cdr1_start	cdr1_end	fwr2_start	fwr2_end	cdr2_start	cdr2_end	fwr3_start	fwr3_end	fwr4_start	fwr4_end	cdr3_start	cdr3_end	np1	np1_length	np2	np2_length"
+    if [[ "\$firstline" != "\$expected" ]]; then
+        echo -e "\\n\\n========\\n\\nINTERNAL ERROR IN NEXTFLOW EXECUTION\\n\\nTHE COMANND AssignGenes.py igblast --format airr DOES NOT RETURN THE EXPECTED COLUMN NAMES\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n"
+        echo -e "COLUMN NAMES:\n \$firstline \\n\\n"
+        echo -e "EXPECTED COLUMN NAMES:\n \$expected"
+        echo -e "\\n\\n========\\n\\n"
+        exit 1
     fi
+    # end test that the AssignGenes.py igblast --format airr is ok
+    # convert to tsv (not required anymore)
+    # Also convert data from the web interface IMGT/HighV-QUEST
+    # MakeDb.py igblast -i ./\${FILE}_igblast.fmt7 -s ./\${FILE}.fa -r \${VDJ_FILES} --extended |& tee -a igblast_report.log
+    # convert to tsv (not required anymore)
+    # if no alignment
+    ALIGNED=\$(awk 'BEGIN{FS="\\t"}NR==2{if(\$8 == ""){print "FALSE"}else{print "TRUE"}}' ./\${FILE}_igblast.tsv)
+    # NR==2{if(\$8 is the line 2 and the field "productive", tested if empty (thus unaligned)
+    cp ./\${FILE}_igblast.tsv igblast_unaligned_seq.tsv
+    cp ./\${FILE}_igblast.tsv igblast_aligned_seq.tsv
+    if [[ "\$ALIGNED" == "FALSE" ]]; then
+        sed -i '\$d' igblast_aligned_seq.tsv # delete the second (last) line
+    else
+        sed -i '\$d' igblast_unaligned_seq.tsv # delete the second (last) line
+    fi
+    # end if no alignment
     """
     // write ${} between "" to make a single argument when the variable is made of several values separated by a space. Otherwise, several arguments will be considered
 }
@@ -249,17 +262,6 @@ process parseDb_filtering {
     FILE=\${FILENAME%.*} # file name without extension
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a ParseDb_filtering.log
     if [[ -s ${db_pass_ch} ]]; then # -s means "exists and non empty". Thus, return FALSE is the file does not exists or is empty
-        # test that the AssignGenes.py igblast --format airr is ok
-        read -r firstline < ${db_pass_ch}
-        expected="sequence_id	sequence	sequence_aa	locus	stop_codon	vj_in_frame	v_frameshift	productive	rev_comp	complete_vdj	d_frame	v_call	d_call	j_call	c_call	sequence_alignment	germline_alignment	sequence_alignment_aa	germline_alignment_aa	v_alignment_start	v_alignment_end	d_alignment_start	d_alignment_end	j_alignment_start	j_alignment_end	c_alignment_start	c_alignment_end	v_sequence_alignment	v_sequence_alignment_aa	v_germline_alignment	v_germline_alignment_aa	d_sequence_alignment	d_sequence_alignment_aa	d_germline_alignment	d_germline_alignment_aa	j_sequence_alignment	j_sequence_alignment_aa	j_germline_alignment	j_germline_alignment_aa	c_sequence_alignment	c_sequence_alignment_aa	c_germline_alignment	c_germline_alignment_aa	fwr1	fwr1_aa	cdr1	cdr1_aa	fwr2	fwr2_aa	cdr2	cdr2_aa	fwr3	fwr3_aa	fwr4	fwr4_aa	cdr3	cdr3_aa	junction	junction_length	junction_aa	junction_aa_length	v_score	d_score	j_score	c_score	v_cigar	d_cigar	j_cigar	c_cigar	v_support	d_support	j_support	c_support	v_identity	d_identity	j_identity	c_identity	v_sequence_start	v_sequence_end	v_germline_start	v_germline_end	d_sequence_start	d_sequence_end	d_germline_start	d_germline_end	j_sequence_start	j_sequence_end	j_germline_start	j_germline_end	c_sequence_start	c_sequence_end	c_germline_start	c_germline_end	fwr1_start	fwr1_end	cdr1_start	cdr1_end	fwr2_start	fwr2_end	cdr2_start	cdr2_end	fwr3_start	fwr3_end	fwr4_start	fwr4_end	cdr3_start	cdr3_end	np1	np1_length	np2	np2_length"
-        if [[ "\$firstline" != "\$expected" ]]; then
-            echo -e "\\n\\n========\\n\\nINTERNAL ERROR IN NEXTFLOW EXECUTION\\n\\nTHE COMANND AssignGenes.py igblast --format airr DOES NOT RETURN THE EXPECTED COLUMN NAMES\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n"
-            echo -e "COLUMN NAMES:\n \$firstline \\n\\n"
-            echo -e "EXPECTED COLUMN NAMES:\n \$expected"
-            echo -e "\\n\\n========\\n\\n"
-            exit 1
-        fi
-        # end test that the AssignGenes.py igblast --format airr is ok
         ParseDb.py select -d ${db_pass_ch} -f productive -u TRUE T |& tee -a ParseDb_filtering.log
         ParseDb.py split -d ${db_pass_ch} -f productive |& tee -a ParseDb_filtering.log  # Used to create a file if the FALSE F value is found in the field (select command only creates a select file if values specifies in -u flag are found, in this case TRUE or T)
         if [ -f *_parse-select.tsv ]; then
@@ -2075,18 +2077,12 @@ workflow {
     //tsv_ch1 = igblast.out.db_pass_ch.map { tuple -> tuple[1] } // Only the igblast_db-pass.tsv files (without _igblast.tsv)
     tsv_ch1 = igblast.out.db_pass_ch
     tsv_ch1.count().subscribe{ n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE igblast PROCESS\n\nCHECK THAT THE igblast_organism, igblast_loci AND igblast_variable_ref_files ARE CORRECTLY SET IN THE nextflow.config FILE\n\n========\n\n"}}
-    tsv_ch2 = tsv_ch1.collectFile(name: "all_igblast_seq.tsv", skip: 1, keepHeader: true)
+    tsv_ch2 = tsv_ch1.collectFile(name: "passed_igblast_seq.tsv", skip: 1, keepHeader: true)
     tsv_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
-    igblast.out.aligned_seq_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\n0 ALIGNED SEQ FILES RETURNED BY THE igblast PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
-    // tsv_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
-
-    aligned_seq_ch2 = igblast.out.aligned_seq_ch.collectFile(name: "igblast_aligned_seq_name.tsv")
-    aligned_seq_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
-    igblast.out.unaligned_seq_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\n0 UNALIGNED SEQ FILES RETURNED BY THE igblast PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
-    unaligned_seq_ch2 = igblast.out.unaligned_seq_ch.collectFile(name: "igblast_unaligned_seq_name.tsv") // because an empty file must be present
-    unaligned_seq_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
-    nb1 = aligned_seq_ch2.countLines() 
-    nb2 =  unaligned_seq_ch2.countLines()
+    db_unpass = igblast.out.db_unpass_ch.collectFile(name: "failed_igblast_seq.tsv", skip: 1, keepHeader: true)
+    db_unpass.subscribe{it -> it.copyTo("${out_path}/files")}
+    nb1 = tsv_ch2.countLines(keepHeader: true) 
+    nb2 =  db_unpass.countLines(keepHeader: true)
     // nb1.view()
     //nb1.view()
     //fs_ch.count().view()
@@ -2108,8 +2104,8 @@ workflow {
     nb1_b.subscribe { n -> if ( n == 1 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FOLLOWING THE parseDb_filtering PROCESS\nSEE THE EMPTY productive_seq.tsv FILE AND THE unproductive_seq.tsv FILE IN THE OUTPUT FOLDER\n\n========\n\n"}}
     // nb1_b.map { "Nombre de lignes dans select_ch2 (productive_seq_init.tsv): $it (en comptant le header)" }.view()
     // nb2_b.map { "Nombre de lignes dans unselect_ch2 (unproductive_seq.tsv): $it (en comptant le header)" }.view()
-    // tsv_ch2.countLines().map { "Nombre de lignes dans tsv_ch2 (all_igblast_seq.tsv): $it (en comptant le header)" }.view()
-    tsv_ch2.countLines().combine(nb1_b).combine(nb2_b).subscribe{n,n1,n2 -> if(n != n1 + n2 - 1){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE productive_seq.tsv (${n1}) AND unproductive_seq.tsv (${n2} - 1) IS NOT EQUAL TO THE NUMBER OF FILES IN all_igblast_seq.tsv (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // n1 + n2 - 1 because header counted in both n1 and n2 while only one header in n
+    // tsv_ch2.countLines().map { "Nombre de lignes dans tsv_ch2 (passed_igblast_seq.tsv): $it (en comptant le header)" }.view()
+    tsv_ch2.countLines().combine(nb1_b).combine(nb2_b).subscribe{n,n1,n2 -> if(n != n1 + n2 - 1){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE productive_seq.tsv (${n1}) AND unproductive_seq.tsv (${n2} - 1) IS NOT EQUAL TO THE NUMBER OF FILES IN passed_igblast_seq.tsv (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // n1 + n2 - 1 because header counted in both n1 and n2 while only one header in n
     parseDb_filtering.out.parseDb_filtering_log_ch.collectFile(name: "ParseDb_filtering.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
 
