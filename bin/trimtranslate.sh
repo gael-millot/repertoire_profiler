@@ -21,6 +21,7 @@ mkdir productive_aa
 if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
     SEQ="sequence" # name of the column containing the initial sequences
     SEQ_ALIGN="sequence_alignment" # name of the column containing the aligned sequence by igblast
+    AA_SEQ_COL="sequence_aa"
     # make fasta files of the filtered sequences (only productive ones because this process is called after the productive filtering)
     awk -v var1=${SEQ} -v var2=${SEQ_ALIGN} 'BEGIN{FS="\t" ; ORS="\n" ; OFS="\t"}{
         if(NR==1){
@@ -86,7 +87,7 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
     # translation into aa (for a potential second round of analysis) since analysis is performed at the nuc level
     # translate fasta files
     seqkit translate -T 1 -f 1 -w 0 --allow-unknown-codon ./productive_nuc/"${COL_NAME}"_trim.fasta > ./productive_aa/aa_"${COL_NAME}"_trim.fasta |& tee -a trimtranslate.log
-    seqkit translate -T 1 -f 1 -w 0 --allow-unknown-codon ./productive_nuc/"${COL_NAME}"_ini.fasta > ./aa_"${COL_NAME}"_ini.fasta |& tee -a trimtranslate.log
+    seqkit translate -T 1 -f 1 -w 0 --allow-unknown-codon ./"${COL_NAME}"_ini.fasta > ./aa_"${COL_NAME}"_ini.fasta |& tee -a trimtranslate.log
         # no trim, no translate unknown code to 'X'
         # -T 1 : human genetic code
         # -f 1 : only the first frame is translated
@@ -108,14 +109,25 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
     paste --delimiters='\t' name.txt seq.txt > aa.tsv |& tee -a trimtranslate.log
     # assemble name and seq into aa.tsv 
     # add the aa seq into the trimtranslate.tsv
-    awk -v var1=${SEQ} -v var2=${TRIM_SEQ} -v var3=${TRIM_LOG} -v var4=${REMOVED_SEQ} -v var5=${TRIM_AA_SEQ} -v var6=${INI_AA_SEQ} 'BEGIN{FS="\t" ; ORS="" ; OFS=""}
+    awk -v var1=${SEQ} -v var2=${TRIM_SEQ} -v var3=${TRIM_LOG} -v var4=${REMOVED_SEQ} -v var5=${TRIM_AA_SEQ} -v var6=${INI_AA_SEQ} -v var7=${AA_SEQ_COL} 'BEGIN{FS="\t" ; ORS="" ; OFS=""}
         {
             if(FNR==1){ # first line
                 gsub(/\r/, "") # remove CR
-                print $0"\tini_sequence\tis_sequence_trimmed\tremoved_sequence\ttrimmed_sequence_aa\tini_sequence_aa\n" > "trimtranslate.tsv"
+                print $0"\tini_sequence\tis_sequence_trimmed\tremoved_sequence\ttrimmed_sequence_aa\tini_sequence_aa\taa_warning\n" > "trimtranslate.tsv"
                 # header added to trimtranslate.tsv
+                COL_SEQ="FALSE"
+                COL_AA_SEQ="FALSE"
                 for(i4=1; i4<=NF; i4++){
                     if($i4==var1){COL_SEQ=i4}
+                    if($i4==var7){COL_AA_SEQ=i4}
+                }
+                if(COL_SEQ=="FALSE"){
+                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO "var1" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                    exit 1
+                }
+                if(COL_AA_SEQ=="FALSE"){
+                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO "var7" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                    exit 1
                 }
                 # no need the recheck as above because already done above
             }else{
@@ -130,7 +142,12 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
                         if(i5!=FN){print "\t" > "trimtranslate.tsv"} # because of BEGIN
                     }
                 }
-                print $OLD_SEQ"\t"var3"\t"var4"\t"var5"\t"var6"\n" > "trimtranslate.tsv"
+                if($COL_AA_SEQ==var5){
+                    TEMPO_WARN="FALSE"
+                }else{
+                    TEMPO_WARN="TRUE"
+                }
+                print OLD_SEQ"\t"var3"\t"var4"\t"var5"\t"var6"\t"TEMPO_WARN"\n" > "trimtranslate.tsv"
             }
         }
     ' ${select_ch} |& tee -a trimtranslate.log
