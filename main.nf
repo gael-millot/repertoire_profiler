@@ -289,8 +289,12 @@ process parseDb_filtering {
 // Trim the 5' end of the sequence if required (to remove the leader peptide) and Translate the nucleotidic sequences into amino acid sequences
 process TrimTranslate {
     label 'seqkit'
-    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_aa/*.fasta", overwrite: false
-    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_nuc/*.fasta", overwrite: false
+    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_nuc/trimmed/*.fasta", overwrite: false
+    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_nuc/removed/*.fasta", overwrite: false
+    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_nuc/query/*.fasta", overwrite: false
+    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_aa/trimmed/*.fasta", overwrite: false
+    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_aa/igblast/*.fasta", overwrite: false
+    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_aa/query/*.fasta", overwrite: false
     cache 'true'
 
     input:
@@ -298,9 +302,12 @@ process TrimTranslate {
 
     output:
     path "trimtranslate.tsv", emit: trimtranslate_ch // productive file with column sequence_alignment_aa added
-    path "productive_nuc/*.*"
-    path "aa.tsv", emit: aa_tsv_ch
-    path "productive_aa/*.*"
+    path "productive_nuc/trimmed/*.*"
+    path "productive_nuc/removed/*.*"
+    path "productive_nuc/query/*.*"
+    path "productive_aa/trimmed/*.*"
+    path "productive_aa/igblast/*.*"
+    path "productive_aa/query/*.*"
     path "trimtranslate.log", emit: trimtranslate_log_ch
 
     script:
@@ -2116,8 +2123,6 @@ workflow {
     )
     TrimTranslate.out.trimtranslate_ch.count().subscribe { n -> if ( n == 1 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FILES FOLLOWING THE TrimTranslate PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
     trimtranslate_ch2 = TrimTranslate.out.trimtranslate_ch.collectFile(name: "trimtranslate.tsv", skip: 1, keepHeader: true) // productive file with column sequence_alignment_aa added
-    aa_tsv_ch2 = TrimTranslate.out.aa_tsv_ch.collectFile(name: "aa.tsv", skip: 1, keepHeader: true)
-    aa_tsv_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
     TrimTranslate.out.trimtranslate_log_ch.collectFile(name: "trimtranslate.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
 

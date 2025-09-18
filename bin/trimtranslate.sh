@@ -16,22 +16,28 @@
 select_ch=${1}
 
 
-mkdir productive_nuc
-mkdir productive_aa
+mkdir -p productive_nuc/trimmed
+mkdir -p productive_nuc/removed
+mkdir -p productive_nuc/query
+mkdir -p productive_aa/trimmed
+mkdir -p productive_aa/igblast
+mkdir -p productive_aa/query
 if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
     SEQ="sequence" # name of the column containing the initial sequences
     SEQ_ALIGN="sequence_alignment" # name of the column containing the aligned sequence by igblast
     AA_SEQ_COL="sequence_aa"
     # make fasta files of the filtered sequences (only productive ones because this process is called after the productive filtering)
-    awk -v var1=${SEQ} -v var2=${SEQ_ALIGN} 'BEGIN{FS="\t" ; ORS="\n" ; OFS="\t"}{
+    awk -v var1=${SEQ} -v var2=${SEQ_ALIGN} -v var3=${AA_SEQ_COL} 'BEGIN{FS="\t" ; ORS="\n" ; OFS="\t"}{
         if(NR==1){
             COL_NAME="FALSE"
             COL_SEQ="FALSE"
             COL_SEQ_ALIGN="FALSE"
+            COL_AA_SEQ="FALSE"
             for(i4=1; i4<=NF; i4++){
                 if($i4=="sequence_id"){COL_NAME=i4}
                 if($i4==var1){COL_SEQ=i4}
                 if($i4==var2){COL_SEQ_ALIGN=i4}
+                if($i4==var3){COL_AA_SEQ=i4}
             }
             if(COL_NAME=="FALSE"){
                 print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO sequence_id COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
@@ -45,6 +51,10 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
                 print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO "var2" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
                 exit 1
             }
+            if(COL_AA_SEQ=="FALSE"){
+                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO "var3" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                exit 1
+            }
         }else{
             if($COL_SEQ!~/^[-NATGC.]*$/){
                 print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\n"var1" COLUMN NAME OF THE INPUT FILE MUST BE A NUCLEOTIDE SEQUENCE\nHERE IT MIGHT BE MADE OF AMINO ACIDS:\n"$COL_SEQ"\n\n========\n\n"
@@ -55,7 +65,8 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
                 print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\n"var2" COLUMN NAME OF THE INPUT FILE MUST BE A NUCLEOTIDE SEQUENCE\nHERE IT MIGHT BE MADE OF AMINO ACIDS:\n"$COL_SEQ_ALIGN"\n\n========\n\n"
                 exit 1
             }
-            print ">"$COL_NAME"\n"$COL_SEQ > $COL_NAME"_ini.fasta" # make fasta files of the nuc sequences
+            print ">"$COL_NAME"\n"$COL_SEQ > "./productive_nuc/query/"$COL_NAME"_query.fasta" # make fasta files of the query nuc sequences
+            print ">"$COL_NAME"\n"$COL_AA_SEQ > "./productive_aa/igblast/aa_"$COL_NAME".fasta" # make fasta files of the sequence_aa column
             print ">"$COL_NAME"\n"$COL_SEQ_ALIGN > $COL_NAME"_align.fasta" # make fasta files of the aligned nuc sequences without dots. This sequence will help to know if trimming must be done. Because igblast only returns aligned VDJ seq (without leader seq).
             print $COL_NAME > "COL_NAME.txt" # name of the line in a file
         }
@@ -68,52 +79,53 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
         COL_NAME=$(cat COL_NAME.txt) # recover the name of the line
         SEQ_B=$(seqkit seq -s "${COL_NAME}"_align.fasta) 
         # Find start position of B in A
-        START_POS=$(seqkit locate -p "$SEQ_B" "${COL_NAME}"_ini.fasta | tail -n 1 | cut -f5) #determine if trimming has been done by igblast when returning aligned VDJ seq
+        START_POS=$(seqkit locate -p "$SEQ_B" "${COL_NAME}"_query.fasta | tail -n 1 | cut -f5) #determine if trimming has been done by igblast when returning aligned VDJ seq
         # Trim A from the start position onwards
         if (( $START_POS > 1 )) ; then
             TRIM_LOG=TRUE
         else
             TRIM_LOG=FALSE # FALSE means no tream
         fi
-        seqkit subseq -w 0 -r ${START_POS}:-1 "${COL_NAME}"_ini.fasta > ./productive_nuc/"${COL_NAME}"_trim.fasta
+        seqkit subseq -w 0 -r ${START_POS}:-1 ./productive_nuc/query/"${COL_NAME}"_query.fasta > ./productive_nuc/trimmed/"${COL_NAME}"_trim.fasta
         # -w 0 → disables line wrapping so the sequence is on one line.
         # -r ${START_POS}:-1 → specifies the range: from position ${START_POS} up to the last base (-1 means the end).
-        TRIM_SEQ=$(sed -n '2p' ./productive_nuc/"${COL_NAME}"_trim.fasta) # prints only the second line of the file.
-        seqkit subseq -w 0 -r 1:$(( ${START_POS} - 1 )) "${COL_NAME}"_ini.fasta > ./productive_nuc/"${COL_NAME}"_removed.fasta
+        TRIM_SEQ=$(sed -n '2p' ./productive_nuc/trimmed/"${COL_NAME}"_trim.fasta) # prints only the second line of the file.
+        seqkit subseq -w 0 -r 1:$(( ${START_POS} - 1 )) ./productive_nuc/query/"${COL_NAME}"_query.fasta > ./productive_nuc/removed/"${COL_NAME}"_removed.fasta
         # -w 0 → disables line wrapping so the sequence is on one line.
         # -r ${START_POS}:-1 → specifies the range: from position ${START_POS} up to the last base (-1 means the end).
-        REMOVED_SEQ=$(sed -n '2p' ./productive_nuc/"${COL_NAME}"_removed.fasta) # prints only the second line of the file.
+        REMOVED_SEQ=$(sed -n '2p' ./productive_nuc/removed/"${COL_NAME}"_removed.fasta) # prints only the second line of the file.
     # end triming the initial nucleotide sequence (corresponding to the leader peptide before the FWR1 region)
     # translation into aa (for a potential second round of analysis) since analysis is performed at the nuc level
     # translate fasta files
-    seqkit translate -T 1 -f 1 -w 0 --allow-unknown-codon ./productive_nuc/"${COL_NAME}"_trim.fasta > ./productive_aa/aa_"${COL_NAME}"_trim.fasta |& tee -a trimtranslate.log
-    seqkit translate -T 1 -f 1 -w 0 --allow-unknown-codon ./"${COL_NAME}"_ini.fasta > ./aa_"${COL_NAME}"_ini.fasta |& tee -a trimtranslate.log
+    seqkit translate -T 1 -f 1 -w 0 --allow-unknown-codon ./productive_nuc/trimmed/"${COL_NAME}"_trim.fasta > ./productive_aa/trimmed/aa_"${COL_NAME}"_trim.fasta |& tee -a trimtranslate.log
+    seqkit translate -T 1 -f 1 -w 0 --allow-unknown-codon ./productive_nuc/query/"${COL_NAME}"_query.fasta > ./productive_aa/query/aa_"${COL_NAME}"_query.fasta |& tee -a trimtranslate.log
         # no trim, no translate unknown code to 'X'
         # -T 1 : human genetic code
         # -f 1 : only the first frame is translated
         # --allow-unknown-codon : convert unknown codon (for instance ...) to X
     # end translate fasta files
-    INI_AA_SEQ=$(sed -n '2p' ./aa_"${COL_NAME}"_ini.fasta)
-    TRIM_AA_SEQ=$(sed -n '2p' ./productive_aa/aa_"${COL_NAME}"_trim.fasta)
+    INI_AA_SEQ=$(sed -n '2p' ./productive_aa/query/aa_"${COL_NAME}"_query.fasta)
+    TRIM_AA_SEQ=$(sed -n '2p' ./productive_aa/trimmed/aa_"${COL_NAME}"_trim.fasta)
     # assemble name and seq into aa.tsv 
-    awk '{
-        lineKind=(NR-1)%2 ; 
-        if(lineKind==0){
-            gsub("> *", "", $0)
-            print $0 >> "name.txt"
-        }
-        if(lineKind==1){
-            print $0 >> "seq.txt"
-        }
-    }' productive_aa/aa_"${COL_NAME}"_trim.fasta |& tee -a trimtranslate.log
-    paste --delimiters='\t' name.txt seq.txt > aa.tsv |& tee -a trimtranslate.log
+    # awk '{
+    #     lineKind=(NR-1)%2 ; 
+    #     if(lineKind==0){
+    #         gsub("> *", "", $0)
+    #         print $0 >> "name.txt"
+    #     }
+    #     if(lineKind==1){
+    #         print $0 >> "seq.txt"
+    #     }
+    # }' productive_aa/aa_"${COL_NAME}"_trim.fasta |& tee -a trimtranslate.log
+    # paste --delimiters='\t' name.txt seq.txt > aa.tsv |& tee -a trimtranslate.log
+    # sed -i '1i sequence_id\tsequence_aa' aa.tsv |& tee -a trimtranslate.log # header added to aa.tsv
     # assemble name and seq into aa.tsv 
     # add the aa seq into the trimtranslate.tsv
     awk -v var1=${SEQ} -v var2=${TRIM_SEQ} -v var3=${TRIM_LOG} -v var4=${REMOVED_SEQ} -v var5=${TRIM_AA_SEQ} -v var6=${INI_AA_SEQ} -v var7=${AA_SEQ_COL} 'BEGIN{FS="\t" ; ORS="" ; OFS=""}
         {
             if(FNR==1){ # first line
                 gsub(/\r/, "") # remove CR
-                print $0"\tini_sequence\tis_sequence_trimmed\tremoved_sequence\ttrimmed_sequence_aa\tini_sequence_aa\taa_warning\n" > "trimtranslate.tsv"
+                print $0"\tini_sequence\tis_sequence_trimmed\tremoved_sequence\ttrimmed_sequence_aa\tini_sequence_aa\taa_identical\n" > "trimtranslate.tsv"
                 # header added to trimtranslate.tsv
                 COL_SEQ="FALSE"
                 COL_AA_SEQ="FALSE"
@@ -143,17 +155,15 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
                     }
                 }
                 if($COL_AA_SEQ==var5){
-                    TEMPO_WARN="FALSE"
-                }else{
                     TEMPO_WARN="TRUE"
+                }else{
+                    TEMPO_WARN="FALSE"
                 }
                 print OLD_SEQ"\t"var3"\t"var4"\t"var5"\t"var6"\t"TEMPO_WARN"\n" > "trimtranslate.tsv"
             }
         }
     ' ${select_ch} |& tee -a trimtranslate.log
     # end add the aa seq into the trimtranslate.tsv
-    sed -i '1i sequence_id\tsequence_aa' aa.tsv |& tee -a trimtranslate.log # header added to aa.tsv
-    # echo -e "sequence_id\tsequence_alignment\n" | cat aa.tsv > caca.tsv 
 fi
 
 
