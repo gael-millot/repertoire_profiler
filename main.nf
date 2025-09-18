@@ -1404,24 +1404,26 @@ process Tree {
     """
 }
 
-process ProcessMeta {
+process MetaToITOL {
     label 'tabletoitol'
 
     input:
-    path meta // no parallelization
+    path meta_file // no parallelization
+    val meta_seq_names
 
     output:
-    path "iTOL*", emit : itol_out
+    path "iTOL*", emit : itol_out_ch
 
     script:
     """
-    if [ "\$(basename ${meta})" = "NULL" ]; then
+    if [ "${meta_file}" == "NULL" ]; then
         echo "No metadata provided; skipping iTOL annotation" > skip.iTOL.txt
-        touch iTOL.empty
+        touch iTOL.empty # create the empty file iTOL.empty
         exit 0
+    else
+        table2itol.R -i ${meta_seq_names} ${meta_file}
+        # create three files: iTOL_colorstrip-Isotype.txt, iTOL_colorstrip-Name.txt, iTOL_gradient-KD.txt
     fi
-
-    table2itol.R -i ${meta_seq_names} ${meta}
     """
 }
 
@@ -1431,7 +1433,7 @@ process ITOL{
 
     input:
     path tree
-    path meta
+    path itol_files
     val phylo_tree_itolkey
 
     output:
@@ -1440,11 +1442,12 @@ process ITOL{
 
     script:
     """
-    # Check if meta_file is an empty file (meta_path = "NULL")
-    if [ ! -s ${meta} ]; then
+    # Check if itol_files is made of iTOL.empty # -s means exists and non-empty
+    if [ ! -s "iTOL.empty" ]; then 
         gotree upload itol --project gotree_uploads --user-id $phylo_tree_itolkey -i $tree > ${tree.baseName}_itol_url.txt 2>&1
     else
-        gotree upload itol --project gotree_uploads --user-id $phylo_tree_itolkey -i $tree $meta > ${tree.baseName}_itol_url.txt 2>&1
+        # add metadata
+        gotree upload itol --project gotree_uploads --user-id $phylo_tree_itolkey -i $tree $itol_files > ${tree.baseName}_itol_url.txt 2>&1 
     fi
     """
 }
@@ -2451,10 +2454,10 @@ workflow {
     tree_aa = Tree.out.tree_file_aa
     tree_nuc = Tree.out.tree_file_nuc
 
-    ProcessMeta(
-        meta_file
+    MetaToITOL(
+        meta_file,
+        meta_seq_names
     )
-    itolmeta = ProcessMeta.out.itol_out
 
     // The ITOL process can only be executed if user has paid the subsription for automated visualization
 
@@ -2464,7 +2467,7 @@ workflow {
 
         ITOL(
             tree,
-            itolmeta,
+            MetaToITOL.out.itol_out_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE MetaToITOL PROCESS\n\n========\n\n"},
             phylo_tree_itolkey
         )
 
