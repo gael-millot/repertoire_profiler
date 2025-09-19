@@ -207,81 +207,100 @@ process igblast {
     # See https://changeo.readthedocs.io/en/stable/tools/AssignGenes.html for the details
     AssignGenes.py igblast -s \${FILE}.fa -b /usr/local/share/igblast --organism ${igblast_organism} --loci ${igblast_loci} --format blast |& tee -a igblast_report.log # *_igblast.fmt7
     AssignGenes.py igblast -s \${FILE}.fa -b /usr/local/share/igblast --organism ${igblast_organism} --loci ${igblast_loci} --format airr |& tee -a igblast_report.log # output is *_igblast.tsv
-    # test that the AssignGenes.py igblast --format airr is ok
-    read -r firstline < ./\${FILE}_igblast.tsv
-    expected="sequence_id	sequence	sequence_aa	locus	stop_codon	vj_in_frame	v_frameshift	productive	rev_comp	complete_vdj	d_frame	v_call	d_call	j_call	c_call	sequence_alignment	germline_alignment	sequence_alignment_aa	germline_alignment_aa	v_alignment_start	v_alignment_end	d_alignment_start	d_alignment_end	j_alignment_start	j_alignment_end	c_alignment_start	c_alignment_end	v_sequence_alignment	v_sequence_alignment_aa	v_germline_alignment	v_germline_alignment_aa	d_sequence_alignment	d_sequence_alignment_aa	d_germline_alignment	d_germline_alignment_aa	j_sequence_alignment	j_sequence_alignment_aa	j_germline_alignment	j_germline_alignment_aa	c_sequence_alignment	c_sequence_alignment_aa	c_germline_alignment	c_germline_alignment_aa	fwr1	fwr1_aa	cdr1	cdr1_aa	fwr2	fwr2_aa	cdr2	cdr2_aa	fwr3	fwr3_aa	fwr4	fwr4_aa	cdr3	cdr3_aa	junction	junction_length	junction_aa	junction_aa_length	v_score	d_score	j_score	c_score	v_cigar	d_cigar	j_cigar	c_cigar	v_support	d_support	j_support	c_support	v_identity	d_identity	j_identity	c_identity	v_sequence_start	v_sequence_end	v_germline_start	v_germline_end	d_sequence_start	d_sequence_end	d_germline_start	d_germline_end	j_sequence_start	j_sequence_end	j_germline_start	j_germline_end	c_sequence_start	c_sequence_end	c_germline_start	c_germline_end	fwr1_start	fwr1_end	cdr1_start	cdr1_end	fwr2_start	fwr2_end	cdr2_start	cdr2_end	fwr3_start	fwr3_end	fwr4_start	fwr4_end	cdr3_start	cdr3_end	np1	np1_length	np2	np2_length"
-    if [[ "\$firstline" != "\$expected" ]]; then
-        echo -e "\\n\\n========\\n\\nINTERNAL ERROR IN NEXTFLOW EXECUTION\\n\\nTHE COMANND AssignGenes.py igblast --format airr DOES NOT RETURN THE EXPECTED COLUMN NAMES\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n"
-        echo -e "COLUMN NAMES:\n \$firstline \\n\\n"
-        echo -e "EXPECTED COLUMN NAMES:\n \$expected"
-        echo -e "\\n\\n========\\n\\n"
-        exit 1
-    fi
-    # end test that the AssignGenes.py igblast --format airr is ok
     # convert to tsv
     # Also convert data from the web interface IMGT/HighV-QUEST
     MakeDb.py igblast -i ./\${FILE}_igblast.fmt7 -s ./\${FILE}.fa -r \${VDJ_FILES} --extended -o blast_format.tsv |& tee -a igblast_report.log
     # end convert to tsv
-    # add _with_gaps into 
-    awk 'BEGIN{FS="\\t" ; ORS="" ; OFS=""}
-        # means that work only on the first file
-        FNR==NR{ 
-            if(FNR==1){
-            # first line
-                SEQ_ALIGN_COL_NB="FALSE"
-                GERM_ALIGN_COL_NB="FALSE"
-                for(i4=1; i4<=NF; i4++){
-                    if(\$i4=="sequence_alignment"){SEQ_ALIGN_COL_NB=i4}
-                    if(\$i4=="germline_alignment"){GERM_ALIGN_COL_NB=i4}
+    # test that the AssignGenes.py igblast --format airr is ok
+        expected="sequence_id	sequence	sequence_aa	locus	stop_codon	vj_in_frame	v_frameshift	productive	rev_comp	complete_vdj	d_frame	v_call	d_call	j_call	c_call	sequence_alignment	germline_alignment	sequence_alignment_aa	germline_alignment_aa	v_alignment_start	v_alignment_end	d_alignment_start	d_alignment_end	j_alignment_start	j_alignment_end	c_alignment_start	c_alignment_end	v_sequence_alignment	v_sequence_alignment_aa	v_germline_alignment	v_germline_alignment_aa	d_sequence_alignment	d_sequence_alignment_aa	d_germline_alignment	d_germline_alignment_aa	j_sequence_alignment	j_sequence_alignment_aa	j_germline_alignment	j_germline_alignment_aa	c_sequence_alignment	c_sequence_alignment_aa	c_germline_alignment	c_germline_alignment_aa	fwr1	fwr1_aa	cdr1	cdr1_aa	fwr2	fwr2_aa	cdr2	cdr2_aa	fwr3	fwr3_aa	fwr4	fwr4_aa	cdr3	cdr3_aa	junction	junction_length	junction_aa	junction_aa_length	v_score	d_score	j_score	c_score	v_cigar	d_cigar	j_cigar	c_cigar	v_support	d_support	j_support	c_support	v_identity	d_identity	j_identity	c_identity	v_sequence_start	v_sequence_end	v_germline_start	v_germline_end	d_sequence_start	d_sequence_end	d_germline_start	d_germline_end	j_sequence_start	j_sequence_end	j_germline_start	j_germline_end	c_sequence_start	c_sequence_end	c_germline_start	c_germline_end	fwr1_start	fwr1_end	cdr1_start	cdr1_end	fwr2_start	fwr2_end	cdr2_start	cdr2_end	fwr3_start	fwr3_end	fwr4_start	fwr4_end	cdr3_start	cdr3_end	np1	np1_length	np2	np2_length"
+    if [[ -s ./\${FILE}_igblast.tsv ]]; then # -s means --format airr has worked
+        read -r firstline < ./\${FILE}_igblast.tsv
+        if [[ "\$firstline" != "\$expected" ]]; then
+            echo -e "\\n\\n========\\n\\nINTERNAL ERROR IN NEXTFLOW EXECUTION\\n\\nTHE COMANND AssignGenes.py igblast --format airr DOES NOT RETURN THE EXPECTED COLUMN NAMES\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n"
+            echo -e "COLUMN NAMES:\n \$firstline \\n\\n"
+            echo -e "EXPECTED COLUMN NAMES:\n \$expected"
+            echo -e "\\n\\n========\\n\\n"
+            exit 1
+        fi
+        # end test that the AssignGenes.py igblast --format airr is ok
+        # add _with_gaps into 
+        if [[ -s blast_format.tsv ]]; then # -s means MakeDb.py igblast has worked
+            awk 'BEGIN{FS="\\t" ; ORS="" ; OFS=""}
+                # means that work only on the first file
+                FNR==NR{ 
+                    if (FNR == 1){
+                    # first line
+                        SEQ_ALIGN_COL_NB="FALSE"
+                        GERM_ALIGN_COL_NB="FALSE"
+                        for(i4=1; i4<=NF; i4++){
+                            if(\$i4=="sequence_alignment"){SEQ_ALIGN_COL_NB=i4}
+                            if(\$i4=="germline_alignment"){GERM_ALIGN_COL_NB=i4}
+                        }
+                        if(SEQ_ALIGN_COL_NB=="FALSE"){
+                            print "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\\n\\nNO sequence_alignment COLUMN NAME FOUND IN THE INPUT FILE\\n\\n========\\n\\n"
+                            exit 1
+                        }
+                        if(GERM_ALIGN_COL_NB=="FALSE"){
+                            print "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\\n\\nNO germline_alignment COLUMN NAME FOUND IN THE INPUT FILE\\n\\n========\\n\\n"
+                            exit 1
+                        }
+                    }else{
+                        gsub(/\\r/, "") 
+                        # remove CR
+                        SEQ_ALIGN=\$SEQ_ALIGN_COL_NB
+                        GERM_ALIGN=\$GERM_ALIGN_COL_NB
+                    }
+                    next   # important!! skip processing in second block for first file
                 }
-                if(SEQ_ALIGN_COL_NB=="FALSE"){
-                    print "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\\n\\nNO sequence_alignment COLUMN NAME FOUND IN THE INPUT FILE\\n\\n========\\n\\n"
-                    exit 1
+                FNR!=NR {
+                    # mean that works only for the second file
+                    if (FNR == 1){ 
+                        # first line
+                        print \$0"\\tsequence_alignment_with_gaps\\tgermline_alignment_with_gaps\\n" > "trimtranslate.tsv"
+                    }else{
+                        print \$0"\\t"SEQ_ALIGN"\\t"GERM_ALIGN"\\n" > "trimtranslate.tsv"
+                    }
                 }
-                if(GERM_ALIGN_COL_NB=="FALSE"){
-                    print "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\\n\\nNO germline_alignment COLUMN NAME FOUND IN THE INPUT FILE\\n\\n========\\n\\n"
-                    exit 1
+            ' blast_format.tsv ./\${FILE}_igblast.tsv |& tee -a igblast_report.log
+        else
+            awk 'BEGIN{FS="\\t" ; ORS="" ; OFS=""}
+                FNR == 1{ 
+                    print \$0"\\tsequence_alignment_with_gaps\\tgermline_alignment_with_gaps\\n" > "trimtranslate.tsv"
+                    next
+                }{
+                    print \$0"\\t\\t\\n" > "trimtranslate.tsv"
                 }
-            }else{
-                gsub(/\\r/, "") 
-                # remove CR
-                SEQ_ALIGN=\$SEQ_ALIGN_COL_NB
-                GERM_ALIGN=\$GERM_ALIGN_COL_NB
-            }
-            next   # important!! skip processing in second block for first file
-        }
-        FNR!=NR {
-            # mean that works only for the second file
-            if(FNR==1){ 
+            ' ./\${FILE}_igblast.tsv |& tee -a igblast_report.log
+        fi
+        # if no alignment
+        ALIGNED=\$(
+            awk 'BEGIN{FS="\\t"}
+                NR==1{ 
                 # first line
-                print \$0"\\tsequence_alignment_with_gaps\\tgermline_alignment_with_gaps\\n" > "trimtranslate.tsv"
-            }
-            print \$0"\\t"SEQ_ALIGN"\\t"GERM_ALIGN"\\n" > "trimtranslate.tsv"
-        }
-    ' blast_format.tsv ./\${FILE}_igblast.tsv |& tee -a igblast_report.log
-    # if no alignment
-    ALIGNED=\$(
-        awk 'BEGIN{FS="\\t"}
-            if(NR==1){ # first line
-                for(i4=1; i4<=NF; i4++){
-                    if(\$i4=="productive"){PROD=i4}
+                PROD=="FALSE"
+                    for(i4=1; i4<=NF; i4++){
+                        if(\$i4=="productive"){PROD=i4}
+                    }
+                    if(PROD=="FALSE"){
+                        print "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\\n\\nNO productive COLUMN NAME FOUND IN THE INPUT FILE\\n\\n========\\n\\n"
+                        exit 1
+                    }
                 }
-                if(PROD=="FALSE"){
-                    print "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\\n\\nNO productive COLUMN NAME FOUND IN THE INPUT FILE\\n\\n========\\n\\n"
-                    exit 1
-                }
-            }
-            if(NR==2){if(\$PROD == ""){print "FALSE"}else{print "TRUE"}}
-        ' ./\${FILE}_igblast.tsv
-    )
-    cp ./\${FILE}_igblast.tsv igblast_unaligned_seq.tsv
-    cp ./\${FILE}_igblast.tsv igblast_aligned_seq.tsv
-    if [[ "\$ALIGNED" == "FALSE" ]]; then
-        sed -i '\$d' igblast_aligned_seq.tsv # delete the second (last) line
+                NR==2{if(\$PROD == ""){print "FALSE"}else{print "TRUE"}}
+            ' trimtranslate.tsv
+        )
+        cp trimtranslate.tsv igblast_unaligned_seq.tsv
+        cp trimtranslate.tsv igblast_aligned_seq.tsv
+        if [[ "\$ALIGNED" == "FALSE" ]]; then
+            sed -i '\$d' igblast_aligned_seq.tsv # delete the second (last) line
+        else
+            sed -i '\$d' igblast_unaligned_seq.tsv # delete the second (last) line
+        fi
+        # end if no alignment
     else
-        sed -i '\$d' igblast_unaligned_seq.tsv # delete the second (last) line
+        echo \$expected > igblast_aligned_seq.tsv
+        echo \$expected > igblast_unaligned_seq.tsv
     fi
-    # end if no alignment
     """
     // write ${} between "" to make a single argument when the variable is made of several values separated by a space. Otherwise, several arguments will be considered
 }
@@ -341,9 +360,12 @@ process TrimTranslate {
     publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_nuc/trimmed/*.fasta", overwrite: false
     publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_nuc/removed/*.fasta", overwrite: false
     publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_nuc/query/*.fasta", overwrite: false
+    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_nuc/align/*.fasta", overwrite: false
+    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_nuc/align_with_gaps/*.fasta", overwrite: false
     publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_aa/trimmed/*.fasta", overwrite: false
     publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_aa/igblast/*.fasta", overwrite: false
     publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_aa/query/*.fasta", overwrite: false
+    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_aa/align/*.fasta", overwrite: false
     cache 'true'
 
     input:
@@ -354,9 +376,12 @@ process TrimTranslate {
     path "productive_nuc/trimmed/*.*"
     path "productive_nuc/removed/*.*"
     path "productive_nuc/query/*.*"
+    path "productive_nuc/align/*.*"
+    path "productive_nuc/align_with_gaps/*.*"
     path "productive_aa/trimmed/*.*"
     path "productive_aa/igblast/*.*"
     path "productive_aa/query/*.*"
+    path "productive_aa/align/*.*"
     path "trimtranslate.log", emit: trimtranslate_log_ch
 
     script:

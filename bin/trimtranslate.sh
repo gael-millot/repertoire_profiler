@@ -20,57 +20,105 @@ mkdir -p productive_nuc/trimmed
 mkdir -p productive_nuc/removed
 mkdir -p productive_nuc/query
 mkdir -p productive_nuc/align
+mkdir -p productive_nuc/align_with_gaps
 
 mkdir -p productive_aa/trimmed
 mkdir -p productive_aa/igblast
 mkdir -p productive_aa/query
+mkdir -p productive_aa/align
 
 if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
     SEQ="sequence" # name of the column containing the initial sequences
     SEQ_ALIGN="sequence_alignment" # name of the column containing the aligned sequence by igblast
+    SEQ_ALIGN_GAP="sequence_alignment_with_gaps" # name of the column containing the aligned sequence by igblast
+    GERM_ALIGN_GAP="germline_alignment_with_gaps" # name of the column containing the aligned sequence by igblast
     SEQ_AA="sequence_aa"
+    SEQ_ALIGN_AA="sequence_alignment_aa"
     # make fasta files of the filtered sequences (only productive ones because this process is called after the productive filtering)
-    awk -v var1=${SEQ} -v var2=${SEQ_ALIGN} -v var3=${SEQ_AA} 'BEGIN{FS="\t" ; ORS="\n" ; OFS="\t"}{
+    awk -v var1=${SEQ} -v var2=${SEQ_ALIGN} -v var3=${SEQ_ALIGN_GAP} -v var4=${GERM_ALIGN_GAP} -v var5=${SEQ_AA} -v var6=${SEQ_ALIGN_AA} 'BEGIN{FS="\t" ; ORS="\n" ; OFS="\t"}{
         if(NR==1){
             NAME_COL_NB="FALSE"
             SEQ_COL_NB="FALSE"
             SEQ_ALIGN_COL_NB="FALSE"
+            SEQ_ALIGN_GAP_COL_NB="FALSE"
+            GERM_ALIGN_GAP_COL_NB="FALSE"
             SEQ_AA_COL_NB="FALSE"
+            SEQ_ALIGN_AA_COL_NB="FALSE"
             for(i4=1; i4<=NF; i4++){
                 if($i4=="sequence_id"){NAME_COL_NB=i4}
                 if($i4==var1){SEQ_COL_NB=i4}
                 if($i4==var2){SEQ_ALIGN_COL_NB=i4}
-                if($i4==var3){SEQ_AA_COL_NB=i4}
+                if($i4==var3){SEQ_ALIGN_GAP_COL_NB=i4}
+                if($i4==var4){GERM_ALIGN_GAP_COL_NB=i4}
+                if($i4==var5){SEQ_AA_COL_NB=i4}
+                if($i4==var6){SEQ_ALIGN_AA_COL_NB=i4}
             }
             if(NAME_COL_NB=="FALSE"){
-                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO sequence_id COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nFOR "$NAME_COL_NB", NO sequence_id COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
                 exit 1
             }
             if(SEQ_COL_NB=="FALSE"){
-                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO "var1" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nFOR "$NAME_COL_NB", NO "var1" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
                 exit 1
             }
             if(SEQ_ALIGN_COL_NB=="FALSE"){
-                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO "var2" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nFOR "$NAME_COL_NB", NO "var2" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                exit 1
+            }
+            if(SEQ_ALIGN_GAP_COL_NB=="FALSE"){
+                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nFOR "$NAME_COL_NB", NO "var3" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                exit 1
+            }
+            if(GERM_ALIGN_GAP_COL_NB=="FALSE"){
+                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nFOR "$NAME_COL_NB", NO "var4" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
                 exit 1
             }
             if(SEQ_AA_COL_NB=="FALSE"){
-                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO "var3" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nFOR "$NAME_COL_NB", NO "var5" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                exit 1
+            }
+            if(SEQ_ALIGN_AA_COL_NB=="FALSE"){
+                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nFOR "$NAME_COL_NB", NO "var6" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
                 exit 1
             }
         }else{
-            if($SEQ_COL_NB!~/^[-NATGC.]*$/){
-                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\n"var1" COLUMN NAME OF THE INPUT FILE MUST BE A NUCLEOTIDE SEQUENCE\nHERE IT MIGHT BE MADE OF AMINO ACIDS:\n"$SEQ_COL_NB"\n\n========\n\n"
+            if($SEQ_COL_NB!~/^[NATGC]*$/){
+                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nFOR "$NAME_COL_NB", "var1" COLUMN NAME OF THE INPUT FILE MUST BE A NUCLEOTIDE SEQUENCE WITHOUT . OR - \nHERE IT MAY BE AN ALIGNED SEQUENCE OR A AMINO ACIDS SEQUENCE:\n"$SEQ_COL_NB"\n\n========\n\n"
+                exit 1
+            }
+            if($SEQ_ALIGN_COL_NB!~/^[-NATGC.]*$/){
+                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nFOR "$NAME_COL_NB", "var2" COLUMN NAME OF THE INPUT FILE MUST BE A NUCLEOTIDE SEQUENCE\nHERE IT MIGHT BE MADE OF AMINO ACIDS:\n"$SEQ_COL_NB"\n\n========\n\n"
                 exit 1
             }
             gsub(/\./, "", $SEQ_ALIGN_COL_NB) # Remove dots from the sequence
             if($SEQ_ALIGN_COL_NB!~/^[NATGC]*$/){
-                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\n"var2" COLUMN NAME OF THE INPUT FILE MUST BE A NUCLEOTIDE SEQUENCE\nHERE IT MIGHT BE MADE OF AMINO ACIDS:\n"$SEQ_ALIGN_COL_NB"\n\n========\n\n"
+                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nFOR "$NAME_COL_NB", "var2" COLUMN NAME OF THE INPUT FILE MUST BE A NUCLEOTIDE SEQUENCE\nHERE IT MIGHT BE MADE OF AMINO ACIDS:\n"$SEQ_ALIGN_COL_NB"\n\n========\n\n"
+                exit 1
+            }
+            if($SEQ_ALIGN_GAP_COL_NB!~/^[NATGC.]*$/){
+                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nFOR "$NAME_COL_NB", "var3" COLUMN NAME OF THE INPUT FILE MUST BE A NUCLEOTIDE SEQUENCE WITH POTENTIAL IMGT GAPS (DOTS)\nHERE IT MIGHT BE MADE OF AMINO ACIDS:\n"$SEQ_COL_NB"\n\n========\n\n"
+                exit 1
+            }
+            TEMPO_SEQ_ALIGN_GAP=$SEQ_ALIGN_GAP_COL_NB
+            gsub(/\./, "", TEMPO_SEQ_ALIGN_GAP)
+            if(TEMPO_SEQ_ALIGN_GAP!~/^[NATGC]*$/){
+                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nFOR "$NAME_COL_NB", "var3" COLUMN NAME OF THE INPUT FILE MUST BE A NUCLEOTIDE SEQUENCE WITH POTENTIAL IMGT GAPS (DOTS)\nHERE IT MIGHT BE MADE OF AMINO ACIDS:\n"TEMPO_SEQ_ALIGN_GAP"\n\n========\n\n"
+                exit 1
+            }
+            if(TEMPO_SEQ_ALIGN_GAP!=$SEQ_ALIGN_COL_NB){
+                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nFOR "$NAME_COL_NB", "var2" and "var3" COLUMN NAME ARE NOT THE SAME SEQUENCE, GAP (DOTS) EXCLUDED.\n"var2"\n"$SEQ_ALIGN_COL_NB"\n"var3"\n"TEMPO_SEQ_ALIGN_GAP"\n\n========\n\n"
+                exit 1
+            }
+            if($GERM_ALIGN_GAP_COL_NB!~/^[NATGC.]*$/){
+                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nFOR "$NAME_COL_NB", "var4" COLUMN NAME OF THE INPUT FILE MUST BE A NUCLEOTIDE SEQUENCE WITH POTENTIAL IMGT GAPS (DOTS)\nHERE IT MIGHT BE MADE OF AMINO ACIDS:\n"$SEQ_COL_NB"\n\n========\n\n"
                 exit 1
             }
             print ">"$NAME_COL_NB"\n"$SEQ_COL_NB > "./productive_nuc/query/"$NAME_COL_NB"_query.fasta" # make fasta files of the query nuc sequences
-            print ">"$NAME_COL_NB"\n"$SEQ_AA_COL_NB > "./productive_aa/igblast/aa_"$NAME_COL_NB".fasta" # make fasta files of the sequence_aa column
             print ">"$NAME_COL_NB"\n"$SEQ_ALIGN_COL_NB > "./productive_nuc/align/"$NAME_COL_NB"_align.fasta" # make fasta files of the aligned nuc sequences without dots. This sequence will help to know if trimming must be done. Because igblast only returns aligned VDJ seq (without leader seq).
+            print ">"$NAME_COL_NB"\n"$SEQ_ALIGN_GAP_COL_NB > "./productive_nuc/align_with_gaps/"$NAME_COL_NB"_seq_align_with_gaps.fasta"
+            # print ">"$NAME_COL_NB"\n"$GERM_ALIGN_GAP_COL_NB > "./productive_nuc/align_with_gaps/"$NAME_COL_NB"_germ_align_with_gaps.fasta"
+            print ">"$NAME_COL_NB"\n"$SEQ_AA_COL_NB > "./productive_aa/igblast/aa_"$NAME_COL_NB".fasta" # make fasta files of the sequence_aa column
+            print ">"$NAME_COL_NB"\n"$SEQ_ALIGN_AA_COL_NB > "./productive_aa/align/aa_"$NAME_COL_NB"_align.fasta"
             print $NAME_COL_NB > "NAME.txt" # name of the line in a file
         }
     }' ${select_ch} |& tee -a trimtranslate.log
