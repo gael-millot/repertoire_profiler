@@ -18,7 +18,7 @@ params:
   itol_subscription: "TRUE"
 ---
 
-\n\n<br /><br />\n\n
+\n\n<br><br>\n\n
 
 
 
@@ -66,7 +66,7 @@ params:
 
 [comment]: <> (End of script to zoom on images)
 
-[comment]: <> (The following script is meant to display the tsvs in a readable way)
+[comment]: <> (The following script is meant to display the tsv files in a readable way)
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -125,7 +125,7 @@ Success ratio: ```r base::round(params$nb_seq_aligned / (params$nb_seq_aligned +
 
 ### Productive sequences
 
-**Productive sequences** are sequences with:<br /><ul><li>an open reading frame (start and stop codon).<br /></li><li>no defect in the start codon, splicing sites or regulatory elements.<br /></li><li>no internal stop codons.<br /></li><li>in-frame junction between regions.<br></ul>
+**Productive sequences** are sequences with:<br><ul><li>an open reading frame (start and stop codon).<br></li><li>no defect in the start codon, splicing sites or regulatory elements.<br></li><li>no internal stop codons.<br></li><li>in-frame junction between regions.<br></ul>
 
 Number of productive sequences: ```r params$nb_productive``` &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
 <span style="color:green">*productive_seq.tsv file in the [tsv](./tsv) folder*</span>
@@ -165,7 +165,9 @@ Productiveness ratio: ```r base::round(params$nb_productive / (params$nb_product
 <br>
 Click on a figure to enlarge. Reclick to go back to the report.
 <br>
-Only V, J and C genes are displayed here. See the [donuts.pdf](pdf/donuts.pdf) file in the pdf folder for the complete results, including the alleles (different copies of a same gene) proportions.
+Only V, J and C genes are displayed here. See the [donuts.pdf](./pdf/donuts.pdf) file in the [pdf](./pdf) folder for the complete results, including the alleles (different copies of a same gene) proportions.
+<br>
+Warning: only the first annotation is considered if several are presents in the v_call, j_call or c_call column of the productive_seq.tsv file.
 
 <br>
 
@@ -187,7 +189,9 @@ Only V, J and C genes are displayed here. See the [donuts.pdf](pdf/donuts.pdf) f
 <br>
 Click on a figure to enlarge. Reclick to go back to the report.
 <br>
-Only V, J and C genes are displayed here. See the [gene_repertoire.pdf](pdf/gene_repertoire.pdf) and [allele_repertoire.pdf](pdf/allele_repertoire.pdf) files in the pdf folder for the complete results, including the alleles (different copies of a same gene) counts.
+Only V, J and C genes are displayed here. See the [gene_repertoire.pdf](./pdf/gene_repertoire.pdf) and [allele_repertoire.pdf](./pdf/allele_repertoire.pdf) files in the [pdf](./pdf) folder for the complete results, including the alleles (different copies of a same gene) counts.
+<br>
+Warning: only the first annotation is considered if several are presents in the v_call, j_call or c_call column of the productive_seq.tsv file.
 
 <br>
 
@@ -196,7 +200,7 @@ Only V, J and C genes are displayed here. See the [gene_repertoire.pdf](pdf/gene
   <img src="`r params$vj_rep`" onclick="toggleFullscreen(this)" style="border: 2px solid black; width: 25%"/> 
 </div>
 
-<br />
+<br>
 
 
 
@@ -206,7 +210,7 @@ Only V, J and C genes are displayed here. See the [gene_repertoire.pdf](pdf/gene
 
 <br>
 
-**Clone-assigned sequences** are productive sequences with additionnal features:<br /><ul><li>germline clustering (clone ID).<br /></li><li>allele reannotation (germinal_v_call and germinal_j_call columns).<br /></li><li>mutation load.<br /></li><li>distance and sequence nickname (annotation from the metadata file) added.<br></ul>
+**Clone-assigned sequences** are productive sequences with additionnal features:<br><ul><li>germline clustering (clone ID).<br></li><li>allele reannotation (germline_v_call and germline_j_call columns).<br></li><li>mutation load.<br></li><li>distance and sequence nickname (annotation from the metadata file) added.<br></ul>
 
 Some sequences from the productive file can **fail to be clone-assigned**, and will not be in the clone_assigned_seq.tsv file. 
 
@@ -244,47 +248,63 @@ Passing ratio: ```r base::round(params$nb_clone_assigned / (params$nb_clone_assi
 
 <br>
 
-**Sequence Alignments** are available in the [alignments/nuc](./alignments/nuc) folder for nucleotide alignments and in the [alignments/aa](./alignments/aa) folder for amino acids alignments. Such alignments are performed using [Abalign](https://academic.oup.com/nar/article/51/W1/W17/7173809) (alignments guided by IMGT antibody numbering schemes).<br />Several options are possible to visualize and save as picture:<br /><ul><li>Click on the html file to see the alignment.<br /><ul><li>Warning: use the horizontal scrollbar of the window + the right click of the mouse on the alignment to see the left part of the representation.<br /></li><li>To change the aligments colors ("Nucleotide" recommanded for nucleotides):<br><br><br>
+**Sequence Alignments** are available in the [alignments/nuc](./alignments/nuc) folder for nucleotide alignments and in the [alignments/aa](./alignments/aa) folder for amino acids alignments. Such alignments are performed using [Abalign](https://academic.oup.com/nar/article/51/W1/W17/7173809) (alignments guided by IMGT antibody numbering schemes).<br>Several options are possible to visualize and save as picture:<br>
+<ul>
+<li>Click on the html file to see the alignment.<br>
+<ul>
+<li>Warning: use the horizontal scrollbar of the window + the right click of the mouse on the alignment to see the left part of the representation.</li><br>
+<li>To change the aligments colors ("Nucleotide" recommanded for nucleotides):<br><br><br>
 <div class="image-container">
-  <img src="doc_images/color.png" onclick="toggleFullscreen(this)" />
+<img src="doc_images/color.png" onclick="toggleFullscreen(this)" />
 </div>
-<br /></li><li>To annotate the FR and CDR regions, use the .gff file in the same folder than the opened .html file:<br><br><br>
+</li><br>
+<li>To annotate the FR and CDR regions, use the .gff file in the same folder than the opened .html file:<br><br><br>
 <div class="image-container">
-  <img src="doc_images/gff.png" onclick="toggleFullscreen(this)" />
+<img src="doc_images/gff.png" onclick="toggleFullscreen(this)" />
 </div>
-<br />Schematic illustration of these regions:<br><br><br>
+</li><br>
+<li>Schematic illustration of these regions:<br><br><br>
 <div class="image-container">
-  <img src="doc_images/FR_CDR.png" onclick="toggleFullscreen(this)" />
+<img src="doc_images/FR_CDR.png" onclick="toggleFullscreen(this)" />
 </div>
 <div class="image-container">
-  <img src="doc_images/collier_de_perle.png" onclick="toggleFullscreen(this)" />
+<img src="doc_images/collier_de_perle.png" onclick="toggleFullscreen(this)" />
 </div>
-<br /></li><li>Export as picture does not work well as part of the sequence not displayed are not exported (screenshot).<br><br><br>
-<ul><li>In [Jalview](https://www.jalview.org/download/).<br /><ul><li>import the .fasta file with the same name as the .html file:<br><br><br>
+</li><br>
+<li>Export as picture does not work well as part of the sequence not displayed are not exported (screenshot).</li><br><br><br>
+</ul>
+</li>
+<li>In [Jalview](https://www.jalview.org/download/).<br>
+<ul>
+<li>import the .fasta file with the same name as the .html file:<br><br><br>
 <div class="image-container">
-  <img src="doc_images/jalview_open.png" onclick="toggleFullscreen(this)" />
+<img src="doc_images/jalview_open.png" onclick="toggleFullscreen(this)" />
 </div>
-<br /></li><li>Add colors:<br><br><br>
+</li><br>
+<li>Add colors:<br><br><br>
 <div class="image-container">
-  <img src="doc_images/jalview_color.png" onclick="toggleFullscreen(this)" />
+<img src="doc_images/jalview_color.png" onclick="toggleFullscreen(this)" />
 </div>
-<br /></li><li>Set a threshold to see the differences:<br><br><br>
+</li><br><li>Set a threshold to see the differences:<br><br><br>
 <div class="image-container">
-  <img src="doc_images/jalview_diff.png" onclick="toggleFullscreen(this)" />
+<img src="doc_images/jalview_diff.png" onclick="toggleFullscreen(this)" />
 </div>
-<br /></li><li>A high threshold set all the columns with at least one difference in white:<br><br><br>
+</li><br><li>A high threshold set all the columns with at least one difference in white:<br><br><br>
 <div class="image-container">
-  <img src="doc_images/jalview_diff_threshold_high.png" onclick="toggleFullscreen(this)" />
+<img src="doc_images/jalview_diff_threshold_high.png" onclick="toggleFullscreen(this)" />
 </div>
-<br /></li><li>A low threshold set all the different minority events in each column in white:<br><br><br>
+</li><br><li>A low threshold set all the different minority events in each column in white:<br><br><br>
 <div class="image-container">
-  <img src="doc_images/jalview_diff_threshold_low.png" onclick="toggleFullscreen(this)" />
+<img src="doc_images/jalview_diff_threshold_low.png" onclick="toggleFullscreen(this)" />
 </div>
-<br /></li><li>To export as .png for instance:<br><br><br>
+</li><br><li>To export as .png for instance:<br><br><br>
 <div class="image-container">
-  <img src="doc_images/jalview_export.png" onclick="toggleFullscreen(this)" />
+<img src="doc_images/jalview_export.png" onclick="toggleFullscreen(this)" />
 </div>
-
+</li>
+</ul>
+</li>
+</ul>
 <br><br><br>
 
 ###  Phylogeny
@@ -302,7 +322,7 @@ Alignment visualization is available for each clonal group used in each tree, in
 ###  Backup
 
 
-See the [reports](./reports) folder for all the details of the analysis, including:<br /><ul><li>**nextflow.config** Parameter settings.<br /></li><li>**Run_info.txt** Variables.<br /></li><li>**trace.txt** and **timeline.html** Date of execution, CPU% and Memory requirement for each steps.<br></ul>
+See the [reports](./reports) folder for all the details of the analysis, including:<br><ul><li>**nextflow.config** Parameter settings.<br></li><li>**Run_info.txt** Variables.<br></li><li>**trace.txt** and **timeline.html** Date of execution, CPU% and Memory requirement for each steps.<br></ul>
 
 ```{r include = FALSE}
 #remove work directory from current directory
@@ -314,7 +334,7 @@ path <- paste0(path, "/")
 Warning: the full .nextflow.log is in: ```r path```. Indeed, the one in the [reports](./reports) folder is not complete (miss the end).
 
 
-<br /><br />
+<br><br>
 
 <style>
   #TOC { max-width: 200px !important;}

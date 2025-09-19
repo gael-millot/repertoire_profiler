@@ -205,7 +205,7 @@ process igblast {
 
     # Alignment <-> annotate sequence using VDJ info
     # See https://changeo.readthedocs.io/en/stable/tools/AssignGenes.html for the details
-    # AssignGenes.py igblast -s \${FILE}.fa -b /usr/local/share/igblast --organism ${igblast_organism} --loci ${igblast_loci} --format blast |& tee -a igblast_report.log # *_igblast.fmt7
+    AssignGenes.py igblast -s \${FILE}.fa -b /usr/local/share/igblast --organism ${igblast_organism} --loci ${igblast_loci} --format blast |& tee -a igblast_report.log # *_igblast.fmt7
     AssignGenes.py igblast -s \${FILE}.fa -b /usr/local/share/igblast --organism ${igblast_organism} --loci ${igblast_loci} --format airr |& tee -a igblast_report.log # output is *_igblast.tsv
     # test that the AssignGenes.py igblast --format airr is ok
     read -r firstline < ./\${FILE}_igblast.tsv
@@ -218,13 +218,62 @@ process igblast {
         exit 1
     fi
     # end test that the AssignGenes.py igblast --format airr is ok
-    # convert to tsv (not required anymore)
+    # convert to tsv
     # Also convert data from the web interface IMGT/HighV-QUEST
-    # MakeDb.py igblast -i ./\${FILE}_igblast.fmt7 -s ./\${FILE}.fa -r \${VDJ_FILES} --extended |& tee -a igblast_report.log
-    # convert to tsv (not required anymore)
+    MakeDb.py igblast -i ./\${FILE}_igblast.fmt7 -s ./\${FILE}.fa -r \${VDJ_FILES} --extended -o blast_format.tsv |& tee -a igblast_report.log
+    # end convert to tsv
+    # add _with_gaps into 
+    awk 'BEGIN{FS="\\t" ; ORS="" ; OFS=""}
+        # means that work only on the first file
+        FNR==NR{ 
+            if(FNR==1){
+            # first line
+                SEQ_ALIGN_COL_NB="FALSE"
+                GERM_ALIGN_COL_NB="FALSE"
+                for(i4=1; i4<=NF; i4++){
+                    if(\$i4=="sequence_alignment"){SEQ_ALIGN_COL_NB=i4}
+                    if(\$i4=="germline_alignment"){GERM_ALIGN_COL_NB=i4}
+                }
+                if(SEQ_ALIGN_COL_NB=="FALSE"){
+                    print "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\\n\\nNO sequence_alignment COLUMN NAME FOUND IN THE INPUT FILE\\n\\n========\\n\\n"
+                    exit 1
+                }
+                if(GERM_ALIGN_COL_NB=="FALSE"){
+                    print "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\\n\\nNO germline_alignment COLUMN NAME FOUND IN THE INPUT FILE\\n\\n========\\n\\n"
+                    exit 1
+                }
+            }else{
+                gsub(/\\r/, "") 
+                # remove CR
+                SEQ_ALIGN=\$SEQ_ALIGN_COL_NB
+                GERM_ALIGN=\$GERM_ALIGN_COL_NB
+            }
+            next   # important!! skip processing in second block for first file
+        }
+        FNR!=NR {
+            # mean that works only for the second file
+            if(FNR==1){ 
+                # first line
+                print \$0"\\tsequence_alignment_with_gaps\\tgermline_alignment_with_gaps\\n" > "trimtranslate.tsv"
+            }
+            print \$0"\\t"SEQ_ALIGN"\\t"GERM_ALIGN"\\n" > "trimtranslate.tsv"
+        }
+    ' blast_format.tsv ./\${FILE}_igblast.tsv |& tee -a igblast_report.log
     # if no alignment
-    ALIGNED=\$(awk 'BEGIN{FS="\\t"}NR==2{if(\$8 == ""){print "FALSE"}else{print "TRUE"}}' ./\${FILE}_igblast.tsv)
-    # NR==2{if(\$8 is the line 2 and the field "productive", tested if empty (thus unaligned)
+    ALIGNED=\$(
+        awk 'BEGIN{FS="\\t"}
+            if(NR==1){ # first line
+                for(i4=1; i4<=NF; i4++){
+                    if(\$i4=="productive"){PROD=i4}
+                }
+                if(PROD=="FALSE"){
+                    print "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\\n\\nNO productive COLUMN NAME FOUND IN THE INPUT FILE\\n\\n========\\n\\n"
+                    exit 1
+                }
+            }
+            if(NR==2){if(\$PROD == ""){print "FALSE"}else{print "TRUE"}}
+        ' ./\${FILE}_igblast.tsv
+    )
     cp ./\${FILE}_igblast.tsv igblast_unaligned_seq.tsv
     cp ./\${FILE}_igblast.tsv igblast_aligned_seq.tsv
     if [[ "\$ALIGNED" == "FALSE" ]]; then
