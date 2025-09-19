@@ -415,7 +415,7 @@ process seq_name_replacement {
 // + isotype class (4 first characters of the c_gene column)
 process data_assembly {
     label 'immcantation'
-    publishDir path: "${out_path}/files", mode: 'copy', pattern: "{productive_seq.tsv}", overwrite: false
+    publishDir path: "${out_path}/tsv", mode: 'copy', pattern: "{productive_seq.tsv}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{data_assembly.log}", overwrite: false
     cache 'true'
 
@@ -572,7 +572,7 @@ process metadata_check { // cannot be in germ_tree_vizu because I have to use th
 
 process repertoire {
     label 'r_ext'
-    publishDir path: "${out_path}/files", mode: 'copy', pattern: "{*_repertoire.pdf}", overwrite: false
+    publishDir path: "${out_path}/pdf", mode: 'copy', pattern: "{*_repertoire.pdf}", overwrite: false
     publishDir path: "${out_path}/figures/png", mode: 'copy', pattern: "{*.png}", overwrite: false
     publishDir path: "${out_path}/figures/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
     publishDir path: "${out_path}/repertoires", mode: 'copy', pattern: "{rep_*.tsv}", overwrite: false
@@ -668,7 +668,7 @@ process distance_hist {
 
 process histogram_assembly {
     label 'r_ext'
-    publishDir path: "${out_path}/files", mode: 'copy', pattern: "{seq_distance.pdf}", overwrite: false
+    publishDir path: "${out_path}/pdf", mode: 'copy', pattern: "{seq_distance.pdf}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{histogram_assembly.log}", overwrite: false
     cache 'true'
 
@@ -692,7 +692,7 @@ process histogram_assembly {
 process clone_assignment {
     label 'immcantation'
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
-    publishDir path: "${out_path}/files", mode: 'copy', pattern: "non_clone_assigned_sequence.tsv", overwrite: false
+    publishDir path: "${out_path}/tsv", mode: 'copy', pattern: "non_clone_assigned_sequence.tsv", overwrite: false
     cache 'true'
 
     input:
@@ -1160,8 +1160,8 @@ process GermlineGenes{
 
 process germ_tree_vizu {
     label 'r_ext'
-    publishDir path: "${out_path}/files", mode: 'copy', pattern: "{germ_tree.pdf}", overwrite: false
-    publishDir path: "${out_path}/files", mode: 'copy', pattern: "{germ_no_tree.pdf}", overwrite: false
+    publishDir path: "${out_path}/pdf", mode: 'copy', pattern: "{germ_tree.pdf}", overwrite: false
+    publishDir path: "${out_path}/pdf", mode: 'copy', pattern: "{germ_no_tree.pdf}", overwrite: false
     publishDir path: "${out_path}/figures/png", mode: 'copy', pattern: "{*.png}", overwrite: false
     publishDir path: "${out_path}/figures/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
     publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{all_trees.RData}", overwrite: false
@@ -1505,7 +1505,8 @@ process print_report{
     """
     #!/bin/bash -ue
     cp ${template_rmd} report_file.rmd
-    cp -r "${out_path}/files" .
+    cp -r "${out_path}/tsv" .
+    cp -r "${out_path}/pdf" .
     cp -r "${projectDir}/bin/doc_images" .
     Rscript -e '
 
@@ -1628,7 +1629,7 @@ process donut {
 
 process donut_assembly {
     label 'r_ext'
-    publishDir path: "${out_path}/files", mode: 'copy', pattern: "{donuts.pdf}", overwrite: false
+    publishDir path: "${out_path}/pdf", mode: 'copy', pattern: "{donuts.pdf}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{donut_assembly.log}", overwrite: false
     cache 'true'
 
@@ -2069,7 +2070,8 @@ workflow {
         modules
     )
 
-    file("${out_path}/files").mkdirs()
+    file("${out_path}/tsv").mkdirs()
+    file("${out_path}/pdf").mkdirs()
 
     igblast_data_check(
         igblast_organism, 
@@ -2087,9 +2089,9 @@ workflow {
     tsv_ch1 = igblast.out.db_pass_ch
     tsv_ch1.count().subscribe{ n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE igblast PROCESS\n\nCHECK THAT THE igblast_organism, igblast_loci AND igblast_variable_ref_files ARE CORRECTLY SET IN THE nextflow.config FILE\n\n========\n\n"}}
     tsv_ch2 = tsv_ch1.collectFile(name: "passed_igblast_seq.tsv", skip: 1, keepHeader: true)
-    tsv_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
+    tsv_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
     db_unpass = igblast.out.db_unpass_ch.collectFile(name: "failed_igblast_seq.tsv", skip: 1, keepHeader: true)
-    db_unpass.subscribe{it -> it.copyTo("${out_path}/files")}
+    db_unpass.subscribe{it -> it.copyTo("${out_path}/tsv")}
     nb1 = tsv_ch2.countLines(keepHeader: true) 
     nb2 =  db_unpass.countLines(keepHeader: true)
     // nb1.view()
@@ -2107,7 +2109,7 @@ workflow {
     select_ch2 = parseDb_filtering.out.select_ch.collectFile(name: "productive_seq_init.tsv", skip: 1, keepHeader: true)
     parseDb_filtering.out.unselect_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nO UNPRODUCTIVE SEQUENCE FILES FOLLOWING THE parseDb_filtering PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // because an empty file must be present
     unselect_ch2 = parseDb_filtering.out.unselect_ch.collectFile(name: "unproductive_seq.tsv", skip: 1, keepHeader: true)
-    unselect_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
+    unselect_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
     nb1_b = select_ch2.countLines()
     nb2_b = unselect_ch2.countLines()
     nb1_b.subscribe { n -> if ( n == 1 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FOLLOWING THE parseDb_filtering PROCESS\nSEE THE EMPTY productive_seq.tsv FILE AND THE unproductive_seq.tsv FILE IN THE OUTPUT FOLDER\n\n========\n\n"}}
@@ -2236,7 +2238,7 @@ workflow {
 
     clone_assigned_seq = mutation_load.out.mutation_load_ch.collectFile(name: "clone_assigned_seq.tsv", skip: 1, keepHeader: true)
     nb_clone_assigned = clone_assigned_seq.countLines() - 1 // Minus 1 because 1st line = column names
-    clone_assigned_seq.subscribe{it -> it.copyTo("${out_path}/files")}
+    clone_assigned_seq.subscribe{it -> it.copyTo("${out_path}/tsv")}
 
     mutation_load_filtered_ch = mutation_load.out.mutation_load_ch.filter{ file -> file.countLines() > clone_nb_seq.toInteger() } // Only keep clonal groups that have a number of sequences superior to clone_nb_seq (variable defined in nextflow.config)
 
@@ -2246,10 +2248,10 @@ workflow {
     )
 
     germline_genes_ch2 = GermlineGenes.out.germline_genes_ch.collectFile(name: "germ_tree_seq.tsv", skip: 1, keepHeader: true)
-    germline_genes_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
+    germline_genes_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
     germline_genes_filtered_ch = GermlineGenes.out.germline_genes_ch.filter{ file -> file.countLines() > clone_nb_seq.toInteger() } // Only keep clonal groups that have a number of sequences superior to clone_nb_seq (variable defined in nextflow.config)
     //germline_genes_filtered_ch2 = germline_genes_filtered_ch.collectFile(name : "germline_genes_filtered.tsv", skip: 1, keepHeader: true)
-    //germline_genes_filtered_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
+    //germline_genes_filtered_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
 
 
 
@@ -2281,26 +2283,26 @@ workflow {
         print("\n\nWARNING: ALL SEQUENCES IN TREES FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_dismissed_seq.tsv FILE RETURNED\n\n")
     }}
     no_germ_tree_ch2 = get_germ_tree.out.no_germ_tree_ch.collectFile(name: "germ_tree_dismissed_seq.tsv", skip: 1, keepHeader: true)
-    no_germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
+    no_germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
 
     get_germ_tree.out.germ_tree_ch.count().subscribe { n -> if ( n == 0 ){
         print("\n\nWARNING: NO SEQUENCES IN TREES FOLLOWING THE get_germ_tree PROCESS -> EMPTY seq_for_germ_tree.tsv FILE RETURNED\n\n")
     }}
     germ_tree_ch2 = get_germ_tree.out.germ_tree_ch.collectFile(name: "seq_for_germ_tree.tsv", skip: 1, keepHeader: true)
-    // germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
+    // germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
     germ_tree_ch3 = get_germ_tree.out.germ_tree_ch.flatten().filter{ file -> file.countLines() > clone_nb_seq.toInteger() }
 
     get_germ_tree.out.no_cloneID_ch.count().subscribe { n -> if ( n == 0 ){
         print("\n\nWARNING: ALL SEQUENCES IN CLONAL GROUP FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_dismissed_clone_id.tsv FILE RETURNED\n\n")
     }}
     no_cloneID_ch2 = get_germ_tree.out.no_cloneID_ch.collectFile(name: "germ_tree_dismissed_clone_id.tsv")
-    no_cloneID_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
+    no_cloneID_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
 
     get_germ_tree.out.cloneID_ch.count().subscribe { n -> if ( n == 0 ){
         print("\n\nWARNING: NO CLONAL GROUP FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_clone_id.tsv and germ_tree.pdf FILES RETURNED\n\n")
     }}
     cloneID_ch2 = get_germ_tree.out.cloneID_ch.collectFile(name: "germ_tree_clone_id.tsv")
-    cloneID_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
+    cloneID_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
 
     get_germ_tree.out.get_germ_tree_log_ch.collectFile(name: "get_germ_tree.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
 
@@ -2331,7 +2333,7 @@ workflow {
         print("\n\nWARNING: -> NO germ_tree_dup_seq_not_displayed.tsv FILE RETURNED\n\n")
     }
     germ_tree_dup_seq_not_displayed_ch2 = germ_tree_vizu.out.germ_tree_dup_seq_not_displayed_ch.flatten().collectFile(name: "germ_tree_dup_seq_not_displayed.tsv", skip: 1, keepHeader: true) // flatten split the list into several objects which is required by collectFile()
-    germ_tree_dup_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
+    germ_tree_dup_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
 
 
 
@@ -2375,7 +2377,7 @@ workflow {
         print("\n\nWARNING: -> NO donut_stats.tsv FILE RETURNED FOLLOWING THE donut PROCESS\n\n")
     }}
     donut_tsv_ch2 = donut.out.donut_tsv_ch.collectFile(name: "donut_stats.tsv", skip: 1, keepHeader: true)
-    donut_tsv_ch2.subscribe{it -> it.copyTo("${out_path}/files")}
+    donut_tsv_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
 
 
 
