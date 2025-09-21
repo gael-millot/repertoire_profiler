@@ -450,7 +450,7 @@ tempo.title <- paste0(
         ifelse(
             kind == "tree", 
             paste0(
-                "Donut plot of the clone-assigned sequences (see the corresponding germ_tree_seq.tsv), grouped by same ", type_text, "\n\n",
+                "Donut plot of the sequences in trees (see the corresponding germ_tree_seq.tsv), grouped by same ", type_text, "\n\n",
                 "Kind of sequences: ",
                 kind
             ), 
