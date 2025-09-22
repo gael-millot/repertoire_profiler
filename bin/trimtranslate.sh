@@ -176,7 +176,7 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
         {
             if(FNR==1){ # first line
                 gsub(/\r/, "") # remove CR
-                print $0"\ttrimmed_sequence\tis_sequence_trimmed\tremoved_sequence\ttrimmed_sequence_aa\tquery_sequence_aa\taa_identical\tsequence_alignment_aa_stop\tgermline_alignment_aa_stop\ttrimmed_sequence_aa_stop\tquery_sequence_aa_stop\n" > "trimtranslate.tsv"
+                print $0"\ttrimmed_sequence\tis_sequence_trimmed\tremoved_sequence\ttrimmed_sequence_aa\tquery_sequence_aa\taa_identical\tsequence_aa_stop\tsequence_alignment_aa_stop\tgermline_alignment_aa_stop\ttrimmed_sequence_aa_stop\tquery_sequence_aa_stop\n" > "trimtranslate.tsv"
                 # header added to trimtranslate.tsv
                 SEQ_COL_NB="FALSE"
                 SEQ_AA_COL_NB="FALSE"
@@ -223,6 +223,11 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
                 }else{
                     IDENTICAL="FALSE"
                 }
+                if($SEQ_AA_COL_NB ~ /\*/){
+                    SEQ_AA_STOP="TRUE"
+                }else{
+                    SEQ_AA_STOP="FALSE"
+                }
                 if($SEQ_ALIGN_AA_COL_NB ~ /\*/){
                     SEQ_ALIGN_AA_STOP="TRUE"
                 }else{
@@ -243,7 +248,7 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
                 }else{
                     INI_AA_SEQ_STOP="FALSE"
                 }
-                print $0"\t"var2"\t"var3"\t"var4"\t"var5"\t"var6"\t"IDENTICAL"\t"SEQ_ALIGN_AA_STOP"\t"GERM_ALIGN_AA_STOP"\t"TRIM_AA_SEQ_STOP"\t"INI_AA_SEQ_STOP"\n" > "trimtranslate.tsv"
+                print $0"\t"var2"\t"var3"\t"var4"\t"var5"\t"var6"\t"IDENTICAL"\t"SEQ_AA_STOP"\t"SEQ_ALIGN_AA_STOP"\t"GERM_ALIGN_AA_STOP"\t"TRIM_AA_SEQ_STOP"\t"INI_AA_SEQ_STOP"\n" > "trimtranslate.tsv"
             }
         }
     ' ${select_ch} |& tee -a trimtranslate.log
