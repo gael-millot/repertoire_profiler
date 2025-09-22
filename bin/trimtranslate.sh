@@ -176,13 +176,17 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
         {
             if(FNR==1){ # first line
                 gsub(/\r/, "") # remove CR
-                print $0"\ttrimmed_sequence\tis_sequence_trimmed\tremoved_sequence\ttrimmed_sequence_aa\tquery_sequence_aa\taa_identical\n" > "trimtranslate.tsv"
+                print $0"\ttrimmed_sequence\tis_sequence_trimmed\tremoved_sequence\ttrimmed_sequence_aa\tquery_sequence_aa\taa_identical\tsequence_alignment_aa_stop\tgermline_alignment_aa_stop\ttrimmed_sequence_aa_stop\tquery_sequence_aa_stop\n" > "trimtranslate.tsv"
                 # header added to trimtranslate.tsv
                 SEQ_COL_NB="FALSE"
                 SEQ_AA_COL_NB="FALSE"
+                SEQ_ALIGN_AA_COL_NB="FALSE"
+                GERM_ALIGN_AA_COL_NB="FALSE"
                 for(i4=1; i4<=NF; i4++){
                     if($i4==var1){SEQ_COL_NB=i4}
                     if($i4==var7){SEQ_AA_COL_NB=i4}
+                    if($i4=="sequence_alignment_aa"){SEQ_ALIGN_AA_COL_NB=i4}
+                    if($i4=="germline_alignment_aa"){GERM_ALIGN_AA_COL_NB=i4}
                 }
                 if(SEQ_COL_NB=="FALSE"){
                     print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO "var1" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
@@ -190,6 +194,14 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
                 }
                 if(SEQ_AA_COL_NB=="FALSE"){
                     print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO "var7" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                    exit 1
+                }
+                if(SEQ_ALIGN_AA_COL_NB=="FALSE"){
+                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO sequence_alignment_aa COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                    exit 1
+                }
+                if(GERM_ALIGN_AA_COL_NB=="FALSE"){
+                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO germline_alignment_aa COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
                     exit 1
                 }
                 # no need the recheck as above because already done above
@@ -207,11 +219,31 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
                 #     }
                 # }
                 if($SEQ_AA_COL_NB==var5){
-                    TEMPO_WARN="TRUE"
+                    IDENTICAL="TRUE"
                 }else{
-                    TEMPO_WARN="FALSE"
+                    IDENTICAL="FALSE"
                 }
-                print $0"\t"var2"\t"var3"\t"var4"\t"var5"\t"var6"\t"TEMPO_WARN"\n" > "trimtranslate.tsv"
+                if($SEQ_ALIGN_AA_COL_NB ~ /\*/){
+                    SEQ_ALIGN_AA_STOP="TRUE"
+                }else{
+                    SEQ_ALIGN_AA_STOP="FALSE"
+                }
+                if($GERM_ALIGN_AA_COL_NB ~ /\*/){
+                    GERM_ALIGN_AA_STOP="TRUE"
+                }else{
+                    GERM_ALIGN_AA_STOP="FALSE"
+                }
+                if(var5 ~ /\*/){
+                    TRIM_AA_SEQ_STOP="TRUE"
+                }else{
+                    TRIM_AA_SEQ_STOP="FALSE"
+                }
+                if(var6 ~ /\*/){
+                    INI_AA_SEQ_STOP="TRUE"
+                }else{
+                    INI_AA_SEQ_STOP="FALSE"
+                }
+                print $0"\t"var2"\t"var3"\t"var4"\t"var5"\t"var6"\t"IDENTICAL"\t"SEQ_ALIGN_AA_STOP"\t"GERM_ALIGN_AA_STOP"\t"TRIM_AA_SEQ_STOP"\t"INI_AA_SEQ_STOP"\n" > "trimtranslate.tsv"
             }
         }
     ' ${select_ch} |& tee -a trimtranslate.log
