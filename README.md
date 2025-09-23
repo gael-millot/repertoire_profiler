@@ -239,7 +239,7 @@ Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.
 <br><br>
 Use the scrollbar at the bottom of the table if the text is cut.
 <br><br>
-<table style="width:100%; border-collapse:collapse; table-layout:auto; word-break:break-word;">
+<table style="width:100%; border-collapse:collapse; overflow-wrap: anywhere;table-layout:auto; word-break:break-word;">
     <tr>
         <th>
             repertoire_profiler_<UNIQUE_ID> folders and files
