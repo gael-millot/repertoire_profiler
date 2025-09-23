@@ -295,6 +295,36 @@ Use the scrollbar at the bottom of the table if the text is cut.
     </tr>
     <tr>
         <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            phylo
+        </th>
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            Folder containing phylogenic tree files in amino-acid (aa folder) and nucleotide (nuc folder) sequences of each clonal group with at least the number of sequences set in the <i>clone_nb_seq</i> parameter of the <i>nextflow.config</i> file: <ul style="padding-left:1.2em; margin:0;"><li>*fasta.treefile: phylogenetic tree in Newick format for each sequence group in the phylo file (not constructed for groups with fewer than 4 sequences).</li><li>*fasta_itol_url.txt (if the <i>phylo_tree_itol_subscription</i> parameter of the <i>newtflow.config</i> file is TRUE): URL of the phylogenetic tree in iTOL.</li></ul><br>Warning: trees are perfomed using the variable region of the sequences only. 
+        </td>
+    </tr>
+    <tr>
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            fasta
+        </th>
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            Folder containing all fasta files:
+            <ul style="padding-left:1.2em; margin:0;"><li><b>clonal_full_length_nuc</b>: folder containing the full length sequences (<i>sequence</i> column of the  <i>productive_seq.tsv</i> file) belonging to the same clonal group (i.e.,  with the same value in the <i>clone_id</i> column of the  <i>productive_seq.tsv</i> file). Each file is named as <i>sequence_&lt;CLONE_ID&gt;_&lt;V_GENE&gt;-&lt;J_GENE&gt;.fasta</i>. The sequences are also those indicated in the <i>sequence</i> and <i>germline_d_mask_no_gaps</i> columns of the <i>clone_assigned_seq.tsv</i> file. Warning: the <i>germline_d_mask_clone_id_&lt;CLONE_ID&gt;_&lt;V_GENE&gt;-&lt;J_GENE&gt;</i> sequence is always the variable region only (thus, can be shorter compared to the other sequences).
+            </li><li><b>clonal_variable_nuc</b>: idem to <i>clonal_full_length_nuc</i> but only for the variable region of the sequences (<i>sequence_alignment</i> column of the <i>productive_seq.tsv</i> file).
+            </li><li><b>clonal_full_length_aa</b>: idem to <i>clonal_full_length_nuc</i> but for aa sequences (<i>sequence_aa</i> column of the  <i>productive_seq.tsv</i> file, <i>sequence_aa</i> and <i>germline_d_mask_aa_no_gaps</i> columns of the <i>clone_assigned_seq.tsv</i> file. Each file is named as <i>sequence_aa_&lt;CLONE_ID&gt;_&lt;V_GENE&gt;-&lt;J_GENE&gt;.fasta</i>.
+            </li><li><b>productive_nuc</b>: folder containing fasta files of the nucleotidic sequences in the <i>productive_seq.tsv</i> file.
+            <ul style="padding-left:1.2em; margin:0;"><li><b>query</b>: folder of the sequences from the <i>sequence</i> column.
+            </li><li><b>removed</b>: folder of the sequences from the <i>removed_sequence</i> column.
+            </li><li><b>trimmed</b>: folder of the sequences from the <i>trimmed_sequence</i> column.
+            </li><li><b>align</b>: folder of the sequences from the <i>sequence_alignment</i> column.
+            </li><li><b>align_with_gaps</b>: folder of the sequences from the <i>sequence_alignment_with_gaps</i> column.
+            </li></ul></li><li><b>productive_aa</b>: folder containing fasta files of the translated sequences in the <i>productive_seq.tsv</i> file.
+            <ul style="padding-left:1.2em; margin:0;"><li><b>query</b>: folder of the sequences from the <i>query_sequence_aa</i> column.
+            </li><li><b>igblast</b>: folder of the sequences from the <i>sequence_aa</i> column.
+            </li><li><b>trimmed</b>: folder of the sequences from the <i>trimmed_sequence_aa</i> column.
+            </li><li><b>align</b>: folder of the sequences from the <i>sequence_alignment_aa</i> column.</li></ul>  <b>IMPORTANT NOTE ABOUT CLONAL GROUPS</b> :<br>If the <i>clone_strategy</i> parameter in <i>nextflow.config</i> is set to "set", a single clonal group may contain different gene assignments. In such cases, the germline sequence included in the aligned FASTA file is selected as the most frequent germline sequence within the group.<br>If multiple germline sequences are equally frequent, the one associated with the first sequence (after sorting the group by sequence ID) is used. A warning is written to the log file whenever multiple germline sequences are detected in a group. 
+        </td>
+    </tr>
+    <tr>
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             pdf
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
