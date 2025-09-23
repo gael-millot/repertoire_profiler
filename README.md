@@ -239,7 +239,7 @@ Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.
 <br><br>
 Use the scrollbar at the bottom of the table if the text is cut.
 <br><br>
-
+<div style="overflow-x:auto; max-width:100%;">
 <table style="width:100%; border-collapse:collapse; overflow-wrap: anywhere;table-layout:auto; word-break:break-word;">
     <tr>
         <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
@@ -640,7 +640,7 @@ Use the scrollbar at the bottom of the table if the text is cut.
         </td>
     </tr>
 </table>
-
+</div>
 <br><br>
 ## VERSIONS
 
