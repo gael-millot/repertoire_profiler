@@ -105,10 +105,6 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
                 print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nFOR "$NAME_COL_NB", "var3" COLUMN NAME OF THE INPUT FILE MUST BE A NUCLEOTIDE SEQUENCE WITH POTENTIAL IMGT GAPS (DOTS)\nHERE IT MIGHT BE MADE OF AMINO ACIDS:\n"TEMPO_SEQ_ALIGN_GAP"\n\n========\n\n"
                 exit 1
             }
-            if(TEMPO_SEQ_ALIGN_GAP!=$SEQ_ALIGN_COL_NB){
-                print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nFOR "$NAME_COL_NB", "var2" and "var3" COLUMN NAME ARE NOT THE SAME SEQUENCE, GAP (DOTS) EXCLUDED.\n"var2"\n"$SEQ_ALIGN_COL_NB"\n"var3"\n"TEMPO_SEQ_ALIGN_GAP"\n\n========\n\n"
-                exit 1
-            }
             if($GERM_ALIGN_GAP_COL_NB!~/^[NATGC.]*$/){
                 print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nFOR "$NAME_COL_NB", "var4" COLUMN NAME OF THE INPUT FILE MUST BE A NUCLEOTIDE SEQUENCE WITH POTENTIAL IMGT GAPS (DOTS)\nHERE IT MIGHT BE MADE OF AMINO ACIDS:\n"$SEQ_COL_NB"\n\n========\n\n"
                 exit 1
@@ -176,17 +172,21 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
         {
             if(FNR==1){ # first line
                 gsub(/\r/, "") # remove CR
-                print $0"\ttrimmed_sequence\tis_sequence_trimmed\tremoved_sequence\ttrimmed_sequence_aa\tquery_sequence_aa\taa_identical\tsequence_aa_stop\tsequence_alignment_aa_stop\tgermline_alignment_aa_stop\ttrimmed_sequence_aa_stop\tquery_sequence_aa_stop\n" > "trimtranslate.tsv"
+                print $0"\ttrimmed_sequence\tis_sequence_trimmed\tremoved_sequence\ttrimmed_sequence_aa\tquery_sequence_aa\talign_seq_identical\taa_identical\tsequence_aa_stop\tsequence_alignment_aa_stop\tgermline_alignment_aa_stop\ttrimmed_sequence_aa_stop\tquery_sequence_aa_stop\n" > "trimtranslate.tsv"
                 # header added to trimtranslate.tsv
                 SEQ_COL_NB="FALSE"
                 SEQ_AA_COL_NB="FALSE"
                 SEQ_ALIGN_AA_COL_NB="FALSE"
                 GERM_ALIGN_AA_COL_NB="FALSE"
+                SEQ_ALIGN_COL_NB="FALSE"
+                SEQ_ALIGN_GAP_COL_NB="FALSE"
                 for(i4=1; i4<=NF; i4++){
                     if($i4==var1){SEQ_COL_NB=i4}
                     if($i4==var7){SEQ_AA_COL_NB=i4}
                     if($i4=="sequence_alignment_aa"){SEQ_ALIGN_AA_COL_NB=i4}
                     if($i4=="germline_alignment_aa"){GERM_ALIGN_AA_COL_NB=i4}
+                    if($i4=="sequence_alignment"){SEQ_ALIGN_COL_NB=i4}
+                    if($i4=="sequence_alignment_with_gaps"){SEQ_ALIGN_GAP_COL_NB=i4}
                 }
                 if(SEQ_COL_NB=="FALSE"){
                     print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO "var1" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
@@ -202,6 +202,14 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
                 }
                 if(GERM_ALIGN_AA_COL_NB=="FALSE"){
                     print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO germline_alignment_aa COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                    exit 1
+                }
+                if(SEQ_ALIGN_COL_NB=="FALSE"){
+                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nFOR "$NAME_COL_NB", NO "var2" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                    exit 1
+                }
+                if(SEQ_ALIGN_GAP_COL_NB=="FALSE"){
+                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nFOR "$NAME_COL_NB", NO "var3" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
                     exit 1
                 }
                 # no need the recheck as above because already done above
@@ -248,7 +256,14 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
                 }else{
                     INI_AA_SEQ_STOP="FALSE"
                 }
-                print $0"\t"var2"\t"var3"\t"var4"\t"var5"\t"var6"\t"IDENTICAL"\t"SEQ_AA_STOP"\t"SEQ_ALIGN_AA_STOP"\t"GERM_ALIGN_AA_STOP"\t"TRIM_AA_SEQ_STOP"\t"INI_AA_SEQ_STOP"\n" > "trimtranslate.tsv"
+                TEMPO_SEQ_ALIGN_GAP=$SEQ_ALIGN_GAP_COL_NB
+                gsub(/\./, "", TEMPO_SEQ_ALIGN_GAP)
+                if(TEMPO_SEQ_ALIGN_GAP==$SEQ_ALIGN_COL_NB){
+                    IDENT_SEQ_ALIGN="TRUE"
+                }else{
+                    IDENT_SEQ_ALIGN="FALSE"
+                }
+                print $0"\t"var2"\t"var3"\t"var4"\t"var5"\t"var6"\t"IDENT_SEQ_ALIGN"\t"IDENTICAL"\t"SEQ_AA_STOP"\t"SEQ_ALIGN_AA_STOP"\t"GERM_ALIGN_AA_STOP"\t"TRIM_AA_SEQ_STOP"\t"INI_AA_SEQ_STOP"\n" > "trimtranslate.tsv"
             }
         }
     ' ${select_ch} |& tee -a trimtranslate.log
