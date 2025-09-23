@@ -251,6 +251,88 @@ Use the scrollbar at the bottom of the table if the text is cut.
     </tr>
     <tr>
         <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            report.html
+        </th>
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            HTML report presenting the main results of the data processing. Its content will be gradually expanded to provide a more comprehensive analysis. 
+        </td>
+    </tr>
+    <tr>
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            reports
+        </th>
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            Folder containing all the reports of the different processes, as well as the <i>nextflow.config</i> file used and the map of the processes execution (<i>nf_dag.png</i> file). 
+        </td>
+    </tr>
+    <tr>
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            repertoires
+        </th>
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            Folder containing the repertoires, i.e., contingency tables of the V, J and C (constant) allele and gene usage from the <i>productive_seq.tsv</i> file (see below). Warning: the script currently takes the first annotation of the imgt annotation if several are presents in the v_call, j_call and c_call columns of the <i>productive_seq.tsv</i> file. (e.g., v_call with IGKV1-39*01,IGKV1D-39*01), so that contingencies are identical to those from the donut frequencies, that use germline_v_call and germline_j_call columns (allele reassignment by the CreateGermlines.py tool of immcantation) 
+        </td>
+    </tr>
+    <tr>
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            figures
+        </th>
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            Folder containing:<ul style="padding-left:1.2em; margin:0;"><li><b>png</b>: folder containing the graphs in png format. </li><li><b>svg</b>: folder containing the graphs in svg vectorial format.</ul> 
+        </td>
+    </tr>
+    <tr>
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            RData
+        </th>
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            Folder containing, for each clonal group, objects that can be used in R to further analyze or plot the data:
+            <br><ul style="padding-left:1.2em; margin:0;"><li>db: tibble data frame resulting from the import by the <code>alakazam::readChangeoDb()</code> function.
+            <br></li><li>clones: db in the airClone format.
+            <br></li><li>trees: output of the <code>dowser::getTrees()</code> function using the clones object as input (igphylm tree).
+            </ul><br>Also contains the all_trees.RData file that combine the trees R objects of the different files in a single trees object. 
+        </td>
+    </tr>
+    <tr>
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            alignments
+        </th>
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            Folder containing alignment files in amino-acid (aa folder) and nucleotide (nuc folder) sequences of each clonal group with at least the number of sequences set in the <i>clone_nb_seq</i> parameter of the <i>nextflow.config</i> file: <ul style="padding-left:1.2em; margin:0;"><li>*.html: visualization of the alignments. Each file is named as <i>sequence_var_&lt;CLONE_ID&gt;_&lt;V_GENE&gt;_&lt;J_GENE&gt;_aligned_&lt;nucORaa&gt;.html</i>.</li><li>*.gff: file used to add domain features in the corresponding <i>.html</i> file. Each file is named as <i>germline_d_mask_clone_id_&lt;CLONE_ID&gt;_&lt;V_GENE&gt;_&lt;J_GENE&gt;_&lt;nucORaa&gt;.gff</i>.</li><li>*.fasta: aligned sequences. Each file is named as the corresponding <i>.html</i> file.</ul><br>Warning: alignments are perfomed using the variable region of the sequences only. 
+        </td>
+    </tr>
+    <tr>
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            phylo
+        </th>
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            Folder containing phylogenic tree files in amino-acid (aa folder) and nucleotide (nuc folder) sequences of each clonal group with at least the number of sequences set in the <i>clone_nb_seq</i> parameter of the <i>nextflow.config</i> file: <ul style="padding-left:1.2em; margin:0;"><li>*fasta.treefile: phylogenetic tree in Newick format for each sequence group in the phylo file (not constructed for groups with fewer than 4 sequences).</li><li>*fasta_itol_url.txt (if the <i>phylo_tree_itol_subscription</i> parameter of the <i>newtflow.config</i> file is TRUE): URL of the phylogenetic tree in iTOL.</li></ul><br>Warning: trees are perfomed using the variable region of the sequences only. 
+        </td>
+    </tr>
+    <tr>
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            fasta
+        </th>
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            Folder containing all fasta files:
+            <ul style="padding-left:1.2em; margin:0;"><li><b>clonal_full_length_nuc</b>: folder containing the full length sequences (<i>sequence</i> column of the  <i>productive_seq.tsv</i> file) belonging to the same clonal group (i.e.,  with the same value in the <i>clone_id</i> column of the  <i>productive_seq.tsv</i> file). Each file is named as <i>sequence_&lt;CLONE_ID&gt;_&lt;V_GENE&gt;-&lt;J_GENE&gt;.fasta</i>. The sequences are also those indicated in the <i>sequence</i> and <i>germline_d_mask_no_gaps</i> columns of the <i>clone_assigned_seq.tsv</i> file. Warning: the <i>germline_d_mask_clone_id_&lt;CLONE_ID&gt;_&lt;V_GENE&gt;-&lt;J_GENE&gt;</i> sequence is always the variable region only (thus, can be shorter compared to the other sequences).
+            </li><li><b>clonal_variable_nuc</b>: idem to <i>clonal_full_length_nuc</i> but only for the variable region of the sequences (<i>sequence_alignment</i> column of the <i>productive_seq.tsv</i> file).
+            </li><li><b>clonal_full_length_aa</b>: idem to <i>clonal_full_length_nuc</i> but for aa sequences (<i>sequence_aa</i> column of the  <i>productive_seq.tsv</i> file, <i>sequence_aa</i> and <i>germline_d_mask_aa_no_gaps</i> columns of the <i>clone_assigned_seq.tsv</i> file. Each file is named as <i>sequence_aa_&lt;CLONE_ID&gt;_&lt;V_GENE&gt;-&lt;J_GENE&gt;.fasta</i>.
+            </li><li><b>productive_nuc</b>: folder containing fasta files of the nucleotidic sequences in the <i>productive_seq.tsv</i> file.
+            <ul style="padding-left:1.2em; margin:0;"><li><b>query</b>: folder of the sequences from the <i>sequence</i> column.
+            </li><li><b>removed</b>: folder of the sequences from the <i>removed_sequence</i> column.
+            </li><li><b>trimmed</b>: folder of the sequences from the <i>trimmed_sequence</i> column.
+            </li><li><b>align</b>: folder of the sequences from the <i>sequence_alignment</i> column.
+            </li><li><b>align_with_gaps</b>: folder of the sequences from the <i>sequence_alignment_with_gaps</i> column.
+            </li></ul></li><li><b>productive_aa</b>: folder containing fasta files of the translated sequences in the <i>productive_seq.tsv</i> file.
+            <ul style="padding-left:1.2em; margin:0;"><li><b>query</b>: folder of the sequences from the <i>query_sequence_aa</i> column.
+            </li><li><b>igblast</b>: folder of the sequences from the <i>sequence_aa</i> column.
+            </li><li><b>trimmed</b>: folder of the sequences from the <i>trimmed_sequence_aa</i> column.
+            </li><li><b>align</b>: folder of the sequences from the <i>sequence_alignment_aa</i> column.</li></ul>  <b>IMPORTANT NOTE ABOUT CLONAL GROUPS</b> :<br>If the <i>clone_strategy</i> parameter in <i>nextflow.config</i> is set to "set", a single clonal group may contain different gene assignments. In such cases, the germline sequence included in the aligned FASTA file is selected as the most frequent germline sequence within the group.<br>If multiple germline sequences are equally frequent, the one associated with the first sequence (after sorting the group by sequence ID) is used. A warning is written to the log file whenever multiple germline sequences are detected in a group. 
+        </td>
+    </tr>
+    <tr>
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             - productive_seq.tsv
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
