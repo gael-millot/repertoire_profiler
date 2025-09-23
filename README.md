@@ -295,6 +295,14 @@ Use the scrollbar at the bottom of the table if the text is cut.
     </tr>
     <tr>
         <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            alignments
+        </th>
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            Folder containing alignment 
+        </td>
+    </tr>
+    <tr>
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             phylo
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
