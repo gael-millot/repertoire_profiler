@@ -241,226 +241,226 @@ Use the scrollbar at the bottom of the table if the text is cut.
 <br><br>
 <table style="width:100%; border-collapse:collapse; overflow-wrap: anywhere;table-layout:auto; word-break:break-word;">
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             repertoire_profiler_<UNIQUE_ID> folders and files
         </th>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             Description
         </th>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             report.html
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             HTML report presenting the main results of the data processing. Its content will be gradually expanded to provide a more comprehensive analysis. 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             reports
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             Folder containing all the reports of the different processes, as well as the <i>nextflow.config</i> file used and the map of the processes execution (<i>nf_dag.png</i> file). 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             repertoires
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             Folder containing the repertoires, i.e., contingency tables of the V, J and C (constant) allele and gene usage from the <i>productive_seq.tsv</i> file (see below). Warning: the script currently takes the first annotation of the imgt annotation if several are presents in the v_call, j_call and c_call columns of the <i>productive_seq.tsv</i> file. (e.g., v_call with IGKV1-39*01,IGKV1D-39*01), so that contingencies are identical to those from the donut frequencies, that use germline_v_call and germline_j_call columns (allele reassignment by the CreateGermlines.py tool of immcantation) 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             figures
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             Folder containing:<ul><li><b>png</b>: folder containing the graphs in png format. </li><li><b>svg</b>: folder containing the graphs in svg vectorial format.</ul> 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             RData
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             Folder containing, for each clonal group, objects that can be used in R to further analyze or plot the data:<br><ul><li>db: tibble data frame resulting from the import by the <code>alakazam::readChangeoDb()</code> function<br></li><li>clones: db in the airClone format<br></li><li>trees: output of the <code>dowser::getTrees()</code> function using the clones object as input (igphylm tree)</ul><br>Also contains the all_trees.RData file that combine the trees R objects of the different files in a single trees object. 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             alignments
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             Folder containing alignment files in amino-acid (aa folder) and nucleotide (nuc folder) sequences of each clonal group with at least the number of sequences set in the <i>clone_nb_seq</i> parameter of the <i>nextflow.config</i> file: <ul><li>*.html: visualization of the alignments. Each file is named as <i>sequence_var_&lt;CLONE_ID&gt;_&lt;V_GENE&gt;_&lt;J_GENE&gt;_aligned_&lt;nucORaa&gt;.html</i>.</li><li>*.gff: file used to add domain features in the corresponding <i>.html</i> file. Each file is named as <i>germline_d_mask_clone_id_&lt;CLONE_ID&gt;_&lt;V_GENE&gt;_&lt;J_GENE&gt;_&lt;nucORaa&gt;.gff</i>.</li><li>*.fasta: aligned sequences. Each file is named as the corresponding <i>.html</i> file.</ul><br>Warning: alignments are perfomed using the variable region of the sequences only. 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             phylo
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             Folder containing phylogenic tree files in amino-acid (aa folder) and nucleotide (nuc folder) sequences of each clonal group with at least the number of sequences set in the <i>clone_nb_seq</i> parameter of the <i>nextflow.config</i> file: <ul><li>*fasta.treefile: phylogenetic tree in Newick format for each sequence group in the phylo file (not constructed for groups with fewer than 4 sequences).</li><li>*fasta_itol_url.txt (if the <i>phylo_tree_itol_subscription</i> parameter of the <i>newtflow.config</i> file is TRUE): URL of the phylogenetic tree in iTOL.</li></ul><br>Warning: trees are perfomed using the variable region of the sequences only. 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             fasta
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             Folder containing all fasta files: <ul><li><b>clonal_full_length_nuc</b>: folder containing the full length sequences (<i>sequence</i> column of the  <i>productive_seq.tsv</i> file) belonging to the same clonal group (i.e.,  with the same value in the <i>clone_id</i> column of the  <i>productive_seq.tsv</i> file). Each file is named as <i>sequence_&lt;CLONE_ID&gt;_&lt;V_GENE&gt;-&lt;J_GENE&gt;.fasta</i>. The sequences are also those indicated in the <i>sequence</i> and <i>germline_d_mask_no_gaps</i> columns of the <i>clone_assigned_seq.tsv</i> file. Warning: the <i>germline_d_mask_clone_id_&lt;CLONE_ID&gt;_&lt;V_GENE&gt;-&lt;J_GENE&gt;</i> sequence is always the variable region only (thus, can be shorter compared to the other sequences).</li><li><b>clonal_variable_nuc</b>: idem to <i>clonal_full_length_nuc</i> but only for the variable region of the sequences (<i>sequence_alignment</i> column of the <i>productive_seq.tsv</i> file).</li><li><b>clonal_full_length_aa</b>: idem to <i>clonal_full_length_nuc</i> but for aa sequences (<i>sequence_aa</i> column of the  <i>productive_seq.tsv</i> file, <i>sequence_aa</i> and <i>germline_d_mask_aa_no_gaps</i> columns of the <i>clone_assigned_seq.tsv</i> file. Each file is named as <i>sequence_aa_&lt;CLONE_ID&gt;_&lt;V_GENE&gt;-&lt;J_GENE&gt;.fasta</i>.</li><li><b>productive_nuc</b>: folder containing fasta files of the nucleotidic sequences in the <i>productive_seq.tsv</i> file.<ul><li><b>query</b>: folder of the sequences from the <i>sequence</i> column.</li><li><b>removed</b>: folder of the sequences from the <i>removed_sequence</i> column.</li><li><b>trimmed</b>: folder of the sequences from the <i>trimmed_sequence</i> column.</li><li><b>align</b>: folder of the sequences from the <i>sequence_alignment</i> column.</li><li><b>align_with_gaps</b>: folder of the sequences from the <i>sequence_alignment_with_gaps</i> column.</li></ul></li><li><b>productive_aa</b>: folder containing fasta files of the translated sequences in the <i>productive_seq.tsv</i> file.<ul><li><b>query</b>: folder of the sequences from the <i>query_sequence_aa</i> column.</li><li><b>igblast</b>: folder of the sequences from the <i>sequence_aa</i> column.</li><li><b>trimmed</b>: folder of the sequences from the <i>trimmed_sequence_aa</i> column.</li><li><b>align</b>: folder of the sequences from the <i>sequence_alignment_aa</i> column.</li></ul>  <b>IMPORTANT NOTE ABOUT CLONAL GROUPS</b> :<br>If the <i>clone_strategy</i> parameter in <i>nextflow.config</i> is set to "set", a single clonal group may contain different gene assignments. In such cases, the germline sequence included in the aligned FASTA file is selected as the most frequent germline sequence within the group.<br>If multiple germline sequences are equally frequent, the one associated with the first sequence (after sorting the group by sequence ID) is used. A warning is written to the log file whenever multiple germline sequences are detected in a group. 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             pdf
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             Folder containing all the  <b>pdf files</b> described below : 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             - seq_distance.pdf
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             Distribution of the distances between the two nearest sequences (see the <i>nearest_distance</i> column in the <i>productive_seq.tsv</i> file). 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             - donuts.pdf
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             donut plots showing the frequency of sequences per clonal groups, among:<br><ul><li>all: all the productive sequences (<i>productive_seq.tsv</i> output file).<br></li><li>annotated: as the "all" donut but using all the productive sequences that have been annotated using the meta_name_replacement parameter of the nextflow.config file if not "NULL".<br></li><li>trees: all the sequences used for germline trees (<i>germ_tree_seq.tsv</i> output file).</li> 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             - *_repertoire.pdf
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             heatmap of the files from the <i>repertoires</i> folder (see above), showing the frequency of alleles and genes used among all the all productive sequences ("all"), non empty cells ("non-zero") and "annotated" sequences (if metadata are provided). Non-zero means that unused alleles are removed from the heatmap (empty row or column). Warning: to build the repertoire contingencies, the script currently takes the first annotation of the imgt annotation if several are presents in the v_call, j_call or c_call columns of the <i>productive_seq.tsv</i> file. 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             - germ_tree.pdf
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             Phylogenic trees of the sequences that belong to a clonal (supposedly germline) group made of at least n sequences, n being set by the clone_nb_seq parameter in the nextflow.config file (one page per clonal group). Warning: clonal group full names are those given by dowser::formatClones, i.e., those from germinal_v_call and germinal_j_call from the <i>germ_tree_seq.tsv</i> file. 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             - germ_no_tree.pdf
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             All the clonal groups with less than n sequences, n being set by the clone_nb_seq parameter in the nextflow.config file (one page per clonal group). Clonal group information is recapitulated in each page. 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             tsv
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             Folder containing all the  <b>tsv files</b> described below : 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             - donut_stat.tsv
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             stats associated to the <i>donuts.pdf</i> file. 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             - failed_igblast_seq.tsv
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             sequences that failed to be annotated by igblast (empty file if all the sequences are annotated). 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             - passed_igblast_seq.tsv
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             sequences annotated by igblast (more precisely by <code>AssignGenes.py igblast --format airr</code>). If empty, generate a subsequent nextflow failure. The number of lines in <i>failed_igblast_seq.tsv</i> and <i>passed_igblast_seq.tsv</i> is equal to the number of submitted .fasta files. 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             - productive_seq.tsv
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             Productive sequences. Productive <a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#productive">means</a>: (1) coding region has an open reading frame, (2) no defect in the start codon, splicing sites or regulatory elements, (3) no internal stop codons, (4) an in-frame <a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#junction-versus-cdr3">junction</a> region. See the <i>unproductive_seq.tsv</i> file for sequences that failed to be productive.<br><b>Names in bold</b> are columns that have been added or modified, compared to the output of <code>AssignGenes.py igblast --format airr</code>.<br><a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#coordinate-numbering">Coordinates</a> are 1-based numbering with closed intervals. This means that 1) the very first position in sequence is numbered 1 (not 0) and 2) both the start and the end positions are included in the range.<br>Column description (from <a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#fields">here</a> for the names not in bold, with fields not kept <a href="./bin/fields_not_kept.txt">here</a>):<br><ul><li><b>sequence_id</b>: equivalent to <i>initial_sequence_id</i> column but modified with new names according to the <i>meta_name_replacement</i> parameter of the <i>nextflow.config</i> file.<br></li><li><b>initial_sequence_id</b>: optional. Only present if the <i>meta_path</i> and <i>meta_name_replacement</i> parameters of the <i>nextflow.config</i> file are non NULL. Originaly the <i>sequence_id</i> column of the <code>AssignGenes.py igblast --format airr</code> output. Unique query sequence identifier for the Rearrangement. Most often this will be the input sequence header or a substring thereof, but may also be a custom identifier defined by the tool in cases where query sequences have been combined in some fashion prior to alignment. When downloaded from an AIRR Data Commons repository, this will usually be a universally unique record locator for linking with other objects in the AIRR Data Model.<br></li><li>sequence: the query (input) nucleotide sequence. Usually, this is the unmodified input sequence, which may be reverse complemented if necessary. In some cases, this field may contain consensus sequences or other types of collapsed input sequences if these steps are performed prior to alignment.<br></li><li>sequence_aa: Translation in aa of the query nucleotide sequence performed by <code>AssignGenes.py igblast --format airr</code>. Warning: see the <i>aa_identical</i> column description.<br></li><li>stop_codon: True if the aligned sequence contains a stop codon.<br></li><li>vj_in_frame: True if the V and J gene alignments are in-frame.<br></li><li>v_frameshift: True if the V gene in the query nucleotide sequence contains a translational <a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#frameshifts">frameshift</a> relative to the frame of the V gene reference sequence.<br></li><li>productive: True if the V(D)J sequence is predicted to be productive.<br></li><li>rev_comp: True if the alignment is on the opposite strand (reverse complemented) with respect to the query sequence. If True then all output data, such as alignment coordinates and sequences, are based on the reverse complement of 'sequence'.<br></li><li>complete_vdj: True if the sequence alignment spans the entire V(D)J region. Meaning, sequence_alignment includes both the first V gene codon that encodes the mature polypeptide chain (i.e., after the leader sequence) and the last complete codon of the J gene (i.e., before the J-C splice site). This does not require an absence of deletions within the internal FWR and CDR regions of the alignment.<br></li><li>d_frame: Numerical reading frame (1, 2, 3) of the D gene in the query nucleotide sequence, where frame 1 is relative to the first codon of D gene reference sequence.<br></li><li>v_call: V gene (i.e., cassette) with allele after the star (e.g., IGHV4-59*01 if using IMGT/GENE-DB). Sometimes, Igblast cannot distinguished between several reference sequences (cassette or allele), and are all provided, comma separated (e.g., IGHJ5*01,IGHJ5*02).d_call: as in the <i>v_call</i> column but for D gene with allele.<br></li><li>j_call: as in the <i>v_call</i> column but for J gene with allele.<br></li><li>c_call: as in the <i>v_call</i> column but for Constant region gene with allele.<br></li><li>sequence_alignment: Aligned portion of query sequence (i.e., <i>sequence</i> column). Typically, this will include  <b>only the V(D)J region</b>, but that is not a requirement, explaining why this sequence lacks the 3' part of the sequence indicated in the <i>sequence</i> column. Warning, it seems that <code>AssignGenes.py igblast --format airr</code> (currently used in this pipeline) does not introduce the IMGT-gaps spacers as with <code>AssignGenes.py igblast --format blast</code> (previously used in this pipeline). See the <i>sequence_alignment_with_gaps</i> column to have the IMGT-gaps spacers. Of note, <i>v_sequence_alignment</i>, <i>d_sequence_alignment</i>, <i>j_sequence_alignment</i> and <i>c_sequence_alignment</i> sequence assembly is not always equivalent to <i>sequence_alignment</i>, due to extra nucleotides between v-d, d-j and j-c, and potential overlap between j-c.<br></li><li>germline_alignment: Assembled, aligned, full-length inferred germline sequence spanning the same region as the sequence_alignment field (typically the V(D)J region) and including the same set of corrections and IMGT-gaps spacers (if any). Thus, If well understood, this sequence is built from V, D, J reference sequences from the IMGT database that match the sequence in sequence_alignment, with potential IMGT-gaps spacers already present in the sequences of the database kept. The aligned parts of these V, D, J references are stitched together, and the <code>N</code> nucleotides in the germline alignment sequence are positions that belong to no templated nucleotides, added during V(D)J recombination by enzymes involved in this process, and not part of the reference. These 'N's only appear in the junction region where DJ recombination and V-DJ recombination happened and are present where VDJ reference cassettes don't match each other. Warning: sequences with the same clone_ID can have different germline_aligments since the column does not come from CreateGermlines.py. Warning, it seems that <code>AssignGenes.py igblast --format airr</code> (currently used in this pipeline) does not introduce the IMGT-gaps spacers as with <code>AssignGenes.py igblast --format blast</code> (previously used in this pipeline). See the <i>germline_alignment_with_gaps</i> column to have the IMGT-gaps spacers. Of note, <i>v_germline_alignment</i>, <i>d_germline_alignment</i>, <i>j_germline_alignment</i> and <i>c_germline_alignment</i> sequence assembly is not always equivalent to <i>germline_alignment</i>, due to extra nucleotides between v-d, d-j and j-c, and potential overlap between j-c.<br></li><li>sequence_alignment_aa: Amino acid translation of the <i>sequence_alignment</i> column.  Warning: see the <i>aa_identical</i> column description. Of note, <i>v_sequence_alignment_aa</i>, <i>d_sequence_alignment_aa</i>, <i>j_sequence_alignment_aa</i> and <i>c_sequence_alignment_aa</i> sequence assembly is not always equivalent to <i>sequence_alignment_aa</i>, due to extra amino acids between v-d, d-j and j-c.<br></li><li>germline_alignment_aa: Amino acid translation of the <i>germline_alignment</i> column. Warning: see the <i>aa_identical</i> column description. Of note, <i>v_germline_alignment_aa</i>, <i>d_germline_alignment_aa</i>, <i>j_germline_alignment_aa</i> and <i>c_germline_alignment_aa</i> sequence assembly is not always equivalent to <i>germline_alignment_aa</i>, due to extra amino acids between v-d, d-j and j-c.<br></li><li>v_alignment_start: Start position of the V gene alignment in both the sequence_alignment and germline_alignment fields (1-based closed interval).<br></li><li>v_alignment_end: End position of the V gene alignment in both the sequence_alignment and germline_alignment fields (1-based closed interval).<br></li><li>d_alignment_start: Start position of the D gene in both the sequence_alignment and germline_alignment fields (1-based closed interval).<br></li><li>d_alignment_end: End position of the D gene in both the sequence_alignment and germline_alignment fields (1-based closed interval).<br></li><li>j_alignment_start: Start position of the J gene alignment in both the sequence_alignment and germline_alignment fields (1-based closed interval).<br></li><li>j_alignment_end: End position of the J gene alignment in both the sequence_alignment and germline_alignment fields (1-based closed interval).<br></li><li>c_alignment_start: Start position of the C gene alignment in both the sequence_alignment and germline_alignment fields (1-based closed interval).<br></li><li>c_alignment_end: End position of the C gene alignment in both the sequence_alignment and germline_alignment fields (1-based closed interval).<br></li><li>v_sequence_alignment: Aligned portion of query sequence (i.e., <i>sequence</i> column) assigned to the V gene, including any indel corrections or numbering spacers.<br></li><li>v_sequence_alignment_aa: Amino acid translation of the v_sequence_alignment field.<br></li><li>v_germline_alignment: Aligned V gene germline sequence spanning the same region as the v_sequence_alignment field and including the same set of corrections and spacers (if any).<br></li><li>v_germline_alignment_aa: Amino acid translation of the v_germline_alignment field.<br></li><li>d_sequence_alignment: Aligned portion of query sequence (i.e., <i>sequence</i> column) assigned to the D gene, including any indel corrections or numbering spacers.<br></li><li>d_sequence_alignment_aa: Amino acid translation of the d_sequence_alignment field.<br></li><li>d_germline_alignment: Aligned D gene germline sequence spanning the same region as the d_sequence_alignment field and including the same set of corrections and spacers (if any).<br></li><li>d_germline_alignment_aa: Amino acid translation of the d_germline_alignment field.<br></li><li>j_sequence_alignment: Aligned portion of query sequence (i.e., <i>sequence</i> column) assigned to the J gene, including any indel corrections or numbering spacers.<br></li><li>j_sequence_alignment_aa: Amino acid translation of the j_sequence_alignment field.<br></li><li>j_germline_alignment: Aligned J gene germline sequence spanning the same region as the j_sequence_alignment field and including the same set of corrections and spacers (if any).<br></li><li>j_germline_alignment_aa: Amino acid translation of the j_germline_alignment field.<br></li><li>c_sequence_alignment: Aligned portion of query sequence (i.e., <i>sequence</i> column) assigned to the constant region, including any indel corrections or numbering spacers.<br></li><li>c_sequence_alignment_aa: Amino acid translation of the c_sequence_alignment field.<br></li><li>c_germline_alignment: Aligned constant region germline sequence spanning the same region as the c_sequence_alignment field and including the same set of corrections and spacers (if any).<br></li><li>c_germline_alignment_aa: Amino acid translation of the c_germline_aligment field.<br></li><li>fwr1: Nucleotide sequence of the aligned FWR1 region of the query sequence (i.e., FWR1 region of the <i>sequence_alignment</i> field, which is the input sequence with IMGT gaps added).<br></li><li>fwr1_aa: Amino acid translation of the fwr1 field.<br></li><li>cdr1: Nucleotide sequence of the aligned CDR1 region of the query sequence (i.e., CDR1 region of the <i>sequence_alignment</i> field, which is the input sequence with IMGT gaps added).<br></li><li>cdr1_aa: Amino acid translation of the cdr1 field.<br></li><li>fwr2: Nucleotide sequence of the aligned FWR2 region of the query sequence (i.e., FWR2 region of the <i>sequence_alignment</i> field, which is the input sequence with IMGT gaps added).<br></li><li>fwr2_aa: Amino acid translation of the fwr2 field.<br></li><li>cdr2: Nucleotide sequence of the aligned CDR2 region of the query sequence (i.e., CDR2 region of the <i>sequence_alignment</i> field, which is the input sequence with IMGT gaps added).<br></li><li>cdr2_aa: Amino acid translation of the cdr2 field.<br></li><li>fwr3: Nucleotide sequence of the aligned FWR3 region of the query sequence (i.e., FWR3 region of the <i>sequence_alignment</i> field, which is the input sequence with IMGT gaps added).<br></li><li>fwr3_aa: Amino acid translation of the fwr3 field.<br></li><li>fwr4: Nucleotide sequence of the aligned FWR4 region of the query sequence (i.e., FWR4 region of the <i>sequence_alignment</i> field, which is the input sequence with IMGT gaps added).<br></li><li>fwr4_aa: Amino acid translation of the fwr4 field.<br></li><li>cdr3: Nucleotide sequence of the aligned CDR3 region of the query sequence (i.e., CDR3 region of the <i>sequence_alignment</i> field, which is the input sequence with IMGT gaps added).<br></li><li>cdr3_aa: Amino acid translation of the cdr3 field.<br></li><li>junction: Junction region nucleotide sequence, where the <a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#junction-versus-cdr3">Junction</a> is defined as the CDR3 plus the two flanking conserved codons (including the conserved cysteine and tryptophan/phenylalanine residues, while CDR3 excludes those).<br></li><li>junction_length: Number of nucleotides in the junction sequence.<br></li><li>junction_aa: Amino acid translation of the junction.<br></li><li>junction_aa_length: Number of amino acids in the junction sequence.<br></li><li>v_score: Alignment score for the V gene.<br></li><li>d_score: Alignment score for the D gene alignment.<br></li><li>j_score: Alignment score for the J gene alignment.<br></li><li>c_score: Alignment score for the C gene alignment.<br></li><li>v_cigar: CIGAR string for the V gene alignment.<br></li><li>d_cigar: CIGAR string for the D gene alignment.<br></li><li>j_cigar: CIGAR string for the J gene alignment.<br></li><li>c_cigar: CIGAR string for the C gene alignment.<br></li><li>v_support: V gene alignment E-value, p-value, likelihood, probability or other similar measure of support for the V gene assignment as defined by the alignment tool.<br></li><li>d_support: D gene alignment E-value, p-value, likelihood, probability or other similar measure of support for the D gene as defined by the alignment tool.<br></li><li>j_support: J gene alignment E-value, p-value, likelihood, probability or other similar measure of support for the J gene assignment as defined by the alignment tool.<br></li><li>c_support: C gene alignment E-value, p-value, likelihood, probability or other similar measure of support for the C gene assignment as defined by the alignment tool.<br></li><li>v_identity: Fractional identity for the V gene alignment (proportion).<br></li><li>d_identity: Fractional identity for the D gene alignment (proportion).<br></li><li>j_identity: Fractional identity for the J gene alignment (proportion).<br></li><li>c_identity: Fractional identity for the C gene alignment (proportion).<br></li><li>v_sequence_start: Start position of the V gene in the query sequence (i.e., <i>sequence</i> column, 1-based closed interval).<br></li><li>v_sequence_end: End position of the V gene in the query sequence (i.e., <i>sequence</i> column, 1-based closed interval).<br></li><li>v_germline_start: Alignment start position in the V gene reference sequence (1-based closed interval).<br></li><li>v_germline_end: Alignment end position in the V gene reference sequence (1-based closed interval).<br></li><li>d_sequence_start: Start position of the D gene in the query sequence (i.e., <i>sequence</i> column, 1-based closed interval).<br></li><li>d_sequence_end: End position of the D gene in the query sequence (i.e., <i>sequence</i> column, 1-based closed interval).<br></li><li>d_germline_start: Alignment start position in the D gene reference sequence for the D gene (1-based closed interval).<br></li><li>d_germline_end: Alignment end position in the D gene reference sequence for the D gene (1-based closed interval).<br></li><li>j_sequence_start: Start position of the J gene in the query sequence (i.e., <i>sequence</i> column, 1-based closed interval).<br></li><li>j_sequence_end: End position of the J gene in the query sequence (i.e., <i>sequence</i> column, 1-based closed interval).<br></li><li>j_germline_start: Alignment start position in the J gene reference sequence (1-based closed interval).<br></li><li>j_germline_end: Alignment end position in the J gene reference sequence (1-based closed interval).<br></li><li>c_sequence_start: Start position of the C gene in the query sequence (i.e., <i>sequence</i> column, 1-based closed interval).<br></li><li>c_sequence_end: End position of the C gene in the query sequence (i.e., <i>sequence</i> column, 1-based closed interval).<br></li><li>c_germline_start: Alignment start position in the C gene reference sequence (1-based closed interval).<br></li><li>c_germline_end: Alignment end position in the C gene reference sequence (1-based closed interval).<br></li><li>fwr1_start: FWR1 start position in the query sequence (i.e., <i>sequence</i> column, 1-based closed interval).<br></li><li>fwr1_end: FWR1 end position in the query sequence (i.e., <i>sequence</i> column, 1-based closed interval).<br></li><li>cdr1_start: CDR1 start position in the query sequence (i.e., <i>sequence</i> column, 1-based closed interval).<br></li><li>cdr1_end: CDR1 end position in the query sequence (i.e., <i>sequence</i> column, 1-based closed interval).<br></li><li>fwr2_start: FWR2 start position in the query sequence (i.e., <i>sequence</i> column, 1-based closed interval).<br></li><li>fwr2_end: FWR2 end position in the query sequence (i.e., <i>sequence</i> column, 1-based closed interval).<br></li><li>cdr2_start: CDR2 start position in the query sequence (i.e., <i>sequence</i> column, 1-based closed interval).<br></li><li>cdr2_end: CDR2 end position in the query sequence (i.e., <i>sequence</i> column, 1-based closed interval).<br></li><li>fwr3_start: FWR3 start position in the query sequence (i.e., <i>sequence</i> column, 1-based closed interval).<br></li><li>fwr3_end: FWR3 end position in the query sequence (i.e., <i>sequence</i> column, 1-based closed interval).<br></li><li>fwr4_start: FWR4 start position in the query sequence (i.e., <i>sequence</i> column, 1-based closed interval).<br></li><li>fwr4_end: FWR4 end position in the query sequence (i.e., <i>sequence</i> column, 1-based closed interval).<br></li><li>cdr3_start: CDR3 start position in the query sequence (i.e., <i>sequence</i> column, 1-based closed interval).<br></li><li>cdr3_end: CDR3 end position in the query sequence (i.e., <i>sequence</i> column, 1-based closed interval).<br></li><li>np1: Nucleotide sequence of the combined N/P region between the V gene and first D gene alignment or between the V gene and J gene alignments.<br></li><li>np1_length: Number of nucleotides between the V gene and first D gene alignments or between the V gene and J gene alignments.<br></li><li>np2: Nucleotide sequence of the combined N/P region between either the first D gene and J gene alignments or the first D gene and second D gene alignments.<br></li><li>np2_length: Number of nucleotides between either the first D gene and J gene alignments or the first D gene and second D gene alignments.<br></li><li><b>sequence_alignment_with_gaps</b>: Aligned portion of query sequence (i.e., <i>sequence</i> column), including any indel corrections or numbering spacers, such as IMGT-gaps (explained <a href="https://www.imgt.org/IMGTScientificChart/Numbering/IMGTIGVLsuperfamily.html">here</a>), in order to fit the <a href="https://www.imgt.org/3Dstructure-DB/doc/IMGTCollier-de-Perles.shtml">collier de perle represention</a>. Typically, this will include  <b>only the V(D)J region</b>, but that is not a requirement, explaining why this sequence lacks the 3' part of the sequence indicated in the <i>sequence</i> column. Warning: correspond to the <i>sequence_alignment</i> column that would be obtained with <code>AssignGenes.py igblast --format blast</code>.<br></li><li><b>germline_alignment_with_gaps</b>: Assembled, aligned, full-length inferred germline sequence spanning the same region as the sequence_alignment field (typically the V(D)J region) and including the same set of corrections and IMGT-gaps spacers (if any). Thus, If well understood, this sequence is built from V, D, J reference sequences from the IMGT database that match the sequence in sequence_alignment, with potential IMGT-gaps spacers already present in the sequences of the database kept. The aligned parts of these V, D, J references are stitched together, and the <code>N</code> nucleotides in the germline alignment sequence are positions that belong to no templated nucleotides, added during V(D)J recombination by enzymes involved in this process, and not part of the reference. These 'N's only appear in the junction region where DJ recombination and V-DJ recombination happened and are present where VDJ reference cassettes don't match each other. Warning: sequences with the same clone_ID can have different germline_aligments since the column does not come from CreateGermlines.py.  Warning: correspond to the <i>sequence_alignment</i> column that would be obtained with <code>AssignGenes.py igblast --format blast</code>.<br></li><li><b>trimmed_sequence</b>: identical to the query sequence (in the <i>sequence</i> column), except a potential trimming of the 5' part that removes all the nucleotides before the fwr1 region (corresponding to the leader peptide). This should guarantees a translation of these sequences without premature stops. Trimming is performed by comparing the 5' part of the <i>sequence_alignment</i> and the <i>sequence</i> sequences.<br></li><li><b>is_sequence_trimmed</b>: indicates if the sequences in the <i>sequence</i> column are trimmed or not. If FALSE, then the data in both <i>sequence</i> and <i>sequence</i> should be identical.<br></li><li><b>removed_sequence</b>: removed sequence in 5'. NA if no removal (<i>is_sequence_trimmed</i> column FALSE).<br></li><li><b>trimmed_sequence_aa</b>: Translation in aa of the <i>sequence</i> column using <code>seqkit translate</code>.<br></li><li><b>query_sequence_aa</b>: Translation in aa of the <i>sequence</i> column (i.e., query nucleotide sequence) using <code>seqkit translate</code>. If <i>is_sequence_trimmed</i> column is TRUE, then some * are expected to be present in the sequence (stop codons), since the query sequence does not necessarily start with a start codon (primer sequence addition for instance).<br></li><li><b>aa_identical</b>: if TRUE, it means that both the sequences in the "sequence_aa" and "trimmed_sequence_aa" columns are identical. If FALSE, it can be because of an extra aa at the end of the <i>sequence_aa</i> sequence, due to incomplete last codon but with aa inferred by <code>AssignGenes.py igblast --format airr</code>. Otherwise, it raises problems in the output of <code>AssignGenes.py igblast --format airr</code>, notably the correspondance between: 1) <i>sequence_alignment_aa</i> and <i>sequence_alignment</i> columns, 2) <i>germline_alignment_aa</i> and <i>germline_alignment</i> columns. In other words, translation of <i>sequence_alignment</i> and <i>germline_alignment</i> might not results in the corresponding columns.<br></li><li><b>sequence_aa_stop</b>: Is there any stop codon inside the <i>sequence_aa</i> sequence? TRUE if yes, FALSE if no. Warning: TRUE is not expected for productive sequences.<br></li><li><b>sequence_alignment_aa_stop</b>: Is there any stop codon inside the <i>sequence_alignment_aa</i> sequence? TRUE if yes, FALSE if no. Warning: TRUE is not expected for productive sequences.<br></li><li><b>germline_alignment_aa_stop</b>: Is there any stop codon inside the <i>germline_alignment_aa</i> sequence? TRUE if yes, FALSE if no. Warning: TRUE is not expected for productive sequences.<br></li><li><b>trimmed_sequence_aa_stop</b>: Is there any stop codon inside the <i>trimmed_sequence_aa</i> sequence? TRUE if yes, FALSE if no. If TRUE and stars are present in the end of the aa sequence, it might come from a bad sequencing quality.<br></li><li><b>query_sequence_aa_stop</b>: Is there any stop codon inside the <i>query_sequence_aa</i> sequence? TRUE if yes, FALSE if no.<br></li><li><b>&lt;OPTIONAL_COLUMN&gt;</b>: reporting the data from the meta_legend parameter of the <i>nextflow.config</i> file, if ever used. Example: "KD".<br></li><li><b>dist_nearest</b>: minimal distance from the nearest sequence using the model from the clone_model parameter (Haming by default). NA if no other sequences have same V, J and junction length or if another sequence is strictly identical (should be 0 but NA is returned).<br></li><li><b>v_gene</b>: extracted from the <i>v_call</i> column but removing the allele specification after the *.<br></li><li><b>j_gene</b>: extracted from the <i>j_call</i> column but removing the allele specification after the *.<br></li><li><b>isotype_class</b>: extracted from the <i>c_call</i> column but indicating only the isotype.<br></li><li><b>c_gene</b>: extracted from the <i>c_call</i> column but removing the allele specification after the *.</li> 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             - clone_assigned_seq.tsv
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             Sequences from the <i>productive_seq.tsv</i> file with germline clustering (clone ID), allele reannotation (germinal_v_call and germinal_j_call columns) and mutation load added. Warning: the number of sequences (i.e., rows) can be lower than in the <i>productive_seq.tsv</i> file due to sequences that failed to be clone assigned (see the <i>non_clone_assigned_sequence.tsv</i> file).<br>Additional columns description (from <a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#fields">here</a>): <br><ul><li>clone_id: Clone number. A same clone_id gathers all the sequences that putatively come from a same germline cell. The criteria for that is 1) same V gene, 2) same J gene, 3) same CDR3 length and 4) distance between CR3 sequences, computed using the clone_model and clone_normalize parameters from the <i>nextflow.config file</i>, less than the threshold set by the clone_distance parameter from the <i>nextflow.config</i> file<br></li><li>germline_alignment_d_mask: as germline_alignment but with D masked (i.e., replaced by N, in the middle of the CDR3). Because the D-segment call for B cell receptor alignments is often low confidence, the default germline format (-g dmask) places Ns in the N/P and D-segments of the junction region rather than using the D-segment assigned during reference alignment; this can be modified to generate a complete germline (-g full) or a V-segment only germline (-g vonly)<br></li><li>germline_v_call: V germline cassette<br></li><li>germline_d_call: D germline cassette (usually NA)<br></li><li>germline_j_call: J germline cassette<br></li><li>germline_v_seq: nucleotide sequence of the V germline cassette<br></li><li>germline_v_seq_no_gaps: nucleotide sequence of the V germline cassette without IMGT gaps<br></li><li>germline_d_seq: nucleotide sequence of the D germline cassette<br></li><li>germline_d_seq_no_gaps: nucleotide sequence of the D germline cassette without IMGT gaps<br></li><li>germline_j_seq: nucleotide sequence of the J germline cassette<br></li><li>germline_j_seq_no_gaps: nucleotide sequence of the J germline cassette without IMGT gaps<br></li><li>germline_d_mask_no_gaps: <i>germline_alignment_d_mask</i> column without IMGT gaps<br></li><li>germline_d_mask_aa_no_gaps: translation of the <i>germline_d_mask_no_gaps</i> column into amino-acids<br></li><li>mu_count_cdr_r: number of replacement mutations in CDR1 and CDR2 of the V-segment (comparing column <i>sequence_alignment</i> and <i>column germline_alignment_d_mask</i>, see details <a href="https://shazam.readthedocs.io/en/stable/topics/observedMutations/#value">here</a>).<br></li><li>mu_count_cdr_s: number of silent mutations in CDR1 and CDR2 of the V-segment.<br></li><li>mu_count_fwr_r: number of replacement mutations in FWR1, FWR2 and FWR3 of the V-segment.<br></li><li>mu_count_fwr_s: number of silent mutations in FWR1, FWR2 and FWR3 of the V-segment.<br></li><li>mu_count: number of replacement and silent mutations (sum of the previous columns).<br></li><li>mu_freq_cdr_r: frequency of replacement mutations in CDR1 and CDR2 of the V-segment (if frequency=TRUE, R and S mutation frequencies are calculated over the number of non-N positions in the specified regions).<br></li><li>mu_freq_cdr_s: frequency of silent mutations in CDR1 and CDR2 of the V-segment (idem).<br></li><li>mu_freq_fwr_r: frequency of replacement mutations in FWR1, FWR2 and FWR3 of the V-segment (idem).<br></li><li>mu_freq_fwr_s: frequency of silent mutations in FWR1, FWR2 and FWR3 of the V-segment (idem).<br></li><li>mu_freq: frequency of replacement and silent mutations (sum of the previous columns).</li> 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             - unproductive_seq.tsv
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             Sequences that failed in productive annotations by igblast (empty file if all the sequences are productively annotated). 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             - non_clone_assigned_sequence.tsv
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             Productive sequences that failed to be assigned to a clone ID by the DefineClones.py function (empty file if all the sequences are assigned). See https://changeo.readthedocs.io/en/latest/methods/clustering.html but failure reasons are not explained. 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             - germ_tree_clone_id.tsv
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             Clonal group IDs used in the germline tree analysis (clonal group with at least n sequences, n being set by the clone_nb_seq parameter of the <i>nextflow.config</i> file). 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             - germ_tree_dismissed_clone_id.tsv
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             Clonal group IDs not used in the germline tree analysis (clonal group with less than n sequences, n being set by the clone_nb_seq parameter of the <i>nextflow.config</i> file). 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             - germ_tree_seq.tsv
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             Sequences of the <i>clone_assigned_seq.tsv</i> file used in the germline tree analysis (clonal group with at least n sequences, n being set by the clone_nb_seq parameter of the <i>nextflow.config</i> file). Additionnal germline_[<i>vdj</i>]_gene columns. 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             - germ_tree_dismissed_seq.tsv
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             Sequences of the <i>clone_assigned_seq.tsv</i> file not used in the germline tree analysis (clonal group with less than n sequences, n being set by the clone_nb_seq parameter of the <i>nextflow.config</i> file). 
         </td>
     </tr>
     <tr>
-        <th>
+        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             - germ_tree_dup_seq_not_displayed.tsv
         </th>
-        <td>
+        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
             Sequences file used in the germline tree analysis but not displayed in the graph, (1) because strictly identical to another sequence already in the tree and (2) because the tree_duplicate_seq parameter of the <i>nextflow.config</i> file has been set to "FALSE".
         </td>
     </tr>
