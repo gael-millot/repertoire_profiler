@@ -298,7 +298,7 @@ Use the scrollbar at the bottom of the table if the text is cut.
             alignments
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            Folder containing alignment 
+            Folder containing alignment files in amino-acid (aa folder) and nucleotide (nuc folder) sequences of each clonal group with at least the number of sequences set in the <i>clone_nb_seq</i> parameter of the <i>nextflow.config</i> file: <ul style="padding-left:1.2em; margin:0;"><li>*.html: visualization of the alignments. Each file is named as <i>sequence_var_&lt;CLONE_ID&gt;_&lt;V_GENE&gt;_&lt;J_GENE&gt;_aligned_&lt;nucORaa&gt;.html</i>.</li></ul><br>Warning: alignments are perfomed using the variable region of the sequences only. 
         </td>
     </tr>
     <tr>
