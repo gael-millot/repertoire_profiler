@@ -240,52 +240,52 @@ Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.
 Use the scrollbar at the bottom of the table if the text is cut.
 <br><br>
 <div style="overflow-x:auto; max-width:100%;">
-<table style="width:100%; border-collapse:collapse; overflow-wrap: anywhere;table-layout:auto; word-break:break-word;">
+<table style="width:100%; border-collapse:collapse; overflow-wrap: anywhere;table-layout:fixed; word-break:break-all;">
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             repertoire_profiler_&lt;UNIQUE_ID&gt; folders and files
         </th>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Description
         </th>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             report.html
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             HTML report presenting the main results of the data processing. Its content will be gradually expanded to provide a more comprehensive analysis. 
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             reports
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Folder containing all the reports of the different processes, as well as the <i>nextflow.config</i> file used and the map of the processes execution (<i>nf_dag.png</i> file). 
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             repertoires
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Folder containing the repertoires, i.e., contingency tables of the V, J and C (constant) allele and gene usage from the <i>productive_seq.tsv</i> file (see below). Warning: the script currently takes the first annotation of the imgt annotation if several are presents in the v_call, j_call and c_call columns of the <i>productive_seq.tsv</i> file. (e.g., v_call with IGKV1-39*01,IGKV1D-39*01), so that contingencies are identical to those from the donut frequencies, that use germline_v_call and germline_j_call columns (allele reassignment by the CreateGermlines.py tool of immcantation) 
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             figures
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Folder containing:<ul style="padding-left:1.2em; margin:0;"><li><b>png</b>: folder containing the graphs in png format. </li><li><b>svg</b>: folder containing the graphs in svg vectorial format.</ul> 
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             RData
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Folder containing, for each clonal group, objects that can be used in R to further analyze or plot the data:
             <br><ul style="padding-left:1.2em; margin:0;"><li>db: tibble data frame resulting from the import by the <code>alakazam::readChangeoDb()</code> function.
             <br></li><li>clones: db in the airClone format.
@@ -294,26 +294,26 @@ Use the scrollbar at the bottom of the table if the text is cut.
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             alignments
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Folder containing alignment files in amino-acid (aa folder) and nucleotide (nuc folder) sequences of each clonal group with at least the number of sequences set in the <i>clone_nb_seq</i> parameter of the <i>nextflow.config</i> file: <ul style="padding-left:1.2em; margin:0;"><li>*.html: visualization of the alignments. Each file is named as <i>sequence_var_&lt;CLONE_ID&gt;_&lt;V_GENE&gt;_&lt;J_GENE&gt;_aligned_&lt;nucORaa&gt;.html</i>.</li><li>*.gff: file used to add domain features in the corresponding <i>.html</i> file. Each file is named as <i>germline_d_mask_clone_id_&lt;CLONE_ID&gt;_&lt;V_GENE&gt;_&lt;J_GENE&gt;_&lt;nucORaa&gt;.gff</i>.</li><li>*.fasta: aligned sequences. Each file is named as the corresponding <i>.html</i> file.</ul><br>Warning: alignments are perfomed using the variable region of the sequences only. 
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             phylo
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Folder containing phylogenic tree files in amino-acid (aa folder) and nucleotide (nuc folder) sequences of each clonal group with at least the number of sequences set in the <i>clone_nb_seq</i> parameter of the <i>nextflow.config</i> file: <ul style="padding-left:1.2em; margin:0;"><li>*fasta.treefile: phylogenetic tree in Newick format for each sequence group in the phylo file (not constructed for groups with fewer than 4 sequences).</li><li>*fasta_itol_url.txt (if the <i>phylo_tree_itol_subscription</i> parameter of the <i>newtflow.config</i> file is TRUE): URL of the phylogenetic tree in iTOL.</li></ul><br>Warning: trees are perfomed using the variable region of the sequences only. 
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             fasta
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Folder containing all fasta files:
             <ul style="padding-left:1.2em; margin:0;"><li><b>clonal_full_length_nuc</b>: folder containing the full length sequences (<i>sequence</i> column of the  <i>productive_seq.tsv</i> file) belonging to the same clonal group (i.e.,  with the same value in the <i>clone_id</i> column of the  <i>productive_seq.tsv</i> file). Each file is named as <i>sequence_&lt;CLONE_ID&gt;_&lt;V_GENE&gt;-&lt;J_GENE&gt;.fasta</i>. The sequences are also those indicated in the <i>sequence</i> and <i>germline_d_mask_no_gaps</i> columns of the <i>clone_assigned_seq.tsv</i> file. Warning: the <i>germline_d_mask_clone_id_&lt;CLONE_ID&gt;_&lt;V_GENE&gt;-&lt;J_GENE&gt;</i> sequence is always the variable region only (thus, can be shorter compared to the other sequences).
             </li><li><b>clonal_variable_nuc</b>: idem to <i>clonal_full_length_nuc</i> but only for the variable region of the sequences (<i>sequence_alignment</i> column of the <i>productive_seq.tsv</i> file).
@@ -332,92 +332,92 @@ Use the scrollbar at the bottom of the table if the text is cut.
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             pdf
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Folder containing all the  <b>pdf files</b> described below : 
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             - seq_distance.pdf
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Distribution of the distances between the two nearest sequences (see the <i>nearest_distance</i> column in the <i>productive_seq.tsv</i> file). 
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             - donuts.pdf
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             donut plots showing the frequency of sequences per clonal groups, among:<br><ul style="padding-left:1.2em; margin:0;"><li>all: all the productive sequences (<i>productive_seq.tsv</i> output file).
             <br></li><li>annotated: as the "all" donut but using all the productive sequences that have been annotated using the meta_name_replacement parameter of the nextflow.config file if not "NULL".
             <br></li><li>trees: all the sequences used for germline trees (<i>germ_tree_seq.tsv</i> output file).</li> 
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             - *_repertoire.pdf
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             heatmap of the files from the <i>repertoires</i> folder (see above), showing the frequency of alleles and genes used among all the all productive sequences ("all"), non empty cells ("non-zero") and "annotated" sequences (if metadata are provided). Non-zero means that unused alleles are removed from the heatmap (empty row or column). Warning: to build the repertoire contingencies, the script currently takes the first annotation of the imgt annotation if several are presents in the v_call, j_call or c_call columns of the <i>productive_seq.tsv</i> file. 
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             - germ_tree.pdf
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Phylogenic trees of the sequences that belong to a clonal (supposedly germline) group made of at least n sequences, n being set by the clone_nb_seq parameter in the nextflow.config file (one page per clonal group). Warning: clonal group full names are those given by dowser::formatClones, i.e., those from germinal_v_call and germinal_j_call from the <i>germ_tree_seq.tsv</i> file. 
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             - germ_no_tree.pdf
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             All the clonal groups with less than n sequences, n being set by the clone_nb_seq parameter in the nextflow.config file (one page per clonal group). Clonal group information is recapitulated in each page. 
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             tsv
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Folder containing all the  <b>tsv files</b> described below : 
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             - donut_stat.tsv
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             stats associated to the <i>donuts.pdf</i> file. 
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             - failed_igblast_seq.tsv
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             sequences that failed to be annotated by igblast (empty file if all the sequences are annotated). 
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             - passed_igblast_seq.tsv
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             sequences annotated by igblast (more precisely by <code>AssignGenes.py igblast --format airr</code>). If empty, generate a subsequent nextflow failure. The number of lines in <i>failed_igblast_seq.tsv</i> and <i>passed_igblast_seq.tsv</i> is equal to the number of submitted .fasta files. 
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             - productive_seq.tsv
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Productive sequences. Productive <a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#productive">means</a>: (1) coding region has an open reading frame, (2) no defect in the start codon, splicing sites or regulatory elements, (3) no internal stop codons, (4) an in-frame <a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#junction-versus-cdr3">junction</a> region. See the <i>unproductive_seq.tsv</i> file for sequences that failed to be productive.<br><b>Names in bold</b> are columns that have been added or modified, compared to the output of <code>AssignGenes.py igblast --format airr</code>.<br><a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#coordinate-numbering">Coordinates</a> are 1-based numbering with closed intervals. This means that 1) the very first position in sequence is numbered 1 (not 0) and 2) both the start and the end positions are included in the range.<br>Column description (from <a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#fields">here</a> for the names not in bold, with fields not kept <a href="./bin/fields_not_kept.txt">here</a>):
             <br><ul style="padding-left:1.2em; margin:0;"><li><b>sequence_id</b>: equivalent to <i>initial_sequence_id</i> column but modified with new names according to the <i>meta_name_replacement</i> parameter of the <i>nextflow.config</i> file.
             <br></li><li><b>initial_sequence_id</b>: optional. Only present if the <i>meta_path</i> and <i>meta_name_replacement</i> parameters of the <i>nextflow.config</i> file are non NULL. Originaly the <i>sequence_id</i> column of the <code>AssignGenes.py igblast --format airr</code> output. Unique query sequence identifier for the Rearrangement. Most often this will be the input sequence header or a substring thereof, but may also be a custom identifier defined by the tool in cases where query sequences have been combined in some fashion prior to alignment. When downloaded from an AIRR Data Commons repository, this will usually be a universally unique record locator for linking with other objects in the AIRR Data Model.
@@ -551,10 +551,10 @@ Use the scrollbar at the bottom of the table if the text is cut.
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             - clone_assigned_seq.tsv
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Sequences from the <i>productive_seq.tsv</i> file with germline clustering (clone ID), allele reannotation (germinal_v_call and germinal_j_call columns) and mutation load added. Warning: the number of sequences (i.e., rows) can be lower than in the <i>productive_seq.tsv</i> file due to sequences that failed to be clone assigned (see the <i>non_clone_assigned_sequence.tsv</i> file).
             <br>Additional columns description (from <a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#fields">here</a>):
             <br><ul style="padding-left:1.2em; margin:0;"><li>clone_id: Clone number. A same clone_id gathers all the sequences that putatively come from a same germline cell. The criteria for that is 1) same V gene, 2) same J gene, 3) same CDR3 length and 4) distance between CR3 sequences, computed using the clone_model and clone_normalize parameters from the <i>nextflow.config file</i>, less than the threshold set by the clone_distance parameter from the <i>nextflow.config</i> file.
@@ -584,58 +584,58 @@ Use the scrollbar at the bottom of the table if the text is cut.
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             - unproductive_seq.tsv
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Sequences that failed in productive annotations by igblast (empty file if all the sequences are productively annotated). 
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             - non_clone_assigned_sequence.tsv
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Productive sequences that failed to be assigned to a clone ID by the DefineClones.py function (empty file if all the sequences are assigned). See https://changeo.readthedocs.io/en/latest/methods/clustering.html but failure reasons are not explained. 
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             - germ_tree_clone_id.tsv
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Clonal group IDs used in the germline tree analysis (clonal group with at least n sequences, n being set by the clone_nb_seq parameter of the <i>nextflow.config</i> file). 
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             - germ_tree_dismissed_clone_id.tsv
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Clonal group IDs not used in the germline tree analysis (clonal group with less than n sequences, n being set by the clone_nb_seq parameter of the <i>nextflow.config</i> file). 
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             - germ_tree_seq.tsv
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Sequences of the <i>clone_assigned_seq.tsv</i> file used in the germline tree analysis (clonal group with at least n sequences, n being set by the clone_nb_seq parameter of the <i>nextflow.config</i> file). Additionnal germline_[<i>vdj</i>]_gene columns. 
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             - germ_tree_dismissed_seq.tsv
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Sequences of the <i>clone_assigned_seq.tsv</i> file not used in the germline tree analysis (clonal group with less than n sequences, n being set by the clone_nb_seq parameter of the <i>nextflow.config</i> file). 
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             - germ_tree_dup_seq_not_displayed.tsv
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-word; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Sequences file used in the germline tree analysis but not displayed in the graph, (1) because strictly identical to another sequence already in the tree and (2) because the tree_duplicate_seq parameter of the <i>nextflow.config</i> file has been set to "FALSE".
         </td>
     </tr>
