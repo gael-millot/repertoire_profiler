@@ -118,7 +118,7 @@ Total: ```r params$nb_seq_aligned + params$nb_seq_not_aligned```
 
 Success ratio: ```r base::round(params$nb_seq_aligned / (params$nb_seq_aligned + params$nb_seq_not_aligned), 2)```
 
-See the [passed_igblast_seq.tsv](./tsv/passed_igblast_seq.tsv) and the [passed_igblast_seq.tsv](./tsv/failed_igblast_seq.tsv) files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output). 
+See the passed_igblast_seq.tsv and the passed_igblast_seq.tsv files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output). 
 
 <br>
 
@@ -151,7 +151,7 @@ kable(df, format = "markdown", row.names = FALSE)
 
 Productiveness ratio: ```r base::round(params$nb_productive / (params$nb_productive + params$nb_unproductive), 2)```
 
-See the [productive_seq.tsv](./tsv/productive_seq.tsv) and the [unproductive_seq.tsv](./tsv/unproductive_seq.tsv) files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output).
+See the productive_seq.tsv and the unproductive_seq.tsv files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output).
 
 <br>
 
@@ -160,7 +160,7 @@ See the [productive_seq.tsv](./tsv/productive_seq.tsv) and the [unproductive_seq
 
 <br>
 
-Compilation of the [productive_seq.tsv](./tsv/productive_seq.tsv) file (and also of the [germ_tree_seq.tsv](./tsv/germ_tree_seq.tsv) file for the donut plots).
+Compilation of the [productive_seq.tsv](./tsv) file (and also of the [germ_tree_seq.tsv](./tsv) file for the donut plots).
 
 <br>
 
@@ -243,7 +243,7 @@ kable(df, format = "markdown", row.names = FALSE)
 <br>
 Passing ratio: ```r base::round(params$nb_clone_assigned / (params$nb_clone_assigned + nb_failed_clone), 2)```
 
-See the [clone_assigned_seq.tsv](./tsv/clone_assigned_seq.tsv) and the [non_clone_assigned_sequence.tsv](./tsv/non_clone_assigned_sequence.tsv) (sequences from the productive file that fail to be clone-assigned by `DefineClones.py`) files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output).
+See the clone_assigned_seq.tsv and the non_clone_assigned_sequence.tsv (sequences from the productive file that fail to be clone-assigned by `DefineClones.py`) files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output).
 
 <br>
 
