@@ -77,7 +77,7 @@ awk -v slice_size=1 -v prefix="cut" '$1 ~ /^>/{nbSeq++; currSlice=int((nbSeq-1)/
 ### 1. Prerequisite
 
 Installation of:<br>
-[nextflow DSL2](https://gael-millot.github.io/protocols/docs/Protocol%20152-rev0%20DSL2.html#_Toc159933761). Please, use the version indicated above.<br>
+[nextflow DSL2](file:///C:/Users/gmillot/Documents/Git_projects/protocols/docs/Protocol%20152-rev0%20DSL2.htm#_Toc208504071). Please, use the version indicated above.<br>
 [Graphviz](https://www.graphviz.org/download/), `sudo apt install graphviz` for Linux ubuntu.<br>
 [Apptainer](https://gael-millot.github.io/protocols/docs/Protocol%20135-rev0%20APPTAINER.html#_Toc160091693).<br>
 <br>
@@ -332,7 +332,7 @@ If the text is cut in the table, reload the page or change the width of the wind
             </li><li><b>igblast</b>: folder of the sequences from the <i>sequence_aa</i> column. Sequences are made of single letter aa with X and * added.
             </li><li><b>trimmed</b>: folder of the sequences from the <i>trimmed_sequence_aa</i> column. Sequences are made of single letter aa with X and * added. Warning: empty fasta means that trimming was not possible by <code>seqkit subseq</code> because sequences in the <i>sequence_alignment</i> and <i>sequence_alignment_with_gaps</i> columns are not identical (align_seq_identical column is FALSE).
             </li><li><b>align</b>: folder of the sequences from the <i>sequence_alignment_aa</i> column. Sequences are made of single letter aa with X, * and - added.</li></ul>
-            <b>IMPORTANT NOTE ABOUT CLONAL GROUPS</b> :<br>If the <i>clone_strategy</i> parameter in <i>nextflow.config</i> is set to "set", a single clonal group may contain different gene assignments. In such cases, the germline sequence included in the aligned FASTA file is selected as the most frequent germline sequence within the group.<br>If multiple germline sequences are equally frequent, the one associated with the first sequence (after sorting the group by sequence ID) is used. A warning is written to the log file whenever multiple germline sequences are detected in a group. 
+            <br><b>IMPORTANT NOTE ABOUT CLONAL GROUPS</b> :<br>If the <i>clone_strategy</i> parameter in <i>nextflow.config</i> is set to "set", a single clonal group may contain different gene assignments. In such cases, the germline sequence included in the aligned FASTA file is selected as the most frequent germline sequence within the group.<br>If multiple germline sequences are equally frequent, the one associated with the first sequence (after sorting the group by sequence ID) is used. A warning is written to the log file whenever multiple germline sequences are detected in a group. 
         </td>
     </tr>
     <tr>
