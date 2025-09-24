@@ -223,7 +223,7 @@ process igblast {
             exit 1
         fi
         # end test that the AssignGenes.py igblast --format airr is ok
-        # add _with_gaps into 
+        # add _with_gaps
         if [[ -s blast_format.tsv ]]; then # -s means MakeDb.py igblast has worked
             awk 'BEGIN{FS="\\t" ; ORS="" ; OFS=""}
                 # means that work only on the first file
@@ -272,6 +272,7 @@ process igblast {
                 }
             ' ./\${FILE}_igblast.tsv |& tee -a igblast_report.log
         fi
+        # end add _with_gaps
         # if no alignment
         ALIGNED=\$(
             awk 'BEGIN{FS="\\t"}

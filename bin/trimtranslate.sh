@@ -91,21 +91,21 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
                 exit 1
             }
             gsub(/\./, "", $SEQ_ALIGN_COL_NB) # Remove dots from the sequence
-            if($SEQ_ALIGN_COL_NB!~/^[NATGC]*$/){
+            if($SEQ_ALIGN_COL_NB!~/^[-NATGC]*$/){
                 print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nFOR "$NAME_COL_NB", "var2" COLUMN NAME OF THE INPUT FILE MUST BE A NUCLEOTIDE SEQUENCE\nHERE IT MIGHT BE MADE OF AMINO ACIDS:\n"$SEQ_ALIGN_COL_NB"\n\n========\n\n"
                 exit 1
             }
-            if($SEQ_ALIGN_GAP_COL_NB!~/^[NATGC.]*$/){
+            if($SEQ_ALIGN_GAP_COL_NB!~/^[-NATGC.]*$/){
                 print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nFOR "$NAME_COL_NB", "var3" COLUMN NAME OF THE INPUT FILE MUST BE A NUCLEOTIDE SEQUENCE WITH POTENTIAL IMGT GAPS (DOTS)\nHERE IT MIGHT BE MADE OF AMINO ACIDS:\n"$SEQ_COL_NB"\n\n========\n\n"
                 exit 1
             }
             TEMPO_SEQ_ALIGN_GAP=$SEQ_ALIGN_GAP_COL_NB
             gsub(/\./, "", TEMPO_SEQ_ALIGN_GAP)
-            if(TEMPO_SEQ_ALIGN_GAP!~/^[NATGC]*$/){
+            if(TEMPO_SEQ_ALIGN_GAP!~/^[-NATGC]*$/){
                 print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nFOR "$NAME_COL_NB", "var3" COLUMN NAME OF THE INPUT FILE MUST BE A NUCLEOTIDE SEQUENCE WITH POTENTIAL IMGT GAPS (DOTS)\nHERE IT MIGHT BE MADE OF AMINO ACIDS:\n"TEMPO_SEQ_ALIGN_GAP"\n\n========\n\n"
                 exit 1
             }
-            if($GERM_ALIGN_GAP_COL_NB!~/^[NATGC.]*$/){
+            if($GERM_ALIGN_GAP_COL_NB!~/^[-NATGC.]*$/){
                 print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nFOR "$NAME_COL_NB", "var4" COLUMN NAME OF THE INPUT FILE MUST BE A NUCLEOTIDE SEQUENCE WITH POTENTIAL IMGT GAPS (DOTS)\nHERE IT MIGHT BE MADE OF AMINO ACIDS:\n"$SEQ_COL_NB"\n\n========\n\n"
                 exit 1
             }

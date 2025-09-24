@@ -237,7 +237,7 @@ An example of results obtained with the dataset is present at this address: http
 <br><br>
 Complete informations are in the Protocol 144-rev0 Ig clustering - Immcantation.docx (contact Gael Millot).
 <br><br>
-Use the scrollbar at the bottom of the table if the text is cut.
+If the text is cut in the table, reload the page or change the width of the window.
 <br><br>
 <div style="overflow-x:auto; max-width:100%;">
 <table style="width:100%; border-collapse:collapse; overflow-wrap: anywhere;table-layout:fixed; word-break:break-all;">
@@ -549,7 +549,7 @@ Use the scrollbar at the bottom of the table if the text is cut.
             <br></li><li><b>trimmed_sequence_aa_stop</b>: Is there any stop codon inside the <i>trimmed_sequence_aa</i> sequence? TRUE if yes, FALSE if no. If TRUE and stars are present in the end of the aa sequence, it might come from a bad sequencing quality.
             <br></li><li><b>query_sequence_aa_stop</b>: Is there any stop codon inside the <i>query_sequence_aa</i> sequence? TRUE if yes, FALSE if no.
             <br></li><li><b>&lt;OPTIONAL_COLUMN&gt;</b>: reporting the data from the meta_legend parameter of the <i>nextflow.config</i> file, if ever used. Example: "KD".
-            <br></li><li><b>dist_nearest</b>: minimal distance from the nearest sequence using the model from the clone_model parameter (Haming by default). NA if no other sequences have same V, J and junction length or if another sequence is strictly identical (should be 0 but NA is returned).
+            <br></li><li><b>dist_nearest</b>: minimal distance from the nearest sequence using the model from the clone_model parameter (Haming by default). NA if no other sequences have same V, J and junction length or if another sequence is strictly identical (should be 0 but NA is returned). See <i>clone_id</i> below.
             <br></li><li><b>v_gene</b>: extracted from the <i>v_call</i> column but removing the allele specification after the *.
             <br></li><li><b>j_gene</b>: extracted from the <i>j_call</i> column but removing the allele specification after the *.
             <br></li><li><b>isotype_class</b>: extracted from the <i>c_call</i> column but indicating only the isotype.
@@ -563,7 +563,7 @@ Use the scrollbar at the bottom of the table if the text is cut.
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Sequences from the <i>productive_seq.tsv</i> file with germline clustering (clone ID), allele reannotation (germinal_v_call and germinal_j_call columns) and mutation load added. Warning: the number of sequences (i.e., rows) can be lower than in the <i>productive_seq.tsv</i> file due to sequences that failed to be clone assigned (see the <i>non_clone_assigned_sequence.tsv</i> file).
             <br>Additional columns description (from <a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#fields">here</a>):
-            <br><ul style="padding-left:1.2em; margin:0;"><li>clone_id: Clone number. A same clone_id gathers all the sequences that putatively come from a same germline cell. The criteria for that is 1) same V gene, 2) same J gene, 3) same CDR3 length and 4) distance between CR3 sequences, computed using the clone_model and clone_normalize parameters from the <i>nextflow.config file</i>, less than the threshold set by the clone_distance parameter from the <i>nextflow.config</i> file.
+            <br><ul style="padding-left:1.2em; margin:0;"><li>clone_id: Clone number. A same clone_id gathers all the sequences that putatively come from a same germline cell. See [here](https://changeo.readthedocs.io/en/stable/examples/cloning.html#assigning-clones), [here](https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette/) and [this article](https://genomemedicine.biomedcentral.com/articles/10.1186/s13073-015-0243-2) for details. In summary: 1) grouping the sequences according to "same V, J and junction length" (to facilitate the distance computation), 2) for each group, 2x2 distance computation using by default (<i>clone_model</i> and <i>clone_normalize</i> parameters of the <i>nextflow.config</i> file) the [Hamming distance](https://biology.stackexchange.com/questions/23523/hamming-distance-between-two-dna-strings), 3) cutoff definition , 4) using the cutoff (<i>clone_distance</i> parameter of the <i>nextflow.config</i> file) to define clonal groups inside each "same V, J and junction length" group.
             <br></li><li>germline_alignment_d_mask: as germline_alignment but with D masked (i.e., replaced by N, in the middle of the CDR3). Because the D-segment call for B cell receptor alignments is often low confidence, the default germline format (-g dmask) places Ns in the N/P and D-segments of the junction region rather than using the D-segment assigned during reference alignment; this can be modified to generate a complete germline (-g full) or a V-segment only germline (-g vonly).
             <br></li><li>germline_v_call: V germline cassette
             <br></li><li>germline_d_call: D germline cassette (usually NA)
@@ -703,6 +703,10 @@ Special acknowledgement to the team of [Kenneth Hoehn](https://medicine.yale.edu
 
 <br><br>
 ## WHAT'S NEW IN
+
+#### v21.2
+
+- Now take into account that nucleotide alignment sequences can have --- inside.
 
 #### v21.1
 
