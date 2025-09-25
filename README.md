@@ -705,6 +705,10 @@ Special acknowledgement to the team of [Kenneth Hoehn](https://medicine.yale.edu
 <br><br>
 ## WHAT'S NEW IN
 
+#### v21.3
+
+- Donut updated for better management of legends.
+
 #### v21.2
 
 - Now take into account that nucleotide alignment sequences can have --- inside.
