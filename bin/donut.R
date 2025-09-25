@@ -375,7 +375,9 @@ donut_legend_box_size <- as.numeric(donut_legend_box_size) # numeric string alre
 donut_legend_box_space <- as.numeric(donut_legend_box_space) # numeric string already checked by nextflow
 if(donut_legend_limit == "NULL"){
     donut_legend_limit <- NULL
-}else{
+}else if(donut_legend_limit == "ALL"){
+    donut_legend_limit <- 0 # numeric string already checked by nextflow
+else{
     donut_legend_limit <- as.numeric(donut_legend_limit) # numeric string already checked by nextflow
 
 }
