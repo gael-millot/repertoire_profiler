@@ -210,7 +210,7 @@ req.package.list <- c(
     "shazam"
 )
 # for(i in 1:length(req.package.list)){suppressMessages(library(req.package.list[i], character.only = TRUE))}
-fun_pack(req.package = req.package.list, load = TRUE, lib.path = NULL) # packages are imported even if inside functions are written as package.name::function() in the present code
+fun_pack(req.package = req.package.list, load = TRUE, lib_path = NULL) # packages are imported even if inside functions are written as package.name::function() in the present code
 
 
 ################################ End Functions

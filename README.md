@@ -705,6 +705,11 @@ Special acknowledgement to the team of [Kenneth Hoehn](https://medicine.yale.edu
 <br><br>
 ## WHAT'S NEW IN
 
+#### v21.4
+
+- Donut updated so that it uses saferDev.
+
+
 #### v21.3
 
 - Donut updated for better management of legends.

@@ -35,8 +35,8 @@
 
 
 # R version checking
-if(version$version.string != "R version 4.1.2 (2021-11-01)"){
-    stop(paste0("\n\n================\n\nERROR IN donut.R\n\n\n", version$version.string, " IS NOT THE 4.1.2 RECOMMANDED\n\n================\n\n"))
+if(version$version.string != "R version 4.4.2 (2024-10-31)"){
+    stop(paste0("\n\n================\n\nERROR IN donut.R\n\n\n", version$version.string, " IS NOT THE 4.4.2 RECOMMANDED\n\n================\n\n"))
 }
 # other initializations
 erase.objects = TRUE # write TRUE to erase all the existing objects in R before starting the algorithm and FALSE otherwise. Beginners should use TRUE
@@ -251,7 +251,7 @@ req.package.list <- c(
     "ggrepel"
 )
 for(i in 1:length(req.package.list)){suppressMessages(library(req.package.list[i], character.only = TRUE))}
-# fun_pack(req.package = req.package.list, load = TRUE, lib.path = NULL) # packages are imported even if inside functions are written as package.name::function() in the present code
+# fun_pack(req.package = req.package.list, load = TRUE, lib_path = NULL) # packages are imported even if inside functions are written as package.name::function() in the present code
 
 ################ local function
 
@@ -375,9 +375,9 @@ donut_legend_box_size <- as.numeric(donut_legend_box_size) # numeric string alre
 donut_legend_box_space <- as.numeric(donut_legend_box_space) # numeric string already checked by nextflow
 if(donut_legend_limit == "NULL"){
     donut_legend_limit <- NULL
-}else if(donut_legend_limit == "ALL"){
-    donut_legend_limit <- 0 # numeric string already checked by nextflow
-else{
+}else if(donut_legend_limit == "all"){
+    donut_legend_limit <- "all" # numeric string already checked by nextflow
+}else{
     donut_legend_limit <- as.numeric(donut_legend_limit) # numeric string already checked by nextflow
 
 }
@@ -424,7 +424,7 @@ fun_report(data = paste0("\n\n################################ RUNNING\n\n"), ou
 
 obs <- read.table(file_name, sep = "\t", header = TRUE, comment.char = "")
 
-tempo.cat <- paste0("\n\nREPERTOIRENAMES : ", repertoire_names_ch, "\n\n")
+tempo.cat <- paste0("\n\nREPERTOIRE NAMES : ", repertoire_names_ch, "\n\n")
 fun_report(data = tempo.cat, output = log, path = "./", overwrite = FALSE)
 cat(tempo.cat)
 
@@ -602,7 +602,7 @@ if(nrow(obs) > 0){
     if(length(obs3$Freq) != 0){
         if( ! (all(obs3$Freq == 0) | all(is.na(obs3$Freq)))){
             pdf(NULL) # used because I need plot = TRUE for return.gtable
-            tempo.plot <- fun_gg_donut(
+            tempo.plot <- gg_donut(
                 data1 = obs3, # select only the classes with annotations if kind == "annotated" & all.annotation.log != TRUE
                 freq = "Freq", 
                 categ = col, 
@@ -634,7 +634,7 @@ if(nrow(obs) > 0){
                 return.gtable = TRUE,
                 plot = FALSE, 
                 warn.print = TRUE, 
-                lib.path = NULL
+                lib_path = NULL
             )
             final.plot <- suppressMessages(suppressWarnings(gridExtra::grid.arrange(tempo.plot$gtable))) # , left = " ", right = " " : trick to add margins in the plot. padding =  unit(0.5, "inch") is for top margin above the title
             dev.off()

@@ -1893,7 +1893,7 @@ fun_test <- function(
         plot.fun = FALSE, 
         export = FALSE, 
         res.path = NULL, 
-        lib.path = NULL, 
+        lib_path = NULL, 
         cute.path = "C:\\Users\\Gael\\Documents\\Git_projects\\cute_little_R_functions\\cute_little_R_functions.R"
 ){
     # AIM
@@ -1911,13 +1911,13 @@ fun_test <- function(
     # plot.fun: logical. Plot the plotting function tested for each test?
     # export: logical. Export the results into a .RData file and into a .txt file? If FALSE, return a list into the console (see below). BEWARE: will be automatically set to TRUE if parall is TRUE. This means that when using parallelization, the results are systematically exported, not returned into the console
     # res.path: character string indicating the absolute pathway of folder where the txt results and pdfs, containing all the plots, will be saved. Several txt and pdf, one per thread, if parallelization. Ignored if export is FALSE. Must be specified if parall is TRUE or if export is TRUE
-    # lib.path: character vector specifying the absolute pathways of the directories containing the required packages if not in the default directories. Ignored if NULL
+    # lib_path: character vector specifying the absolute pathways of the directories containing the required packages if not in the default directories. Ignored if NULL
     # cute.path: character string indicating the absolute path of the cute.R file. Will be remove when cute will be a package. Ignored if parall is FALSE
     # REQUIRED PACKAGES
     # lubridate
     # parallel if parall arguemtn is TRUE (included in the R installation packages but not automatically loaded)
     # pdftools if parall arguemtn is TRUE (included in the R installation packages but not automatically loaded)
-    # If the tested function is in a package, this package must be imported first (no parallelization) or must be in the classical R package folder indicated by the lib.path argument (parallelization)
+    # If the tested function is in a package, this package must be imported first (no parallelization) or must be in the classical R package folder indicated by the lib_path argument (parallelization)
     # RETURN
     # if export is FALSE a list containing:
     # $fun: the tested function
@@ -1940,17 +1940,17 @@ fun_test <- function(
     # EXAMPLES
     # fun_test(fun = "unique", arg = c("x", "incomparables"), val = list(x = list(1:10, c(1,1,2,8), NA), incomparable = c(TRUE, FALSE, NA)))
     # fun_test(fun = "fun_round", arg = c("data", "dec.nb", "after.lead.zero"), val = list(L1 = list(c(1, 1.0002256, 1.23568), "a", NA), L2 = list(2, c(1,3), NA), L3 = c(TRUE, FALSE, NA)))
-    # fun_test(fun = "plot", arg = c("x", "y"), val = list(x = list(1:10, 12:13, NA, (1:10)^2), y = list(1:10, NA, NA)),  expect.error = list(x = list(FALSE, TRUE, TRUE, FALSE), y = list(FALSE, TRUE, TRUE)), parall = FALSE, thread.nb = NULL, plot.fun = TRUE, res.path = "C:\\Users\\Gael\\Desktop\\", lib.path = NULL)
-    # fun_test(fun = "plot", arg = c("x", "y"), val = list(x = list(1:10, 12:13, NA, (1:10)^2), y = list(1:10, NA, NA)), parall = FALSE, thread.nb = 4, plot.fun = TRUE, res.path = "C:\\Users\\Gael\\Desktop\\", lib.path = "C:\\Program Files\\R\\R-4.0.2\\library\\")
+    # fun_test(fun = "plot", arg = c("x", "y"), val = list(x = list(1:10, 12:13, NA, (1:10)^2), y = list(1:10, NA, NA)),  expect.error = list(x = list(FALSE, TRUE, TRUE, FALSE), y = list(FALSE, TRUE, TRUE)), parall = FALSE, thread.nb = NULL, plot.fun = TRUE, res.path = "C:\\Users\\Gael\\Desktop\\", lib_path = NULL)
+    # fun_test(fun = "plot", arg = c("x", "y"), val = list(x = list(1:10, 12:13, NA, (1:10)^2), y = list(1:10, NA, NA)), parall = FALSE, thread.nb = 4, plot.fun = TRUE, res.path = "C:\\Users\\Gael\\Desktop\\", lib_path = "C:\\Program Files\\R\\R-4.0.2\\library\\")
     # set.seed(1) ; obs1 <- data.frame(Time = c(rnorm(10), rnorm(10) + 2), Group1 = rep(c("G", "H"), each = 10), stringsAsFactors = TRUE) ; fun_test(fun = "fun_gg_boxplot", arg = c("data1", "y", "categ"), val = list(L1 = list(L1 = obs1), L2 = list(L1 = "Time"), L3 = list(L1 = "Group1")))
-    # set.seed(1) ; obs1 <- data.frame(Time = c(rnorm(10), rnorm(10) + 2), Group1 = rep(c("G", "H"), each = 10), stringsAsFactors = TRUE) ; fun_test(fun = "fun_gg_boxplot", arg = c("data1", "y", "categ"), val = list(L1 = list(obs1), L2 = "Time", L3 = "Group1"), parall = FALSE, thread.nb = NULL, plot.fun = TRUE, res.path = "C:\\Users\\Gael\\Desktop\\", lib.path = "C:\\Program Files\\R\\R-4.0.2\\library\\")
-    # library(ggplot2) ; fun_test(fun = "geom_histogram", arg = c("data", "mapping"), val = list(x = list(data.frame(X = "a", stringsAsFactors = TRUE)), y = list(ggplot2::aes(x = X))), parall = FALSE, thread.nb = NULL, plot.fun = TRUE, res.path = "C:\\Users\\Gael\\Desktop\\", lib.path = "C:\\Program Files\\R\\R-4.0.2\\library\\") # BEWARE: ggplot2::geom_histogram does not work
+    # set.seed(1) ; obs1 <- data.frame(Time = c(rnorm(10), rnorm(10) + 2), Group1 = rep(c("G", "H"), each = 10), stringsAsFactors = TRUE) ; fun_test(fun = "fun_gg_boxplot", arg = c("data1", "y", "categ"), val = list(L1 = list(obs1), L2 = "Time", L3 = "Group1"), parall = FALSE, thread.nb = NULL, plot.fun = TRUE, res.path = "C:\\Users\\Gael\\Desktop\\", lib_path = "C:\\Program Files\\R\\R-4.0.2\\library\\")
+    # library(ggplot2) ; fun_test(fun = "geom_histogram", arg = c("data", "mapping"), val = list(x = list(data.frame(X = "a", stringsAsFactors = TRUE)), y = list(ggplot2::aes(x = X))), parall = FALSE, thread.nb = NULL, plot.fun = TRUE, res.path = "C:\\Users\\Gael\\Desktop\\", lib_path = "C:\\Program Files\\R\\R-4.0.2\\library\\") # BEWARE: ggplot2::geom_histogram does not work
     # DEBUGGING
-    # fun = "unique" ; arg = "x" ; val = list(x = list(1:10, c(1,1,2,8), NA)) ; expect.error = list(x = list(FALSE, FALSE, TRUE)) ; parall = FALSE ; thread.nb = NULL ; plot.fun = FALSE ; export = FALSE ; res.path = "C:\\Users\\Gael\\Desktop\\" ; lib.path = NULL ; print.count = 1 ; cute.path = "C:\\Users\\Gael\\Documents\\Git_projects\\cute_little_R_functions\\cute_little_R_functions.R" # for function debugging
-    # fun = "unique" ; arg = c("x", "incomparables") ; val = list(x = list(1:10, c(1,1,2,8), NA), incomparable = c(TRUE, FALSE, NA)) ; expect.error = NULL ; parall = FALSE ; thread.nb = 2 ; plot.fun = FALSE ; export = TRUE ; res.path = "C:\\Users\\Gael\\Desktop\\" ; lib.path = NULL ; print.count = 10 ; cute.path = "C:\\Users\\Gael\\Documents\\Git_projects\\cute_little_R_functions\\cute_little_R_functions.R" # for function debugging
-    # fun = "plot" ; arg = c("x", "y") ; val = list(x = list(1:10, 12:13, NA), y = list(1:10, NA, NA)) ; expect.error = list(x = list(FALSE, FALSE, TRUE, FALSE), y = list(FALSE, TRUE, TRUE)) ; print.count = 10 ; parall = FALSE ; thread.nb = NULL ; plot.fun = TRUE ; export = TRUE ; res.path = "C:\\Users\\Gael\\Desktop\\" ; lib.path = NULL # for function debugging
-    # set.seed(1) ; obs1 <- data.frame(Time = c(rnorm(10), rnorm(10) + 2), Group1 = rep(c("G", "H"), each = 10), stringsAsFactors = TRUE) ; fun = "fun_gg_boxplot" ; arg = c("data1", "y", "categ") ; val = list(L1 = list(L1 = obs1), L2 = list(L1 = "Time"), L3 = list(L1 = "Group1")) ; expect.error = NULL ; print.count = 10 ; parall = FALSE ; thread.nb = NULL ; plot.fun = TRUE ; export = TRUE ; res.path = "C:\\Users\\Gael\\Desktop\\" ; lib.path = NULL # for function debugging
-    # fun = "unique" ; arg = "x" ; val = list(list(1:3, mean)) ; expect.error = list(TRUE, TRUE) ; parall = FALSE ; thread.nb = NULL ; plot.fun = FALSE ; export = FALSE ; res.path = "C:\\Users\\Gael\\Desktop\\" ; lib.path = NULL ; print.count = 1 ; cute.path = "C:\\Users\\Gael\\Documents\\Git_projects\\cute_little_R_functions\\cute_little_R_functions.R" # for function debugging
+    # fun = "unique" ; arg = "x" ; val = list(x = list(1:10, c(1,1,2,8), NA)) ; expect.error = list(x = list(FALSE, FALSE, TRUE)) ; parall = FALSE ; thread.nb = NULL ; plot.fun = FALSE ; export = FALSE ; res.path = "C:\\Users\\Gael\\Desktop\\" ; lib_path = NULL ; print.count = 1 ; cute.path = "C:\\Users\\Gael\\Documents\\Git_projects\\cute_little_R_functions\\cute_little_R_functions.R" # for function debugging
+    # fun = "unique" ; arg = c("x", "incomparables") ; val = list(x = list(1:10, c(1,1,2,8), NA), incomparable = c(TRUE, FALSE, NA)) ; expect.error = NULL ; parall = FALSE ; thread.nb = 2 ; plot.fun = FALSE ; export = TRUE ; res.path = "C:\\Users\\Gael\\Desktop\\" ; lib_path = NULL ; print.count = 10 ; cute.path = "C:\\Users\\Gael\\Documents\\Git_projects\\cute_little_R_functions\\cute_little_R_functions.R" # for function debugging
+    # fun = "plot" ; arg = c("x", "y") ; val = list(x = list(1:10, 12:13, NA), y = list(1:10, NA, NA)) ; expect.error = list(x = list(FALSE, FALSE, TRUE, FALSE), y = list(FALSE, TRUE, TRUE)) ; print.count = 10 ; parall = FALSE ; thread.nb = NULL ; plot.fun = TRUE ; export = TRUE ; res.path = "C:\\Users\\Gael\\Desktop\\" ; lib_path = NULL # for function debugging
+    # set.seed(1) ; obs1 <- data.frame(Time = c(rnorm(10), rnorm(10) + 2), Group1 = rep(c("G", "H"), each = 10), stringsAsFactors = TRUE) ; fun = "fun_gg_boxplot" ; arg = c("data1", "y", "categ") ; val = list(L1 = list(L1 = obs1), L2 = list(L1 = "Time"), L3 = list(L1 = "Group1")) ; expect.error = NULL ; print.count = 10 ; parall = FALSE ; thread.nb = NULL ; plot.fun = TRUE ; export = TRUE ; res.path = "C:\\Users\\Gael\\Desktop\\" ; lib_path = NULL # for function debugging
+    # fun = "unique" ; arg = "x" ; val = list(list(1:3, mean)) ; expect.error = list(TRUE, TRUE) ; parall = FALSE ; thread.nb = NULL ; plot.fun = FALSE ; export = FALSE ; res.path = "C:\\Users\\Gael\\Desktop\\" ; lib_path = NULL ; print.count = 1 ; cute.path = "C:\\Users\\Gael\\Documents\\Git_projects\\cute_little_R_functions\\cute_little_R_functions.R" # for function debugging
     # function name
     function.name <- paste0(as.list(match.call(expand.dots = FALSE))[[1]], "()")
     arg.names <- names(formals(fun = sys.function(sys.parent(n = 2)))) # names of all the arguments
@@ -2015,8 +2015,8 @@ fun_test <- function(
     if( ! is.null(res.path)){
         tempo <- fun_check(data = res.path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
     }
-    if( ! is.null(lib.path)){
-        tempo <- fun_check(data = lib.path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
+    if( ! is.null(lib_path)){
+        tempo <- fun_check(data = lib_path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
     }
     tempo <- fun_check(data = cute.path, class = "vector", typeof = "character", length = 1, fun.name = function.name) ; eval(ee)
     if( ! is.null(arg.check)){
@@ -2060,7 +2060,7 @@ fun_test <- function(
         "plot.fun", 
         "export", 
         # "res.path", # because can be NULL
-        # "lib.path", # because can be NULL
+        # "lib_path", # because can be NULL
         "cute.path"
     )
     tempo.log <- sapply(lapply(tempo.arg, FUN = get, env = sys.nframe(), inherit = FALSE), FUN = is.null)
@@ -2146,9 +2146,9 @@ fun_test <- function(
         tempo.cat <- paste0("WARNING FROM ", function.name, ": export ARGUMENT CONVERTED TO TRUE BECAUSE thread.nb ARGUMENT IS NOT NULL")
         warning(paste0("\n", tempo.cat, "\n"), call. = FALSE)
     }
-    if( ! is.null(lib.path)){
-        if( ! all(dir.exists(lib.path))){ # separation to avoid the problem of tempo$problem == FALSE and lib.path == NA
-            tempo.cat <- paste0("ERROR IN ", function.name, ": DIRECTORY PATH INDICATED IN THE lib.path ARGUMENT DOES NOT EXISTS:\n", paste(lib.path, collapse = "\n"))
+    if( ! is.null(lib_path)){
+        if( ! all(dir.exists(lib_path))){ # separation to avoid the problem of tempo$problem == FALSE and lib_path == NA
+            tempo.cat <- paste0("ERROR IN ", function.name, ": DIRECTORY PATH INDICATED IN THE lib_path ARGUMENT DOES NOT EXISTS:\n", paste(lib_path, collapse = "\n"))
             stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE)
         }
     }
@@ -2170,9 +2170,9 @@ fun_test <- function(
     # end reserved word checking
     # end second round of checking and data preparation
     # package checking
-    fun_pack(req.package = c("lubridate"), lib.path = lib.path)
+    fun_pack(req.package = c("lubridate"), lib_path = lib_path)
     if(parall == TRUE){
-        fun_pack(req.package = c("parallel", "pdftools"), lib.path = lib.path)
+        fun_pack(req.package = c("parallel", "pdftools"), lib_path = lib_path)
     }
     # end package checking
     # declaration of special plot functions
@@ -2426,7 +2426,7 @@ end.loop.string
             code = code,
             plot.fun = plot.fun, 
             res.path = res.path, 
-            lib.path = lib.path, 
+            lib_path = lib_path, 
             cute.path = cute.path, 
             fun = function(
         x, 
@@ -2450,14 +2450,14 @@ end.loop.string
         code, 
         plot.fun, 
         res.path, 
-        lib.path, 
+        lib_path, 
         cute.path
             ){
                 # check again: very important because another R
                 process.id <- Sys.getpid()
                 cat(paste0("\nPROCESS ID ", process.id, " -> TESTS ", x[1], " TO ", x[base::length(x)], "\n"))
                 source(cute.path, local = .GlobalEnv)
-                fun_pack(req.package = "lubridate", lib.path = lib.path, load = TRUE) # load = TRUE to be sure that functions are present in the environment. And this prevent to use R.lib.path argument of fun_python_pack()
+                fun_pack(req.package = "lubridate", lib_path = lib_path, load = TRUE) # load = TRUE to be sure that functions are present in the environment. And this prevent to use R.lib_path argument of fun_python_pack()
                 # end check again: very important because another R
                 # plot management
                 if(plot.fun == TRUE){
@@ -3512,7 +3512,7 @@ fun_permut <- function(
         cor.method = "spearman", 
         cor.limit = 0.2, 
         warn.print = FALSE, 
-        lib.path = NULL
+        lib_path = NULL
 ){
     # AIM
     # reorder the elements of the data1 vector by flipping 2 randomly selected  consecutive positions either:
@@ -3533,7 +3533,7 @@ fun_permut <- function(
     # cor.method: correlation method. Either "pearson", "kendall" or "spearman". Ignored if data2 is not specified
     # cor.limit: a correlation limit (between 0 and 1). Ignored if data2 is not specified. Compute the correlation between data1 and data2, permute the data1 values, and stop the permutation process when the correlation between data1 and data2 decreases down below the cor limit value (0.2 by default). If cor(data1, data2) is negative, then -cor.limit is used and the process stops until the correlation between data1 and data2 increases up over cor.limit (-0.2 by default). BEWARE: write a positive cor.limit even if cor(data1, data2) is known to be negative. The function will automatically uses -cor.limit. If the initial correlation is already below cor.limit (positive correlation) or over -cor.limit (negative correlation), then the data1 value positions are completely randomized (correlation between data1 and data2 is expected to be 0)
     # warn.print: logical. Print warnings at the end of the execution? No print if no warning messages
-    # lib.path: character vector specifying the absolute pathways of the directories containing the required packages if not in the default directories. Ignored if NULL
+    # lib_path: character vector specifying the absolute pathways of the directories containing the required packages if not in the default directories. Ignored if NULL
     # RETURN
     # a list containing:
     # $data: the modified vector
@@ -3559,10 +3559,10 @@ fun_permut <- function(
     # fun_permut(data1 = 1:1e2, data2 = 1e2:1, seed = 1, print.count = 1e3, cor.limit = 0.5)
     # fun_permut(data1 = c(0,0,0,0,0), n = 5, data2 = NULL, seed = 1, print.count = 1e3, cor.limit = 0.5)
     # DEBUGGING
-    # data1 = LETTERS[1:5] ; data2 = NULL ; n = 1e6 ; seed = NULL ; print.count = 1e3 ; text.print = "" ; cor.method = "spearman" ; cor.limit = 0.2 ; warn.print = TRUE ; lib.path = NULL
-    # data1 = LETTERS[1:5] ; data2 = NULL ; n = 10 ; seed = 22 ; print.count = 10 ; text.print = "" ; cor.method = "spearman" ; cor.limit = 0.2 ; warn.print = TRUE ; lib.path = NULL
-    # data1 = 101:110 ; data2 = 21:30 ; n = 10 ; seed = 22 ; print.count = 10 ; text.print = "" ; cor.method = "spearman" ; cor.limit = 0.2 ; warn.print = TRUE ; lib.path = NULL
-    # data1 = 1:1e3 ; data2 = 1e3:1 ; n = 20 ; seed = 22 ; print.count = 1e6 ; text.print = "" ; cor.method = "spearman" ; cor.limit = 0.5 ; warn.print = TRUE ; lib.path = NULL
+    # data1 = LETTERS[1:5] ; data2 = NULL ; n = 1e6 ; seed = NULL ; print.count = 1e3 ; text.print = "" ; cor.method = "spearman" ; cor.limit = 0.2 ; warn.print = TRUE ; lib_path = NULL
+    # data1 = LETTERS[1:5] ; data2 = NULL ; n = 10 ; seed = 22 ; print.count = 10 ; text.print = "" ; cor.method = "spearman" ; cor.limit = 0.2 ; warn.print = TRUE ; lib_path = NULL
+    # data1 = 101:110 ; data2 = 21:30 ; n = 10 ; seed = 22 ; print.count = 10 ; text.print = "" ; cor.method = "spearman" ; cor.limit = 0.2 ; warn.print = TRUE ; lib_path = NULL
+    # data1 = 1:1e3 ; data2 = 1e3:1 ; n = 20 ; seed = 22 ; print.count = 1e6 ; text.print = "" ; cor.method = "spearman" ; cor.limit = 0.5 ; warn.print = TRUE ; lib_path = NULL
     # function name
     function.name <- paste0(as.list(match.call(expand.dots = FALSE))[[1]], "()")
     # end function name
@@ -3620,11 +3620,11 @@ fun_permut <- function(
     tempo <- fun_check(data = cor.method, options = c("pearson", "kendall", "spearman"), length =1, fun.name = function.name) ; eval(ee)
     tempo <- fun_check(data = cor.limit, class = "vector", mode = "numeric", prop = TRUE, length = 1, fun.name = function.name) ; eval(ee)
     tempo <- fun_check(data = warn.print, class = "logical", length = 1, fun.name = function.name) ; eval(ee)
-    if( ! is.null(lib.path)){
-        tempo <- fun_check(data = lib.path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
+    if( ! is.null(lib_path)){
+        tempo <- fun_check(data = lib_path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
         if(tempo$problem == FALSE){
-            if( ! all(dir.exists(lib.path))){ # separation to avoid the problem of tempo$problem == FALSE and lib.path == NA
-                tempo.cat <- paste0("ERROR IN ", function.name, ": DIRECTORY PATH INDICATED IN THE lib.path ARGUMENT DOES NOT EXISTS:\n", paste(lib.path, collapse = "\n"))
+            if( ! all(dir.exists(lib_path))){ # separation to avoid the problem of tempo$problem == FALSE and lib_path == NA
+                tempo.cat <- paste0("ERROR IN ", function.name, ": DIRECTORY PATH INDICATED IN THE lib_path ARGUMENT DOES NOT EXISTS:\n", paste(lib_path, collapse = "\n"))
                 text.check <- c(text.check, tempo.cat)
                 arg.check <- c(arg.check, TRUE)
             }
@@ -3638,7 +3638,7 @@ fun_permut <- function(
     # source("C:/Users/Gael/Documents/Git_versions_to_use/debugging_tools_for_r_dev-v1.7/r_debugging_tools-v1.7.R") ; eval(parse(text = str_basic_arg_check_dev)) ; eval(parse(text = str_arg_check_with_fun_check_dev)) # activate this line and use the function (with no arguments left as NULL) to check arguments status and if they have been checked using fun_check()
     # end argument checking
     # package checking
-    fun_pack(req.package = "lubridate", lib.path = lib.path)
+    fun_pack(req.package = "lubridate", lib_path = lib_path)
     # end package checking
     # main code
     # code that protects set.seed() in the global environment
@@ -3911,7 +3911,7 @@ fun_slide <- function(
         thread.nb = NULL, 
         print.count = 100, 
         res.path = NULL, 
-        lib.path = NULL, 
+        lib_path = NULL, 
         verbose = TRUE, 
         cute.path = "C:\\Users\\Gael\\Documents\\Git_projects\\cute_little_R_functions\\cute_little_R_functions.R"
 ){
@@ -3934,7 +3934,7 @@ fun_slide <- function(
     # thread.nb: numeric value indicating the number of threads to use if ever parallelization is required. If NULL, all the available threads will be used. Ignored if parall is FALSE
     # print.count: interger value. Print a working progress message every print.count during loops. BEWARE: can increase substentially the time to complete the process using a small value, like 10 for instance. Use Inf is no loop message desired
     # res.path: character string indicating the absolute pathway where the parallelization log file will be created if parallelization is used. If NULL, will be created in the R current directory
-    # lib.path: character vector specifying the absolute pathways of the directories containing the required packages if not in the default directories. Ignored if NULL
+    # lib_path: character vector specifying the absolute pathways of the directories containing the required packages if not in the default directories. Ignored if NULL
     # verbose: logical. Display messages?
     # cute.path: character string indicating the absolute path of the cute.R file. Will be remove when cute will be a package. Ignored if parall is FALSE
     # RETURN
@@ -3955,7 +3955,7 @@ fun_slide <- function(
     # fun_slide(data = c(1:10, 100:110, 500), window.size = 5, step = 2, fun = length, boundary = "right") # effect of boundary argument
     # fun_slide(data = c(1:10, 100:110, 500), window.size = 5, step = 2, fun = length, boundary = "left", parall = TRUE) # effect of parall argument
     # DEBUGGING
-    # data = c(1:10, 100:110, 500) ; window.size = 5 ; step = 2 ; from = NULL ; to = NULL ; fun = length ; args = NULL ; boundary = "left" ; parall = FALSE ; thread.nb = NULL ; print.count = 100 ; res.path = NULL ; lib.path = NULL ; verbose = TRUE ; cute.path = "C:\\Users\\Gael\\Documents\\Git_projects\\cute_little_R_functions\\cute_little_R_functions.R"
+    # data = c(1:10, 100:110, 500) ; window.size = 5 ; step = 2 ; from = NULL ; to = NULL ; fun = length ; args = NULL ; boundary = "left" ; parall = FALSE ; thread.nb = NULL ; print.count = 100 ; res.path = NULL ; lib_path = NULL ; verbose = TRUE ; cute.path = "C:\\Users\\Gael\\Documents\\Git_projects\\cute_little_R_functions\\cute_little_R_functions.R"
     # data = lag.pos; window.size = window.size; step = step; fun = length; from = min(a$pos); to = max(a$pos)
     # function name
     function.name <- paste0(as.list(match.call(expand.dots = FALSE))[[1]], "()")
@@ -4034,8 +4034,8 @@ fun_slide <- function(
     if( ! is.null(res.path)){
         tempo <- fun_check(data = res.path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
     }
-    if( ! is.null(lib.path)){
-        tempo <- fun_check(data = lib.path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
+    if( ! is.null(lib_path)){
+        tempo <- fun_check(data = lib_path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
     }
     tempo <- fun_check(data = verbose, class = "vector", mode = "logical", length = 1, fun.name = function.name) ; eval(ee)
     tempo <- fun_check(data = cute.path, class = "vector", typeof = "character", length = 1, fun.name = function.name) ; eval(ee)
@@ -4081,7 +4081,7 @@ fun_slide <- function(
         # "thread.nb", # because can be NULL
         "print.count", 
         # "res.path", # because can be NULL
-        # "lib.path", # because can be NULL
+        # "lib_path", # because can be NULL
         "verbose", 
         "cute.path"
     )
@@ -4116,9 +4116,9 @@ fun_slide <- function(
     }else{
         res.path <- getwd() # working directory
     }
-    if( ! is.null(lib.path)){
-        if( ! all(dir.exists(lib.path))){ # separation to avoid the problem of tempo$problem == FALSE and lib.path == NA
-            tempo.cat <- paste0("ERROR IN ", function.name, ": DIRECTORY PATH INDICATED IN THE lib.path ARGUMENT DOES NOT EXISTS:\n", paste(lib.path, collapse = "\n"))
+    if( ! is.null(lib_path)){
+        if( ! all(dir.exists(lib_path))){ # separation to avoid the problem of tempo$problem == FALSE and lib_path == NA
+            tempo.cat <- paste0("ERROR IN ", function.name, ": DIRECTORY PATH INDICATED IN THE lib_path ARGUMENT DOES NOT EXISTS:\n", paste(lib_path, collapse = "\n"))
             stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE)
         }
     }
@@ -4139,8 +4139,8 @@ fun_slide <- function(
     # end reserved word checking
     # end second round of checking and data preparation
     # package checking
-    fun_pack(req.package = c("lubridate"), lib.path = lib.path)
-    fun_pack(req.package = c("parallel"), lib.path = lib.path)
+    fun_pack(req.package = c("lubridate"), lib_path = lib_path)
+    fun_pack(req.package = c("parallel"), lib_path = lib_path)
     # end package checking
     # main code
     if(verbose == TRUE){
@@ -4249,7 +4249,7 @@ fun_slide <- function(
             left = left, 
             right = right, 
             res.path = res.path, 
-            lib.path = lib.path, 
+            lib_path = lib_path, 
             verbose = verbose, 
             cute.path = cute.path, 
             fun = function(
@@ -4264,7 +4264,7 @@ fun_slide <- function(
         left, 
         right, 
         res.path, 
-        lib.path, 
+        lib_path, 
         verbose, 
         cute.path
             ){
@@ -4272,7 +4272,7 @@ fun_slide <- function(
                 process.id <- Sys.getpid()
                 cat(paste0("\nPROCESS ID ", process.id, " -> TESTS ", x[1], " TO ", x[length(x)], "\n"))
                 source(cute.path, local = .GlobalEnv)
-                fun_pack(req.package = "lubridate", lib.path = lib.path, load = TRUE) # load = TRUE to be sure that functions are present in the environment. And this prevent to use R.lib.path argument of fun_python_pack()
+                fun_pack(req.package = "lubridate", lib_path = lib_path, load = TRUE) # load = TRUE to be sure that functions are present in the environment. And this prevent to use R.lib_path argument of fun_python_pack()
                 # end check again: very important because another R
                 ini.date <- Sys.time()
                 ini.time <- as.numeric(ini.date) # time of process begin, converted into 
@@ -5096,14 +5096,14 @@ fun_prior_plot <- function(
 
 
 
-fun_scale <- function(n, lim, kind = "approx", lib.path = NULL){
+fun_scale <- function(n, lim, kind = "approx", lib_path = NULL){
     # AIM
     # attempt to select nice scale numbers when setting n ticks on a lim axis range
     # ARGUMENTS
     # n: desired number of main ticks on the axis (integer above 0)
     # lim: vector of 2 numbers indicating the limit range of the axis. Order of the 2 values matters (for inverted axis). Can be log transformed values
     # kind: either "approx" (approximative), "strict" (strict) or "strict.cl" (strict clean). If "approx", use the scales::trans_breaks() function to provide an easy to read scale of approximately n ticks spanning the range of the lim argument. If "strict", cut the range of the lim argument into n + 1 equidistant part and return the n numbers at each boundary. This often generates numbers uneasy to read. If "strict.cl", provide an easy to read scale of exactly n ticks, but sometimes not completely spanning the range of the lim argument
-    # lib.path: character vector specifying the absolute pathways of the directories containing the required packages if not in the default directories. Ignored if NULL
+    # lib_path: character vector specifying the absolute pathways of the directories containing the required packages if not in the default directories. Ignored if NULL
     # RETURN
     # a vector of numbers
     # REQUIRED PACKAGES
@@ -5123,8 +5123,8 @@ fun_scale <- function(n, lim, kind = "approx", lib.path = NULL){
     # approximate number of main ticks, scale inversion
     # ymin = 3.101 ; ymax = 2 ; n = 5 ; scale <- fun_scale(n = n, lim = c(ymin, ymax), kind = "approx") ; scale ; par(yaxt = "n", yaxs = "i", las = 1) ; plot(ymin:ymax, ymin:ymax, xlim = range(scale, ymin, ymax)[order(c(ymin, ymax))], ylim = range(scale, ymin, ymax)[order(c(ymin, ymax))], xlab = "DEFAULT SCALE", ylab = "NEW SCALE") ; par(yaxt = "s") ; axis(side = 2, at = scale)
     # DEBUGGING
-    # n = 9 ; lim = c(2, 3.101) ; kind = "approx" ; lib.path = NULL # for function debugging
-    # n = 10 ; lim = c(1e-4, 1e6) ; kind = "approx" ; lib.path = NULL # for function debugging
+    # n = 9 ; lim = c(2, 3.101) ; kind = "approx" ; lib_path = NULL # for function debugging
+    # n = 10 ; lim = c(1e-4, 1e6) ; kind = "approx" ; lib_path = NULL # for function debugging
     # function name
     function.name <- paste0(as.list(match.call(expand.dots = FALSE))[[1]], "()")
     # end function name
@@ -5161,11 +5161,11 @@ fun_scale <- function(n, lim, kind = "approx", lib.path = NULL){
         arg.check <- c(arg.check, TRUE)
     }
     tempo <- fun_check(data = kind, options = c("approx", "strict", "strict.cl"), length = 1, fun.name = function.name) ; eval(ee)
-    if( ! is.null(lib.path)){
-        tempo <- fun_check(data = lib.path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
+    if( ! is.null(lib_path)){
+        tempo <- fun_check(data = lib_path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
         if(tempo$problem == FALSE){
-            if( ! all(dir.exists(lib.path))){ # separation to avoid the problem of tempo$problem == FALSE and lib.path == NA
-                tempo.cat <- paste0("ERROR IN ", function.name, ": DIRECTORY PATH INDICATED IN THE lib.path ARGUMENT DOES NOT EXISTS:\n", paste(lib.path, collapse = "\n"))
+            if( ! all(dir.exists(lib_path))){ # separation to avoid the problem of tempo$problem == FALSE and lib_path == NA
+                tempo.cat <- paste0("ERROR IN ", function.name, ": DIRECTORY PATH INDICATED IN THE lib_path ARGUMENT DOES NOT EXISTS:\n", paste(lib_path, collapse = "\n"))
                 text.check <- c(text.check, tempo.cat)
                 arg.check <- c(arg.check, TRUE)
             }
@@ -5184,8 +5184,8 @@ fun_scale <- function(n, lim, kind = "approx", lib.path = NULL){
     lim <- sort(lim)
     if(kind == "approx"){
         # package checking
-        fun_pack(req.package = c("ggplot2"), lib.path = lib.path)
-        fun_pack(req.package = c("scales"), lib.path = lib.path)
+        fun_pack(req.package = c("ggplot2"), lib_path = lib_path)
+        fun_pack(req.package = c("scales"), lib_path = lib_path)
         # end package checking
         output <- ggplot2::ggplot_build(ggplot2::ggplot() + ggplot2::scale_y_continuous(
             breaks = scales::trans_breaks(
@@ -6330,14 +6330,14 @@ fun_gg_just <- function(angle, pos, kind = "axis"){
 
 
 
-fun_gg_get_legend <- function(ggplot_built, fun.name = NULL, lib.path = NULL){
+fun_gg_get_legend <- function(ggplot_built, fun.name = NULL, lib_path = NULL){
     # AIM
     # get legend of ggplot objects
     # # from https://stackoverflow.com/questions/12539348/ggplot-separate-legend-and-plot
     # ARGUMENTS
     # ggplot_built: a ggplot build object
     # fun.name: single character string indicating the name of the function using fun_gg_get_legend() for warning and error messages. Ignored if NULL
-    # lib.path: character vector specifying the absolute pathways of the directories containing the required packages if not in the default directories. Ignored if NULL
+    # lib_path: character vector specifying the absolute pathways of the directories containing the required packages if not in the default directories. Ignored if NULL
     # RETURN
     # a list of class c("gtable", "gTree", "grob", "gDesc"), providing legend information of ggplot_built objet, or NULL if the ggplot_built object has no legend
     # REQUIRED PACKAGES
@@ -6351,7 +6351,7 @@ fun_gg_get_legend <- function(ggplot_built, fun.name = NULL, lib.path = NULL){
     # Error message because no legend in the ggplot
     # obs1 <- data.frame(time = 1:20, group = rep(c("CLASS_1", "CLASS_2"), times = 10), stringsAsFactors = TRUE) ; p <- ggplot2::ggplot() + ggplot2::geom_point(data = obs1, mapping = ggplot2::aes(x = group, y = time)) ; fun_gg_get_legend(ggplot_built = ggplot2::ggplot_build(p))
     # DEBUGGING
-    # obs1 <- data.frame(time = 1:20, group = rep(c("CLASS_1", "CLASS_2"), times = 10), stringsAsFactors = TRUE) ; p <- ggplot2::ggplot() + ggplot2::geom_point(data = obs1, mapping = ggplot2::aes(x = group, y = time)) ; ggplot_built = ggplot2::ggplot_build(p) ; fun.name = NULL ; lib.path = NULL
+    # obs1 <- data.frame(time = 1:20, group = rep(c("CLASS_1", "CLASS_2"), times = 10), stringsAsFactors = TRUE) ; p <- ggplot2::ggplot() + ggplot2::geom_point(data = obs1, mapping = ggplot2::aes(x = group, y = time)) ; ggplot_built = ggplot2::ggplot_build(p) ; fun.name = NULL ; lib_path = NULL
     # function name
     function.name <- paste0(as.list(match.call(expand.dots = FALSE))[[1]], "()")
     # end function name
@@ -6387,8 +6387,8 @@ fun_gg_get_legend <- function(ggplot_built, fun.name = NULL, lib.path = NULL){
     if( ! is.null(fun.name)){
         tempo <- fun_check(data = fun.name, class = "vector", mode = "character", length = 1, fun.name = function.name) ; eval(ee)
     }
-    if( ! is.null(lib.path)){
-        tempo <- fun_check(data = lib.path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
+    if( ! is.null(lib_path)){
+        tempo <- fun_check(data = lib_path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
     }
     if( ! is.null(arg.check)){
         if(any(arg.check) == TRUE){
@@ -6400,7 +6400,7 @@ fun_gg_get_legend <- function(ggplot_built, fun.name = NULL, lib.path = NULL){
     # end argument primary checking
     # second round of checking
     # management of NA
-    if(any(is.na(ggplot_built)) | any(is.na(fun.name)) | any(is.na(lib.path))){
+    if(any(is.na(ggplot_built)) | any(is.na(fun.name)) | any(is.na(lib_path))){
         tempo.cat <- paste0("ERROR IN ", function.name, ": NO ARGUMENT CAN HAVE NA VALUES")
         stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between ==
     }
@@ -6411,15 +6411,15 @@ fun_gg_get_legend <- function(ggplot_built, fun.name = NULL, lib.path = NULL){
         stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between ==
     }
     # end management of NULL
-    if( ! is.null(lib.path)){
-        if( ! all(dir.exists(lib.path))){
-            tempo.cat <- paste0("ERROR IN ", function.name, ": DIRECTORY PATH INDICATED IN THE lib.path ARGUMENT DOES NOT EXISTS:\n", paste(lib.path, collapse = "\n"))
+    if( ! is.null(lib_path)){
+        if( ! all(dir.exists(lib_path))){
+            tempo.cat <- paste0("ERROR IN ", function.name, ": DIRECTORY PATH INDICATED IN THE lib_path ARGUMENT DOES NOT EXISTS:\n", paste(lib_path, collapse = "\n"))
             stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between ==
         }
     }
     # end second round of checking
     # package checking
-    fun_pack(req.package = c("ggplot2"), lib.path = lib.path)
+    fun_pack(req.package = c("ggplot2"), lib_path = lib_path)
     # end package checking
     # main code
     win.nb <- dev.cur()
@@ -6459,7 +6459,7 @@ fun_gg_point_rast <- function(
         raster.height = NULL, 
         raster.dpi = 300, 
         inactivate = TRUE, 
-        lib.path = NULL
+        lib_path = NULL
 ){
     # AIM
     # equivalent to ggplot2::geom_point() but in raster mode
@@ -6475,7 +6475,7 @@ fun_gg_point_rast <- function(
     # raster.height: height of the result image (in inches). Default: deterined by the current device parameters
     # raster.dpi: resolution of the result image
     # inactivate: logical. Inactivate the fun.name argument of the fun_check() function? If TRUE, the name of the fun_check() function in error messages coming from this function. Use TRUE if fun_gg_point_rast() is used like this: eval(parse(text = "fun_gg_point_rast"))
-    # lib.path: character vector specifying the absolute pathways of the directories containing the required packages if not in the default directories. Ignored if NULL
+    # lib_path: character vector specifying the absolute pathways of the directories containing the required packages if not in the default directories. Ignored if NULL
     # RETURN
     # a raster scatter plot
     # REQUIRED PACKAGES
@@ -6533,11 +6533,11 @@ fun_gg_point_rast <- function(
     }
     tempo <- fun_check(data = raster.dpi, class = "integer", length = 1, double.as.integer.allowed = TRUE, neg.values = FALSE, fun.name = function.name) ; eval(ee)
     tempo <- fun_check(data = inactivate, class = "vector", mode = "logical", length = 1, fun.name = function.name) ; eval(ee)
-    if( ! is.null(lib.path)){
-        tempo <- fun_check(data = lib.path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
+    if( ! is.null(lib_path)){
+        tempo <- fun_check(data = lib_path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
         if(tempo$problem == FALSE){
-            if( ! all(dir.exists(lib.path))){ # separation to avoid the problem of tempo$problem == FALSE and lib.path == NA
-                tempo.cat <- paste0("ERROR IN ", function.name, ": DIRECTORY PATH INDICATED IN THE lib.path ARGUMENT DOES NOT EXISTS:\n", paste(lib.path, collapse = "\n"))
+            if( ! all(dir.exists(lib_path))){ # separation to avoid the problem of tempo$problem == FALSE and lib_path == NA
+                tempo.cat <- paste0("ERROR IN ", function.name, ": DIRECTORY PATH INDICATED IN THE lib_path ARGUMENT DOES NOT EXISTS:\n", paste(lib_path, collapse = "\n"))
                 text.check <- c(text.check, tempo.cat)
                 arg.check <- c(arg.check, TRUE)
             }
@@ -6551,9 +6551,9 @@ fun_gg_point_rast <- function(
     # source("C:/Users/Gael/Documents/Git_versions_to_use/debugging_tools_for_r_dev-v1.7/r_debugging_tools-v1.7.R") ; eval(parse(text = str_basic_arg_check_dev)) ; eval(parse(text = str_arg_check_with_fun_check_dev)) # activate this line and use the function (with no arguments left as NULL) to check arguments status and if they have been checked using fun_check()
     # end argument checking
     # package checking
-    fun_pack(req.package = c("ggplot2"), lib.path = lib.path)
-    fun_pack(req.package = c("grid"), lib.path = lib.path)
-    fun_pack(req.package = c("Cairo"), lib.path = lib.path)
+    fun_pack(req.package = c("ggplot2"), lib_path = lib_path)
+    fun_pack(req.package = c("grid"), lib_path = lib_path)
+    fun_pack(req.package = c("Cairo"), lib_path = lib_path)
     # end package checking
     # additional functions
     DrawGeomPointRast <- function(data, panel_params, coord, na.rm = FALSE, raster.width = NULL, raster.height= NULL, raster.dpi = raster.dpi){
@@ -6635,7 +6635,7 @@ fun_gg_heatmap <- function(
         plot = TRUE, 
         add = NULL, 
         warn.print = FALSE, 
-        lib.path = NULL
+        lib_path = NULL
 ){
     # AIM
     # ggplot2 heatmap with the possibility to overlay a mask
@@ -6664,7 +6664,7 @@ fun_gg_heatmap <- function(
     # plot: logical. Plot the graphic? If FALSE and return argument is TRUE, graphical parameters and associated warnings are provided without plotting
     # add: character string allowing to add more ggplot2 features (dots, lines, themes, etc.). BEWARE: (1) must start with "+" just after the simple or double opening quote (no space, end of line, carriage return, etc., allowed), (2) must finish with ")" just before the simple or double closing quote (no space, end of line, carriage return, etc., allowed) and (3) each function must be preceded by "ggplot2::" (for instance: "ggplot2::coord_flip()). If the character string contains the "ggplot2::theme" string, then internal ggplot2 theme() and theme_classic() functions will be inactivated to be reused by add. BEWARE: handle this argument with caution since added functions can create conflicts with the preexisting internal ggplot2 functions
     # warn.print: logical. Print warnings at the end of the execution? No print if no warning messages
-    # lib.path: absolute path of the required packages, if not in the default folders
+    # lib_path: absolute path of the required packages, if not in the default folders
     # RETURN
     # a heatmap if plot argument is TRUE
     # a list of the graph info if return argument is TRUE:
@@ -6691,7 +6691,7 @@ fun_gg_heatmap <- function(
     # fun_gg_heatmap(data1 = matrix(1:16, ncol = 4), data2 = reshape2::melt(matrix(rep(c(1,0,0,0), 4), ncol = 4)))
     # fun_gg_heatmap(data1 = reshape2::melt(matrix(1:16, ncol = 4)), data2 = reshape2::melt(matrix(rep(c(1,0,0,0), 4), ncol = 4)))
     # DEBUGGING
-    # data1 = matrix(1:16, ncol = 4) ; legend.name1 = "" ; low.color1 = "blue" ; mid.color1 = "white" ; high.color1 = "red" ; limit1 = NULL ; midpoint1 = NULL ; data2 = matrix(rep(c(1,0,0,0), 4), ncol = 4) ; color2 = "black" ; alpha2 = 0.5 ; invert2 = FALSE ; text.size = 12 ; title = "" ; title.text.size = 12 ; show.scale = TRUE ; rotate = FALSE ; return = FALSE ; plot = TRUE ; add = NULL ; warn.print = TRUE ; lib.path = NULL
+    # data1 = matrix(1:16, ncol = 4) ; legend.name1 = "" ; low.color1 = "blue" ; mid.color1 = "white" ; high.color1 = "red" ; limit1 = NULL ; midpoint1 = NULL ; data2 = matrix(rep(c(1,0,0,0), 4), ncol = 4) ; color2 = "black" ; alpha2 = 0.5 ; invert2 = FALSE ; text.size = 12 ; title = "" ; title.text.size = 12 ; show.scale = TRUE ; rotate = FALSE ; return = FALSE ; plot = TRUE ; add = NULL ; warn.print = TRUE ; lib_path = NULL
     # function name
     function.name <- paste0(as.list(match.call(expand.dots = FALSE))[[1]], "()")
     # end function name
@@ -6836,11 +6836,11 @@ fun_gg_heatmap <- function(
         }
     }
     tempo <- fun_check(data = warn.print, class = "logical", length = 1, fun.name = function.name) ; eval(ee)
-    if( ! is.null(lib.path)){
-        tempo <- fun_check(data = lib.path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
+    if( ! is.null(lib_path)){
+        tempo <- fun_check(data = lib_path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
         if(tempo$problem == FALSE){
-            if( ! all(dir.exists(lib.path))){ # separation to avoid the problem of tempo$problem == FALSE and lib.path == NA
-                tempo.cat <- paste0("ERROR IN ", function.name, ": DIRECTORY PATH INDICATED IN THE lib.path ARGUMENT DOES NOT EXISTS:\n", paste(lib.path, collapse = "\n"))
+            if( ! all(dir.exists(lib_path))){ # separation to avoid the problem of tempo$problem == FALSE and lib_path == NA
+                tempo.cat <- paste0("ERROR IN ", function.name, ": DIRECTORY PATH INDICATED IN THE lib_path ARGUMENT DOES NOT EXISTS:\n", paste(lib_path, collapse = "\n"))
                 text.check <- c(text.check, tempo.cat)
                 arg.check <- c(arg.check, TRUE)
             }
@@ -6854,7 +6854,7 @@ fun_gg_heatmap <- function(
     # source("C:/Users/Gael/Documents/Git_versions_to_use/debugging_tools_for_r_dev-v1.7/r_debugging_tools-v1.7.R") ; eval(parse(text = str_basic_arg_check_dev)) ; eval(parse(text = str_arg_check_with_fun_check_dev)) # activate this line and use the function (with no arguments left as NULL) to check arguments status and if they have been checked using fun_check()
     # end argument checking
     # package checking
-    fun_pack(req.package = c("reshape2", "ggplot2"), lib.path = lib.path)
+    fun_pack(req.package = c("reshape2", "ggplot2"), lib_path = lib_path)
     # end package checking
     # main code
     ini.warning.length <- options()$warning.length
@@ -6971,7 +6971,7 @@ fun_gg_empty_graph <- function(
         text.size = 12, 
         title = NULL, 
         title.size = 8, 
-        lib.path = NULL
+        lib_path = NULL
 ){
     # AIM
     # display an empty ggplot2 plot with a text in the middle of the window (for instance to specify that no plot can be drawn)
@@ -6980,7 +6980,7 @@ fun_gg_empty_graph <- function(
     # text.size: numeric value of the text size (in points)
     # title: character string of the graph title
     # title.size: numeric value of the title size (in points)
-    # lib.path: character vector specifying the absolute pathways of the directories containing the required packages if not in the default directories. Ignored if NULL
+    # lib_path: character vector specifying the absolute pathways of the directories containing the required packages if not in the default directories. Ignored if NULL
     # RETURN
     # an empty plot
     # REQUIRED PACKAGES
@@ -6994,9 +6994,9 @@ fun_gg_empty_graph <- function(
     ### white page
     # fun_gg_empty_graph()
     ### all the arguments
-    # fun_gg_empty_graph(text = "NO GRAPH", text.size = 8, title = "GRAPH1", title.size = 10, lib.path = NULL)
+    # fun_gg_empty_graph(text = "NO GRAPH", text.size = 8, title = "GRAPH1", title.size = 10, lib_path = NULL)
     # DEBUGGING
-    # text = "NO GRAPH" ; text.size = 12 ; title = "GRAPH1" ; title.size = 8 ; lib.path = NULL
+    # text = "NO GRAPH" ; text.size = 12 ; title = "GRAPH1" ; title.size = 8 ; lib_path = NULL
     # function name
     function.name <- paste0(as.list(match.call(expand.dots = FALSE))[[1]], "()")
     # end function name
@@ -7031,7 +7031,7 @@ fun_gg_empty_graph <- function(
     # source("C:/Users/Gael/Documents/Git_versions_to_use/debugging_tools_for_r_dev-v1.7/r_debugging_tools-v1.7.R") ; eval(parse(text = str_basic_arg_check_dev)) ; eval(parse(text = str_arg_check_with_fun_check_dev)) # activate this line and use the function (with no arguments left as NULL) to check arguments status and if they have been checked using fun_check()
     # end argument checking
     # package checking
-    fun_pack(req.package = c("ggplot2"), lib.path = lib.path)
+    fun_pack(req.package = c("ggplot2"), lib_path = lib_path)
     # end package checking
     # main code
     tempo.gg.name <- "gg.indiv.plot."
@@ -7419,7 +7419,7 @@ fun_segmentation <- function(
         graph.in.file = FALSE, 
         raster = TRUE, 
         warn.print = FALSE, 
-        lib.path = NULL
+        lib_path = NULL
 ){
     # AIM
     # if data1 is a data frame corresponding to the data set of a scatterplot (with a x column for x-axis values and a y column for the y-axis column), then fun_segmentation() delimits a frame around the dots cloud using a sliding window set by x.range.split and x.step.factor to frame the top and bottom part of the cloud, and set by y.range.split and y.step.factor to frame the left and right part of the cloud
@@ -7446,7 +7446,7 @@ fun_segmentation <- function(
     # graph.in.file: logical. Graphs sent into a graphic device already opened? If FALSE, GUI are opened for each graph. If TRUE, no GUI are opended. The graphs are displayed on the current active graphic device. Ignored if plot is FALSE
     # raster: logical. Dots in raster mode? If FALSE, dots from each geom_point from geom argument are in vectorial mode (bigger pdf and long to display if millions of dots). If TRUE, dots from each geom_point from geom argument are in matricial mode (smaller pdf and easy display if millions of dots, but long to generate the layer). If TRUE, the region plot will be square to avoid a bug in fun_gg_point_rast(). If TRUE, solve the transparency problem with some GUI. Not considered if plot is FALSE
     # warn.print: logical. Print warnings at the end of the execution? No print if no warning messages
-    # lib.path: character vector specifying the absolute pathways of the directories containing the required packages if not in the default directories. Ignored if NULL. Ignored if plot is FALSE
+    # lib_path: character vector specifying the absolute pathways of the directories containing the required packages if not in the default directories. Ignored if NULL. Ignored if plot is FALSE
     # RETURN
     # several graphs if plot is TRUE
     # a list containing:
@@ -7479,13 +7479,13 @@ fun_segmentation <- function(
     # EXAMPLES
     # example explaining the unknown and inconsistent dots, and the cross 
     
-    # set.seed(1) ; data1 = data.frame(x = rnorm(500), y = rnorm(500), stringsAsFactors = TRUE) ; data1[5:7, 2] <- NA ; data2 = data.frame(x = rnorm(500, 0, 2), y = rnorm(500, 0, 2), stringsAsFactors = TRUE) ; data2[11:13, 1] <- Inf ; set.seed(NULL) ; fun_segmentation(data1 = data1, x1 = names(data1)[1], y1 = names(data1)[2], x.range.split = 20, x.step.factor = 10, y.range.split = 23, y.step.factor = 10, error = 0, data2 = data2, x2 = names(data2)[1], y2 = names(data2)[2], data2.pb.dot = "not.signif", xy.cross.kind = "|", plot = TRUE, graph.in.file = FALSE, raster = FALSE, lib.path = NULL)
-    # set.seed(1) ; data1 = data.frame(x = rnorm(500), y = rnorm(500), stringsAsFactors = TRUE) ; data2 = data.frame(x = rnorm(500, 0, 2), y = rnorm(500, 0, 2), stringsAsFactors = TRUE) ; set.seed(NULL) ; fun_segmentation(data1 = data1, x1 = names(data1)[1], y1 = names(data1)[2], x.range.split = NULL, x.step.factor = 10, y.range.split = 23, y.step.factor = 10, error = 0, data2 = data2, x2 = names(data2)[1], y2 = names(data2)[2], data2.pb.dot = "unknown", xy.cross.kind = "|", plot = TRUE, graph.in.file = FALSE, raster = FALSE, lib.path = NULL)
-    # set.seed(1) ; data1 = data.frame(x = rnorm(500), y = rnorm(500), stringsAsFactors = TRUE) ; data2 = data.frame(x = rnorm(500, 0, 2), y = rnorm(500, 0, 2), stringsAsFactors = TRUE) ; set.seed(NULL) ; fun_segmentation(data1 = data1, x1 = names(data1)[1], y1 = names(data1)[2], x.range.split = 20, x.step.factor = 10, y.range.split = NULL, y.step.factor = 10, error = 0, data2 = data2, x2 = names(data2)[1], y2 = names(data2)[2], data2.pb.dot = "unknown", xy.cross.kind = "&", plot = TRUE, graph.in.file = FALSE, raster = FALSE, lib.path = NULL)
+    # set.seed(1) ; data1 = data.frame(x = rnorm(500), y = rnorm(500), stringsAsFactors = TRUE) ; data1[5:7, 2] <- NA ; data2 = data.frame(x = rnorm(500, 0, 2), y = rnorm(500, 0, 2), stringsAsFactors = TRUE) ; data2[11:13, 1] <- Inf ; set.seed(NULL) ; fun_segmentation(data1 = data1, x1 = names(data1)[1], y1 = names(data1)[2], x.range.split = 20, x.step.factor = 10, y.range.split = 23, y.step.factor = 10, error = 0, data2 = data2, x2 = names(data2)[1], y2 = names(data2)[2], data2.pb.dot = "not.signif", xy.cross.kind = "|", plot = TRUE, graph.in.file = FALSE, raster = FALSE, lib_path = NULL)
+    # set.seed(1) ; data1 = data.frame(x = rnorm(500), y = rnorm(500), stringsAsFactors = TRUE) ; data2 = data.frame(x = rnorm(500, 0, 2), y = rnorm(500, 0, 2), stringsAsFactors = TRUE) ; set.seed(NULL) ; fun_segmentation(data1 = data1, x1 = names(data1)[1], y1 = names(data1)[2], x.range.split = NULL, x.step.factor = 10, y.range.split = 23, y.step.factor = 10, error = 0, data2 = data2, x2 = names(data2)[1], y2 = names(data2)[2], data2.pb.dot = "unknown", xy.cross.kind = "|", plot = TRUE, graph.in.file = FALSE, raster = FALSE, lib_path = NULL)
+    # set.seed(1) ; data1 = data.frame(x = rnorm(500), y = rnorm(500), stringsAsFactors = TRUE) ; data2 = data.frame(x = rnorm(500, 0, 2), y = rnorm(500, 0, 2), stringsAsFactors = TRUE) ; set.seed(NULL) ; fun_segmentation(data1 = data1, x1 = names(data1)[1], y1 = names(data1)[2], x.range.split = 20, x.step.factor = 10, y.range.split = NULL, y.step.factor = 10, error = 0, data2 = data2, x2 = names(data2)[1], y2 = names(data2)[2], data2.pb.dot = "unknown", xy.cross.kind = "&", plot = TRUE, graph.in.file = FALSE, raster = FALSE, lib_path = NULL)
     # DEBUGGING
-    # set.seed(1) ; data1 = data.frame(x = rnorm(50), y = rnorm(50), stringsAsFactors = TRUE) ; data1[5:7, 2] <- NA ; x1 = names(data1)[1] ; y1 = names(data1)[2] ; x.range.split = 5 ; x.step.factor = 10 ; y.range.split = 5 ; y.step.factor = 10 ; error = 0 ; data2 = data.frame(x = rnorm(50, 0, 2), y = rnorm(50, 0, 2), stringsAsFactors = TRUE) ; set.seed(NULL) ; x2 = names(data2)[1] ; y2 = names(data2)[2] ; data2.pb.dot = "unknown" ; xy.cross.kind = "|" ; plot = TRUE ; graph.in.file = FALSE ; raster = FALSE ; warn.print = TRUE ; lib.path = NULL
-    # set.seed(1) ; data1 = data.frame(x = rnorm(500), y = rnorm(500), stringsAsFactors = TRUE) ; data2 = data.frame(x = rnorm(500, 0, 2), y = rnorm(500, 0, 2), stringsAsFactors = TRUE) ; set.seed(NULL) ; x1 = names(data1)[1] ; y1 = names(data1)[2] ; x.range.split = 20 ; x.step.factor = 10 ; y.range.split = 23 ; y.step.factor = 10 ; error = 0 ; x2 = names(data2)[1] ; y2 = names(data2)[2] ; data2.pb.dot = "not.signif" ; xy.cross.kind = "|" ; plot = TRUE ; graph.in.file = FALSE ; raster = FALSE ; warn.print = TRUE ; lib.path = NULL
-    # set.seed(1) ; data1 = data.frame(x = rnorm(500), y = rnorm(500), stringsAsFactors = TRUE) ; data2 = data.frame(x = rnorm(500, 0, 2), y = rnorm(500, 0, 2), stringsAsFactors = TRUE) ; set.seed(NULL) ; x1 = names(data1)[1] ; y1 = names(data1)[2] ; x.range.split = 20 ; x.step.factor = 10 ; y.range.split = NULL ; y.step.factor = 10 ; error = 0 ; x2 = names(data2)[1] ; y2 = names(data2)[2] ; data2.pb.dot = "unknown" ; xy.cross.kind = "&" ; plot = TRUE ; graph.in.file = FALSE ; raster = FALSE ; warn.print = TRUE ; lib.path = NULL
+    # set.seed(1) ; data1 = data.frame(x = rnorm(50), y = rnorm(50), stringsAsFactors = TRUE) ; data1[5:7, 2] <- NA ; x1 = names(data1)[1] ; y1 = names(data1)[2] ; x.range.split = 5 ; x.step.factor = 10 ; y.range.split = 5 ; y.step.factor = 10 ; error = 0 ; data2 = data.frame(x = rnorm(50, 0, 2), y = rnorm(50, 0, 2), stringsAsFactors = TRUE) ; set.seed(NULL) ; x2 = names(data2)[1] ; y2 = names(data2)[2] ; data2.pb.dot = "unknown" ; xy.cross.kind = "|" ; plot = TRUE ; graph.in.file = FALSE ; raster = FALSE ; warn.print = TRUE ; lib_path = NULL
+    # set.seed(1) ; data1 = data.frame(x = rnorm(500), y = rnorm(500), stringsAsFactors = TRUE) ; data2 = data.frame(x = rnorm(500, 0, 2), y = rnorm(500, 0, 2), stringsAsFactors = TRUE) ; set.seed(NULL) ; x1 = names(data1)[1] ; y1 = names(data1)[2] ; x.range.split = 20 ; x.step.factor = 10 ; y.range.split = 23 ; y.step.factor = 10 ; error = 0 ; x2 = names(data2)[1] ; y2 = names(data2)[2] ; data2.pb.dot = "not.signif" ; xy.cross.kind = "|" ; plot = TRUE ; graph.in.file = FALSE ; raster = FALSE ; warn.print = TRUE ; lib_path = NULL
+    # set.seed(1) ; data1 = data.frame(x = rnorm(500), y = rnorm(500), stringsAsFactors = TRUE) ; data2 = data.frame(x = rnorm(500, 0, 2), y = rnorm(500, 0, 2), stringsAsFactors = TRUE) ; set.seed(NULL) ; x1 = names(data1)[1] ; y1 = names(data1)[2] ; x.range.split = 20 ; x.step.factor = 10 ; y.range.split = NULL ; y.step.factor = 10 ; error = 0 ; x2 = names(data2)[1] ; y2 = names(data2)[2] ; data2.pb.dot = "unknown" ; xy.cross.kind = "&" ; plot = TRUE ; graph.in.file = FALSE ; raster = FALSE ; warn.print = TRUE ; lib_path = NULL
     # function name
     function.name <- paste0(as.list(match.call(expand.dots = FALSE))[[1]], "()")
     # end function name
@@ -7612,11 +7612,11 @@ fun_segmentation <- function(
             tempo.warn <- paste0("(", warn.count,") GRAPHS PRINTED IN THE CURRENT DEVICE (TYPE ", toupper(names(dev.cur())), ")")
             warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
         }
-        if( ! is.null(lib.path)){
-            tempo <- fun_check(data = lib.path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
+        if( ! is.null(lib_path)){
+            tempo <- fun_check(data = lib_path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
             if(tempo$problem == FALSE){
-                if( ! all(dir.exists(lib.path))){ # separation to avoid the problem of tempo$problem == FALSE and lib.path == NA
-                    tempo.cat <- paste0("ERROR IN ", function.name, ": DIRECTORY PATH INDICATED IN THE lib.path ARGUMENT DOES NOT EXISTS:\n", paste(lib.path, collapse = "\n"))
+                if( ! all(dir.exists(lib_path))){ # separation to avoid the problem of tempo$problem == FALSE and lib_path == NA
+                    tempo.cat <- paste0("ERROR IN ", function.name, ": DIRECTORY PATH INDICATED IN THE lib_path ARGUMENT DOES NOT EXISTS:\n", paste(lib_path, collapse = "\n"))
                     text.check <- c(text.check, tempo.cat)
                     arg.check <- c(arg.check, TRUE)
                 }
@@ -7660,7 +7660,7 @@ fun_segmentation <- function(
     # end other required function checking
     # package checking
     if(plot == TRUE){
-        fun_pack(req.package = c("ggplot2"), lib.path = lib.path)
+        fun_pack(req.package = c("ggplot2"), lib_path = lib_path)
     }
     # end package checking
     # main code
@@ -8696,14 +8696,14 @@ fun_segmentation <- function(
 fun_pack <- function(
         req.package, 
         load = FALSE, 
-        lib.path = NULL
+        lib_path = NULL
 ){
     # AIM
     # check if the specified R packages are present in the computer and import them into the working environment
     # ARGUMENTS
     # req.package: character vector of package names to import
     # load: logical. Load the package into the environement (using library())? Interesting if packages are not in default folders or for checking the functions names of packages using search()
-    # lib.path: optional character vector specifying the absolute pathways of the directories containing some of the listed packages in the req.package argument, if not in the default directories. Ignored if NULL
+    # lib_path: optional character vector specifying the absolute pathways of the directories containing some of the listed packages in the req.package argument, if not in the default directories. Ignored if NULL
     # RETURN
     # nothing
     # REQUIRED PACKAGES
@@ -8713,10 +8713,10 @@ fun_pack <- function(
     # EXAMPLES
     # fun_pack(req.package = "nopackage")
     # fun_pack(req.package = "ggplot2")
-    # fun_pack(req.package = "ggplot2", lib.path = "blablabla")
+    # fun_pack(req.package = "ggplot2", lib_path = "blablabla")
     # DEBUGGING
-    # req.package = "ggplot2" ; lib.path = "C:/Program Files/R/R-3.5.1/library"
-    # req.package = "serpentine" ; lib.path = "C:/users/gael/appdata/roaming/python/python36/site-packages"
+    # req.package = "ggplot2" ; lib_path = "C:/Program Files/R/R-3.5.1/library"
+    # req.package = "serpentine" ; lib_path = "C:/users/gael/appdata/roaming/python/python36/site-packages"
     # function name
     function.name <- paste0(as.list(match.call(expand.dots = FALSE))[[1]], "()")
     # end function name
@@ -8733,11 +8733,11 @@ fun_pack <- function(
     ee <- expression(arg.check <- c(arg.check, tempo$problem) , text.check <- c(text.check, tempo$text) , checked.arg.names <- c(checked.arg.names, tempo$object.name))
     tempo <- fun_check(data = req.package, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
     tempo <- fun_check(data = load, class = "vector", mode = "logical", length = 1, fun.name = function.name) ; eval(ee)
-    if( ! is.null(lib.path)){
-        tempo <- fun_check(data = lib.path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
+    if( ! is.null(lib_path)){
+        tempo <- fun_check(data = lib_path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
         if(tempo$problem == FALSE){
-            if( ! all(dir.exists(lib.path))){ # separation to avoid the problem of tempo$problem == FALSE and lib.path == NA
-                tempo.cat <- paste0("ERROR IN ", function.name, ": DIRECTORY PATH INDICATED IN THE lib.path ARGUMENT DOES NOT EXISTS:\n", paste(lib.path, collapse = "\n"))
+            if( ! all(dir.exists(lib_path))){ # separation to avoid the problem of tempo$problem == FALSE and lib_path == NA
+                tempo.cat <- paste0("ERROR IN ", function.name, ": DIRECTORY PATH INDICATED IN THE lib_path ARGUMENT DOES NOT EXISTS:\n", paste(lib_path, collapse = "\n"))
                 text.check <- c(text.check, tempo.cat)
                 arg.check <- c(arg.check, TRUE)
             }
@@ -8751,15 +8751,15 @@ fun_pack <- function(
     # source("C:/Users/Gael/Documents/Git_versions_to_use/debugging_tools_for_r_dev-v1.7/r_debugging_tools-v1.7.R") ; eval(parse(text = str_basic_arg_check_dev)) ; eval(parse(text = str_arg_check_with_fun_check_dev)) # activate this line and use the function (with no arguments left as NULL) to check arguments status and if they have been checked using fun_check()
     # end argument checking
     # main code
-    if(is.null(lib.path)){
-        lib.path <- .libPaths() # .libPaths(new = lib.path) # or .libPaths(new = c(.libPaths(), lib.path))
+    if(is.null(lib_path)){
+        lib_path <- .libPaths() # .libPaths(new = lib_path) # or .libPaths(new = c(.libPaths(), lib_path))
     }else{
-        .libPaths(new = sub(x = lib.path, pattern = "/$|\\\\$", replacement = "")) # .libPaths(new = ) add path to default path. BEWARE: .libPaths() does not support / at the end of a submitted path. Thus check and replace last / or \\ in path
-        lib.path <- .libPaths()
+        .libPaths(new = sub(x = lib_path, pattern = "/$|\\\\$", replacement = "")) # .libPaths(new = ) add path to default path. BEWARE: .libPaths() does not support / at the end of a submitted path. Thus check and replace last / or \\ in path
+        lib_path <- .libPaths()
     }
     tempo <- NULL
     for(i1 in 1:length(req.package)){
-        if( ! req.package[i1] %in% rownames(utils::installed.packages(lib.loc = lib.path))){
+        if( ! req.package[i1] %in% rownames(utils::installed.packages(lib.loc = lib_path))){
             tempo <- c(tempo, req.package[i1])
         }
     }
@@ -8770,14 +8770,14 @@ fun_pack <- function(
             ": PACKAGE", 
             ifelse(length(tempo) == 1L, paste0("\n\n", tempo, "\n\n"), paste0("S\n", paste(tempo, collapse = "\n"), "\n")), 
             "MUST BE INSTALLED IN", 
-            ifelse(length(lib.path) == 1L, "", " ONE OF THESE FOLDERS"), 
+            ifelse(length(lib_path) == 1L, "", " ONE OF THESE FOLDERS"), 
             ":\n", 
-            paste(lib.path, collapse = "\n")
+            paste(lib_path, collapse = "\n")
         )
         stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between ==
     }else if(load == TRUE){
         for(i2 in 1:length(req.package)){
-            suppressMessages(suppressWarnings(suppressPackageStartupMessages(library(req.package[i2], lib.loc = lib.path, quietly = TRUE, character.only = TRUE))))
+            suppressMessages(suppressWarnings(suppressPackageStartupMessages(library(req.package[i2], lib.loc = lib_path, quietly = TRUE, character.only = TRUE))))
         }
     }
 }
@@ -8789,8 +8789,8 @@ fun_pack <- function(
 fun_python_pack <- function(
         req.package, 
         python.exec.path = NULL, 
-        lib.path = NULL, 
-        R.lib.path = NULL
+        lib_path = NULL, 
+        R.lib_path = NULL
 ){
     # AIM
     # check if the specified python packages are present in the computer (no import)
@@ -8798,9 +8798,9 @@ fun_python_pack <- function(
     # for python 3.7. Previous versions return an error "Error in sys$stdout$flush() : attempt to apply non-function"
     # ARGUMENTS
     # req.package: character vector of package names to import
-    # python.exec.path: optional character vector specifying the absolute pathways of the executable python file to use (associated to the packages to use). If NULL, the reticulate::import_from_path() function used in fun_python_pack() seeks for an available version of python.exe, and then uses python_config(python_version, required_module, python_versions). But might not be the correct one for the lib.path parameter specified. Thus, it is recommanded to do not leave NULL, notably when using computing clusters
-    # lib.path: optional character vector specifying the absolute pathways of the directories containing some of the listed packages in the req.package argument, if not in the default directories
-    # R.lib.path: absolute path of the reticulate packages, if not in the default folders
+    # python.exec.path: optional character vector specifying the absolute pathways of the executable python file to use (associated to the packages to use). If NULL, the reticulate::import_from_path() function used in fun_python_pack() seeks for an available version of python.exe, and then uses python_config(python_version, required_module, python_versions). But might not be the correct one for the lib_path parameter specified. Thus, it is recommanded to do not leave NULL, notably when using computing clusters
+    # lib_path: optional character vector specifying the absolute pathways of the directories containing some of the listed packages in the req.package argument, if not in the default directories
+    # R.lib_path: absolute path of the reticulate packages, if not in the default folders
     # RETURN
     # nothing
     # REQUIRED PACKAGES
@@ -8812,12 +8812,12 @@ fun_python_pack <- function(
     # example of error message
     # fun_python_pack(req.package = "nopackage")
     # example without error message (require the installation of the python serpentine package from https://github.com/koszullab/serpentine
-    # fun_python_pack(req.package = "serpentine", python.exec.path = "C:/ProgramData/Anaconda3/python.exe", lib.path = "c:/programdata/anaconda3/lib/site-packages/")
+    # fun_python_pack(req.package = "serpentine", python.exec.path = "C:/ProgramData/Anaconda3/python.exe", lib_path = "c:/programdata/anaconda3/lib/site-packages/")
     # another example of error message
-    # fun_python_pack(req.package = "serpentine", lib.path = "blablabla")
+    # fun_python_pack(req.package = "serpentine", lib_path = "blablabla")
     # DEBUGGING
-    # req.package = "serpentine" ; python.exec.path = "C:/ProgramData/Anaconda3/python.exe" ; lib.path = "c:/programdata/anaconda3/lib/site-packages/" ; R.lib.path = NULL
-    # req.package = "bad" ; lib.path = NULL ; R.lib.path = NULL
+    # req.package = "serpentine" ; python.exec.path = "C:/ProgramData/Anaconda3/python.exe" ; lib_path = "c:/programdata/anaconda3/lib/site-packages/" ; R.lib_path = NULL
+    # req.package = "bad" ; lib_path = NULL ; R.lib_path = NULL
     # function name
     function.name <- paste0(as.list(match.call(expand.dots = FALSE))[[1]], "()")
     # end function name
@@ -8847,21 +8847,21 @@ fun_python_pack <- function(
             }
         }
     }
-    if( ! is.null(lib.path)){
-        tempo <- fun_check(data = lib.path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
+    if( ! is.null(lib_path)){
+        tempo <- fun_check(data = lib_path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
         if(tempo$problem == FALSE){
-            if( ! all(dir.exists(lib.path))){ # separation to avoid the problem of tempo$problem == FALSE and lib.path == NA
-                tempo.cat <- paste0("ERROR IN ", function.name, ": DIRECTORY PATH INDICATED IN THE lib.path ARGUMENT DOES NOT EXISTS:\n", paste(lib.path, collapse = "\n"))
+            if( ! all(dir.exists(lib_path))){ # separation to avoid the problem of tempo$problem == FALSE and lib_path == NA
+                tempo.cat <- paste0("ERROR IN ", function.name, ": DIRECTORY PATH INDICATED IN THE lib_path ARGUMENT DOES NOT EXISTS:\n", paste(lib_path, collapse = "\n"))
                 text.check <- c(text.check, tempo.cat)
                 arg.check <- c(arg.check, TRUE)
             }
         }
     }
-    if( ! is.null(R.lib.path)){
-        tempo <- fun_check(data = R.lib.path, class = "character", fun.name = function.name) ; eval(ee)
+    if( ! is.null(R.lib_path)){
+        tempo <- fun_check(data = R.lib_path, class = "character", fun.name = function.name) ; eval(ee)
         if(tempo$problem == FALSE){
-            if( ! all(dir.exists(R.lib.path))){ # separation to avoid the problem of tempo$problem == FALSE and R.lib.path == NA
-                tempo.cat <- paste0("ERROR IN ", function.name, ": DIRECTORY PATH INDICATED IN THE R.lib.path ARGUMENT DOES NOT EXISTS:\n", paste(R.lib.path, collapse = "\n"))
+            if( ! all(dir.exists(R.lib_path))){ # separation to avoid the problem of tempo$problem == FALSE and R.lib_path == NA
+                tempo.cat <- paste0("ERROR IN ", function.name, ": DIRECTORY PATH INDICATED IN THE R.lib_path ARGUMENT DOES NOT EXISTS:\n", paste(R.lib_path, collapse = "\n"))
                 text.check <- c(text.check, tempo.cat)
                 arg.check <- c(arg.check, TRUE)
             }
@@ -8875,7 +8875,7 @@ fun_python_pack <- function(
     # source("C:/Users/Gael/Documents/Git_versions_to_use/debugging_tools_for_r_dev-v1.7/r_debugging_tools-v1.7.R") ; eval(parse(text = str_basic_arg_check_dev)) ; eval(parse(text = str_arg_check_with_fun_check_dev)) # activate this line and use the function (with no arguments left as NULL) to check arguments status and if they have been checked using fun_check()
     # end argument checking
     # package checking
-    fun_pack(req.package = "reticulate", lib.path = R.lib.path)
+    fun_pack(req.package = "reticulate", lib_path = R.lib_path)
     # end package checking
     # main code
     if(is.null(python.exec.path)){
@@ -8885,22 +8885,22 @@ path_lib = sys.path
 ") # python string
         python.exec.path <- python.exec.path$path_lib
     }
-    if(is.null(lib.path)){
-        lib.path <- reticulate::py_run_string("
+    if(is.null(lib_path)){
+        lib_path <- reticulate::py_run_string("
 import sys ;
 path_lib = sys.path
 ") # python string
-        lib.path <- lib.path$path_lib
+        lib_path <- lib_path$path_lib
     }
     reticulate::use_python(Sys.which(python.exec.path), required = TRUE) # required to avoid the use of erratic python exec by reticulate::import_from_path()
     for(i1 in 1:length(req.package)){
-        tempo.try <- vector("list", length = length(lib.path))
-        for(i2 in 1:length(lib.path)){
-            tempo.try[[i2]] <- suppressWarnings(try(reticulate::import_from_path(req.package[i1], path = lib.path[i2]), silent = TRUE))
-            tempo.try[[i2]] <- suppressWarnings(try(reticulate::import_from_path(req.package[i1], path = lib.path[i2]), silent = TRUE)) # done twice to avoid the error message  about flushing present the first time but not the second time. see https://stackoverflow.com/questions/57357001/reticulate-1-13-error-in-sysstdoutflush-attempt-to-apply-non-function
+        tempo.try <- vector("list", length = length(lib_path))
+        for(i2 in 1:length(lib_path)){
+            tempo.try[[i2]] <- suppressWarnings(try(reticulate::import_from_path(req.package[i1], path = lib_path[i2]), silent = TRUE))
+            tempo.try[[i2]] <- suppressWarnings(try(reticulate::import_from_path(req.package[i1], path = lib_path[i2]), silent = TRUE)) # done twice to avoid the error message  about flushing present the first time but not the second time. see https://stackoverflow.com/questions/57357001/reticulate-1-13-error-in-sysstdoutflush-attempt-to-apply-non-function
         }
         if(all(sapply(tempo.try, FUN = grepl, pattern = "[Ee]rror"))){
-            tempo.cat <- paste0("ERROR IN ", function.name, ": PACKAGE ", req.package[i1], " MUST BE INSTALLED IN THE MENTIONNED DIRECTORY:\n", paste(lib.path, collapse = "\n"))
+            tempo.cat <- paste0("ERROR IN ", function.name, ": PACKAGE ", req.package[i1], " MUST BE INSTALLED IN THE MENTIONNED DIRECTORY:\n", paste(lib_path, collapse = "\n"))
             stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between ==
         } # else{
         # suppressMessages(suppressWarnings(suppressPackageStartupMessages(assign(req.package[i1], reticulate::import(req.package[i1]))))) # not required because try() already evaluates
@@ -8971,7 +8971,7 @@ fun_report <- function(
     }
     tempo <- fun_check(data = path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
     if(tempo$problem == FALSE){
-        if( ! all(dir.exists(path))){ # separation to avoid the problem of tempo$problem == FALSE and lib.path == NA
+        if( ! all(dir.exists(path))){ # separation to avoid the problem of tempo$problem == FALSE and lib_path == NA
             tempo.cat <- paste0("ERROR IN ", function.name, ": path ARGUMENT DOES NOT CORRESPOND TO EXISTING DIRECTORY\n", paste(path, collapse = "\n"))
             text.check <- c(text.check, tempo.cat)
             arg.check <- c(arg.check, TRUE)
@@ -9298,7 +9298,7 @@ fun_gg_boxplot <- function(
         return.gtable = TRUE,
         plot = TRUE, 
         warn.print = FALSE, 
-        lib.path = NULL
+        lib_path = NULL
 ){
     # AIM
     # Plot ggplot2 boxplots + dots + means
@@ -9385,7 +9385,7 @@ fun_gg_boxplot <- function(
     # return.gtable: logical. Return the ggplot object as gtable of grobs in the output list? Ignored if plot argument is FALSE. Indeed, the graph must be plotted to get the grobs dispositions. See $gtable in the RETURN section below for more details
     # plot: logical. Plot the graphic? If FALSE and return argument is TRUE, graphical parameters and associated warnings are provided without plotting
     # warn.print: logical. Print warnings at the end of the execution? ? If FALSE, warning messages are never printed, but can still be recovered in the returned list. Some of the warning messages (those delivered by the internal ggplot2 functions) are not apparent when using the argument plot = FALSE
-    # lib.path: character string indicating the absolute path of the required packages (see below). if NULL, the function will use the R library default folders
+    # lib_path: character string indicating the absolute path of the required packages (see below). if NULL, the function will use the R library default folders
     # RETURN
     # A boxplot if plot argument is TRUE
     # A list of the graph info if return argument is TRUE:
@@ -9431,7 +9431,7 @@ fun_gg_boxplot <- function(
     # set.seed(1) ; obs1 <- data.frame(Time = c(rnorm(20, 100, 10), rnorm(20, 200, 50), rnorm(20, 500, 60), rnorm(20, 100, 50)), Categ1 = rep(c("CAT", "DOG"), times = 40), Categ2 = rep(c("A", "B", "C", "D"), each = 20), Color1 = rep(c("coral", "lightblue"), times = 40), Color2 = rep(c("#9F2108", "#306100", "#007479", "#8500C0"), each = 20), stringsAsFactors = TRUE) ; set.seed(NULL) ; fun_gg_boxplot(data1 = obs1, y = "Time", categ = "Categ1")
     # see http
     # DEBUGGING
-    # set.seed(1) ; obs1 <- data.frame(Time = c(rnorm(10), rnorm(10) + 2), Categ1 = rep(c("G", "H"), each = 10), stringsAsFactors = TRUE) ; set.seed(NULL) ; obs1$Time[1:10] <- NA ; data1 = obs1 ; y = "Time" ; categ = c("Categ1") ; categ.class.order = NULL ; categ.color = NULL ; box.legend.name = NULL ; box.fill = FALSE ; box.width = 0.5 ; box.space = 0.1 ; box.line.size = 0.75 ; box.notch = FALSE ; box.alpha = 1 ; box.mean = TRUE ; box.whisker.kind = "std" ; box.whisker.width = 0 ; dot.color = grey(0.25) ; dot.categ = NULL ; dot.categ.class.order = NULL ; dot.legend.name = NULL ; dot.tidy = FALSE ; dot.tidy.bin.nb = 50 ; dot.jitter = 0.5 ; dot.seed = 2 ; dot.size = 3 ; dot.alpha = 0.5 ; dot.border.size = 0.5 ; dot.border.color = NULL ; x.lab = NULL ; x.angle = 0 ; y.lab = NULL ; y.lim = NULL ; y.log = "no" ; y.tick.nb = NULL ; y.second.tick.nb = 1 ; y.include.zero = FALSE ; y.top.extra.margin = 0.05 ; y.bottom.extra.margin = 0.05 ; stat.pos = "top" ; stat.mean = FALSE ; stat.size = 4 ; stat.dist = 5 ; stat.angle = 0 ; vertical = TRUE ; text.size = 12 ; title = "" ; title.text.size = 8 ; legend.show = TRUE ; legend.width = 0.5 ; article = TRUE ; grid = FALSE ; add = NULL ; return = FALSE ; return.ggplot = FALSE ; return.gtable = TRUE ; plot = TRUE ; warn.print = FALSE ; lib.path = NULL
+    # set.seed(1) ; obs1 <- data.frame(Time = c(rnorm(10), rnorm(10) + 2), Categ1 = rep(c("G", "H"), each = 10), stringsAsFactors = TRUE) ; set.seed(NULL) ; obs1$Time[1:10] <- NA ; data1 = obs1 ; y = "Time" ; categ = c("Categ1") ; categ.class.order = NULL ; categ.color = NULL ; box.legend.name = NULL ; box.fill = FALSE ; box.width = 0.5 ; box.space = 0.1 ; box.line.size = 0.75 ; box.notch = FALSE ; box.alpha = 1 ; box.mean = TRUE ; box.whisker.kind = "std" ; box.whisker.width = 0 ; dot.color = grey(0.25) ; dot.categ = NULL ; dot.categ.class.order = NULL ; dot.legend.name = NULL ; dot.tidy = FALSE ; dot.tidy.bin.nb = 50 ; dot.jitter = 0.5 ; dot.seed = 2 ; dot.size = 3 ; dot.alpha = 0.5 ; dot.border.size = 0.5 ; dot.border.color = NULL ; x.lab = NULL ; x.angle = 0 ; y.lab = NULL ; y.lim = NULL ; y.log = "no" ; y.tick.nb = NULL ; y.second.tick.nb = 1 ; y.include.zero = FALSE ; y.top.extra.margin = 0.05 ; y.bottom.extra.margin = 0.05 ; stat.pos = "top" ; stat.mean = FALSE ; stat.size = 4 ; stat.dist = 5 ; stat.angle = 0 ; vertical = TRUE ; text.size = 12 ; title = "" ; title.text.size = 8 ; legend.show = TRUE ; legend.width = 0.5 ; article = TRUE ; grid = FALSE ; add = NULL ; return = FALSE ; return.ggplot = FALSE ; return.gtable = TRUE ; plot = TRUE ; warn.print = FALSE ; lib_path = NULL
     # function name
     function.name <- paste0(as.list(match.call(expand.dots = FALSE))[[1]], "()")
     arg.names <- names(formals(fun = sys.function(sys.parent(n = 2)))) # names of all the arguments
@@ -9721,18 +9721,18 @@ fun_gg_boxplot <- function(
     tempo <- fun_check(data = return.gtable, class = "logical", length = 1, fun.name = function.name) ; eval(ee)
     tempo <- fun_check(data = plot, class = "logical", length = 1, fun.name = function.name) ; eval(ee)
     tempo <- fun_check(data = warn.print, class = "logical", length = 1, fun.name = function.name) ; eval(ee)
-    if( ! is.null(lib.path)){
-        tempo <- fun_check(data = lib.path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
+    if( ! is.null(lib_path)){
+        tempo <- fun_check(data = lib_path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
         if(tempo$problem == FALSE){
-            if( ! all(dir.exists(lib.path), na.rm = TRUE)){ # separation to avoid the problem of tempo$problem == FALSE and lib.path == NA
-                tempo.cat <- paste0("ERROR IN ", function.name, "\nDIRECTORY PATH INDICATED IN THE lib.path ARGUMENT DOES NOT EXISTS:\n", paste(lib.path, collapse = "\n"))
+            if( ! all(dir.exists(lib_path), na.rm = TRUE)){ # separation to avoid the problem of tempo$problem == FALSE and lib_path == NA
+                tempo.cat <- paste0("ERROR IN ", function.name, "\nDIRECTORY PATH INDICATED IN THE lib_path ARGUMENT DOES NOT EXISTS:\n", paste(lib_path, collapse = "\n"))
                 text.check <- c(text.check, tempo.cat)
                 arg.check <- c(arg.check, TRUE)
             }
         }
     }else{
         # no fun_check test here, it is just for checked.arg.names
-        tempo <- fun_check(data = lib.path, class = "vector")
+        tempo <- fun_check(data = lib_path, class = "vector")
         checked.arg.names <- c(checked.arg.names, tempo$object.name)
     }
     if( ! is.null(arg.check)){
@@ -10466,7 +10466,7 @@ fun_gg_boxplot <- function(
         "gridExtra", 
         "lemon", 
         "scales"
-    ), load = FALSE, lib.path = lib.path)
+    ), load = FALSE, lib_path = lib_path)
     # end package checking
     
     
@@ -11364,7 +11364,7 @@ fun_gg_boxplot <- function(
     
     # legend management
     if( ! is.null(legend.width)){
-        legend.final <- fun_gg_get_legend(ggplot_built = bef.final.plot, fun.name = function.name, lib.path = lib.path) # get legend
+        legend.final <- fun_gg_get_legend(ggplot_built = bef.final.plot, fun.name = function.name, lib_path = lib_path) # get legend
         assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(fill = "none", color = "none", alpha = "none")) # inactivate the initial legend
         if(is.null(legend.final) & plot == TRUE){ # even if any(unlist(legend.disp)) is TRUE
             legend.final <- ggplot2::ggplot()+ggplot2::theme_void() # empty graph instead of legend
@@ -11519,7 +11519,7 @@ fun_gg_scatter <- function(
         return.gtable = TRUE,
         plot = TRUE, 
         warn.print = FALSE, 
-        lib.path = NULL
+        lib_path = NULL
 ){
     # AIM
     # Plot ggplot2 scatterplot with the possibility to overlay dots from up to 3 different data frames (-> three different legends) and lines from up to 3 different data frames (-> three different legends) -> up to 6 overlays totally
@@ -11626,7 +11626,7 @@ fun_gg_scatter <- function(
     # return.gtable: logical. Return the ggplot object as gtable of grobs in the output list? Ignored if plot argument is FALSE. Indeed, the graph must be plotted to get the grobs dispositions. See $gtable in the RETURN section below for more details
     # plot: logical. Plot the graphic? If FALSE and return argument is TRUE, graphical parameters and associated warnings are provided without plotting
     # warn.print: logical. Print warnings at the end of the execution? ? If FALSE, warning messages are never printed, but can still be recovered in the returned list. Some of the warning messages (those delivered by the internal ggplot2 functions) are not apparent when using the argument plot = FALSE
-    # lib.path: character string indicating the absolute path of the required packages (see below). if NULL, the function will use the R library default folders
+    # lib_path: character string indicating the absolute path of the required packages (see below). if NULL, the function will use the R library default folders
     # RETURN
     # a scatter plot if plot argument is TRUE
     # a list of the graph info if return argument is TRUE:
@@ -11662,7 +11662,7 @@ fun_gg_scatter <- function(
     # EXAMPLES
     # set.seed(1) ; obs1 <- data.frame(Km = c(2, 1, 6, 5, 4, 7), Time = c(2, 1, 6, 5, 4, 7)^2, Car = c("TUUT", "TUUT", "TUUT", "WIIM", "WIIM", "WIIM"), Color1 = rep(c("coral", "lightblue"), each = 3), stringsAsFactors = TRUE) ; fun_gg_scatter(data1 = obs1, x = "Km", y = "Time")
     # DEBUGGING
-    # set.seed(1) ; obs1 <- data.frame(km = rnorm(1000, 10, 3), time = rnorm(1000, 10, 3), group1 = rep(c("A1", "A2"), 500), stringsAsFactors = TRUE) ; obs2 <-data.frame(km = rnorm(1000, 15, 3), time = rnorm(1000, 15, 3), group2 = rep(c("G1", "G2"), 500), stringsAsFactors = TRUE) ; set.seed(NULL) ; obs1$km[2:3] <- NA ; data1 = list(L1 = obs1, L2 = obs2) ; x = list(L1 = "km", L2 = "km") ; y = list(L1 = "time", L2 = "time") ; categ = list(L1 = "group1", L2 = "group2") ; categ = NULL ; categ.class.order = NULL ; color = NULL ; geom = "geom_point" ; geom.step.dir = "hv" ; geom.stick.base = NULL ; alpha = 0.5 ; dot.size = 2 ; dot.shape = 21 ; dot.border.size = 0.5 ; dot.border.color = NULL ; line.size = 0.5 ; line.type = "solid" ; x.lim = NULL ; x.lab = NULL ; x.log = "no" ; x.tick.nb = NULL ; x.second.tick.nb = NULL ; x.include.zero = FALSE ; x.left.extra.margin = 0.05 ; x.right.extra.margin = 0.05 ; x.text.angle = 0 ; y.lim = NULL ; y.lab = NULL ; y.log = "no" ; y.tick.nb = NULL ; y.second.tick.nb = NULL ; y.include.zero = FALSE ; y.top.extra.margin = 0.05 ; y.bottom.extra.margin = 0.05 ; y.text.angle = 0 ; raster = FALSE ; raster.ratio = 1 ; raster.threshold = NULL ; text.size = 12 ; title = "" ; title.text.size = 12 ; legend.show = TRUE ; legend.width = 0.5 ; legend.name = NULL ; article = TRUE ; grid = FALSE ; add = NULL ; return = FALSE ; return.ggplot = FALSE ; return.gtable = TRUE ; plot = TRUE ; warn.print = FALSE ; lib.path = NULL
+    # set.seed(1) ; obs1 <- data.frame(km = rnorm(1000, 10, 3), time = rnorm(1000, 10, 3), group1 = rep(c("A1", "A2"), 500), stringsAsFactors = TRUE) ; obs2 <-data.frame(km = rnorm(1000, 15, 3), time = rnorm(1000, 15, 3), group2 = rep(c("G1", "G2"), 500), stringsAsFactors = TRUE) ; set.seed(NULL) ; obs1$km[2:3] <- NA ; data1 = list(L1 = obs1, L2 = obs2) ; x = list(L1 = "km", L2 = "km") ; y = list(L1 = "time", L2 = "time") ; categ = list(L1 = "group1", L2 = "group2") ; categ = NULL ; categ.class.order = NULL ; color = NULL ; geom = "geom_point" ; geom.step.dir = "hv" ; geom.stick.base = NULL ; alpha = 0.5 ; dot.size = 2 ; dot.shape = 21 ; dot.border.size = 0.5 ; dot.border.color = NULL ; line.size = 0.5 ; line.type = "solid" ; x.lim = NULL ; x.lab = NULL ; x.log = "no" ; x.tick.nb = NULL ; x.second.tick.nb = NULL ; x.include.zero = FALSE ; x.left.extra.margin = 0.05 ; x.right.extra.margin = 0.05 ; x.text.angle = 0 ; y.lim = NULL ; y.lab = NULL ; y.log = "no" ; y.tick.nb = NULL ; y.second.tick.nb = NULL ; y.include.zero = FALSE ; y.top.extra.margin = 0.05 ; y.bottom.extra.margin = 0.05 ; y.text.angle = 0 ; raster = FALSE ; raster.ratio = 1 ; raster.threshold = NULL ; text.size = 12 ; title = "" ; title.text.size = 12 ; legend.show = TRUE ; legend.width = 0.5 ; legend.name = NULL ; article = TRUE ; grid = FALSE ; add = NULL ; return = FALSE ; return.ggplot = FALSE ; return.gtable = TRUE ; plot = TRUE ; warn.print = FALSE ; lib_path = NULL
     # function name
     function.name <- paste0(as.list(match.call(expand.dots=FALSE))[[1]], "()")
     arg.names <- names(formals(fun = sys.function(sys.parent(n = 2)))) # names of all the arguments
@@ -12042,18 +12042,18 @@ fun_gg_scatter <- function(
     tempo <- fun_check(data = return.gtable, class = "logical", length = 1, fun.name = function.name) ; eval(ee)
     tempo <- fun_check(data = plot, class = "logical", length = 1, fun.name = function.name) ; eval(ee)
     tempo <- fun_check(data = warn.print, class = "logical", length = 1, fun.name = function.name) ; eval(ee)
-    if( ! is.null(lib.path)){
-        tempo <- fun_check(data = lib.path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
+    if( ! is.null(lib_path)){
+        tempo <- fun_check(data = lib_path, class = "vector", mode = "character", fun.name = function.name) ; eval(ee)
         if(tempo$problem == FALSE){
-            if( ! all(dir.exists(lib.path))){ # separation to avoid the problem of tempo$problem == FALSE and lib.path == NA
-                tempo.cat <- paste0("ERROR IN ", function.name, ": DIRECTORY PATH INDICATED IN THE lib.path ARGUMENT DOES NOT EXISTS:\n", paste(lib.path, collapse = "\n"))
+            if( ! all(dir.exists(lib_path))){ # separation to avoid the problem of tempo$problem == FALSE and lib_path == NA
+                tempo.cat <- paste0("ERROR IN ", function.name, ": DIRECTORY PATH INDICATED IN THE lib_path ARGUMENT DOES NOT EXISTS:\n", paste(lib_path, collapse = "\n"))
                 text.check <- c(text.check, tempo.cat)
                 arg.check <- c(arg.check, TRUE)
             }
         }
     }else{
         # no fun_check test here, it is just for checked.arg.names
-        tempo <- fun_check(data = lib.path, class = "vector")
+        tempo <- fun_check(data = lib_path, class = "vector")
         checked.arg.names <- c(checked.arg.names, tempo$object.name)
     }
     if( ! is.null(arg.check)){
@@ -12957,7 +12957,7 @@ fun_gg_scatter <- function(
         "ggplot2", 
         "lemon", 
         "scales"
-    ), load = FALSE, lib.path = lib.path)
+    ), load = FALSE, lib_path = lib_path)
     # packages Cairo and grid tested by fun_gg_point_rast()
     # end package checking
     
@@ -13592,7 +13592,7 @@ shape = NA
 if( ! is.null(legend.width)){
     if(any(unlist(legend.disp))){ # means some TRUE
         tempo.graph.info <- suppressMessages(ggplot2::ggplot_build(eval(parse(text = paste0(paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + "), ' + ', tempo.legend.final))))) # will be recovered later again, when ylim will be considered
-        legend.final <- fun_gg_get_legend(ggplot_built = tempo.graph.info, fun.name = function.name) # get legend
+        legend.final <- fun_gg_get_legend(ggplot_built = tempo.graph.info, fun.name = function.name, lib_path = lib_path) # get legend
         fin.lg.disp[] <- FALSE # remove all the legends. Must be done even if fin.lg.disp is not appearing in the code thenafter. Otherwise twice the legend
         if(is.null(legend.final) & plot == TRUE){ # even if any(unlist(legend.disp)) is TRUE
             legend.final <- fun_gg_empty_graph() # empty graph instead of legend
@@ -13830,7 +13830,7 @@ if(return == TRUE){
 
 
 # comes from gg_donut, commit https://github.com/safer-r/saferGG/commit/4176bf40135e39e88c6de3a089e702e7b3493b17
-fun_gg_donut <- function(
+gg_donut <- function(
     data1, 
     freq, 
     categ, 
@@ -14154,7 +14154,7 @@ fun_gg_donut <- function(
     tempo <- saferDev::arg_check(data = freq, class = "vector", typeof = NULL, mode = "character", length = 1, prop = FALSE, double_as_integer_allowed = FALSE, options = NULL, all_options_in_data = FALSE, na_contain = TRUE, neg_values = TRUE, inf_values = TRUE, print = FALSE, data_name = NULL, data_arg = TRUE, lib_path = lib_path, safer_check = FALSE, error_text = embed_error_text) ; base::eval(expr = ee, envir = base::environment(fun = NULL), enclos = base::environment(fun = NULL))
     tempo <- saferDev::arg_check(data = categ, class = "vector", typeof = NULL, mode = "character", length = 1, prop = FALSE, double_as_integer_allowed = FALSE, options = NULL, all_options_in_data = FALSE, na_contain = TRUE, neg_values = TRUE, inf_values = TRUE, print = FALSE, data_name = NULL, data_arg = TRUE, lib_path = lib_path, safer_check = FALSE, error_text = embed_error_text) ; base::eval(expr = ee, envir = base::environment(fun = NULL), enclos = base::environment(fun = NULL))
     if( ! base::is.null(fill.palette)){
-        tempo <- saferDev::arg_check(data = fill.palette, , class = NULL, typeof = NULL, mode = NULL, length = 1, prop = FALSE, double_as_integer_allowed = FALSE, options = base::c("BrBG", "PiYG", "PRGn", "PuOr", "RdBu", "RdGy", "RdYlBu", "RdYlGn", "Spectral", "Accent", "Dark2", "Paired", "Pastel1", "Pastel2", "Set1", "Set2", "Set3", "Blues", "BuGn", "BuPu", "GnBu", "Greens", "Greys", "Oranges", "OrRd", "PuBu", "PuBuGn", "PuRd", "Purples", "RdPu", "Reds", "YlGn", "YlGnBu", "YlOrBr", "YlOrRd"), all_options_in_data = FALSE, na_contain = TRUE, neg_values = TRUE, inf_values = TRUE, print = FALSE, data_name = NULL, data_arg = TRUE, lib_path = lib_path, safer_check = FALSE, error_text = embed_error_text) ; base::eval(expr = ee, envir = base::environment(fun = NULL), enclos = base::environment(fun = NULL))
+        tempo <- saferDev::arg_check(data = fill.palette, class = NULL, typeof = NULL, mode = NULL, length = 1, prop = FALSE, double_as_integer_allowed = FALSE, options = base::c("BrBG", "PiYG", "PRGn", "PuOr", "RdBu", "RdGy", "RdYlBu", "RdYlGn", "Spectral", "Accent", "Dark2", "Paired", "Pastel1", "Pastel2", "Set1", "Set2", "Set3", "Blues", "BuGn", "BuPu", "GnBu", "Greens", "Greys", "Oranges", "OrRd", "PuBu", "PuBuGn", "PuRd", "Purples", "RdPu", "Reds", "YlGn", "YlGnBu", "YlOrBr", "YlOrRd"), all_options_in_data = FALSE, na_contain = TRUE, neg_values = TRUE, inf_values = TRUE, print = FALSE, data_name = NULL, data_arg = TRUE, lib_path = lib_path, safer_check = FALSE, error_text = embed_error_text) ; base::eval(expr = ee, envir = base::environment(fun = NULL), enclos = base::environment(fun = NULL))
     }
     if( ! base::is.null(fill.color)){
         tempo1 <- saferDev::arg_check(data = fill.color, class = "vector", typeof = NULL, mode = "character", length = 1, prop = FALSE, double_as_integer_allowed = FALSE, options = NULL, all_options_in_data = FALSE, na_contain = TRUE, neg_values = TRUE, inf_values = TRUE, print = FALSE, data_name = NULL, data_arg = TRUE, lib_path = lib_path, safer_check = FALSE, error_text = embed_error_text)
@@ -14881,3 +14881,372 @@ fun_gg_donut <- function(
     # end main code
 }
 
+gg_get_legend <- function(
+    ggplot_built, 
+    fun.name = NULL,
+    lib_path = NULL,
+    safer_check = TRUE,
+    error_text = ""
+    ){
+    # DEBUGGING
+    # obs1 <- data.frame(time = 1:20, group = rep(c("CLASS_1", "CLASS_2"), times = 10), stringsAsFactors = TRUE) ; p <- ggplot2::ggplot() + ggplot2::geom_point(data = obs1, mapping = ggplot2::aes(x = group, y = time)) ; ggplot_built = ggplot2::ggplot_build(p) ; fun.name = NULL; lib_path = NULL ;safer_check = TRUE
+
+    #### package name
+    package_name <- "saferGG" # write NULL if the function developed is not in a package
+    #### end package name
+
+    #### internal error report link
+    internal_error_report_link <- base::paste0("https://github.com/safer-r/", package_name, "/issues/new", collapse = NULL, recycle0 = FALSE) # link where to post an issue indicated in an internal error message. Write NULL if no link to propose, or no internal error message
+    #### end internal error report link
+
+    #### function name
+    tempo_settings <- base::as.list(x = base::match.call(definition = base::sys.function(which = base::sys.parent(n = 0)), call = base::sys.call(which = base::sys.parent(n = 0)), expand.dots = FALSE, envir = base::parent.frame(n = 2L))) # warning: I have written n = 0 to avoid error when a safer function is inside another functions. In addition, arguments values retrieved are not evaluated base::match.call
+    function_name <- base::paste0(tempo_settings[[1]], "()", collapse = NULL, recycle0 = FALSE) 
+    # function name with "()" paste, which split into a vector of three: c("::()", "package ()", "function ()") if "package::function()" is used.
+    if(function_name[1] == "::()" | function_name[1] == ":::()"){
+        function_name <- function_name[3]
+    }
+    #### end function name
+
+    #### arguments settings
+    arg_user_setting <- tempo_settings[-1] # list of the argument settings (excluding default values not provided by the user). Always a list, even if 1 argument. So ok for lapply() usage (management of NA section)
+    arg_user_setting_names <- base::names(x = arg_user_setting)
+    arg_names <- base::names(x = base::formals(fun = base::sys.function(which = base::sys.parent(n = 2)), envir = base::parent.frame(n = 1))) # names of all the arguments
+    #### end arguments settings
+
+    #### error_text initiation
+
+    ######## basic error text start
+    error_text <- base::paste0(base::unlist(x = error_text, recursive = TRUE, use.names = TRUE), collapse = "", recycle0 = FALSE) # convert to string. if error_text is a string, changes nothing. If NULL -> "" so no need to check for management of NULL
+    package_function_name <- base::paste0(
+        base::ifelse(test = base::is.null(x = package_name), yes = "", no = base::paste0(package_name, base::ifelse(test = base::grepl(x = function_name, pattern = "^\\.", ignore.case = FALSE, perl = FALSE, fixed = FALSE, useBytes = FALSE), yes = ":::", no = "::"), collapse = NULL, recycle0 = FALSE)), 
+        function_name,
+        collapse = NULL, 
+        recycle0 = FALSE
+    )
+    error_text_start <- base::paste0(
+        "ERROR IN ", # must not be changed, because this "ERROR IN " string is used for text replacement
+        package_function_name, 
+        base::ifelse(test = error_text == "", yes = ".", no = error_text), 
+        "\n\n", 
+        collapse = NULL, 
+        recycle0 = FALSE
+    )
+    ######## end basic error text start
+
+    ######## internal error text
+    intern_error_text_start <- base::paste0(
+        package_function_name, 
+        base::ifelse(test = error_text == "", yes = ".", no = error_text), 
+        "\n\n", 
+        collapse = NULL, 
+        recycle0 = FALSE
+    )
+    intern_error_text_end <- base::ifelse(test = base::is.null(x = internal_error_report_link), yes = "", no = base::paste0("\n\nPLEASE, REPORT THIS ERROR HERE: ", internal_error_report_link, ".", collapse = NULL, recycle0 = FALSE))
+    ######## end internal error text
+
+    ######## error text when embedding
+    # use this in the error_text of safer functions if present below 
+    embed_error_text  <- base::sub(pattern = "^ERROR IN ", replacement = " INSIDE ", x = error_text_start, ignore.case = FALSE, perl = FALSE, fixed = FALSE, useBytes = FALSE)
+    embed_error_text  <- base::sub(pattern = "\n*$", replacement = "", x = embed_error_text, ignore.case = FALSE, perl = FALSE, fixed = FALSE, useBytes = FALSE) # remove all the trailing \n, because added later
+    ######## end error text when embedding
+
+    #### end error_text initiation
+
+    #### argument primary checking
+
+    ######## arg with no default values
+    mandat_args <- base::c(
+        "ggplot_built"
+    )
+    tempo <- base::eval(expr = base::parse(text = base::paste0("base::c(base::missing(", base::paste0(mandat_args, collapse = "),base::missing(", recycle0 = FALSE), "))", collapse = NULL, recycle0 = FALSE), file = "", n = NULL, prompt = "?", keep.source = base::getOption(x = "keep.source", default = NULL), srcfile = NULL, encoding = "unknown"), envir = base::environment(fun = NULL), enclos = base::environment(fun = NULL))
+    if(base::any(tempo, na.rm = TRUE)){
+        tempo_cat <- base::paste0(
+            error_text_start, 
+            "FOLLOWING ARGUMENT", 
+            base::ifelse(test = base::sum(tempo, na.rm = TRUE) > 1, yes = "S HAVE", no = " HAS"), 
+            " NO DEFAULT VALUE AND REQUIRE ONE:\n", 
+            base::paste0(mandat_args[tempo], collapse = "\n", recycle0 = FALSE), 
+            collapse = NULL, 
+            recycle0 = FALSE
+        )
+        base::stop(base::paste0("\n\n================\n\n", tempo_cat, "\n\n================\n\n", collapse = NULL, recycle0 = FALSE), call. = FALSE, domain = NULL) # == in base::stop() to be able to add several messages between ==
+    }
+    ######## end arg with no default values
+
+    ######## management of NULL arguments
+    # before NA checking because is.na(NULL) return logical(0) and all(logical(0)) is TRUE
+    tempo_arg <-base::c(
+        "ggplot_built", 
+        # "fun.name", # inactivated because can be NULL 
+        # "lib_path", # inactivated because can be NULL
+        "safer_check"
+        # "error_text" # inactivated because NULL converted to "" above
+    )
+    tempo_log <- base::sapply(X = base::lapply(X = tempo_arg, FUN = function(x){base::get(x = x, pos = -1L, envir = base::parent.frame(n = 2), mode = "any", inherits = FALSE)}), FUN = function(x){base::is.null(x = x)}, simplify = TRUE, USE.NAMES = TRUE) # parent.frame(n = 2) because sapply(lapply())
+    if(base::any(tempo_log, na.rm = TRUE)){ # normally no NA with base::is.null()
+        tempo_cat <- base::paste0(
+            error_text_start, 
+            base::ifelse(test = base::sum(tempo_log, na.rm = TRUE) > 1, yes = "THESE ARGUMENTS", no = "THIS ARGUMENT"), 
+            " CANNOT BE NULL:\n", 
+            base::paste0(tempo_arg[tempo_log], collapse = "\n", recycle0 = FALSE), 
+            collapse = NULL, 
+            recycle0 = FALSE
+        )
+        base::stop(base::paste0("\n\n================\n\n", tempo_cat, "\n\n================\n\n", collapse = NULL, recycle0 = FALSE), call. = FALSE, domain = NULL) # == in base::stop() to be able to add several messages between ==
+    }
+    ######## end management of NULL arguments
+
+    ######## management of NA arguments
+    # arguments values of class "expression", "name", "function" are not evaluated
+    if(base::length(x = arg_user_setting) != 0){
+        tempo_log <- base::suppressWarnings(
+            expr = base::sapply(
+                X = base::lapply(
+                    X = arg_user_setting, 
+                    FUN = function(x){
+                        if(base::all(base::class(x = x) %in% base::c("expression", "name", "function"), na.rm = TRUE)){
+                            FALSE
+                        }else{
+                            base::is.na(x = x)
+                        }
+                    }
+                ), 
+                FUN = function(x){
+                    base::all(x = x, na.rm = TRUE) & base::length(x = x) > 0
+                }, 
+                simplify = TRUE, 
+                USE.NAMES = TRUE
+            ), 
+            classes = "warning"
+        ) # no argument provided by the user can be just made of NA. is.na(NULL) returns logical(0), the reason why base::length(x = x) > 0 is used # warning: all(x = x, na.rm = TRUE) but normally no NA because base::is.na() used here. Warning: would not work if arg_user_setting is a vector (because treat each element as a compartment), but ok because it is always a list, even is 0 or 1 argument in the developed function
+        if(base::any(tempo_log, na.rm = TRUE)){
+            tempo_cat <- base::paste0(
+                error_text_start, 
+                base::ifelse(test = base::sum(tempo_log, na.rm = TRUE) > 1, yes = "THESE ARGUMENTS", no = "THIS ARGUMENT"), 
+                " CANNOT BE MADE OF NA ONLY:\n", 
+                base::paste0(arg_user_setting_names[tempo_log], collapse = "\n", recycle0 = FALSE), 
+                collapse = NULL, 
+                recycle0 = FALSE
+            )
+            base::stop(base::paste0("\n\n================\n\n", tempo_cat, "\n\n================\n\n", collapse = NULL, recycle0 = FALSE), call. = FALSE, domain = NULL) # == in base::stop() to be able to add several messages between ==
+        }
+    }
+    ######## end management of NA arguments
+
+    #### end argument primary checking
+
+    #### environment checking
+
+    ######## check of lib_path
+    # must be before any :: or ::: non basic package calling
+    if( ! base::is.null(x = lib_path)){ #  is.null(NA) returns FALSE so OK.
+        if( ! base::all(base::typeof(x = lib_path) == "character", na.rm = TRUE)){ # na.rm = TRUE but no NA returned with typeof (typeof(NA) == "character" returns FALSE)
+            tempo_cat <- base::paste0(
+                error_text_start, 
+                "THE DIRECTORY PATH INDICATED IN THE lib_path ARGUMENT MUST BE A VECTOR OF CHARACTERS.\nHERE IT IS:\n", 
+                base::ifelse(test = base::length(x = lib_path) == 0 | base::all(lib_path == base::quote(expr = ), na.rm = TRUE), yes = "<NULL, EMPTY OBJECT OR EMPTY NAME>", no = base::paste0(lib_path, collapse = "\n", recycle0 = FALSE)),
+                collapse = NULL, 
+                recycle0 = FALSE
+            )
+            base::stop(base::paste0("\n\n================\n\n", tempo_cat, "\n\n================\n\n", collapse = NULL, recycle0 = FALSE), call. = FALSE, domain = NULL) # == in base::stop() to be able to add several messages between ==
+        }else if( ! base::all(base::dir.exists(paths = lib_path), na.rm = TRUE)){ # separation to avoid the problem of tempo$problem == FALSE and lib_path == NA. dir.exists(paths = NA) returns an error, so ok. dir.exists(paths = "") returns FALSE so ok
+            tempo_log <- ! base::dir.exists(paths = lib_path)
+            tempo_cat_b <- lib_path[tempo_log] # here lib_path is character string
+            tempo_cat_b[tempo_cat_b == ""] <- "\"\""
+            tempo_cat <- base::paste0(
+                error_text_start, 
+                "THE DIRECTORY PATH",
+                base::ifelse(test = base::sum(tempo_log, na.rm = TRUE) > 1, yes = "S", no = ""), 
+                " INDICATED IN THE lib_path ARGUMENT DO", 
+                base::ifelse(test = base::sum(tempo_log, na.rm = TRUE) > 1, yes = "", no = "ES"), 
+                " NOT EXIST:\n", 
+                base::paste0(tempo_cat_b, collapse = "\n", recycle0 = FALSE), 
+                collapse = NULL, 
+                recycle0 = FALSE
+            )
+            base::stop(base::paste0("\n\n================\n\n", tempo_cat, "\n\n================\n\n", collapse = NULL, recycle0 = FALSE), call. = FALSE, domain = NULL) # == in base::stop() to be able to add several messages between ==
+        }else{
+            base:::.libPaths(new = base::sub(x = lib_path, pattern = "/$|\\\\$", replacement = "", ignore.case = FALSE, perl = FALSE, fixed = FALSE, useBytes = FALSE), include.site = TRUE) # base:::.libPaths(new = ) add path to default path. BEWARE: base:::.libPaths() does not support / at the end of a submitted path. The reason of the check and replacement of the last / or \\ in path
+            lib_path <- base:::.libPaths(new = , include.site = TRUE) # normal to have empty new argument
+        }
+    }else{
+        lib_path <- base:::.libPaths(new = , include.site = TRUE) # normal to have empty new argument # base:::.libPaths(new = lib_path) # or base:::.libPaths(new = base::c(base:::.libPaths(), lib_path))
+    }
+    ######## end check of lib_path
+
+    ######## safer_check argument checking
+    if( ! (base::all(base::typeof(x = safer_check) == "logical", na.rm = TRUE) & base::length(x = safer_check) == 1)){ # no need to test NA because NA only already managed above and base::length(x = safer_check) == 1)
+        tempo_cat <- base::paste0(
+            error_text_start, 
+            "THE safer_check ARGUMENT VALUE MUST BE A SINGLE LOGICAL VALUE (TRUE OR FALSE ONLY).\nHERE IT IS:\n", 
+            base::ifelse(test = base::length(x = safer_check) == 0 | base::all(safer_check == base::quote(expr = ), na.rm = TRUE) | base::all(safer_check == "", na.rm = TRUE), yes = "<NULL, \"\", EMPTY OBJECT OR EMPTY NAME>", no = base::paste0(safer_check, collapse = "\n", recycle0 = FALSE)),
+            collapse = NULL, 
+            recycle0 = FALSE
+        )
+        base::stop(base::paste0("\n\n================\n\n", tempo_cat, "\n\n================\n\n", collapse = NULL, recycle0 = FALSE), call. = FALSE, domain = NULL) # == in base::stop() to be able to add several messages between ==
+    }
+    ######## end safer_check argument checking
+
+    ######## check of the required functions from the required packages
+    if(safer_check == TRUE){
+        saferDev:::.pack_and_function_check(
+            fun = base::c(
+                "ggplot2::ggplot_gtable",
+                "saferDev::arg_check"
+            ),
+            lib_path = lib_path, # write NULL if your function does not have any lib_path argument
+            error_text = embed_error_text
+        )
+    }
+    ######## end check of the required functions from the required packages
+
+    ######## critical operator checking
+    if(safer_check == TRUE){
+        saferDev:::.base_op_check(
+            error_text = embed_error_text
+        )
+    }
+    ######## end critical operator checking
+
+    #### end environment checking
+
+    #### argument secondary checking
+
+    ######## argument checking with arg_check()
+    argum_check <- NULL
+    text_check <- NULL
+    checked_arg_names <- NULL # for function debbuging: used by r_debugging_tools
+    arg_check_error_text <- base::paste0("ERROR ", embed_error_text, "\n\n", collapse = NULL, recycle0 = FALSE) # must be used instead of error_text = embed_error_text when several arg_check are performed on the same argument (tempo1, tempo2, see below) 
+    ee <- base::expression(argum_check <- base::c(argum_check, tempo$problem) , text_check <- base::c(text_check, tempo$text) , checked_arg_names <- base::c(checked_arg_names, tempo$object.name))
+    # add as many lines as below, for each of your arguments of your function in development
+    # tempo <- saferDev::arg_check(data = ggplot_built, class = "ggplot_built", typeof = NULL, mode = "list", length = NULL, prop = FALSE, double_as_integer_allowed = FALSE, options = NULL, all_options_in_data = FALSE, na_contain = TRUE, neg_values = TRUE, inf_values = TRUE, print = FALSE, data_name = NULL, data_arg = TRUE, lib_path = lib_path, safer_check = FALSE, error_text = embed_error_text) ; base::eval(expr = ee, envir = base::environment(fun = NULL), enclos = base::environment(fun = NULL)) # copy - paste this line as much as necessary
+    if( ! base::is.null(x = fun.name)){ # for all arguments that can be NULL, write like this:
+        tempo <- saferDev::arg_check(data = fun.name, class = "vector", typeof = NULL, mode = "character", length = 1, prop = FALSE, double_as_integer_allowed = FALSE, options = NULL, all_options_in_data = FALSE, na_contain = FALSE, neg_values = TRUE, inf_values = TRUE, print = FALSE, data_name = NULL, data_arg = TRUE, lib_path = lib_path, safer_check = FALSE, error_text = embed_error_text) ; base::eval(expr = ee, envir = base::environment(fun = NULL), enclos = base::environment(fun = NULL))
+    }
+    # lib_path already checked above
+    # safer_check already checked above
+    # error_text already checked above
+    if( ! base::is.null(x = argum_check)){
+        if(base::any(argum_check, na.rm = TRUE)){
+            base::stop(base::paste0("\n\n================\n\n", base::paste0(text_check[argum_check], collapse = "\n\n", recycle0 = FALSE), "\n\n================\n\n", collapse = NULL, recycle0 = FALSE), call. = FALSE, domain = NULL)
+        }
+    }
+    # check with r_debugging_tools
+    # source("https://gitlab.pasteur.fr/gmillot/debugging_tools_for_r_dev/-/raw/v1.8/r_debugging_tools.R") ; eval(parse(text = str_basic_arg_check_dev)) ; eval(parse(text = str_arg_check_with_fun_check_dev)) # activate this line and use the function (with no arguments left as NULL) to check arguments status and if they have been checked using saferDev::arg_check()
+    # end check with r_debugging_tools
+    ######## end argument checking with arg_check()
+    
+    ######## management of "" in arguments of mode character
+    tempo_arg <- base::c(
+        "fun.name",
+        "lib_path"
+        # "error_text" # inactivated because can be ""
+    )
+    tempo_log <- ! base::sapply(X = base::lapply(X = tempo_arg, FUN = function(x){base::get(x = x, pos = -1L, envir = base::parent.frame(n = 2), mode = "any", inherits = FALSE)}), FUN = function(x){if(base::is.null(x = x)){base::return(TRUE)}else{base::all(base::mode(x = x) == "character", na.rm = TRUE)}}, simplify = TRUE, USE.NAMES = TRUE) # parent.frame(n = 2) because sapply(lapply())  #  need to test is.null() here
+    if(base::any(tempo_log, na.rm = TRUE)){
+        # This check is here in case the developer has not correctly fill tempo_arg
+        tempo_cat <- base::paste0(
+            "INTERNAL ERROR IN THE BACKBONE PART OF ", 
+            intern_error_text_start, 
+            "IN THE SECTION \"management of \"\" in arguments of mode character\"\n", 
+            base::ifelse(test = base::sum(tempo_log, na.rm = TRUE) > 1, yes = "THESE ARGUMENTS ARE", no = "THIS ARGUMENT IS"), 
+            " NOT CLASS \"character\":\n", 
+            base::paste0(tempo_arg[tempo_log], collapse = "\n", recycle0 = FALSE), 
+            intern_error_text_end, 
+            collapse = NULL, 
+            recycle0 = FALSE
+        )
+        base::stop(base::paste0("\n\n================\n\n", tempo_cat, "\n\n================\n\n", collapse = NULL, recycle0 = FALSE), call. = FALSE, domain = NULL) # == in base::stop() to be able to add several messages between ==
+    }else{
+        tempo_log <- base::sapply(X = base::lapply(X = tempo_arg, FUN = function(x){base::get(x = x, pos = -1L, envir = base::parent.frame(n = 2), mode = "any", inherits = FALSE)}), FUN = function(x){base::any(x == "", na.rm = TRUE)}, simplify = TRUE, USE.NAMES = TRUE) # parent.frame(n = 2) because sapply(lapply()).  # for character argument that can also be NULL, if NULL -> returns FALSE. Thus no need to test is.null()
+        if(base::any(tempo_log, na.rm = TRUE)){
+            tempo_cat <- base::paste0(
+                error_text_start, 
+                base::ifelse(test = base::sum(tempo_log, na.rm = TRUE) > 1, yes = "THESE ARGUMENTS\n", no = "THIS ARGUMENT\n"), 
+                base::paste0(tempo_arg[tempo_log], collapse = "\n", recycle0 = FALSE),
+                "\nCANNOT CONTAIN EMPTY STRING \"\".", 
+                collapse = NULL, 
+                recycle0 = FALSE
+            )
+            base::stop(base::paste0("\n\n================\n\n", tempo_cat, "\n\n================\n\n", collapse = NULL, recycle0 = FALSE), call. = FALSE, domain = NULL) # == in stop() to be able to add several messages between ==
+        }
+    }
+    ######## end management of "" in arguments of mode character
+
+    #### end argument secondary checking
+
+    #### second round of checking and data preparation
+
+    ######## reserved words
+    ######## end reserved words 
+      
+    ######## code that protects set.seed() in the global environment
+    ######## end code that protects set.seed() in the global environment
+
+    ######## warning initiation
+    ######## end warning initiation
+
+    ######## graphic device checking
+    # check the number of graphic devices on exit
+    dev_list <- grDevices::dev.list() 
+    base::on.exit(
+        expr = if(base::length(x = dev_list) != base::length(x = grDevices::dev.list())){
+            tempo_cat <- base::paste0(
+                "INTERNAL ERROR IN THE BACKBONE PART OF ", 
+                intern_error_text_start, 
+                "SOME GRAPHIC DEVICES WERE OPENED BY ", 
+                function_name, 
+                " BUT NOT CLOSED BEFORE END OF EXECUTION.\n\nIF IT IS EXPECTED, JUST REMOVE THE CODE DISPLAYING THIS MESSAGE INSIDE ", 
+                function_name, 
+                ".\n\nOTHERWISE, THE PROBLEM COMES FROM OPENED GRAPHIC DEVICES BEFORE RUNNING ", 
+                function_name, 
+                " (n = ", 
+                base::length(x = dev_list), 
+                ") AND AFTER (n = ", 
+                base::length(x = grDevices::dev.list()), 
+                ").", 
+                intern_error_text_end, 
+                collapse = NULL, 
+                recycle0 = FALSE
+            )
+            base::stop(base::paste0("\n\n================\n\n", tempo_cat, "\n\n================\n\n", collapse = NULL, recycle0 = FALSE), call. = FALSE, domain = NULL) # == in base::stop() to be able to add several messages between ==
+        }, 
+        add = TRUE, 
+        after = TRUE
+    )
+    # end check the number of graphic devices on exit
+    # restore the graphic parameters on exit
+    if(base::length(x = grDevices::dev.list()) > 0){
+        par_ini <- base::suppressWarnings(expr = graphics::par(no.readonly = TRUE), classes = "warning") # to recover the present graphical parameters
+        base::on.exit(expr = base::suppressWarnings(expr = graphics::par(par_ini, no.readonly = TRUE), classes = "warning"), add = TRUE, after = TRUE)
+    }
+    # end restore the graphic parameters on exit
+    ######## end graphic device checking
+
+    ######## other checkings
+    ######## end other checkings
+
+    #### end second round of checking and data preparation
+
+    #### main code
+    win.nb <- grDevices::dev.cur()
+    grDevices::pdf(file = NULL)
+    tmp <- ggplot2::ggplot_gtable(ggplot_built)
+    # BEWARE with ggplot_gtable : open a blanck device https://stackoverflow.com/questions/17012518/why-does-this-r-ggplot2-code-bring-up-a-blank-display-device
+    base::invisible(grDevices::dev.off())
+    if(win.nb > 1){ # to go back to the previous active device, if == 1 means no opened device
+        grDevices::dev.set(win.nb)
+    }
+    leg <- base::which(base::sapply(tmp$grobs, function(x) x$name) == "guide-box")
+    if(base::length(leg) == 0L){
+        legend <- NULL
+    }else{
+        legend <- tmp$grobs[[leg]]
+    }
+    #### end main code
+
+    #### output
+    base::return(legend)
+    #### end output
+}

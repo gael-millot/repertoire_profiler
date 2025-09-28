@@ -196,7 +196,7 @@ fun_gg_heatmap2 <- function(
     # return.gtable: logical (either TRUE or FALSE). Return the full graph (main, title and legend) as a gtable of grobs in the output list? See $gtable in the RETURN section below for more details
     # plot: logical (either TRUE or FALSE). Plot the graphic? If FALSE and return argument is TRUE, graphical parameters and associated warnings are provided without plotting
     # warn.print: logical (either TRUE or FALSE). Print warnings at the end of the execution? ? If FALSE, warning messages are never printed, but can still be recovered in the returned list. Some of the warning messages (those delivered by the internal ggplot2 functions) are not apparent when using the argument plot = FALSE
-    # lib.path: vector of character strings indicating the absolute path of the required packages (see below). if NULL, the function will use the R library default folders
+    # lib_path: vector of character strings indicating the absolute path of the required packages (see below). if NULL, the function will use the R library default folders
     # RETURN
     # a heatmap  if plot argument is TRUE
     # a list of the graph info if return argument is TRUE:
@@ -222,7 +222,7 @@ fun_gg_heatmap2 <- function(
     # EXAMPLES
     # obs1 <- data.frame(X = "A", Var1 = c("TUUT", "WIIM", "BIP", "WROUM"), Count = c(20,15,0,1), stringsAsFactors = TRUE) ; fun_gg_heatmap(data1 = obs1, x = "X", y = "Var1", z = "Count", label.size = 12, size.min = 1, color.low = "white", color.high = "blue", title = tempo.title, title.size = 12)
     # DEBUGGING
-    # obs1 <- data.frame(X = "A", Var1 = c("TUUT", "WIIM", "BIP", "WROUM"), Count = c(20,15,NA,1), stringsAsFactors = TRUE) ; data1 = obs1 ; x = "X" ; y = "Var1" ; z = "Count" ; label.size = 12 ; size.min = 1 ; color.low = "white" ; color.high = "blue" ; zero.color = grey(0.9) ; cell.value = TRUE ; cell.value.size = 6 ; title = tempo.title ; title.size = 12 ; add = NULL ; return = TRUE ; return.ggplot = FALSE ; return.gtable = TRUE ; plot = TRUE ; warn.print = FALSE ; lib.path = NULL
+    # obs1 <- data.frame(X = "A", Var1 = c("TUUT", "WIIM", "BIP", "WROUM"), Count = c(20,15,NA,1), stringsAsFactors = TRUE) ; data1 = obs1 ; x = "X" ; y = "Var1" ; z = "Count" ; label.size = 12 ; size.min = 1 ; color.low = "white" ; color.high = "blue" ; zero.color = grey(0.9) ; cell.value = TRUE ; cell.value.size = 6 ; title = tempo.title ; title.size = 12 ; add = NULL ; return = TRUE ; return.ggplot = FALSE ; return.gtable = TRUE ; plot = TRUE ; warn.print = FALSE ; lib_path = NULL
     # function name
     tempo.gg.name <- "gg.indiv.plot."
     tempo.gg.count <- 0
@@ -433,7 +433,7 @@ req.package.list <- c(
     "ggplot2"
 )
 # for(i in 1:length(req.package.list)){suppressMessages(library(req.package.list[i], character.only = TRUE))}
-fun_pack(req.package = req.package.list, load = TRUE, lib.path = NULL) # packages are imported even if inside functions are written as package.name::function() in the present code
+fun_pack(req.package = req.package.list, load = TRUE, lib_path = NULL) # packages are imported even if inside functions are written as package.name::function() in the present code
 
 
 ################################ End Functions

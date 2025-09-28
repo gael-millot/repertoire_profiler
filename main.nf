@@ -395,7 +395,7 @@ process TrimTranslate {
 // Rename the sequence names in the data file
 // The sequence names are replaced by the values of the column meta_name_replacement (specified in .config) of the metadata file
 process seq_name_replacement {
-    label 'r_ext'
+    label 'r_ig_clustering'
     cache 'true'
 
     input:
@@ -646,7 +646,7 @@ process metadata_check { // cannot be in germ_tree_vizu because I have to use th
 }
 
 process repertoire {
-    label 'r_ext'
+    label 'r_ig_clustering'
     publishDir path: "${out_path}/pdf", mode: 'copy', pattern: "{*_repertoire.pdf}", overwrite: false
     publishDir path: "${out_path}/figures/png", mode: 'copy', pattern: "{*.png}", overwrite: false
     publishDir path: "${out_path}/figures/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
@@ -742,7 +742,7 @@ process distance_hist {
 }
 
 process histogram_assembly {
-    label 'r_ext'
+    label 'r_ig_clustering'
     publishDir path: "${out_path}/pdf", mode: 'copy', pattern: "{seq_distance.pdf}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{histogram_assembly.log}", overwrite: false
     cache 'true'
@@ -968,7 +968,7 @@ process AddGermlineSequences{
 // This process takes the germline_alignment_d_mask column, removes the gaps and adds a column to the tsv
 // It then adds to the tsv the translation in amino-acids of the germline_d_mask without gaps
 process TranslateGermline {
-    label 'r_ext'
+    label 'r_ig_clustering'
 
     input:
     path add_germ_ch // parallelization expected (by clonal groups)
@@ -1182,7 +1182,7 @@ process get_germ_tree {
 
 // Adds germline_v_gene and germline_j_gene columns to the get_germ_tree tsv output files
 process GermlineGenes{
-    label 'r_ext'
+    label 'r_ig_clustering'
     cache 'true'
 
     input:
@@ -1234,7 +1234,7 @@ process GermlineGenes{
 
 
 process germ_tree_vizu {
-    label 'r_ext'
+    label 'r_ig_clustering'
     publishDir path: "${out_path}/pdf", mode: 'copy', pattern: "{germ_tree.pdf}", overwrite: false
     publishDir path: "${out_path}/pdf", mode: 'copy', pattern: "{germ_no_tree.pdf}", overwrite: false
     publishDir path: "${out_path}/figures/png", mode: 'copy', pattern: "{*.png}", overwrite: false
@@ -1310,7 +1310,7 @@ process germ_tree_vizu {
 //                                    - 2nd element : sequences in fasta files, in amino-acidic format
 //                                    - 3rd element : joined with their corresponding gff files indicating region coordinates
 process Tsv2fastaGff{
-    label 'r_ext'
+    label 'r_ig_clustering'
     cache 'true'
     publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{clonal_full_length_nuc/*.fasta}", overwrite: false
     publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{clonal_variable_nuc/*.fasta}", overwrite: false 
@@ -1551,7 +1551,7 @@ process ITOL{
 //      "report.html" : finalized html report for a specific run
 //      "print_report.log" : will contain any error or warning messages produced by rmardown::render
 process print_report{
-    label 'r_ext'
+    label 'r_ig_clustering'
 
     publishDir path: "${out_path}", mode: 'copy', pattern: "{*.html}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{print_report.log}", overwrite: false
@@ -1703,7 +1703,7 @@ process donut {
 }
 
 process donut_assembly {
-    label 'r_ext'
+    label 'r_ig_clustering'
     publishDir path: "${out_path}/pdf", mode: 'copy', pattern: "{donuts.pdf}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{donut_assembly.log}", overwrite: false
     cache 'true'
