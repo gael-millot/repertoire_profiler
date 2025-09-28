@@ -705,10 +705,13 @@ Special acknowledgement to the team of [Kenneth Hoehn](https://medicine.yale.edu
 <br><br>
 ## WHAT'S NEW IN
 
+#### v21.5
+
+- Apptainer image pulling with time limit increased.
+
 #### v21.4
 
 - Donut updated so that it uses saferDev.
-
 
 #### v21.3
 
