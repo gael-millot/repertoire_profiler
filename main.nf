@@ -473,11 +473,11 @@ process seq_name_replacement {
                     }
                 }
             }
-            write.table(seq, file = paste0("./", id, "_renamed_seq.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
+            write.table(seq, file = paste0("./", id, "_renamed_seq.tsv"), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
             # modification of the metadata file for the correct use of ggtree::"%<+%" in germ_tree_vizu.R that uses the column name meta_seq_names for that 
             # meta <- data.frame(meta, initial_label = meta[ , "${meta_seq_names}"])
             # meta[ , "${meta_seq_names}"] <- meta[ , "${meta_name_replacement}"]
-            # write.table(meta, file = "./metadata2.tsv", row.names = FALSE, col.names = TRUE, sep = "\\t")
+            # write.table(meta, file = "./metadata2.tsv", row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
             # end modification of the metadata file for the correct use of ggtree::"%<+%" in germ_tree_vizu.R that uses the column name meta_seq_names for that
         ' |& tee -a seq_name_replacement.log
     fi
@@ -586,7 +586,7 @@ process data_assembly {
 
         #### end remove allele info
 
-        write.table(db4, file = paste0("./productive_seq.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
+        write.table(db4, file = paste0("./productive_seq.tsv"), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
     ' |& tee -a data_assembly.log
     """
 }
@@ -702,7 +702,7 @@ process distToNearest {
          # WEIRD stuf: if db alone is returned, and if distToNearest_ch is used for the clone_assignment process and followings, everything is fine. But if db3 is returned with db3 <- data.frame(db, dist_nearest = db2\$dist_nearest) or db3 <- data.frame(db, caca = db2\$dist_nearest) or data.frame(db, caca = db\$sequence_id) or db3 <- data.frame(db, caca = as.numeric(db2\$dist_nearest)) or db3 <- data.frame(db[1:3], caca = db\$sequence_id, db[4:length(db)]), the get_germ_tree process cannot make trees, while the productive.tsv seem identical at the end, between the use of db or db3, except that the clone_id order is not the same
         db <- read.table("${trimtranslate_ch2}", header = TRUE, sep = "\\t")
         db2 <- shazam::distToNearest(db, sequenceColumn = "junction", locusColumn = "locus", model = "${clone_model}", normalize = "${clone_normalize}", nproc = 1)
-        write.table(db2, file = paste0("./nearest_distance.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
+        write.table(db2, file = paste0("./nearest_distance.tsv"), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
     ' |& tee -a distToNearest.log
     """
 }
@@ -798,7 +798,7 @@ process clone_assignment {
                     names(db)[tempo_log] <- "${meta_legend}"
                 }
             }
-            write.table(db, file = paste0(args[1]), row.names = FALSE, col.names = TRUE, sep = "\\t")
+            write.table(db, file = paste0(args[1]), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
         ' *_clone-pass.tsv
         if [ -s *_clone-fail.tsv ]; then # see above for -s
             cp *_clone-fail.tsv non_clone_assigned_sequence.tsv |& tee -a clone_assignment.log
@@ -815,7 +815,7 @@ process clone_assignment {
                 if (length(initial_col) > 0) {
                     db <- db[, c(1, initial_col, setdiff(seq_along(db), c(1, initial_col)))]
                 }
-                write.table(db, file = paste0("./non_clone_assigned_sequence.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
+                write.table(db, file = paste0("./non_clone_assigned_sequence.tsv"), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
             '
         else
             echo -e "\n\nNOTE: EMPTY non_clone_assigned_sequence.tsv FILE RETURNED FOLLOWING THE clone_assignment PROCESS\n\n" |& tee -a clone_assignment.log
@@ -1018,7 +1018,7 @@ process TranslateGermline {
         df[["germline_d_mask_aa_no_gaps"]] <- toString(germ_aa)
         file_base <- tools::file_path_sans_ext(basename(file_name))
         new_file_name <- paste0(file_base, "-trans_germ-pass.tsv")
-        write.table(df, file = paste0("./", new_file_name), row.names = FALSE, col.names = TRUE, sep = "\\t")
+        write.table(df, file = paste0("./", new_file_name), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
 
     '|& tee -a TranslateGermline.log
 
@@ -1027,9 +1027,7 @@ process TranslateGermline {
 }
 
 
-
-
-process mutation_load {
+process Mutation_load_germ_genes {
     label 'immcantation'
     //publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
     //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
@@ -1054,28 +1052,24 @@ process mutation_load {
     rm \$FILENAME # remove the initial file to avoid to send it into the channel
     cp -rp TEMPO.tsv "\$FILENAME" # -p for preserve permissions
     rm TEMPO.tsv
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a mutation_load.log
-    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a mutation_load.log
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a Mutation_load_germ_genes.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a Mutation_load_germ_genes.log
     Rscript -e '
         # Clonal assignment and germline sequences reconstruction should have been performed 
         # using the DefineClone.py and CreateGerlines.py in ChangeO
         # A "germline_alignment_d_mask" collumn should be present. 
         # If germline sequences reconstruction has been performed after clonal assignment,
         # a single germline_alignment_d_mask" consensus sequence should be present for each clone.
-
-
         args <- commandArgs(trailingOnly = TRUE)  # recover arguments written after the call of the Rscript
         tempo.arg.names <- c("file_name") # objects names exactly in the same order as in the bash code and recovered in args
         if(length(args) != length(tempo.arg.names)){
-          tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE mutation_load PROCESS\\n THE NUMBER OF ELEMENTS IN args (", length(args),") IS DIFFERENT FROM THE NUMBER OF ELEMENTS IN tempo.arg.names (", length(tempo.arg.names),")\\nargs:", paste0(args, collapse = ","), "\\ntempo.arg.names:", paste0(tempo.arg.names, collapse = ","), "\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
+          tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE Mutation_load_germ_genes PROCESS\\n THE NUMBER OF ELEMENTS IN args (", length(args),") IS DIFFERENT FROM THE NUMBER OF ELEMENTS IN tempo.arg.names (", length(tempo.arg.names),")\\nargs:", paste0(args, collapse = ","), "\\ntempo.arg.names:", paste0(tempo.arg.names, collapse = ","), "\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
           stop(tempo.cat)
         }
         for(i2 in 1:length(tempo.arg.names)){
           assign(tempo.arg.names[i2], args[i2])
         }
-
         VDJ_db <- read.table(file_name, sep = "\\t", header = TRUE)
-
         # Calculate R and S mutation counts
         VDJ_db <- shazam::observedMutations(VDJ_db, sequenceColumn="sequence_alignment",
                                     germlineColumn="germline_alignment_d_mask",
@@ -1106,8 +1100,7 @@ process mutation_load {
                                     nproc=1)
 
         VDJ_db <- dplyr::arrange(VDJ_db, clone_id)
-        # write.table(VDJ_db, file = paste0("./", tools::file_path_sans_ext(file_name), "_shm-pass.tsv"), row.names = FALSE, sep = "\\t")
-
+        # write.table(VDJ_db, file = paste0("./", tools::file_path_sans_ext(file_name), "_shm-pass.tsv"), row.names = FALSE, quote = FALSE, sep = "\\t")
         # Reposition the column starting with "initial_" to the second position
         initial_col <- grep("^initial_", names(VDJ_db), value = TRUE)
         if (length(initial_col) > 0) {
@@ -1116,8 +1109,6 @@ process mutation_load {
             VDJ_db <- data.frame(VDJ_db[1], tempo, VDJ_db[2:length(VDJ_db)])
             names(VDJ_db)[2] <- initial_col
         }
-        
-
         # Check if a column equal to meta_legend in lowercase exists in 'data' 
         if("${meta_file}" != "NULL" & "${meta_legend}" != "NULL" ){
             tempo_log <- names(VDJ_db) == tolower("${meta_legend}")
@@ -1126,86 +1117,14 @@ process mutation_load {
             }
         }
         # end Check if a column equal to meta_legend in lowercase exists in 'data'
-        write.table(VDJ_db, file = paste0("./", tools::file_path_sans_ext(file_name), "_shm-pass.tsv"), row.names = FALSE, col.names = TRUE, sep = "\\t")
-
-    ' "\${FILENAME}" |& tee -a mutation_load.log
-    # cp ./tempo_shm-pass.tsv \${FILENAME}_shm-pass.tsv
-    # rm tempo_shm-pass.tsv
-    """
-}
-
-
-
-process get_germ_tree {
-    label 'immcantation_10cpu'
-    publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{*_get_germ_tree_cloneID.RData}", overwrite: false
-    cache 'true'
-
-    input:
-    path mutation_load_ch // parallelization expected
-    path meta_file // just to determine if metadata have been provided (TRUE means NULL) meta_file_ch not required here
-    path cute_file
-    val clone_nb_seq
-    val germ_tree_duplicate_seq
-    val igphylm_exe_path // warning : here val and not path because we do not want the igphyml file to be imported in the work dir
-
-    output:
-    path "*_get_germ_tree_cloneID.RData", emit: rdata_germ_tree_ch, optional: true
-    path "germ_tree_dismissed_seq.tsv", emit: no_germ_tree_ch
-    path "seq_for_germ_tree.tsv", emit: germ_tree_ch
-    path "germ_tree_dismissed_clone_id.tsv", emit: no_cloneID_ch
-    path "germ_tree_clone_id.tsv", emit: cloneID_ch
-    path "get_germ_tree.log", emit: get_germ_tree_log_ch
-    //path "HLP10_germ_tree_parameters.tsv"
-
-    script:
-    """
-    #!/bin/bash -ue
-    if [[ ! -s ${mutation_load_ch} ]]; then
-        echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nEMPTY ${mutation_load_ch} FILE AS INPUT OF THE mutation_load PROCESS\\nCHECK THE mutation_load.log IN THE report FOLDER INSIDE THE OUTPUT FOLDER\\n\\n========\\n\\n"
-        exit 1
-    fi
-    FILENAME=\$(basename -- ${mutation_load_ch}) # recover a file name without path
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a get_germ_tree.log
-    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a get_germ_tree.log
-    get_germ_tree.R \
-"${mutation_load_ch}" \
-"${meta_file}" \
-"${clone_nb_seq}" \
-"${germ_tree_duplicate_seq}" \
-"${igphylm_exe_path}" \
-"${cute_file}" \
-"get_germ_tree.log"
-    """
-}
-
-
-// Adds germline_v_gene and germline_j_gene columns to the get_germ_tree tsv output files
-process GermlineGenes{
-    label 'r_ig_clustering'
-    cache 'true'
-
-    input:
-    path mutation_load_filtered_ch // parallelization expected (by clonal groups over clone_nb_seq sequences)
-
-    output:
-    path "*-germ_genes-pass*.tsv", emit : germline_genes_ch
-
-    script:
-    """
-    #!/bin/bash -ue
-    Rscript -e '
-        df <- read.table("${mutation_load_filtered_ch}", sep = "\\t", header = TRUE)
-
+        # add germline vdj genes
         required_inputs <- c("germline_v_call", "germline_d_call", "germline_j_call")
-
-        if( !all(required_inputs %in% names(df)) ){
-            stop(paste0("\\n\\n========\\n\\nERROR IN THE NEXTFLOW EXECUTION OF THE germline_genes PROCESS\\nMISSING germline_v_call, germline_d_call OR germline_j_call FOLLOWING THE get_germ_tree PROCESS (OUTPUT germ_tree_ch)\\n\\n========\\n\\n"), call. = FALSE)
+        if( !all(required_inputs %in% names(VDJ_db)) ){
+            stop(paste0("\\n\\n========\\n\\nERROR IN THE NEXTFLOW EXECUTION OF THE germline_genes PROCESS\\nMISSING germline_v_call, germline_d_call OR germline_j_call FOLLOWING THE GermlineGenes PROCESS (OUTPUT germ_tree_ch)\\n\\n========\\n\\n"), call. = FALSE)
         }
-
-        tempo_v <- strsplit(df\$germline_v_call, ",")
+        tempo_v <- strsplit(VDJ_db\$germline_v_call, ",")
         sub_v <- sapply(X = tempo_v, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; paste0(unique(y), collapse = ",")})
-        sub_d <- sapply(df\$germline_d_call, function(x) {
+        sub_d <- sapply(VDJ_db\$germline_d_call, function(x) {
             if (is.na(x) || x == "") { # The germline_d_call column can have only empty values if the sequences are light chain
                 return(NA)
             } else {
@@ -1213,89 +1132,43 @@ process GermlineGenes{
                 return(paste0(unique(y), collapse = ","))
             }
         })
-        tempo_j <- strsplit(df\$germline_j_call, ",")
+        tempo_j <- strsplit(VDJ_db\$germline_j_call, ",")
         sub_j <- sapply(X = tempo_j, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; paste0(unique(y), collapse = ",")})
-
-        df <- data.frame(df, germline_v_gene = sub_v, germline_d_gene = sub_d, germline_j_gene = sub_j)
-
-        required_outputs <- c("germline_v_gene", "germline_d_gene", "germline_j_gene")
-
-        if( !all(required_outputs %in% names(df)) ){
-            stop(paste0("\\n\\n========\\n\\nERROR IN THE NEXTFLOW EXECUTION OF THE germline_genes PROCESS\\nMISSING germline_v_call, germline_d_call OR germline_j_call FOLLOWING THE get_germ_tree PROCESS (OUTPUT germ_tree_ch)\\n\\n========\\n\\n"), call. = FALSE)
-        }
-        
-        file_base <- tools::file_path_sans_ext(basename("${mutation_load_filtered_ch}"))
-        file_name <- paste0(file_base, "-germ_genes-pass_group_", df[1, "clone_id"], ".tsv")
-        
-        df <- write.table(df, file = file_name, row.names = FALSE, col.names = TRUE, sep = "\\t")
-    '
+        VDJ_db <- data.frame(VDJ_db, germline_v_gene = sub_v, germline_d_gene = sub_d, germline_j_gene = sub_j)
+        # end add germline vdj genes
+        write.table(VDJ_db, file = paste0("./", tools::file_path_sans_ext(file_name), "_shm-pass.tsv"), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
+    ' "\${FILENAME}" |& tee -a Mutation_load_germ_genes.log
+    # cp ./tempo_shm-pass.tsv \${FILENAME}_shm-pass.tsv
+    # rm tempo_shm-pass.tsv
     """
 }
 
 
-process germ_tree_vizu {
-    label 'r_ig_clustering'
-    publishDir path: "${out_path}/pdf", mode: 'copy', pattern: "{germ_tree.pdf}", overwrite: false
-    publishDir path: "${out_path}/pdf", mode: 'copy', pattern: "{germ_no_tree.pdf}", overwrite: false
-    publishDir path: "${out_path}/figures/png", mode: 'copy', pattern: "{*.png}", overwrite: false
-    publishDir path: "${out_path}/figures/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
-    publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{all_trees.RData}", overwrite: false
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{germ_tree_vizu.log}", overwrite: false
+process Clone_id_count {
+    label 'immcantation'
+    publishDir path: "${out_path}/tsv", mode: 'copy', pattern: "clone_id_count.tsv", overwrite: false
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "clone_id_count.log", overwrite: false
     cache 'true'
 
     input:
-    path rdata_germ_tree_ch2 // no more parallelization
-    val germ_tree_kind
-    val clone_nb_seq
-    val germ_tree_duplicate_seq
-    val germ_tree_leaf_color
-    val germ_tree_leaf_shape
-    val germ_tree_leaf_size
-    val germ_tree_label_size
-    val germ_tree_label_hjust
-    val germ_tree_label_rigth
-    val germ_tree_label_outside
-    val germ_tree_right_margin
-    val germ_tree_legend
-    path data_assembly_ch
-    path meta_file
-    val meta_legend
-    path cute_file
+    path clone_assigned_seq_ch // no parallelization
+
 
     output:
-    path "*.RData", optional: true
-    path "germ_tree.pdf"
-    path "germ_no_tree.pdf"
-    path "*.png", emit: germ_tree_vizu_ch // png plot (but sometimes empty) systematically returned
-    path "*.svg"
-    path "*germ_tree_dup_seq_not_displayed.tsv", emit: germ_tree_dup_seq_not_displayed_ch
-    path "germ_tree_vizu.log"
-    //path "HLP10_germ_tree_parameters.tsv"
+    path "clone_id_count.tsv"
+    path "clone_id_count.log"
 
     script:
     """
     #!/bin/bash -ue
-    germ_tree_vizu.R \
-"${germ_tree_kind}" \
-"${clone_nb_seq}" \
-"${germ_tree_duplicate_seq}" \
-"${germ_tree_leaf_color}" \
-"${germ_tree_leaf_shape}" \
-"${germ_tree_leaf_size}" \
-"${germ_tree_label_size}" \
-"${germ_tree_label_hjust}" \
-"${germ_tree_label_rigth}" \
-"${germ_tree_label_outside}" \
-"${germ_tree_right_margin}" \
-"${germ_tree_legend}" \
-"${data_assembly_ch}" \
-"${meta_file}" \
-"${meta_legend}" \
-"${cute_file}" \
-"germ_tree_vizu.log"
+    Rscript -e '
+        obs <- read.table("./clone_assigned_seq.tsv", sep = "\\t", header = TRUE)
+        clone_id_count <- as.data.frame(table(obs\$clone_id))
+        names(clone_id_count) <- c("clone_id", "count")
+        write.table(clone_id_count, file = "clone_id_count.tsv", row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
+    ' |& tee -a clone_id_count.log
     """
 }
-
 
 
 // Makes a fasta file with several sequences based on the sequences present in the tsv input in BOTH nucleotidic format and amino-acidic format
@@ -1732,7 +1605,114 @@ process donut_assembly {
     """
 }
 
+    /*
+// alakazam::readChangeoDb() ; dowser::formatClones() ; dowser::getTrees()
+process get_germ_tree {
+    label 'immcantation_10cpu'
+    publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{*_get_germ_tree_cloneID.RData}", overwrite: false
+    cache 'true'
 
+    input:
+    path mutation_load_ch // parallelization expected
+    path meta_file // just to determine if metadata have been provided (TRUE means NULL) meta_file_ch not required here
+    path cute_file
+    val clone_nb_seq
+    val germ_tree_duplicate_seq
+    val igphylm_exe_path // warning : here val and not path because we do not want the igphyml file to be imported in the work dir
+
+    output:
+    path "*_get_germ_tree_cloneID.RData", emit: rdata_germ_tree_ch, optional: true
+    path "germ_tree_dismissed_seq.tsv", emit: no_germ_tree_ch
+    path "seq_for_germ_tree.tsv", emit: germ_tree_ch
+    path "germ_tree_dismissed_clone_id.tsv", emit: no_cloneID_ch
+    path "germ_tree_clone_id.tsv", emit: cloneID_ch
+    path "get_germ_tree.log", emit: get_germ_tree_log_ch
+    //path "HLP10_germ_tree_parameters.tsv"
+
+    script:
+    """
+    #!/bin/bash -ue
+    if [[ ! -s ${mutation_load_ch} ]]; then
+        echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nEMPTY ${mutation_load_ch} FILE AS INPUT OF THE mutation_load PROCESS\\nCHECK THE mutation_load.log IN THE report FOLDER INSIDE THE OUTPUT FOLDER\\n\\n========\\n\\n"
+        exit 1
+    fi
+    FILENAME=\$(basename -- ${mutation_load_ch}) # recover a file name without path
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a get_germ_tree.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a get_germ_tree.log
+    get_germ_tree.R \
+"${mutation_load_ch}" \
+"${meta_file}" \
+"${clone_nb_seq}" \
+"${germ_tree_duplicate_seq}" \
+"${igphylm_exe_path}" \
+"${cute_file}" \
+"get_germ_tree.log"
+    """
+}
+
+process germ_tree_vizu {
+    label 'r_ig_clustering'
+    publishDir path: "${out_path}/pdf", mode: 'copy', pattern: "{germ_tree.pdf}", overwrite: false
+    publishDir path: "${out_path}/pdf", mode: 'copy', pattern: "{germ_no_tree.pdf}", overwrite: false
+    publishDir path: "${out_path}/figures/png", mode: 'copy', pattern: "{*.png}", overwrite: false
+    publishDir path: "${out_path}/figures/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
+    publishDir path: "${out_path}/RData", mode: 'copy', pattern: "{all_trees.RData}", overwrite: false
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{germ_tree_vizu.log}", overwrite: false
+    cache 'true'
+
+    input:
+    path rdata_germ_tree_ch2 // no more parallelization
+    val germ_tree_kind
+    val clone_nb_seq
+    val germ_tree_duplicate_seq
+    val germ_tree_leaf_color
+    val germ_tree_leaf_shape
+    val germ_tree_leaf_size
+    val germ_tree_label_size
+    val germ_tree_label_hjust
+    val germ_tree_label_rigth
+    val germ_tree_label_outside
+    val germ_tree_right_margin
+    val germ_tree_legend
+    path data_assembly_ch
+    path meta_file
+    val meta_legend
+    path cute_file
+
+    output:
+    path "*.RData", optional: true
+    path "germ_tree.pdf"
+    path "germ_no_tree.pdf"
+    path "*.png", emit: germ_tree_vizu_ch // png plot (but sometimes empty) systematically returned
+    path "*.svg"
+    path "*germ_tree_dup_seq_not_displayed.tsv", emit: germ_tree_dup_seq_not_displayed_ch
+    path "germ_tree_vizu.log"
+    //path "HLP10_germ_tree_parameters.tsv"
+
+    script:
+    """
+    #!/bin/bash -ue
+    germ_tree_vizu.R \
+"${germ_tree_kind}" \
+"${clone_nb_seq}" \
+"${germ_tree_duplicate_seq}" \
+"${germ_tree_leaf_color}" \
+"${germ_tree_leaf_shape}" \
+"${germ_tree_leaf_size}" \
+"${germ_tree_label_size}" \
+"${germ_tree_label_hjust}" \
+"${germ_tree_label_rigth}" \
+"${germ_tree_label_outside}" \
+"${germ_tree_right_margin}" \
+"${germ_tree_legend}" \
+"${data_assembly_ch}" \
+"${meta_file}" \
+"${meta_legend}" \
+"${cute_file}" \
+"germ_tree_vizu.log"
+    """
+}
+    */
 
 // Save the config file and the log file for a specific run
 process backup {
@@ -2257,7 +2237,11 @@ workflow {
         meta_legend
     )
 
-
+    repertoire(
+        data_assembly.out.productive_ch,
+        igblast_data_check.out.igblast_data_check_ch,
+        cute_file
+    )
 
     clone_assignment(
         data_assembly.out.productive_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE data_assembly PROCESS\n\n========\n\n"}, 
@@ -2302,45 +2286,34 @@ workflow {
     TranslateGermline.out.translate_germ_log_ch.collectFile(name: "TranslateGermline.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
 
-    mutation_load(
+
+
+    Mutation_load_germ_genes(
         TranslateGermline.out.translate_germ_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE TranslateGermline PROCESS\n\n========\n\n"},
         meta_file, 
         meta_legend
     )
-    //mutation_load.out.mutation_load_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE mutation_load PROCESS\n\n========\n\n"}}
-    
-    mutation_load.out.mutation_load_log_ch.collectFile(name: "mutation_load.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
+    clone_assigned_seq_ch = Mutation_load_germ_genes.out.mutation_load_ch.collectFile(name: "clone_assigned_seq.tsv", skip: 1, keepHeader: true)
+    nb_clone_assigned = clone_assigned_seq_ch.countLines() - 1 // Minus 1 because 1st line = column names
+    clone_assigned_seq_ch.subscribe{it -> it.copyTo("${out_path}/tsv")}
+    clone_assigned_seq_filtered_ch = Mutation_load_germ_genes.out.mutation_load_ch.filter{ file -> file.countLines() > clone_nb_seq.toInteger() } // Only keep clonal groups that have a number of sequences superior to clone_nb_seq (variable defined in nextflow.config)
+    Mutation_load_germ_genes.out.mutation_load_log_ch.collectFile(name: "Mutation_load_germ_genes.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
 
-    clone_assigned_seq = mutation_load.out.mutation_load_ch.collectFile(name: "clone_assigned_seq.tsv", skip: 1, keepHeader: true)
-    nb_clone_assigned = clone_assigned_seq.countLines() - 1 // Minus 1 because 1st line = column names
-    clone_assigned_seq.subscribe{it -> it.copyTo("${out_path}/tsv")}
 
-    mutation_load_filtered_ch = mutation_load.out.mutation_load_ch.filter{ file -> file.countLines() > clone_nb_seq.toInteger() } // Only keep clonal groups that have a number of sequences superior to clone_nb_seq (variable defined in nextflow.config)
 
-    
-    GermlineGenes(
-        mutation_load_filtered_ch
+
+    Clone_id_count(
+        clone_assigned_seq_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Mutation_load_germ_genes PROCESS\n\n========\n\n"}
     )
 
-    germline_genes_ch2 = GermlineGenes.out.germline_genes_ch.collectFile(name: "germ_tree_seq.tsv", skip: 1, keepHeader: true)
-    germline_genes_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
-    germline_genes_filtered_ch = GermlineGenes.out.germline_genes_ch.filter{ file -> file.countLines() > clone_nb_seq.toInteger() } // Only keep clonal groups that have a number of sequences superior to clone_nb_seq (variable defined in nextflow.config)
-    //germline_genes_filtered_ch2 = germline_genes_filtered_ch.collectFile(name : "germline_genes_filtered.tsv", skip: 1, keepHeader: true)
-    //germline_genes_filtered_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
 
 
-
-    repertoire(
-        data_assembly.out.productive_ch,
-        igblast_data_check.out.igblast_data_check_ch,
-        cute_file
-    )
 
 
     /*
 
     get_germ_tree(
-        mutation_load.out.mutation_load_ch,
+        Mutation_load_germ_genes.out.mutation_load_ch,
         meta_file, // first() because get_germ_tree process is a parallele one and because meta_file is single
         cute_file, 
         clone_nb_seq,
@@ -2397,7 +2370,7 @@ workflow {
         germ_tree_label_outside,
         germ_tree_right_margin,
         germ_tree_legend,
-        clone_assigned_seq, // may be add .first()
+        clone_assigned_seq_ch, // may be add .first()
         meta_file, 
         meta_legend,
         cute_file
@@ -2410,15 +2383,15 @@ workflow {
     germ_tree_dup_seq_not_displayed_ch2 = germ_tree_vizu.out.germ_tree_dup_seq_not_displayed_ch.flatten().collectFile(name: "germ_tree_dup_seq_not_displayed.tsv", skip: 1, keepHeader: true) // flatten split the list into several objects which is required by collectFile()
     germ_tree_dup_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
 
-
-
     */
+
+
 
     
 
 
     tempo1_ch = Channel.of("all", "annotated", "tree") // 1 channel with 3 values (not list)
-    tempo2_ch = data_assembly.out.productive_ch.mix(data_assembly.out.productive_ch.mix(germline_genes_ch2)) // 1 channel with 3 paths (do not use flatten() -> not list)
+    tempo2_ch = data_assembly.out.productive_ch.mix(data_assembly.out.productive_ch.mix(clone_assigned_seq_ch)) // 1 channel with 3 paths (do not use flatten() -> not list)
     tempo3_ch = tempo1_ch.merge(tempo2_ch) // 3 lists
     tempo4_ch = Channel.of("vj_allele", "c_allele", "vj_gene", "c_gene")
     tempo5_ch = tempo3_ch.combine(tempo4_ch) // 12 tuples
@@ -2480,7 +2453,7 @@ workflow {
 
 
     Tsv2fastaGff(
-        germline_genes_filtered_ch,
+        clone_assigned_seq_filtered_ch,
         clone_nb_seq,
         cute_path
     )

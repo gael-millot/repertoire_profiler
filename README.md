@@ -368,23 +368,7 @@ If the text is cut in the table, reload the page or change the width of the wind
             - *_repertoire.pdf
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            heatmap of the files from the <i>repertoires</i> folder (see above), showing the frequency of alleles and genes used among all the all productive sequences ("all"), non empty cells ("non-zero") and "annotated" sequences (if metadata are provided). Non-zero means that unused alleles are removed from the heatmap (empty row or column). Warning: to build the repertoire contingencies, the script currently takes the first annotation of the imgt annotation if several are presents in the v_call, j_call or c_call columns of the <i>productive_seq.tsv</i> file. 
-        </td>
-    </tr>
-    <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            - germ_tree.pdf
-        </th>
-        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            Phylogenic trees of the sequences that belong to a clonal (supposedly germline) group made of at least n sequences, n being set by the clone_nb_seq parameter in the nextflow.config file (one page per clonal group). Warning: clonal group full names are those given by dowser::formatClones, i.e., those from germinal_v_call and germinal_j_call from the <i>germ_tree_seq.tsv</i> file. 
-        </td>
-    </tr>
-    <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            - germ_no_tree.pdf
-        </th>
-        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            All the clonal groups with less than n sequences, n being set by the clone_nb_seq parameter in the nextflow.config file (one page per clonal group). Clonal group information is recapitulated in each page. 
+            heatmap of the files from the <i>repertoires</i> folder (see above), showing the frequency of 1) alleles or 2) genes used among all the all productive sequences ("all"), non empty cells ("non-zero") and "annotated" sequences (if metadata are provided). Non-zero means that unused alleles are removed from the heatmap (empty row or column). Warning: to build the repertoire contingencies, the script currently takes the first annotation of the imgt annotation if several are presents in the v_call, j_call or c_call columns of the <i>productive_seq.tsv</i> file. 
         </td>
     </tr>
     <tr>
@@ -397,10 +381,10 @@ If the text is cut in the table, reload the page or change the width of the wind
     </tr>
     <tr>
         <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            - donut_stat.tsv
+            - passed_igblast_seq.tsv
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            stats associated to the <i>donuts.pdf</i> file. 
+            sequences annotated by igblast (more precisely by <code>AssignGenes.py igblast --format airr</code>). If empty, generate a subsequent nextflow failure. The number of lines in <i>failed_igblast_seq.tsv</i> and <i>passed_igblast_seq.tsv</i> is equal to the number of submitted .fasta files. 
         </td>
     </tr>
     <tr>
@@ -409,14 +393,6 @@ If the text is cut in the table, reload the page or change the width of the wind
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             sequences that failed to be annotated by igblast (empty file if all the sequences are annotated). 
-        </td>
-    </tr>
-    <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            - passed_igblast_seq.tsv
-        </th>
-        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            sequences annotated by igblast (more precisely by <code>AssignGenes.py igblast --format airr</code>). If empty, generate a subsequent nextflow failure. The number of lines in <i>failed_igblast_seq.tsv</i> and <i>passed_igblast_seq.tsv</i> is equal to the number of submitted .fasta files. 
         </td>
     </tr>
     <tr>
@@ -559,6 +535,14 @@ If the text is cut in the table, reload the page or change the width of the wind
     </tr>
     <tr>
         <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            - unproductive_seq.tsv
+        </th>
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            Sequences that failed in productive annotations by igblast (empty file if all the sequences are productively annotated). 
+        </td>
+    </tr>
+    <tr>
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             - clone_assigned_seq.tsv
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
@@ -587,15 +571,10 @@ If the text is cut in the table, reload the page or change the width of the wind
             <br></li><li>mu_freq_fwr_r: frequency of replacement mutations in FWR1, FWR2 and FWR3 of the V-segment (idem).
             <br></li><li>mu_freq_fwr_s: frequency of silent mutations in FWR1, FWR2 and FWR3 of the V-segment (idem).
             <br></li><li>mu_freq: frequency of replacement and silent mutations (sum of the previous columns).
+            <br></li><li><b>germline_v_gene</b>: extracted from the <i>germline_v_call</i> column but removing the allele specification after the *.
+            <br></li><li><b>germline_d_gene</b>: extracted from the <i>germline_d_call</i> column but removing the allele specification after the *.
+            <br></li><li><b>germline_j_gene</b>: extracted from the <i>germline_j_call</i> column but removing the allele specification after the *.
             </li> 
-        </td>
-    </tr>
-    <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            - unproductive_seq.tsv
-        </th>
-        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            Sequences that failed in productive annotations by igblast (empty file if all the sequences are productively annotated). 
         </td>
     </tr>
     <tr>
@@ -608,42 +587,18 @@ If the text is cut in the table, reload the page or change the width of the wind
     </tr>
     <tr>
         <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            - germ_tree_clone_id.tsv
+            - clone_id_count.tsv
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            Clonal group IDs used in the germline tree analysis (clonal group with at least n sequences, n being set by the clone_nb_seq parameter of the <i>nextflow.config</i> file). 
+            number of sequences in each clonal group in the <i>clone_assigned_seq.tsv</i> file. 
         </td>
     </tr>
     <tr>
         <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            - germ_tree_dismissed_clone_id.tsv
+            - donut_stat.tsv
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            Clonal group IDs not used in the germline tree analysis (clonal group with less than n sequences, n being set by the clone_nb_seq parameter of the <i>nextflow.config</i> file). 
-        </td>
-    </tr>
-    <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            - germ_tree_seq.tsv
-        </th>
-        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            Sequences of the <i>clone_assigned_seq.tsv</i> file used in the germline tree analysis (clonal group with at least n sequences, n being set by the clone_nb_seq parameter of the <i>nextflow.config</i> file). Additionnal germline_[<i>vdj</i>]_gene columns. 
-        </td>
-    </tr>
-    <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            - germ_tree_dismissed_seq.tsv
-        </th>
-        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            Sequences of the <i>clone_assigned_seq.tsv</i> file not used in the germline tree analysis (clonal group with less than n sequences, n being set by the clone_nb_seq parameter of the <i>nextflow.config</i> file). 
-        </td>
-    </tr>
-    <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            - germ_tree_dup_seq_not_displayed.tsv
-        </th>
-        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            Sequences file used in the germline tree analysis but not displayed in the graph, (1) because strictly identical to another sequence already in the tree and (2) because the tree_duplicate_seq parameter of the <i>nextflow.config</i> file has been set to "FALSE".
+            stats associated to the <i>donuts.pdf</i> file. 
         </td>
     </tr>
 </table>

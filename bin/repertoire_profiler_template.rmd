@@ -246,6 +246,17 @@ Passing ratio: ```r base::round(params$nb_clone_assigned / (params$nb_clone_assi
 See the clone_assigned_seq.tsv and the non_clone_assigned_sequence.tsv (sequences from the productive file that fail to be clone-assigned by `DefineClones.py`) files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output).
 
 <br>
+Number of sequences per clone ID: &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
+<span style="color:green">*clone_id_count.tsv file in the [tsv](./tsv) folder*</span>
+```{r, echo=FALSE, results='asis'}
+df <- read_tsv_with_dummy("tsv/clone_id_count.tsv")
+if (is.data.frame(df) && attr(df, "truncated")) {
+  cat("\n**(Note: Table truncated to 10 rows. Full file available in the clone_id_count.tsv file.)**\n\n")
+}
+kable(df, format = "markdown", row.names = FALSE)
+```
+</details>
+<br>
 
 
 ### Alignments of the variable regions for each clonal group
