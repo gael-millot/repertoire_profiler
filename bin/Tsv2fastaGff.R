@@ -69,7 +69,6 @@ script <- "Tsv2fastaGff"
 # path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/f7/daa059b87fb7ad05e1503cabcc7662/1_productive_seq_clone-pass_germ-pass_germ-seq-trans_germ-pass_shm-pass-germ_genes-pass_group_1b.tsv"      # tsv file containing data. needs to have all columns in Name, Seq and Germline
 # Name <- "sequence_id"                # name of the column containing the sequence ids
 # Seq <- "sequence,sequence_aa"        # name of the columns containing the sequences to put in the fasta file (can be a single string or several strings seperated by "," if several columns are needed. the fastas will then be created in different folders)
-# Germline <- "germline_alignment_d_mask,germline_d_mask_aa_no_gaps"    # name of the columns containing corresponding germlines of the previously mentionned sequences. Need to be in the same order as the Seq argument
 # clone_nb_seq <- 3                    # Minimum number of rows in the tsv file. The program expects this to be respected, otherwise raises an error.
 # cute <- "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v11.4.0/cute_little_R_functions.R"
 # log <- "Tsv2fastaGff.log"
@@ -98,7 +97,6 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
         "path", 
         "Name", 
         "Seq",
-        "Germline",
         "clone_nb_seq",
         "cute", 
         "log"
@@ -140,7 +138,6 @@ param.list <- c(
     "path", 
     "Name", 
     "Seq",
-    "Germline",
     "clone_nb_seq",
     "cute", 
     "log"
@@ -270,22 +267,39 @@ checked.arg.names <- NULL # for function debbuging: used by r_debugging_tools
 ee <- expression(arg.check <- c(arg.check, tempo$problem) , text.check <- c(text.check, tempo$text) , checked.arg.names <- c(checked.arg.names, tempo$object.name))
 tempo <- fun_check(data = path, class = "vector", typeof = "character", length = 1) ; eval(ee)
 tempo <- fun_check(data = Name, class = "vector", typeof = "character", length = 1) ; eval(ee)
-tempo <- fun_check(data = Seq, class = "vector", typeof = "character") ; eval(ee)
-tempo <- fun_check(data = Germline, class = "vector", typeof = "character", length = 1) ; eval(ee)
+tempo <- fun_check(data = Seq, options = c("query", "igblast_full", "trimmed", "fwr1", "fwr2", "fwr3", "fwr4", "cdr1", "cdr2", "cdr3", "junction", "sequence_alignment", "v_sequence_alignment", "d_sequence_alignment", "j_sequence_alignment", "c_sequence_alignment", "germline_alignment", "v_germline_alignment", "d_germline_alignment", "j_germline_alignment", "c_germline_alignment")) ; eval(ee)
 # cute already tested above
 tempo <- fun_check(data = log, class = "vector", typeof = "character", length = 1) ; eval(ee)
 if(any(arg.check) == TRUE){ # normally no NA
     stop(paste0("\n\n================\n\n", paste(text.check[arg.check], collapse = "\n"), "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between == #
 }
 
-Seq <- unlist(strsplit(Seq, ",")) # To create a vector from the string
-Germline <- unlist(strsplit(Germline, ","))
+if(Seq == "query"){Seq2 <- c("sequence", "query_sequence_aa")}
+if(Seq == "igblast_full"){Seq2 <- c("sequence", "sequence_aa")}
+if(Seq == "trimmed"){Seq2 <- c("trimmed_sequence", "trimmed_sequence_aa")}
+if(Seq == "fwr1"){Seq2 <- c("fwr1", "fwr1_aa")}
+if(Seq == "fwr2"){Seq2 <- c("fwr2", "fwr2_aa")}
+if(Seq == "fwr3"){Seq2 <- c("fwr3", "fwr3_aa")}
+if(Seq == "fwr4"){Seq2 <- c("fwr4", "fwr4_aa")}
+if(Seq == "cdr1"){Seq2 <- c("cdr1", "cdr1_aa")}
+if(Seq == "cdr2"){Seq2 <- c("cdr2", "cdr2_aa")}
+if(Seq == "cdr3"){Seq2 <- c("cdr3", "cdr3_aa")}
+if(Seq == "junction"){Seq2 <- c("junction", "junction_aa")}
+if(Seq == "sequence_alignment"){Seq2 <- c("sequence_alignment", "sequence_alignment_aa")}
+if(Seq == "v_sequence_alignment"){Seq2 <- c("v_sequence_alignment", "v_sequence_alignment_aa")}
+if(Seq == "d_sequence_alignment"){Seq2 <- c("d_sequence_alignment", "d_sequence_alignment_aa")}
+if(Seq == "j_sequence_alignment"){Seq2 <- c("j_sequence_alignment", "j_sequence_alignment_aa")}
+if(Seq == "c_sequence_alignment"){Seq2 <- c("c_sequence_alignment", "c_sequence_alignment_aa")}
+if(Seq == "germline_alignment"){Seq2 <- c("germline_alignment", "germline_alignment_aa")}
+if(Seq == "v_germline_alignment"){Seq2 <- c("v_germline_alignment", "v_germline_alignment_aa")}
+if(Seq == "d_germline_alignment"){Seq2 <- c("d_germline_alignment", "d_germline_alignment_aa")}
+if(Seq == "j_germline_alignment"){Seq2 <- c("j_germline_alignment", "j_germline_alignment_aa")}
+if(Seq == "c_germline_alignment"){Seq2 <- c("c_germline_alignment", "c_germline_alignment_aa")}
 
-if (length(Seq) != length(Germline)){
-    tempo.cat <- paste0("ERROR IN ", script, ".R:\nTHE Seq ARGUMENT MUST CONTAIN THE SAME NUMBER OF ELEMENTS AS THE Germline ARGUMENT\nHERE, THE Seq ARGUMENT CONTAINS FOLLOWING STRINGS (EXPECTED TO BE COLUMN NAMES) : \n", paste0(Seq, collapse = "\n"),"\nTHE Germline ARGUMENT CONTAINS FOLLOWING STRINGS (EXPECTED TO BE COLUMN NAMES) : \n", paste0(Germline, collapse = "\n"))
-    stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE)
+Germline <- NULL
+if(base::grepl(x = Seq2, pattern = "sequence_alignment")){
+    Germline <- base::sub(x = Seq2, pattern = "sequence", replacement = "germline")
 }
-
 # end argument primary checking
 # second round of checking and data preparation
 # management of NA arguments
@@ -380,16 +394,12 @@ if( ! Name %in% names(obs)){
     stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nTHE Name PARAMETER MUST BE A COLUMN NAME OF THE IMPORTED FILE:\n", path, "\n\nHERE IT IS Name:\n", Name, "\n\nCOLUMN NAMES:\n", paste(names(obs), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
 }
 
-if( ! all(Germline %in% names(obs))){
-    stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nTHE Germline PARAMETER MUST BE COLUMN NAMES OF THE IMPORTED FILE:\n", path, "\n\nHERE IT IS Name:\n", paste(Germline, collapse = "\n"), "\n\nCOLUMN NAMES:\n", paste(names(obs), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
-}
-
 if(any(duplicated(obs[, Name]))){
     stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nDUPLICATED VALUE NOT AUTHORIZED IN THE COLUMN OF THE Name PARAMETER\n\nDUPLICATED VALUES ARE:\n", obs[duplicated(obs[, Name]), Name], "\n\nIN POSITIONS:\n", paste(which(obs[ , Name] %in% obs[duplicated(obs[, Name]), Name]), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
 }
 
-if( ! all(Seq %in% names(obs))){
-    stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nTHE Seq PARAMETER MUST BE COLUMN NAMES OF THE IMPORTED FILE:\n", path, "\n\nHERE IT IS Seq:\n", paste(Seq, collapse = "\n"), "\n\nCOLUMN NAMES:\n", paste(names(obs), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
+if( ! all(Seq2 %in% names(obs))){
+    stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nTHE Seq2 PARAMETER MUST BE COLUMN NAMES OF THE IMPORTED FILE:\n", path, "\n\nHERE IT IS Seq:\n", paste(Seq2, collapse = "\n"), "\n\nCOLUMN NAMES:\n", paste(names(obs), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
 }
 
 tempo.log <- is.na(obs[ , Name]) | obs[ , Name] == ""
@@ -416,7 +426,7 @@ count = 0
 multiple_v_genes <- FALSE
 multiple_j_genes <- FALSE
 
-for(i0 in Seq){
+for(i0 in Seq2){
     count = count + 1
     tempo.log <- is.na(obs[ , i0]) | obs[ , i0] == ""
     if(sum(!tempo.log, na.rm = TRUE) >= clone_nb_seq){
@@ -490,57 +500,49 @@ for(i0 in Seq){
         for(i1 in 1:nrow(tempo.df)) {
             tempo.cat <- paste0(">", tempo.df[i1, Name], "\n", tempo.df[i1, i0], "\n")
             cat(tempo.cat, file = file.path(dir_name, tempo.name), append = TRUE)
-            if(i0 == "sequence"){
-                tempo_seq_var <- tempo.df[i1, "sequence_alignment"]
-                tempo_seq_var <- gsub(pattern = ".", replacement = "", x = tempo_seq_var,  fixed = TRUE) # removal of dots
-                tempo.cat <- paste0(">", tempo.df[i1, Name], "\n", tempo_seq_var, "\n")
-                cat(tempo.cat, file = file.path(dir_name_var, tempo.name.var), append = TRUE)
-            }
         }
 
         # Germline addition to the fasta
         # Sort the dataframe by the column specified in Name
-        germ = Germline[count]
-        tempo.df <- tempo.df[order(tempo.df[[Name]]), ]
+        if( ! base::is.null(Germline)){
+            germ = Germline[count]
+            tempo.df <- tempo.df[order(tempo.df[[Name]]), ]
 
-        # Get the germline values and compute frequencies
-        germ_values <- tempo.df[[germ]]
-        germ_table <- table(germ_values)
-        max_freq <- max(germ_table)
-        most_frequent_germs <- names(germ_table[germ_table == max_freq])
+            # Get the germline values and compute frequencies
+            germ_values <- tempo.df[[germ]]
+            germ_table <- table(germ_values)
+            max_freq <- max(germ_table)
+            most_frequent_germs <- names(germ_table[germ_table == max_freq])
 
-        # Choose the first matching germline by order in tempo.df (sorted by Name)
-        selected_index <- which(tempo.df[[germ]] %in% most_frequent_germs)[1]
-        selected_germline <- tempo.df[selected_index, germ]
+            # Choose the first matching germline by order in tempo.df (sorted by Name)
+            selected_index <- which(tempo.df[[germ]] %in% most_frequent_germs)[1]
+            selected_germline <- tempo.df[selected_index, germ]
 
-        # Get cleaned v_gene and j_gene values for the chosen germline row
-        germ_v_gene <- gsub(",", "-", tempo.df[selected_index, "germline_v_gene"])
-        germ_j_gene <- gsub(",", "-", tempo.df[selected_index, "germline_j_gene"])
+            # Get cleaned v_gene and j_gene values for the chosen germline row
+            germ_v_gene <- gsub(",", "-", tempo.df[selected_index, "germline_v_gene"])
+            germ_j_gene <- gsub(",", "-", tempo.df[selected_index, "germline_j_gene"])
 
-        # Write germline to the same fasta file as above
-        germ_seq_name <- paste0("germline_d_mask_clone_id_", tempo.df[1, "clone_id"], "_", germ_v_gene, "_", germ_j_gene)
-        tempo.cat <- paste0(">", germ_seq_name, "\n", selected_germline, "\n")
-        cat(tempo.cat, file = file.path(dir_name, tempo.name), append = TRUE)
-        if(i0 == "sequence"){
-            cat(tempo.cat, file = file.path(dir_name_var, tempo.name.var), append = TRUE)
+            # Write germline to the same fasta file as above
+            germ_seq_name <- paste0("germline_d_mask_clone_id_", tempo.df[1, "clone_id"], "_", germ_v_gene, "_", germ_j_gene)
+            tempo.cat <- paste0(">", germ_seq_name, "\n", selected_germline, "\n")
+            cat(tempo.cat, file = file.path(dir_name, tempo.name), append = TRUE)
+
+            # If germlines differ in the group, issue a warning
+            if (length(unique(germ_values)) > 1) {
+                tempo.warn <- paste0(
+                    "Multiple germline sequences found for clone_id ", tempo.df[1, "clone_id"], ".\n",
+                    "Selected germline from sequence: ", tempo.df[selected_index, Name], "\n",
+                    "Associated germline_v_gene: ", tempo.df[selected_index, "germline_v_gene"], "\n",
+                    "Associated germline_j_gene: ", tempo.df[selected_index, "germline_j_gene"], "\n",
+                    "Associated v_gene: ", tempo.df[selected_index, "v_gene"], "\n",
+                    "Associated j_gene: ", tempo.df[selected_index, "j_gene"], "\n",
+                    "Used germline sequence: ", selected_germline
+                )
+                cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
+                fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+                warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
+            }
         }
-
-        # If germlines differ in the group, issue a warning
-        if (length(unique(germ_values)) > 1) {
-            tempo.warn <- paste0(
-                "Multiple germline sequences found for clone_id ", tempo.df[1, "clone_id"], ".\n",
-                "Selected germline from sequence: ", tempo.df[selected_index, Name], "\n",
-                "Associated germline_v_gene: ", tempo.df[selected_index, "germline_v_gene"], "\n",
-                "Associated germline_j_gene: ", tempo.df[selected_index, "germline_j_gene"], "\n",
-                "Associated v_gene: ", tempo.df[selected_index, "v_gene"], "\n",
-                "Associated j_gene: ", tempo.df[selected_index, "j_gene"], "\n",
-                "Used germline sequence: ", selected_germline
-            )
-            cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
-            fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
-            warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
-        }
-
     } else {
         stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nNO FASTA FILE CREATED BECAUSE THE IMPORTED FILE:\n", path, "\nHAS MORE THAN ", clone_nb_seq, " EMPTY SEQUENCES (NA OR \"\") IN THE ", i0, " COLUMN\n\n================\n\n"))
     }

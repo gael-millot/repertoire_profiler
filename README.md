@@ -51,7 +51,7 @@
 
 | Required files |
 | :--- |
-| A folder (zipped or not) containing nucleotide fasta files, each containing a single sequence. Use table2fasta.R ([https://github.com/gael-millot/table2fasta](https://github.com/gael-millot/table2fasta)) if sequences are in a .table file. . In each fasta file, sequences can be in a several lines (\n and or \r separated). In addition, spaces and tabs can be present in the header (they will be replaced by an underscore). |
+| A folder (zipped or not) containing nucleotide fasta files, each containing a single sequence.<br>Use table2fasta.R ([https://github.com/gael-millot/table2fasta](https://github.com/gael-millot/table2fasta)) if sequences are in a .table file.<br>In each fasta file, the sequence can be split into several lines (\n and or \r separated). In addition, spaces and tabs can be present in the header (they will be replaced by an underscore). |
 | A metadata file (optional) for adding informations in the results. |
 
 <br>
@@ -603,6 +603,7 @@ If the text is cut in the table, reload the page or change the width of the wind
     </tr>
 </table>
 </div>
+
 <br><br>
 ## VERSIONS
 

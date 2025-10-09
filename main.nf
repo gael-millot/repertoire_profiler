@@ -1175,7 +1175,7 @@ process Clone_id_count {
 // The tsv input is expected to already only contain sequences of one same clonal group. For each clonal group, both nuc and aa fastas will be emitted paired up.
 // Makes a gff file from the coordinates info contained inside the tsv and pairs it with the fastas
 // Inputs :
-//      - germline_genes_filtered_ch : tsv info files containing a "sequence" column (used to create nuc fasta file), a "sequence_aa" column (used to create aa fasta file), a "germline_d_mask_no_gaps" column, a "germline_d_mask_aa_no_gaps" column, "germline_v_gene" and "germline_j_gene" columns + region coordinates info (used to create gff) + "clone_id", "junction_length"
+//      - clone_assigned_seq_filtered_ch : tsv info files containing a "sequence" column (used to create nuc fasta file), a "sequence_aa" column (used to create aa fasta file), a "germline_d_mask_no_gaps" column, a "germline_d_mask_aa_no_gaps" column, "germline_v_gene" and "germline_j_gene" columns + region coordinates info (used to create gff) + "clone_id", "junction_length"
 //      - clone_nb_seq : Minimun number of non-identical sequences per clonal group for tree plotting (defined in nextflow.config). It has to be checked beforehand that the elements in the germ_tree_ch channel contain more than clone_nb_seq rows of data, or the program will stop.
 //      - cute_file : Several functions used in the Tsv2fastaGff.R script
 // Outputs :
@@ -1192,7 +1192,8 @@ process Tsv2fastaGff{
     publishDir path: "${out_path}/alignments/aa", mode: 'copy', pattern: "{*_aa.gff}", overwrite: false
 
     input:
-    path germline_genes_filtered_ch // parallelization expected (by clonal groups over clone_nb_seq sequences)
+    path clone_assigned_seq_filtered_ch // parallelization expected (by clonal groups over clone_nb_seq sequences)
+    val align_kind
     val clone_nb_seq
     path cute_file
 
@@ -1205,16 +1206,15 @@ process Tsv2fastaGff{
     """
     #!/bin/bash -ue
 
-    FILENAME=\$(basename -- ${germline_genes_filtered_ch}) # recover a file name without path
+    FILENAME=\$(basename -- ${clone_assigned_seq_filtered_ch}) # recover a file name without path
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a Tsv2fastaGff.log
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a Tsv2fastaGff.log
 
     # note that both nuc and aa seq are sent into Tsv2fastaGff.R (comma separated)
     Tsv2fastaGff.R \
-    "${germline_genes_filtered_ch}" \
+    "${clone_assigned_seq_filtered_ch}" \
     "sequence_id" \
-    "sequence,sequence_aa" \
-    "germline_d_mask_no_gaps,germline_d_mask_aa_no_gaps" \
+    "${align_kind}" \
     "${clone_nb_seq}" \
     "${cute_file}" \
     "Tsv2fastaGff.log"
@@ -1834,7 +1834,11 @@ workflow {
     if ([heavy, lambda, kappa].count { it } > 2) {
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID PARAMETERS IN nextflow.config FILE:\nONLY ONE OF igblast_heavy_chain AND LIGHT CHAINS (igblast_lambda_chain, igblast_kappa_chain) CAN BE TRUE AT A TIME\nHERE ARE THEIR CURRENT VALUES : \nigblast_heavy_chain : ${igblast_heavy_chain}\nigblast_lambda_chain : ${igblast_lambda_chain}\nigblast_kappa_chain : ${igblast_kappa_chain}\n\n========\n\n"
     }
-
+    if( ! (align_kind in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID align_kind PARAMETER IN nextflow.config FILE:\n${align_kind}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (align_kind =~ /^(query|igblast_full|trimmed|fwr1|fwr2|fwr3|fwr4|cdr1|cdr2|cdr3|junction|sequence_alignment|v_sequence_alignment|d_sequence_alignment|j_sequence_alignment|c_sequence_alignment|germline_alignment|v_germline_alignment|d_germline_alignment|j_germline_alignment|c_germline_alignment)$/) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID align_kind PARAMETER IN nextflow.config FILE:\n${align_kind}\nMUST BE EITHER \"mouse\", \"human\", \"rabbit\", \"rat\" OR \"rhesus_monkey\"\n\n========\n\n"
+    }
     if( ! (clone_strategy in String) ){
                 error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_strategy PARAMETER IN nextflow.config FILE:\n${clone_strategy}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (clone_strategy == "first" || clone_strategy == "set") ){
@@ -2454,10 +2458,10 @@ workflow {
 
     Tsv2fastaGff(
         clone_assigned_seq_filtered_ch,
-        clone_nb_seq,
+        align_kind, 
+        clone_nb_seq, 
         cute_path
     )
-
     fasta_gff_log_ch2 = Tsv2fastaGff.out.fasta_gff_log_ch.collectFile(name: "Tsv2fastaGff.log")
     fasta_gff_log_ch2.subscribe{it -> it.copyTo("${out_path}/reports")}
     fastagff_warn = Tsv2fastaGff.out.warning_ch
