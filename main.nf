@@ -1185,9 +1185,8 @@ process Clone_id_count {
 process Tsv2fastaGff{
     label 'r_ig_clustering'
     cache 'true'
-    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{clonal_full_length_nuc/*.fasta}", overwrite: false
-    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{clonal_variable_nuc/*.fasta}", overwrite: false 
-    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{clonal_full_length_aa/*.fasta}", overwrite: false
+    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{*_nuc/*.fasta}", overwrite: false
+    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{*_aa/*.fasta}", overwrite: false
     publishDir path: "${out_path}/alignments/nuc", mode: 'copy', pattern: "{*_nuc.gff}", overwrite: false
     publishDir path: "${out_path}/alignments/aa", mode: 'copy', pattern: "{*_aa.gff}", overwrite: false
 
@@ -1198,7 +1197,9 @@ process Tsv2fastaGff{
     path cute_file
 
     output:
-    tuple path("clonal_full_length_nuc/*.fasta"), path("clonal_full_length_aa/*.fasta"), path("*.gff"), path("clonal_variable_nuc/*.fasta"), emit: fasta_gff_ch
+    tuple path("*_nuc/*.fasta"), path("*_aa/*.fasta"), emit: fasta_gff_ch
+    path "*_nuc.gff", optional: true
+    path "*_aa.gff", optional: true
     path "Tsv2fastaGff.log", emit: fasta_gff_log_ch
     path "warning.txt", emit: warning_ch, optional: true
 
@@ -1210,7 +1211,6 @@ process Tsv2fastaGff{
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a Tsv2fastaGff.log
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a Tsv2fastaGff.log
 
-    # note that both nuc and aa seq are sent into Tsv2fastaGff.R (comma separated)
     Tsv2fastaGff.R \
     "${clone_assigned_seq_filtered_ch}" \
     "sequence_id" \
@@ -1218,10 +1218,6 @@ process Tsv2fastaGff{
     "${clone_nb_seq}" \
     "${cute_file}" \
     "Tsv2fastaGff.log"
-
-    mv sequence clonal_full_length_nuc
-    mv var_sequence clonal_variable_nuc
-    mv sequence_aa clonal_full_length_aa
     """
 }
 
@@ -1231,22 +1227,22 @@ process Tsv2fastaGff{
 //  - TUPLE :   this is a tuple input because the aa fasta files need to be kept with their respective nucleotide files for future processes.
 //              these nucleotide fasta files need to be kept with their corresponding gff files (containing region coordinates)
 //              heavy_chain is TRUE if the input files are of heavy chains, and it is FALSE if the input files are light chains
-process AlignAa {
+process Abalign_align_aa {
     label 'abalign'
     publishDir path: "${out_path}/alignments/aa", mode: 'copy', pattern: "{*_aligned_aa.fasta}", overwrite: false
     
     input:
-    tuple path(fasta_nuc), path(fasta_aa), path(gff), path(fasta_var_nuc) // parallelization expected (by clonal groups over clone_nb_seq sequences)
+    tuple path(fasta_nuc), path(fasta_aa) // parallelization expected (by clonal groups over clone_nb_seq sequences)
     val igblast_organism
     val igblast_heavy_chain
     
     output:
-    tuple path(fasta_var_nuc), path("*_aligned_aa.fasta"), path(gff), emit : aligned_aa_ch
-    path "AlignAa.log", emit: alignaa_log_ch
+    tuple path(fasta_nuc), path("*_aligned_aa.fasta"), emit : aligned_aa_ch
+    path "Abalign_align_aa.log", emit: abalign_align_aa_log_ch
     
     script:
     if( ! (igblast_heavy_chain == "TRUE" || igblast_heavy_chain == "FALSE") ){
-        error "\n\n========\n\nERROR IN AlignAa PROCESS\n\nINVALID heavy_chain PARAMETER:\n${heavy_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
+        error "\n\n========\n\nERROR IN Abalign_align_aa PROCESS\n\nINVALID heavy_chain PARAMETER:\n${heavy_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
     parms="-al"
     if(igblast_heavy_chain == "TRUE"){parms="-ah"}
@@ -1268,73 +1264,66 @@ process AlignAa {
             species = "RM"
             break
         default:
-            error "\n\n========\n\nERROR IN AlignAa PROCESS\n\nINVALID igblast_organism PARAMETER:\n${igblast_organism}\nMUST BE EITHER \"mouse\" OR \"human\" OR \"rabbit\" OR \"rat\" OR \"rhesus_monkey\"\n\n========\n\n"
+            error "\n\n========\n\nERROR IN Abalign_align_aa PROCESS\n\nINVALID igblast_organism PARAMETER:\n${igblast_organism}\nMUST BE EITHER \"mouse\" OR \"human\" OR \"rabbit\" OR \"rat\" OR \"rhesus_monkey\"\n\n========\n\n"
     }
     """
     #!/bin/bash -ue
     FILENAME=\$(basename -- ${fasta_aa}) # recover a file name without path
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a AlignAa.log
-    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a AlignAa.log
-    /bin/Abalign_V2_Linux_Term/Abalign -g -i ${fasta_aa} ${parms} ${fasta_aa.baseName}_align_aa.fasta -sp ${species} |& tee -a AlignAa.log || true
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a Abalign_align_aa.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a Abalign_align_aa.log
+    /bin/Abalign_V2_Linux_Term/Abalign -g -i ${fasta_aa} ${parms} ${fasta_aa.baseName}_align_aa.fasta -sp ${species}. |& tee -a Abalign_align_aa.log || true
     # -g   (IMGT Numbering scheme, default)
     # -lc length.txt -lg 1 # single length computed spanning the indicated regions. For instance, -lc length.txt -lg 1,2,3,4,5,6,7 returns a single length
 
     # Abalign puts fasta headers in all caps. next script is meant to put those headers back to how they originally were
-    restore_headers.sh ${fasta_aa} ${fasta_aa.baseName}_align_aa.fasta ${fasta_aa.baseName}_aligned_aa.fasta AlignAa.log
+    restore_headers.sh ${fasta_aa} ${fasta_aa.baseName}_align_aa.fasta ${fasta_aa.baseName}_aligned_aa.fasta Abalign_align_aa.log
     """
 }
 
 
+
+
 // This process aligns the nucleotidic fasta files by transfering amino-acidic alignments onto the nucleotidic ones
-process AlignNuc {
+process Abalign_align_nuc {
     label 'goalign'
     publishDir path: "${out_path}/alignments/nuc", mode: 'copy', pattern: "{*_aligned_nuc.fasta}", overwrite: false
 
     input:
-    tuple path(fasta_var_nuc), path(aligned_aa), path(gff) // parallelization expected (by clonal groups over clone_nb_seq sequences)
+    tuple path(fasta_nuc), path(aligned_aa) // parallelization expected (by clonal groups over clone_nb_seq sequences)
 
     output:
-    tuple path("*_aligned_nuc.fasta"), path(aligned_aa), path(gff), emit : aligned_all_ch
+    tuple path("*_aligned_nuc.fasta"), path(aligned_aa), emit : aligned_all_ch
+    path "Abalign_align_nuc.log", emit: abalign_align_nuc_log_ch
 
     script:
     """
-    goalign codonalign -i ${aligned_aa} -f ${fasta_var_nuc} -o ${fasta_var_nuc.baseName}_aligned_nuc.fasta
+    #!/bin/bash -ue
+    FILENAME=\$(basename -- ${fasta_nuc}) # recover a file name without path
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a Abalign_align_nuc.log
+    goalign codonalign -i ${aligned_aa} -f ${fasta_nuc} -o ${fasta_nuc.baseName}_aligned_nuc.fasta |& tee -a Abalign_align_nuc.log
     """
 }
 
-
-process PrintAlignmentNuc{
-    label 'goalign'
-    publishDir path: "${out_path}/alignments/nuc", mode: 'copy', pattern: "{*.html}", overwrite: false
+process  Mafft_align {
+    label 'mafft'
+    publishDir path: "${out_path}/alignments/aa", mode: 'copy', pattern: "{*_aligned_aa.fasta}", overwrite: false
+    publishDir path: "${out_path}/alignments/nuc", mode: 'copy', pattern: "{*_aligned_nuc.fasta}", overwrite: false
 
     input:
-    tuple path(fasta_nuc_alignments), path(gff) // parallelization expected (by clonal groups over clone_nb_seq sequences)
-
+    tuple path(fasta_nuc), path(fasta_aa) // parallelization expected (by clonal groups over clone_nb_seq sequences)
+    
     output:
-    path "*.html", emit : alignment_html
+    tuple path("*_aligned_nuc.fasta"), path("*_aligned_aa.fasta"), emit : aligned_all_ch
+    path "Mafft_align.log", emit: mafft_align_log_ch
 
     script:
     """
-    goalign draw biojs -i ${fasta_nuc_alignments} -o ${fasta_nuc_alignments.baseName}.html
+    mafft ${fasta_nuc} > ${fasta_nuc.baseName}_aligned_nuc.fasta |& tee -a Mafft_align.log
+    mafft ${fasta_aa} > ${fasta_aa.baseName}_aligned_aa.fasta |& tee -a Mafft_align.log
+
     """
 }
 
-
-process PrintAlignmentAA{
-    label 'goalign'
-    publishDir path: "${out_path}/alignments/aa", mode: 'copy', pattern: "{*.html}", overwrite: false
-
-    input:
-    path aligned_aa_only_ch // parallelization expected (by clonal groups over clone_nb_seq sequences)
-
-    output:
-    path "*.html", emit : alignment_html
-
-    script:
-    """
-    goalign draw biojs -i ${aligned_aa_only_ch} -o ${aligned_aa_only_ch.baseName}.html
-    """
-}
 
 process Tree {
     publishDir path: "${out_path}/phylo/aa", mode: 'copy', pattern: "{*_aligned_aa.fasta.treefile}", overwrite: false
@@ -1344,13 +1333,13 @@ process Tree {
     label 'iqtree'
 
     input:
-    tuple path(fasta_nuc_alignments), path(fasta_aa_alignments) // parallelization expected (by clonal groups over clone_nb_seq sequences)
+    tuple path(fasta_nuc_alignments), path(fasta_aa_alignments)  // parallelization expected (by clonal groups over clone_nb_seq sequences)
     path phylo_tree_model_file
 
     output:
-    path "*_aligned_aa.fasta.treefile", emit : tree_file_nuc
-    path "*_aligned_nuc.fasta.treefile", emit : tree_file_aa
-    path "*.log"
+    path "*_aligned_aa.fasta.treefile", emit : tree_aa_ch
+    path "*_aligned_nuc.fasta.treefile", emit : tree_nuc_ch
+    path "*.log", emit : tree_log_ch
 
     script:
     """
@@ -1738,8 +1727,16 @@ process backup {
 
 //////// End Processes
 
-//////// Workflow
 
+//////// Modules
+
+include { PrintAlignment as PrintAlignmentNuc } from './modules/print_alignment'
+include { PrintAlignment as PrintAlignmentAa  } from './modules/print_alignment'
+
+//////// end Modules
+
+
+//////// Workflow
 
 
 workflow {
@@ -2473,45 +2470,54 @@ workflow {
                 }
                 .view()
 
-
-    AlignAa(
-        Tsv2fastaGff.out.fasta_gff_ch,
-        igblast_organism,
-        igblast_heavy_chain
-    )
-    aligned_aa_only_ch = AlignAa.out.aligned_aa_ch.map { x, y, z -> y }
-
-
-    AlignNuc(
-        AlignAa.out.aligned_aa_ch
-    )
-    aligned_nuc_gff_only_ch = AlignNuc.out.aligned_all_ch.map { x, y, z -> tuple(x, z) }
-    aligned_nuc_aa_tuple_ch = AlignNuc.out.aligned_all_ch.map { x, y, z -> tuple(x, y) } // Nuc and aa aligned, without their gff
-
-    PrintAlignmentNuc(
-        aligned_nuc_gff_only_ch
-    )
-    
-    PrintAlignmentNuc.out.alignment_html.ifEmpty{
-        print("\n\nWARNING: -> NO NUCLEOTIDIC ALIGNMENT FILE RETURNED FOLLOWING THE PrintAlignmentNuc PROCESS\n\n")
+    if(align_kind == "query" || align_kind == "igblast_full" || align_kind == "trimmed"){
+        Mafft_align(
+            Tsv2fastaGff.out.fasta_gff_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Tsv2fastaGff PROCESS\n\n========\n\n"}
+        )
+        align_aa_ch = Mafft_align.out.aligned_all_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Mafft_align PROCESS\n\n========\n\n"}.map{ x, y -> y }
+        align_nuc_ch = Mafft_align.out.aligned_all_ch.map{ x, y -> x }
+        aligned_all_ch2 = Mafft_align.out.aligned_all_ch
+        Mafft_align.out.mafft_align_log_ch.collectFile(name: "Mafft_align.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+    }else{
+        Abalign_align_aa(
+            Tsv2fastaGff.out.fasta_gff_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Tsv2fastaGff PROCESS\n\n========\n\n"},
+            igblast_organism,
+            igblast_heavy_chain
+        )
+        Abalign_align_aa.out.abalign_align_aa_log_ch.collectFile(name: "Abalign_align_aa.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+        // aligned_aa_only_ch = Abalign_align_aa.out.aligned_aa_ch.map { x, y, z -> y }
+        Abalign_align_nuc(
+            Abalign_align_aa.out.aligned_aa_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Abalign_align_aa PROCESS\n\n========\n\n"}
+        )
+        align_nuc_ch = Abalign_align_nuc.out.aligned_all_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Abalign_align_nuc PROCESS\n\n========\n\n"}.map{ x, y -> x }
+        align_aa_ch = Abalign_align_nuc.out.aligned_all_ch.map{ x, y -> y }
+        aligned_all_ch2 = Abalign_align_nuc.out.aligned_all_ch
+        Abalign_align_nuc.out.abalign_align_nuc_log_ch.collectFile(name: "Abalign_align_nuc.log").subscribe{it -> it.copyTo("${out_path}/reports")}
     }
 
 
+    // aligned_nuc_gff_only_ch = Abalign_align_nuc.out.aligned_all_ch.map { x, y, z -> tuple(x, z) }
+    // aligned_nuc_aa_tuple_ch = Abalign_align_nuc.out.aligned_all_ch.map { x, y, z -> tuple(x, y) } // Nuc and aa aligned, without their gff
 
-    PrintAlignmentAA(
-        aligned_aa_only_ch
+
+
+    PrintAlignmentNuc( // module
+        align_nuc_ch
     )
-    PrintAlignmentAA.out.alignment_html.ifEmpty{
-        print("\n\nWARNING: -> NO AA ALIGNMENT FILE RETURNED FOLLOWING THE PrintAlignmentAA PROCESS\n\n")
-    }
+    PrintAlignmentNuc.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignment PROCESS FOR NUC\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/nuc")}
 
+    PrintAlignmentAa( // module
+        align_aa_ch
+    )
+    PrintAlignmentAa.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignment PROCESS FOR AA\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/aa")}
 
     Tree(
-        aligned_nuc_aa_tuple_ch,
+        aligned_all_ch2,
         phylo_tree_model_file
     )
-    tree_aa = Tree.out.tree_file_aa
-    tree_nuc = Tree.out.tree_file_nuc
+    tree_aa = Tree.out.tree_aa_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Tree PROCESS FOR NUC\n\n========\n\n"}
+    tree_nuc = Tree.out.tree_nuc_ch
+    Tree.out.tree_log_ch.collectFile(name: "tree.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
     MetaToITOL(
         meta_file,

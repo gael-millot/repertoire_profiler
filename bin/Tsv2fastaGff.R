@@ -66,14 +66,13 @@ script <- "Tsv2fastaGff"
 # script <- "Tsv2fastaGff"
 
 ### Arguments : 
-# path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/f7/daa059b87fb7ad05e1503cabcc7662/1_productive_seq_clone-pass_germ-pass_germ-seq-trans_germ-pass_shm-pass-germ_genes-pass_group_1b.tsv"      # tsv file containing data. needs to have all columns in Name, Seq and Germline
+
+# path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/b6/fe498b4e1e2a9cbdaa89cb9685d6cc/10_productive_seq_clone-pass_germ-pass_germ-seq-trans_germ-pass_shm-pass.tsv"      # tsv file containing data. needs to have all columns in Name, Seq and Germline
 # Name <- "sequence_id"                # name of the column containing the sequence ids
-# Seq <- "sequence,sequence_aa"        # name of the columns containing the sequences to put in the fasta file (can be a single string or several strings seperated by "," if several columns are needed. the fastas will then be created in different folders)
+# Seq <- "trimmed"        # name of the columns containing the sequences to put in the fasta file (can be a single string or several strings seperated by "," if several columns are needed. the fastas will then be created in different folders)
 # clone_nb_seq <- 3                    # Minimum number of rows in the tsv file. The program expects this to be respected, otherwise raises an error.
-# cute <- "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v11.4.0/cute_little_R_functions.R"
+# cute <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/bin/cute_little_R_functions_v12.8.R"
 # log <- "Tsv2fastaGff.log"
-
-
 
 
 ################################# End test
@@ -297,8 +296,10 @@ if(Seq == "j_germline_alignment"){Seq2 <- c("j_germline_alignment", "j_germline_
 if(Seq == "c_germline_alignment"){Seq2 <- c("c_germline_alignment", "c_germline_alignment_aa")}
 
 Germline <- NULL
-if(base::grepl(x = Seq2, pattern = "sequence_alignment")){
+if(base::grepl(x = Seq, pattern = "sequence_alignment")){
     Germline <- base::sub(x = Seq2, pattern = "sequence", replacement = "germline")
+}else if(Seq %in% c("query", "igblast_full", "trimmed")){
+    Germline <- c("germline_alignment", "germline_alignment_aa")
 }
 # end argument primary checking
 # second round of checking and data preparation
@@ -442,9 +443,9 @@ for(i0 in Seq2){
             fun_report(data = tempo.cat, output = log, path = "./", overwrite = FALSE)
         }
         tempo.df <- obs[ ! tempo.log, ]
-        # Sequences in the same seq_for_germ_tree.tsv file belong to the same clonal group and should have the same values in columns relative to clonal groups
+        # Sequences in the same clone_assigned_seq.tsv file belong to the same clonal group and should have the same values in columns relative to clonal groups
         if(any(tempo.df$clone_id != tempo.df$clone_id[1])){
-            stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL clone_id VALUES SHOULD BE THE SAME IN A seq_for_germ_tree FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$clone_id, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
+            stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL clone_id VALUES SHOULD BE THE SAME IN A clone_assigned_seq.tsv FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$clone_id, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
         }
         if (any(tempo.df$v_gene != tempo.df$v_gene[1])) {
             tempo.warn <- paste0(
@@ -470,23 +471,26 @@ for(i0 in Seq2){
             multiple_j_genes <- TRUE
         }
         # if(any(tempo.df$v_gene != tempo.df$v_gene[1])){
-        #     stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL v_gene VALUES SHOULD BE THE SAME IN A seq_for_germ_tree FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$v_gene, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
+        #     stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL v_gene VALUES SHOULD BE THE SAME IN A clone_assigned_seq.tsv FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$v_gene, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
         # }
         # if(any(tempo.df$j_gene != tempo.df$j_gene[1])){
-        #     stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL j_gene VALUES SHOULD BE THE SAME IN A seq_for_germ_tree FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$j_gene, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
+        #     stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL j_gene VALUES SHOULD BE THE SAME IN A clone_assigned_seq.tsv FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$j_gene, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
         # }
         if(any(tempo.df$junction_length != tempo.df$junction_length[1])){
-            stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL junction_length VALUES SHOULD BE THE SAME IN A seq_for_germ_tree FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$junction_length, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
+            stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL junction_length VALUES SHOULD BE THE SAME IN A clone_assigned_seq.tsv FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$junction_length, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
         }
         # End check of columns relative to clonal groups
 
         # Creation of the fasta file
-        dir_name <- paste0("./", i0)
-        dir.create(dir_name, showWarnings = FALSE, recursive = TRUE)
-        if(i0 == "sequence"){
-            dir_name_var <- paste0("./var_", i0)
-            dir.create(dir_name_var, showWarnings = FALSE, recursive = TRUE)
+        if(base::grepl(x = i0, pattern = "_aa$")){
+            dir_name <- paste0("./clonal_", i0)
+        }else if(count > 2){
+            stop(paste0("\n\n================\n\nERROR IN ", script, ".R\ncount CANNOT BE MORE THAN 2 : ", paste0(count, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
+        }else{
+            dir_name <- paste0("./clonal_", i0, "_nuc")
         }
+        dir.create(dir_name, showWarnings = FALSE, recursive = TRUE)
+
         # Extract all different values of v_genes and j_genes in the clonal group (different genes for a same cassette can be present in a clonal group if the clone_strategy = "set" in nextflow.config)
         # If several genes in a column, they are separated by a comma (",")
         v_genes_all <- unique(unlist(strsplit(tempo.df$v_gene, ",")))
@@ -495,8 +499,7 @@ for(i0 in Seq2){
         v_gene_clean <- paste(sort(v_genes_all), collapse = "-") 
         j_gene_clean <- paste(sort(j_genes_all), collapse = "-")
 
-        tempo.name <- paste0(i0, "_", tempo.df[1, "clone_id"], "_", v_gene_clean, "_", j_gene_clean, ".fasta") # Create the name of the file
-        tempo.name.var <- paste0(i0, "_var_", tempo.df[1, "clone_id"], "_", v_gene_clean, "_", j_gene_clean, ".fasta")
+        tempo.name <- paste0(i0, "_clone_id_", tempo.df[1, "clone_id"], "_", v_gene_clean, "_", j_gene_clean, ".fasta") # Create the name of the file
         for(i1 in 1:nrow(tempo.df)) {
             tempo.cat <- paste0(">", tempo.df[i1, Name], "\n", tempo.df[i1, i0], "\n")
             cat(tempo.cat, file = file.path(dir_name, tempo.name), append = TRUE)
@@ -523,7 +526,7 @@ for(i0 in Seq2){
             germ_j_gene <- gsub(",", "-", tempo.df[selected_index, "germline_j_gene"])
 
             # Write germline to the same fasta file as above
-            germ_seq_name <- paste0("germline_d_mask_clone_id_", tempo.df[1, "clone_id"], "_", germ_v_gene, "_", germ_j_gene)
+            germ_seq_name <- paste0(Germline[1], "_clone_id_", tempo.df[1, "clone_id"], "_", germ_v_gene, "_", germ_j_gene) # no choice to use Germline[1], otherwise goalign codonalign cannot align (because nuc and aa must have the same name)
             tempo.cat <- paste0(">", germ_seq_name, "\n", selected_germline, "\n")
             cat(tempo.cat, file = file.path(dir_name, tempo.name), append = TRUE)
 
@@ -563,139 +566,140 @@ if (multiple_j_genes || multiple_v_genes){
 ## Enf of creating the fasta files
 
 ## Create the gff file
+if( ! base::is.null(Germline)){
+    seq_kind <- c("sequence", "germline")
+    region_kind <- c("v", "d", "j", "c")
+    seq_vdjc_features <- paste(region_kind, seq_kind[1], sep = "_")
+    seq_vdjc_features_colors <- c("red", "green", "blue", "yellow")
+    germline_vdjc_features <- paste(region_kind, seq_kind[2], sep = "_")
+    germline_vdjc_features_colors <- c("red", "green", "blue", "yellow")
+    fwr_cdr_features <- c("fwr1", "cdr1", "fwr2", "cdr2", "fwr3", "cdr3", "fwr4")
+    fwr_cdr_features_colors <- c("yellow", "pink", "yellow", "pink", "yellow", "pink", "yellow")
 
-seq_kind <- c("sequence", "germline")
-region_kind <- c("v", "d", "j", "c")
-seq_kind_features <- paste(region_kind, seq_kind[1], sep = "_")
-seq_kind_features_colors <- c("red", "green", "blue", "yellow")
-germline_kind_features <- paste(region_kind, seq_kind[2], sep = "_")
-germline_kind_features_colors <- c("red", "green", "blue", "yellow")
-sub_region_features <- c("fwr1", "cdr1", "fwr2", "cdr2", "fwr3", "cdr3", "fwr4")
-sub_region_features_colors <- c("yellow", "pink", "yellow", "pink", "yellow", "pink", "yellow")
+    ## Convert all column names in obs to lowercase for comparison
+    # colnames_lc <- tolower(colnames(obs))
 
-## Convert all column names in obs to lowercase for comparison
-# colnames_lc <- tolower(colnames(obs))
-
-## Check that all expected columns (case-sensitive) exist
-tempo_names <- c("seq_kind_features", "germline_kind_features", "sub_region_features")
-missing_col <- character()
-non_unique_cols <- character()
-for (suf in c("_start", "_end")) {
-    for(i1 in tempo_names){
-        for(i2 in get(i1)) {
-            col <- paste0(i2, suf)
-            if (!(col %in% colnames(tempo.df))) {
-                missing_col <- c(missing_col, col)
-            }else{
-                unique_vals <- unique(tempo.df[[col]])
-                if (length(unique_vals) != 1) {
-                    non_unique_cols <- c(non_unique_cols, col)
+    ## Check that all expected columns (case-sensitive) exist
+    tempo_names <- c("seq_vdjc_features", "germline_vdjc_features", "fwr_cdr_features")
+    missing_col <- character()
+    non_unique_cols <- character()
+    for (suf in c("_start", "_end")) {
+        for(i1 in tempo_names){
+            for(i2 in get(i1)) {
+                col <- paste0(i2, suf)
+                if (!(col %in% colnames(tempo.df))) {
+                    missing_col <- c(missing_col, col)
+                }else{
+                    unique_vals <- unique(tempo.df[[col]])
+                    if (length(unique_vals) != 1) {
+                        non_unique_cols <- c(non_unique_cols, col)
+                    }
                 }
             }
         }
     }
-}
-if (length(missing_col) > 0) {
-    stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nONE OR MORE COORDINATE COLUMNS MISSING FROM THE IMPORTED FILE:\n", path, "\nHERE IS THE MISSING COLUMN : ", paste0(missing_col, collapse = "\n"), "\n\n================\n\n"), call. = FALSE)
-}
-if (length(non_unique_cols) > 0) {
-    tempo.warn <- paste0(
-        "DATA ROWS IN IMPORTED FILE : ", path, "\n",
-        "HAVE DIFFERENT VALUES FOR THE FOLLOWING REGION COORDINATES COLUMN.\n",
-        "THE MOST FREQUENT VALUE WAS TAKEN FOR THESE COLUMNS:\n",
-        paste(non_unique_cols, collapse = "\n")
-    )
-    cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
-    fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
-    warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
-}
-## end Check that all expected columns (case-sensitive) exist
+    if (length(missing_col) > 0) {
+        stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nONE OR MORE COORDINATE COLUMNS MISSING FROM THE IMPORTED FILE:\n", path, "\nHERE IS THE MISSING COLUMN : ", paste0(missing_col, collapse = "\n"), "\n\n================\n\n"), call. = FALSE)
+    }
+    if (length(non_unique_cols) > 0) {
+        tempo.warn <- paste0(
+            "DATA ROWS IN IMPORTED FILE : ", path, "\n",
+            "HAVE DIFFERENT VALUES FOR THE FOLLOWING REGION COORDINATES COLUMN.\n",
+            "THE MOST FREQUENT VALUE WAS TAKEN FOR THESE COLUMNS:\n",
+            paste(non_unique_cols, collapse = "\n")
+        )
+        cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
+        fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+        warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
+    }
+    ## end Check that all expected columns (case-sensitive) exist
 
 
-for(i0 in tempo_names){
-    gff_rows <- list()
-    gff_rows_convert <- list()
-    for(i1 in 1:length(get(i0))){
-        # Find actual column names (preserve original case)
-        start_col <- colnames(tempo.df)[colnames(tempo.df) == paste0(get(i0)[i1], "_start")]
-        end_col   <- colnames(tempo.df)[colnames(tempo.df) == paste0(get(i0)[i1], "_end")]
+    for(i0 in tempo_names){
+        gff_rows <- list()
+        gff_rows_convert <- list()
+        for(i1 in 1:length(get(i0))){
+            # Find actual column names (preserve original case)
+            start_col <- colnames(tempo.df)[colnames(tempo.df) == paste0(get(i0)[i1], "_start")]
+            end_col   <- colnames(tempo.df)[colnames(tempo.df) == paste0(get(i0)[i1], "_end")]
 
-        # Take the most frequent value for coordinate if not unique, and handle the case when all values are NA in a column
-        if (all(is.na(tempo.df[[start_col]]))) {
-            start_val <- NA
-        } else {
-            start_val <- names(which.max(table(tempo.df[[start_col]])))[1] # [1] in case of equality in max()
-        }
-        if (all(is.na(tempo.df[[end_col]]))) {
-            end_val <- NA
-        } else {
-            end_val <- names(which.max(table(tempo.df[[end_col]])))[1] # [1] in case of equality in max()
-        }
-        # Skip this feature if either coordinate is NA
-        if (is.na(start_val) || is.na(end_val)) {
-            tempo.warn <- paste0("Skipping feature ", get(i0)[i1], " in nuc GFF of ", i0, ", due to missing coordinates: start = ", start_val, ", end = ", end_val, "\n")
-            cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
-            fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
-            warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
-        }else{
-            seq_name <- paste0("clone_id_", tempo.df[1, "clone_id"], "_", germ_v_gene, "_", germ_j_gene)
-            tempo_start <- as.integer(start_val) # unique value
-            tempo_end <- as.integer(end_val)   # unique value
-            row <- c(
-                seq_name,
-                ".",
-                "gene",
-                tempo_start, 
-                tempo_end, 
-                ".",
-                ".",
-                ".",
-                paste0("Name=", get(i0)[i1], ";Color=", get(paste0(i0, "_colors"))[i1])
-            )
-            gff_rows[[length(gff_rows) + 1]] <- row
-            # tol <- .Machine$double.eps^0.5 ; abs(tempo_start %% 3) < tol to use if tempo_start is a double
-            if((tempo_start - 1) %% 3 == 0 && tempo_end %% 3 == 0){
-                row_aa <- c(
+            # Take the most frequent value for coordinate if not unique, and handle the case when all values are NA in a column
+            if (all(is.na(tempo.df[[start_col]]))) {
+                start_val <- NA
+            } else {
+                start_val <- names(which.max(table(tempo.df[[start_col]])))[1] # [1] in case of equality in max()
+            }
+            if (all(is.na(tempo.df[[end_col]]))) {
+                end_val <- NA
+            } else {
+                end_val <- names(which.max(table(tempo.df[[end_col]])))[1] # [1] in case of equality in max()
+            }
+            # Skip this feature if either coordinate is NA
+            if (is.na(start_val) || is.na(end_val)) {
+                tempo.warn <- paste0("Skipping feature ", get(i0)[i1], " in nuc GFF of ", i0, ", due to missing coordinates: start = ", start_val, ", end = ", end_val, "\n")
+                cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
+                fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+                warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
+            }else{
+                seq_name <- paste0(Germline[1], "_clone_id_", tempo.df[1, "clone_id"], "_", germ_v_gene, "_", germ_j_gene)
+                tempo_start <- as.integer(start_val) # unique value
+                tempo_end <- as.integer(end_val)   # unique value
+                row <- c(
                     seq_name,
                     ".",
                     "gene",
-                    as.integer((tempo_start - 1) / 3 + 1), # unique value
-                    as.integer(tempo_end / 3),   # unique value
+                    tempo_start, 
+                    tempo_end, 
                     ".",
                     ".",
                     ".",
                     paste0("Name=", get(i0)[i1], ";Color=", get(paste0(i0, "_colors"))[i1])
                 )
-                gff_rows_convert[[length(gff_rows) + 1]] <- row_aa 
-            }else{
-                tempo.warn <- paste0("Skipping feature ", get(i0)[i1], " in aa GFF of ", i0, ", due to due to coordinates not multiple of three : start = ", tempo_start, ", end = ", tempo_end, "\n")
-                cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
-                fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
-                warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
+                gff_rows[[length(gff_rows) + 1]] <- row
+                # tol <- .Machine$double.eps^0.5 ; abs(tempo_start %% 3) < tol to use if tempo_start is a double
+                if((tempo_start - 1) %% 3 == 0 && tempo_end %% 3 == 0){
+                    row_aa <- c(
+                        seq_name,
+                        ".",
+                        "gene",
+                        as.integer((tempo_start - 1) / 3 + 1), # unique value
+                        as.integer(tempo_end / 3),   # unique value
+                        ".",
+                        ".",
+                        ".",
+                        paste0("Name=", get(i0)[i1], ";Color=", get(paste0(i0, "_colors"))[i1])
+                    )
+                    gff_rows_convert[[length(gff_rows) + 1]] <- row_aa 
+                }else{
+                    tempo.warn <- paste0("Skipping feature ", get(i0)[i1], " in aa GFF of ", i0, ", due to due to coordinates not multiple of three : start = ", tempo_start, ", end = ", tempo_end, "\n")
+                    cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
+                    fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+                    warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
+                }
             }
         }
-    }
-    # gff_rows is a list of GFF row vectors, as before.
-    # Write to GFF file
-    gff_table <- do.call(rbind, gff_rows)
-    if(length(gff_table) > 0){
-        gff_lines <- apply(gff_table, 1, function(x) paste(x, collapse="\t"))
-    }else{
-        gff_lines <- character()
-    }
-    gff_lines <- c("##gff-version 3", gff_lines)
-    output_gff <- paste0(seq_name, "_", i0, "_nuc.gff")
-    writeLines(gff_lines, con = output_gff)
+        # gff_rows is a list of GFF row vectors, as before.
+        # Write to GFF file
+        gff_table <- do.call(rbind, gff_rows)
+        if(length(gff_table) > 0){
+            gff_lines <- apply(gff_table, 1, function(x) paste(x, collapse="\t"))
+        }else{
+            gff_lines <- character()
+        }
+        gff_lines <- c("##gff-version 3", gff_lines)
+        output_gff <- paste0(seq_name, "_", i0, "_nuc.gff")
+        writeLines(gff_lines, con = output_gff)
 
-    gff_table_convert <- do.call(rbind, gff_rows_convert)
-    if(length(gff_table_convert) > 0){
-        gff_lines_convert <- apply(gff_table_convert, 1, function(x) paste(x, collapse="\t"))
-    }else{
-        gff_lines_convert <- character()
+        gff_table_convert <- do.call(rbind, gff_rows_convert)
+        if(length(gff_table_convert) > 0){
+            gff_lines_convert <- apply(gff_table_convert, 1, function(x) paste(x, collapse="\t"))
+        }else{
+            gff_lines_convert <- character()
+        }
+        gff_lines_convert <- c("##gff-version 3", gff_lines_convert)
+        output_gff_convert <- paste0(seq_name, "_", i0, "_aa.gff")
+        writeLines(gff_lines_convert, con = output_gff_convert)
     }
-    gff_lines_convert <- c("##gff-version 3", gff_lines_convert)
-    output_gff_convert <- paste0(seq_name, "_", i0, "_aa.gff")
-    writeLines(gff_lines_convert, con = output_gff_convert)
 }
 
 ## End of creating the gff file
