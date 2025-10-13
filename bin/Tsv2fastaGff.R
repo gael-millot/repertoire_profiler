@@ -483,11 +483,11 @@ for(i0 in Seq2){
 
         # Creation of the fasta file
         if(base::grepl(x = i0, pattern = "_aa$")){
-            dir_name <- paste0("./clonal_", i0)
+            dir_name <- paste0("./for_alignment_aa")
         }else if(count > 2){
             stop(paste0("\n\n================\n\nERROR IN ", script, ".R\ncount CANNOT BE MORE THAN 2 : ", paste0(count, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
         }else{
-            dir_name <- paste0("./clonal_", i0, "_nuc")
+            dir_name <- paste0("./for_alignment_nuc")
         }
         dir.create(dir_name, showWarnings = FALSE, recursive = TRUE)
 
@@ -642,6 +642,8 @@ if( ! base::is.null(Germline)){
                 warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
             }else{
                 seq_name <- paste0(Germline[1], "_clone_id_", tempo.df[1, "clone_id"], "_", germ_v_gene, "_", germ_j_gene)
+                seq_name_nuc <- paste0(Seq2[1], "_clone_id_", tempo.df[1, "clone_id"], "_", germ_v_gene, "_", germ_j_gene)
+                seq_name_aa <- paste0(Seq2[2], "_clone_id_", tempo.df[1, "clone_id"], "_", germ_v_gene, "_", germ_j_gene)
                 tempo_start <- as.integer(start_val) # unique value
                 tempo_end <- as.integer(end_val)   # unique value
                 row <- c(
@@ -687,7 +689,7 @@ if( ! base::is.null(Germline)){
             gff_lines <- character()
         }
         gff_lines <- c("##gff-version 3", gff_lines)
-        output_gff <- paste0(seq_name, "_", i0, "_nuc.gff")
+        output_gff <- paste0(seq_name_nuc, "_", i0, "_nuc.gff")
         writeLines(gff_lines, con = output_gff)
 
         gff_table_convert <- do.call(rbind, gff_rows_convert)
@@ -697,7 +699,7 @@ if( ! base::is.null(Germline)){
             gff_lines_convert <- character()
         }
         gff_lines_convert <- c("##gff-version 3", gff_lines_convert)
-        output_gff_convert <- paste0(seq_name, "_", i0, "_aa.gff")
+        output_gff_convert <- paste0(seq_name_aa, "_", i0, "_aa.gff")
         writeLines(gff_lines_convert, con = output_gff_convert)
     }
 }
