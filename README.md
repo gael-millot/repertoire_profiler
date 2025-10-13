@@ -301,7 +301,7 @@ If the text is cut in the table, reload the page or change the width of the wind
     max-width:100%; overflow-wrap:anywhere;">
             Folder containing alignment files in amino-acid (aa folder) and nucleotide (nuc folder) sequences: 
             <ul style="padding-left:1.2em; margin:0;word-break:break-word;
-    max-width:100%;"><li>*.html: visualization of the alignments. Each file is named as <i>&lt;KIND&gt;_clone_id_&lt;<wbr>CLONE_ID&gt;&#8203;_&lt;<wbr>V_GENE&gt;&#8203;_&lt;J_GENE&gt;_aligned_&lt;nucORaa&gt;&#8203;.html</i>.
+    max-width:100%;"><li>*.html: visualization of the alignments. Each file is named as <i>&lt;KIND&gt;&#8203;_clone_id_;&#8203;&lt;CLONE_ID&gt;&#8203;_&lt;V_GENE&gt;&#8203;_&lt;J_GENE&gt;&#8203;_aligned_&lt;&#8203;nucORaa&gt;&#8203;.html</i>.
             </li><li>*.fasta: aligned sequences. Each file is named as the corresponding <i>.html</i> file.
             </li><li>*.gff: file used to add domain features in the corresponding <i>.html</i> file, and named as this one.</ul><br>
             Warning: alignments are perfomed using <a href="http://cao.labshare.cn/abalign/">Abalign</a>, but by <a href="https://mafft.cbrc.jp/alignment/server/index.html">Mafft</a> if the <i>align_kind</i> parameter of the <i>nextflow.config</i> file is "query", "igblast_full" or "trimmed". Indeed, Abalign returns alignment of the variable region only, whatever the length of the submitted sequence. Abalign has however the strong advantage to take the V, D, J regions as constrain in the alignments, which is not the case of Mafft.<br>
