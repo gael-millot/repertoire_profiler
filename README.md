@@ -547,7 +547,7 @@ If the text is cut in the table, reload the page or change the width of the wind
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Sequences from the <i>productive_seq.tsv</i> file with germline clustering (clone ID), allele reannotation (germinal_v_call and germinal_j_call columns) and mutation load added. Warning: the number of sequences (i.e., rows) can be lower than in the <i>productive_seq.tsv</i> file due to sequences that failed to be clone assigned (see the <i>non_clone_assigned_sequence.tsv</i> file).
             <br>Additional columns description (from <a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#fields">here</a>):
-            <br><ul style="padding-left:1.2em; margin:0;"><li>clone_id: Clone number. A same clone_id gathers all the sequences that putatively come from a same germline cell. See [here](https://changeo.readthedocs.io/en/stable/examples/cloning.html#assigning-clones), [here](https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette/) and [this article](https://genomemedicine.biomedcentral.com/articles/10.1186/s13073-015-0243-2) for details. In summary: 1) grouping the sequences according to "same V, J and junction length" (to facilitate the distance computation), 2) for each group, 2x2 distance computation using by default (<i>clone_model</i> and <i>clone_normalize</i> parameters of the <i>nextflow.config</i> file) the [Hamming distance](https://biology.stackexchange.com/questions/23523/hamming-distance-between-two-dna-strings), 3) cutoff definition , 4) using the cutoff (<i>clone_distance</i> parameter of the <i>nextflow.config</i> file) to define clonal groups inside each "same V, J and junction length" group.
+            <br><ul style="padding-left:1.2em; margin:0;"><li>clone_id: Clone number. A same clone_id gathers all the sequences that putatively come from a same germline cell. See <a href="https://changeo.readthedocs.io/en/stable/examples/cloning.html#assigning-clones">here</a>, <a href="https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette/">here</a> and <a href="https://genomemedicine.biomedcentral.com/articles/10.1186/s13073-015-0243-2">this article</a> for details. In summary: 1) grouping the sequences according to "same V, J and junction length" (to facilitate the distance computation), 2) for each group, 2x2 distance computation using by default (<i>clone_model</i> and <i>clone_normalize</i> parameters of the <i>nextflow.config</i> file) the <a href="https://biology.stackexchange.com/questions/23523/hamming-distance-between-two-dna-strings">Hamming distance</a>, 3) cutoff definition , 4) using the cutoff (<i>clone_distance</i> parameter of the <i>nextflow.config</i> file) to define clonal groups inside each "same V, J and junction length" group.
             <br></li><li>germline_alignment_d_mask: as germline_alignment but with D masked (i.e., replaced by N, in the middle of the CDR3). Because the D-segment call for B cell receptor alignments is often low confidence, the default germline format (-g dmask) places Ns in the N/P and D-segments of the junction region rather than using the D-segment assigned during reference alignment; this can be modified to generate a complete germline (-g full) or a V-segment only germline (-g vonly).
             <br></li><li>germline_v_call: V germline cassette
             <br></li><li>germline_d_call: D germline cassette (usually NA)
@@ -581,7 +581,7 @@ If the text is cut in the table, reload the page or change the width of the wind
             - non_clone_assigned_sequence.tsv
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            Productive sequences that failed to be assigned to a clone ID by <code>DefineClones.py</code> (empty file if all the sequences are assigned). See details [here](https://changeo.readthedocs.io/en/latest/methods/clustering.html) but failure reasons are not explained. 
+            Productive sequences that failed to be assigned to a clone ID by <code>DefineClones.py</code> (empty file if all the sequences are assigned). See details  <a href="https://changeo.readthedocs.io/en/latest/methods/clustering.html">here</a> but failure reasons are not explained. 
         </td>
     </tr>
     <tr>
@@ -624,8 +624,10 @@ See the GNU General Public License for more details at https://www.gnu.org/licen
 
 Version V10.3:
 
-[Dejoux A, Zhu Q, Ganneau C, Goff OR, Godon O, Lemaitre J, Relouzat F, Huetz F, Sokal A, Vandenberghe A, Pecalvel C, Hunault L, Derenne T, Gillis CM, Iannascoli B, Wang Y, Rose T, Mertens C, Nicaise-Roland P; NASA Study Group; England P, Mahévas M, de Chaisemartin L, Le Grand R, Letscher H, Saul F, Pissis C, Haouz A, Reber LL, Chappert P, Jönsson F, Ebo DG, Millot GA, Bay S, Chollet-Martin S, Gouel-Chéron A, Bruhns P. Rocuronium-specific antibodies drive perioperative anaphylaxis but can also function as reversal agents in preclinical models. Sci Transl Med. 2024 Sep 11;16(764):eado4463. doi: 10.1126/scitranslmed.ado4463. Epub 2024 Sep 11. PMID: 39259810.](https://www.science.org/doi/10.1126/scitranslmed.ado4463)
+[Dejoux A, et al. Sci Transl Med. 2024](https://www.science.org/doi/10.1126/scitranslmed.ado4463)
+<br>
 
+[Dejoux A, et al. J Allergy Clin Immunol. 2025](https://www.jacionline.org/article/S0091-6749(25)00113-7/fulltext)
 
 <br><br>
 ## CREDITS
