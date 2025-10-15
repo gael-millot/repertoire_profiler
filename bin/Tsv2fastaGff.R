@@ -566,6 +566,7 @@ if (multiple_j_genes || multiple_v_genes){
 ## Enf of creating the fasta files
 
 ## Create the gff file
+# https://shazam.readthedocs.io/en/stable/topics/setRegionBoundaries/
 if( ! base::is.null(Germline)){
     seq_kind <- c("sequence", "germline")
     region_kind <- c("v", "d", "j", "c")

@@ -329,7 +329,7 @@ kable(df, format = "markdown", row.names = FALSE)
 `r  if(params$itol_subscription == "FALSE"){"To see the trees, follow the link: https://itol.embl.de/upload.cgi. Choose a name for your tree (optional) and upload a '*.treefile' file from the [phylo/aa](./phylo/aa) folder. The trees will then be displayed by iTOL."}`
 
 Alignment visualization is available for each clonal group used in each tree, in the [phylo/aa](./phylo/aa) folder in html format.
-; tree scale is the number of mutations per position.
+Tree scale is the number of mutations per position. Multiply by the length of the sequence to have the number of mutations per sequence
 
 
 <br><br>

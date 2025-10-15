@@ -899,6 +899,7 @@ process closest_germline {
     path clone_split_ch // parallelization expected (by clonal groups)
     val igblast_organism
     val igblast_variable_ref_files
+    val clone_germline_kind
 
     output:
     path "*_germ-pass.tsv", emit: closest_ch, optional: true
@@ -920,7 +921,7 @@ process closest_germline {
     REPO_PATH="/usr/local/share/germlines/imgt/${igblast_organism}/vdj" # path where the imgt_human_IGHV.fasta, imgt_human_IGHD.fasta and imgt_human_IGHJ.fasta files are in the docker container
     VDJ_FILES=\$(awk -v var1="${igblast_variable_ref_files}" -v var2="\${REPO_PATH}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}')
     # end variables
-    CreateGermlines.py -d \$FILENAME -g dmask --cloned -r \${VDJ_FILES} |& tee -a closest_germline.log
+    CreateGermlines.py -d \$FILENAME -g "${clone_germline_kind}" --cloned -r \${VDJ_FILES} |& tee -a closest_germline.log
     # -r: List of folders and/or fasta files (with .fasta, .fna or .fa extension) with germline sequences. When using the default Change-O sequence and coordinate fields, these reference sequences must contain IMGT-numbering spacers (gaps) in the V segment. 
     """
 }
@@ -1037,6 +1038,9 @@ process Mutation_load_germ_genes {
     path translate_germ_ch // parallelization expected (by clonal groups)
     path meta_file
     val meta_legend
+    val clone_mut_obs_seq
+    val clone_mut_germ_seq
+    val clone_mut_regionDefinition
 
 
     output:
@@ -1055,11 +1059,6 @@ process Mutation_load_germ_genes {
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a Mutation_load_germ_genes.log
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a Mutation_load_germ_genes.log
     Rscript -e '
-        # Clonal assignment and germline sequences reconstruction should have been performed 
-        # using the DefineClone.py and CreateGerlines.py in ChangeO
-        # A "germline_alignment_d_mask" collumn should be present. 
-        # If germline sequences reconstruction has been performed after clonal assignment,
-        # a single germline_alignment_d_mask" consensus sequence should be present for each clone.
         args <- commandArgs(trailingOnly = TRUE)  # recover arguments written after the call of the Rscript
         tempo.arg.names <- c("file_name") # objects names exactly in the same order as in the bash code and recovered in args
         if(length(args) != length(tempo.arg.names)){
@@ -1070,31 +1069,41 @@ process Mutation_load_germ_genes {
           assign(tempo.arg.names[i2], args[i2])
         }
         VDJ_db <- read.table(file_name, sep = "\\t", header = TRUE)
+        if( ! "${clone_mut_obs_seq}" %in% names(VDJ_db)){
+            stop(paste0("\\n\\n============\\n\\nERROR IN THE Mutation_load_germ_genes PROCESS OF NEXTFLOW\\nTHE clone_mut_obs_seq PARAMETER OF THE nextflow.config FILE MUST BE A COLUMN NAME OF THE clone_assigned_seq.tsv FILE.\\nDO NOT CHANGE THE PARAMETERS OF THE Clonal groups (clustering) and mutation load SECTION AND CHECK THE COLUMNS OF THE clone_assigned_seq.tsv FILE IN THE OUTPUT FOLDER.\\n\\n============\\n\\n"), call. = FALSE)
+        }
+        if( ! "${clone_mut_germ_seq}" %in% names(VDJ_db)){
+            stop(paste0("\\n\\n============\\n\\nERROR IN THE Mutation_load_germ_genes PROCESS OF NEXTFLOW\\nTHE clone_mut_germ_seq PARAMETER OF THE nextflow.config FILE MUST BE A COLUMN NAME OF THE clone_assigned_seq.tsv FILE.\\nDO NOT CHANGE THE PARAMETERS OF THE Clonal groups (clustering) and mutation load SECTION AND CHECK THE COLUMNS OF THE clone_assigned_seq.tsv FILE IN THE OUTPUT FOLDER.\\n\\n============\\n\\n"), call. = FALSE)
+        }
         # Calculate R and S mutation counts
-        VDJ_db <- shazam::observedMutations(VDJ_db, sequenceColumn="sequence_alignment",
-                                    germlineColumn="germline_alignment_d_mask",
-                                    regionDefinition=shazam::IMGT_V,
+        regionDefinition <- if("${clone_mut_regionDefinition}" == "NULL"){NULL}else{eval(parse(text = "shazam::${clone_mut_regionDefinition}"))}
+        if( ! (( ! is.null(regionDefinition)) & grepl(x = "${clone_mut_obs_seq}", pattern = "alignment") & grepl(x = "${clone_mut_germ_seq}", pattern = "alignment"))){
+            stop(paste0("\\n\\n============\\n\\nERROR IN THE Mutation_load_germ_genes PROCESS OF NEXTFLOW\\nTHE clone_mut_obs_seq AND clone_mut_germ_seq PARAMETERS OF THE nextflow.config FILE MUST BE ALIGNMENT SEQUENCES (COLUMN NAMES OF THE clone_assigned_seq.tsv FILE CONTAINING \\"alignment\\")\\nIF THE clone_mut_regionDefinition PARAMETER IS NOT \\"NULL\\".\\n\\n============\\n\\n"), call. = FALSE)
+        }
+        VDJ_db <- shazam::observedMutations(VDJ_db, sequenceColumn="${clone_mut_obs_seq}",
+                                    germlineColumn="${clone_mut_germ_seq}",
+                                    regionDefinition=regionDefinition,
                                     frequency=FALSE, 
                                     nproc=1)
         # Calculate combined R and S mutation counts
-        VDJ_db <- shazam::observedMutations(VDJ_db, sequenceColumn="sequence_alignment",
-                                    germlineColumn="germline_alignment_d_mask",
-                                    regionDefinition=shazam::IMGT_V,
+        VDJ_db <- shazam::observedMutations(VDJ_db, sequenceColumn="${clone_mut_obs_seq}",
+                                    germlineColumn="${clone_mut_germ_seq}",
+                                    regionDefinition=regionDefinition,
                                     frequency=FALSE, 
                                     combine=TRUE,
                                     nproc=1)
 
         # Calculate R and S mutation frequencies
-        VDJ_db <- shazam::observedMutations(VDJ_db, sequenceColumn="sequence_alignment",
-                                    germlineColumn="germline_alignment_d_mask",
-                                    regionDefinition=shazam::IMGT_V,
+        VDJ_db <- shazam::observedMutations(VDJ_db, sequenceColumn="${clone_mut_obs_seq}",
+                                    germlineColumn="${clone_mut_germ_seq}",
+                                    regionDefinition=regionDefinition,
                                     frequency=TRUE, 
                                     nproc=1)
 
         # Calculate combined R and S mutation frequencies
-        VDJ_db <- shazam::observedMutations(VDJ_db, sequenceColumn="sequence_alignment",
-                                    germlineColumn="germline_alignment_d_mask",
-                                    regionDefinition=shazam::IMGT_V,
+        VDJ_db <- shazam::observedMutations(VDJ_db, sequenceColumn="${clone_mut_obs_seq}",
+                                    germlineColumn="${clone_mut_germ_seq}",
+                                    regionDefinition=regionDefinition,
                                     frequency=TRUE, 
                                     combine=TRUE,
                                     nproc=1)
@@ -1176,7 +1185,7 @@ process Clone_id_count {
 // Makes a gff file from the coordinates info contained inside the tsv and pairs it with the fastas
 // Inputs :
 //      - clone_assigned_seq_filtered_ch : tsv info files containing a "sequence" column (used to create nuc fasta file), a "sequence_aa" column (used to create aa fasta file), a "germline_d_mask_no_gaps" column, a "germline_d_mask_aa_no_gaps" column, "germline_v_gene" and "germline_j_gene" columns + region coordinates info (used to create gff) + "clone_id", "junction_length"
-//      - clone_nb_seq : Minimun number of non-identical sequences per clonal group for tree plotting (defined in nextflow.config). It has to be checked beforehand that the elements in the germ_tree_ch channel contain more than clone_nb_seq rows of data, or the program will stop.
+//      - align_clone_nb : Minimun number of non-identical sequences per clonal group for tree plotting (defined in nextflow.config). It has to be checked beforehand that the elements in the germ_tree_ch channel contain more than align_clone_nb rows of data, or the program will stop.
 //      - cute_file : Several functions used in the Tsv2fastaGff.R script
 // Outputs :
 //      - TUPLE : nuc_alignments_ch : - 1st element : sequences in fasta files, in nucleotidic format
@@ -1191,9 +1200,9 @@ process Tsv2fastaGff{
     publishDir path: "${out_path}/alignments/aa", mode: 'copy', pattern: "{*_aa.gff}", overwrite: false
 
     input:
-    path clone_assigned_seq_filtered_ch // parallelization expected (by clonal groups over clone_nb_seq sequences)
+    path clone_assigned_seq_filtered_ch // parallelization expected (by clonal groups over align_clone_nb sequences)
     val align_kind
-    val clone_nb_seq
+    val align_clone_nb
     path cute_file
 
     output:
@@ -1215,7 +1224,7 @@ process Tsv2fastaGff{
     "${clone_assigned_seq_filtered_ch}" \
     "sequence_id" \
     "${align_kind}" \
-    "${clone_nb_seq}" \
+    "${align_clone_nb}" \
     "${cute_file}" \
     "Tsv2fastaGff.log"
     """
@@ -1232,7 +1241,7 @@ process Abalign_align_aa {
     publishDir path: "${out_path}/alignments/aa", mode: 'copy', pattern: "{*_aligned_aa.fasta}", overwrite: false
     
     input:
-    tuple path(fasta_nuc), path(fasta_aa) // parallelization expected (by clonal groups over clone_nb_seq sequences)
+    tuple path(fasta_nuc), path(fasta_aa) // parallelization expected (by clonal groups over align_clone_nb sequences)
     val igblast_organism
     val igblast_heavy_chain
     
@@ -1289,7 +1298,7 @@ process Abalign_align_nuc {
     publishDir path: "${out_path}/alignments/nuc", mode: 'copy', pattern: "{*_aligned_nuc.fasta}", overwrite: false
 
     input:
-    tuple path(fasta_nuc), path(aligned_aa) // parallelization expected (by clonal groups over clone_nb_seq sequences)
+    tuple path(fasta_nuc), path(aligned_aa) // parallelization expected (by clonal groups over align_clone_nb sequences)
 
     output:
     tuple path("*_aligned_nuc.fasta"), path(aligned_aa), emit : aligned_all_ch
@@ -1310,7 +1319,7 @@ process  Mafft_align {
     publishDir path: "${out_path}/alignments/nuc", mode: 'copy', pattern: "{*_aligned_nuc.fasta}", overwrite: false
 
     input:
-    tuple path(fasta_nuc), path(fasta_aa) // parallelization expected (by clonal groups over clone_nb_seq sequences)
+    tuple path(fasta_nuc), path(fasta_aa) // parallelization expected (by clonal groups over align_clone_nb sequences)
     
     output:
     tuple path("*_aligned_nuc.fasta"), path("*_aligned_aa.fasta"), emit : aligned_all_ch
@@ -1333,7 +1342,7 @@ process Tree {
     label 'iqtree'
 
     input:
-    tuple path(fasta_nuc_alignments), path(fasta_aa_alignments)  // parallelization expected (by clonal groups over clone_nb_seq sequences)
+    tuple path(fasta_nuc_alignments), path(fasta_aa_alignments)  // parallelization expected (by clonal groups over align_clone_nb sequences)
     path phylo_tree_model_file
 
     output:
@@ -1348,7 +1357,7 @@ process Tree {
     """
 }
 
-process MetaToITOL {
+process Meta2ITOL  {
     label 'tabletoitol'
 
     input:
@@ -1605,7 +1614,7 @@ process get_germ_tree {
     path mutation_load_ch // parallelization expected
     path meta_file // just to determine if metadata have been provided (TRUE means NULL) meta_file_ch not required here
     path cute_file
-    val clone_nb_seq
+    val align_clone_nb
     val germ_tree_duplicate_seq
     val igphylm_exe_path // warning : here val and not path because we do not want the igphyml file to be imported in the work dir
 
@@ -1631,7 +1640,7 @@ process get_germ_tree {
     get_germ_tree.R \
 "${mutation_load_ch}" \
 "${meta_file}" \
-"${clone_nb_seq}" \
+"${align_clone_nb}" \
 "${germ_tree_duplicate_seq}" \
 "${igphylm_exe_path}" \
 "${cute_file}" \
@@ -1652,7 +1661,7 @@ process germ_tree_vizu {
     input:
     path rdata_germ_tree_ch2 // no more parallelization
     val germ_tree_kind
-    val clone_nb_seq
+    val align_clone_nb
     val germ_tree_duplicate_seq
     val germ_tree_leaf_color
     val germ_tree_leaf_shape
@@ -1683,7 +1692,7 @@ process germ_tree_vizu {
     #!/bin/bash -ue
     germ_tree_vizu.R \
 "${germ_tree_kind}" \
-"${clone_nb_seq}" \
+"${align_clone_nb}" \
 "${germ_tree_duplicate_seq}" \
 "${germ_tree_leaf_color}" \
 "${germ_tree_leaf_shape}" \
@@ -1763,34 +1772,45 @@ workflow {
 
     //////// Checks
     //// check of the bin folder
-    if( ! (file("${projectDir}/bin/donut.R").exists()) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE donut.R FILE MUST BE PRESENT IN THE ./bin FOLDER, WHERE THE main.nf file IS PRESENT\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
-    }
-    // AB_model not trested because in parameters
-    if( ! (file("${projectDir}/bin/germ_tree_vizu.R").exists()) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE germ_tree_vizu.R FILE MUST BE PRESENT IN THE ./bin FOLDER, WHERE THE main.nf file IS PRESENT\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
-    }
-    if( ! (file("${projectDir}/bin/get_germ_tree.R").exists()) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE get_germ_tree.R FILE MUST BE PRESENT IN THE ./bin FOLDER, WHERE THE main.nf file IS PRESENT\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
-    }
-    if( ! (file("${projectDir}/bin/get_germ_tree.R").exists()) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE get_germ_tree.R FILE MUST BE PRESENT IN THE ./bin FOLDER, WHERE THE main.nf file IS PRESENT\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
-    }
-    if( ! (file("${projectDir}/bin/repertoire.R").exists()) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE repertoire.R FILE MUST BE PRESENT IN THE ./bin FOLDER, WHERE THE main.nf file IS PRESENT\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
-    }
-    if( ! (file("${projectDir}/bin/trimtranslate.sh").exists()) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE trimtranslate.sh FILE MUST BE PRESENT IN THE ./bin FOLDER, WHERE THE main.nf file IS PRESENT\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
-    }
-    if( ! (file("${projectDir}/bin/defineGroups.pl").exists()) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE defineGroups.pl FILE MUST BE PRESENT IN THE ./bin FOLDER, WHERE THE main.nf file IS PRESENT\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
+    tested_files_bin = ["circos.R", "circos_data_prep.R", "cute_little_R_functions_v12.8.R", "defineGroups.pl", "donut.R", "fields_not_kept.txt", "germ_tree_vizu.R", "GermlineSequences.py", "get_germ_tree.R", "histogram.R", "parse_coordinates.R", "repertoire.R", "repertoire_profiler_template.rmd", "restore_headers.sh", "trimtranslate.sh", "Tsv2fastaGff.R"]
+    for(i1 in tested_files_bin){
+        if( ! (file("${projectDir}/bin/${i1}").exists()) ){
+            error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE ${i1} FILE MUST BE PRESENT IN THE ./bin FOLDER, WHERE THE main.nf file IS PRESENT\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
+        }
     }
     //// end check of the bin folder
+
+    //// check of the modules folder
+    tested_files_modules = ["print_alignment.nf"]
+    for(i1 in tested_files_modules){
+        if( ! (file("${projectDir}/modules/${i1}").exists()) ){
+            error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE ${i1} FILE MUST BE PRESENT IN THE ./modules FOLDER, WHERE THE main.nf file IS PRESENT\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
+        }
+    }
+    //// end check of the modules folder
+
+    //// check of config file parameters
+    // Data
     if( ! (sample_path in String || sample_path in GString) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID sample_path PARAMETER IN nextflow.config FILE:\n${sample_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (file(sample_path).exists()) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID sample_path PARAMETER IN nextflow.config FILE (DOES NOT EXIST): ${sample_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
     }
+    if( ! (meta_path in String || meta_path in GString) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_path PARAMETER IN nextflow.config FILE:\n${meta_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if(meta_path != "NULL"){
+        if( ! (file(meta_path).exists()) ){
+            error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_path PARAMETER IN nextflow.config FILE (DOES NOT EXIST): ${meta_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
+        }
+    }
+    if( ! (meta_seq_names in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_seq_names PARAMETER IN nextflow.config FILE:\n${meta_seq_names}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }
+    if( ! (meta_name_replacement in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_name_replacement PARAMETER IN nextflow.config FILE:\n${meta_name_replacement}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }
+
+    // Ig annotation
     if( ! (igblast_organism in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_organism PARAMETER IN nextflow.config FILE:\n${igblast_organism}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (igblast_organism =~ /^(mouse|human|rabbit|rat|rhesus_monkey)$/) ){
@@ -1831,20 +1851,12 @@ workflow {
     if ([heavy, lambda, kappa].count { it } > 2) {
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID PARAMETERS IN nextflow.config FILE:\nONLY ONE OF igblast_heavy_chain AND LIGHT CHAINS (igblast_lambda_chain, igblast_kappa_chain) CAN BE TRUE AT A TIME\nHERE ARE THEIR CURRENT VALUES : \nigblast_heavy_chain : ${igblast_heavy_chain}\nigblast_lambda_chain : ${igblast_lambda_chain}\nigblast_kappa_chain : ${igblast_kappa_chain}\n\n========\n\n"
     }
-    if( ! (align_kind in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID align_kind PARAMETER IN nextflow.config FILE:\n${align_kind}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ! (align_kind =~ /^(query|igblast_full|trimmed|fwr1|fwr2|fwr3|fwr4|cdr1|cdr2|cdr3|junction|sequence_alignment|v_sequence_alignment|d_sequence_alignment|j_sequence_alignment|c_sequence_alignment|germline_alignment|v_germline_alignment|d_germline_alignment|j_germline_alignment|c_germline_alignment)$/) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID align_kind PARAMETER IN nextflow.config FILE:\n${align_kind}\nMUST BE EITHER \"mouse\", \"human\", \"rabbit\", \"rat\" OR \"rhesus_monkey\"\n\n========\n\n"
-    }
+
+    // Clonal groups (clustering) and mutation load
     if( ! (clone_strategy in String) ){
                 error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_strategy PARAMETER IN nextflow.config FILE:\n${clone_strategy}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }else if( ! (clone_strategy == "first" || clone_strategy == "set") ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_strategy PARAMETER IN nextflow.config FILE:\n${clone_strategy}\nMUST BE EITHER \"first\" OR \"set\"\n\n========\n\n"
-    }
-    if( ! (clone_nb_seq in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_nb_seq PARAMETER IN nextflow.config FILE:\n${clone_nb_seq}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-    }else if( ( ! (clone_nb_seq =~/^\d+$/)) || clone_nb_seq.toInteger() < 3 ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_nb_seq PARAMETER IN nextflow.config FILE:\n${clone_nb_seq}\nMUST BE A POSITIVE INTEGER VALUE EQUAL OR GREATER TO 3\n\n========\n\n"
     }
     if( ! (clone_model in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_model PARAMETER IN nextflow.config FILE:\n${clone_model}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
@@ -1861,20 +1873,40 @@ workflow {
     }else if( ! (clone_distance =~ /^((1)|(0)|(0\.[0-9]*))$/) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_distance PARAMETER IN nextflow.config FILE:\n${clone_distance}\nMUST BE A POSITIVE PROPORTION VALUE\n\n========\n\n"
     }
-    if( ! (meta_path in String || meta_path in GString) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_path PARAMETER IN nextflow.config FILE:\n${meta_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    if( ! (clone_germline_kind in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_germline_kind PARAMETER IN nextflow.config FILE:\n${clone_germline_kind}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (clone_germline_kind =~ /^(dmask|full|vonly)$/) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_germline_kind PARAMETER IN nextflow.config FILE:\n${clone_germline_kind}\nMUST BE EITHER \"dmask\", \"full\", \"vonly\".\n\n========\n\n"
     }
-    if(meta_path != "NULL"){
-        if( ! (file(meta_path).exists()) ){
-            error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_path PARAMETER IN nextflow.config FILE (DOES NOT EXIST): ${meta_path}\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
-        }
+
+    if( ! (clone_mut_obs_seq in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_mut_obs_seq PARAMETER IN nextflow.config FILE:\n${clone_mut_obs_seq}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
-    if( ! (meta_seq_names in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_seq_names PARAMETER IN nextflow.config FILE:\n${meta_seq_names}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    if( ! (clone_mut_germ_seq in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_mut_germ_seq PARAMETER IN nextflow.config FILE:\n${clone_mut_germ_seq}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
-    if( ! (meta_name_replacement in String) ){
-        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_name_replacement PARAMETER IN nextflow.config FILE:\n${meta_name_replacement}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    if( ! (clone_mut_regionDefinition in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_mut_regionDefinition PARAMETER IN nextflow.config FILE:\n${clone_mut_regionDefinition}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (clone_mut_regionDefinition =~ /^(NULL|IMGT_V|IMGT_V_BY_CODONS|IMGT_V_BY_REGIONS|IMGT_V_BY_SEGMENTS|IMGT_VDJ|IMGT_VDJ_BY_REGIONS)$/) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID clone_mut_regionDefinition PARAMETER IN nextflow.config FILE:\n${clone_mut_regionDefinition}\nMUST BE EITHER \"NULL\", \"IMGT_V\", \"IMGT_V_BY_CODONS\", \"IMGT_V_BY_REGIONS\", \"IMGT_V_BY_SEGMENTS\", \"IMGT_VDJ\", \"IMGT_VDJ_BY_REGIONS\".\n\n========\n\n"
     }
+
+    // Aligments
+    if( ! (align_clone_nb in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID align_clone_nb PARAMETER IN nextflow.config FILE:\n${align_clone_nb}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ( ! (align_clone_nb =~/^\d+$/)) || align_clone_nb.toInteger() < 2 ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID align_clone_nb PARAMETER IN nextflow.config FILE:\n${align_clone_nb}\nMUST BE A POSITIVE INTEGER VALUE EQUAL OR GREATER TO 2\n\n========\n\n"
+    }
+    if( ! (align_kind in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID align_kind PARAMETER IN nextflow.config FILE:\n${align_kind}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }else if( ! (align_kind =~ /^(query|igblast_full|trimmed|fwr1|fwr2|fwr3|fwr4|cdr1|cdr2|cdr3|junction|sequence_alignment|v_sequence_alignment|d_sequence_alignment|j_sequence_alignment|c_sequence_alignment|germline_alignment|v_germline_alignment|d_germline_alignment|j_germline_alignment|c_germline_alignment)$/) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID align_kind PARAMETER IN nextflow.config FILE:\n${align_kind}\nMUST BE EITHER \"query\", \"igblast_full\", \"trimmed\", \"fwr1\", \"fwr2\", \"fwr3\", \"fwr4\", \"cdr1\", \"cdr2\", \"cdr3\", \"junction\", \"sequence_alignment\", \"v_sequence_alignment\", \"d_sequence_alignment\", \"j_sequence_alignment\", \"c_sequence_alignment\", \"germline_alignment\", \"v_germline_alignment\", \"d_germline_alignment\", \"j_germline_alignment\", \"c_germline_alignment\".\n\n========\n\n"
+    }
+
+
+
+
+
     if( ! (meta_legend in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_legend PARAMETER IN nextflow.config FILE:\n${meta_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
@@ -1929,6 +1961,8 @@ workflow {
     }else if( ! (germ_tree_legend == "TRUE" || germ_tree_legend == "FALSE") ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID germ_tree_legend PARAMETER IN nextflow.config FILE:\n${germ_tree_legend}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
+
+
 
     if( ! (donut_palette in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_palette PARAMETER IN nextflow.config FILE:\n${donut_palette}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
@@ -2022,7 +2056,7 @@ workflow {
     if( ! (igphylm_exe_path in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igphylm_exe_path PARAMETER IN nextflow.config FILE:\n${igphylm_exe_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
-
+    //// end check of config file parameters
 
     // below : those variable are already used in the config file. Thus, to late to check them. And not possible to check inside the config file
     // out_ini
@@ -2267,7 +2301,8 @@ workflow {
     closest_germline(
         split_by_clones.out.clone_split_ch.flatten(), // flatten split the list into several objects (required for parallelization)
         igblast_organism, 
-        igblast_variable_ref_files
+        igblast_variable_ref_files, 
+        clone_germline_kind
     )
     closest_germline.out.closest_log_ch.collectFile(name: "closest_germline.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
@@ -2292,12 +2327,15 @@ workflow {
     Mutation_load_germ_genes(
         TranslateGermline.out.translate_germ_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE TranslateGermline PROCESS\n\n========\n\n"},
         meta_file, 
-        meta_legend
+        meta_legend,
+        clone_mut_obs_seq,
+        clone_mut_germ_seq,
+        clone_mut_regionDefinition
     )
     clone_assigned_seq_ch = Mutation_load_germ_genes.out.mutation_load_ch.collectFile(name: "clone_assigned_seq.tsv", skip: 1, keepHeader: true)
     nb_clone_assigned = clone_assigned_seq_ch.countLines() - 1 // Minus 1 because 1st line = column names
     clone_assigned_seq_ch.subscribe{it -> it.copyTo("${out_path}/tsv")}
-    clone_assigned_seq_filtered_ch = Mutation_load_germ_genes.out.mutation_load_ch.filter{ file -> file.countLines() > clone_nb_seq.toInteger() } // Only keep clonal groups that have a number of sequences superior to clone_nb_seq (variable defined in nextflow.config)
+    clone_assigned_seq_filtered_ch = Mutation_load_germ_genes.out.mutation_load_ch.filter{ file -> file.countLines() > align_clone_nb.toInteger() } // Only keep clonal groups that have a number of sequences superior to align_clone_nb (variable defined in nextflow.config)
     Mutation_load_germ_genes.out.mutation_load_log_ch.collectFile(name: "Mutation_load_germ_genes.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
 
 
@@ -2317,7 +2355,7 @@ workflow {
         Mutation_load_germ_genes.out.mutation_load_ch,
         meta_file, // first() because get_germ_tree process is a parallele one and because meta_file is single
         cute_file, 
-        clone_nb_seq,
+        align_clone_nb,
         germ_tree_duplicate_seq,
         igphylm_exe_path
     )
@@ -2339,7 +2377,7 @@ workflow {
     }}
     germ_tree_ch2 = get_germ_tree.out.germ_tree_ch.collectFile(name: "seq_for_germ_tree.tsv", skip: 1, keepHeader: true)
     // germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
-    germ_tree_ch3 = get_germ_tree.out.germ_tree_ch.flatten().filter{ file -> file.countLines() > clone_nb_seq.toInteger() }
+    germ_tree_ch3 = get_germ_tree.out.germ_tree_ch.flatten().filter{ file -> file.countLines() > align_clone_nb.toInteger() }
 
     get_germ_tree.out.no_cloneID_ch.count().subscribe { n -> if ( n == 0 ){
         print("\n\nWARNING: ALL SEQUENCES IN CLONAL GROUP FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_dismissed_clone_id.tsv FILE RETURNED\n\n")
@@ -2360,7 +2398,7 @@ workflow {
     germ_tree_vizu(
         rdata_germ_tree_ch2,
         germ_tree_kind,
-        clone_nb_seq,
+        align_clone_nb,
         germ_tree_duplicate_seq,
         germ_tree_leaf_color,
         germ_tree_leaf_shape,
@@ -2456,7 +2494,7 @@ workflow {
     Tsv2fastaGff(
         clone_assigned_seq_filtered_ch,
         align_kind, 
-        clone_nb_seq, 
+        align_clone_nb, 
         cute_path
     )
     fasta_gff_log_ch2 = Tsv2fastaGff.out.fasta_gff_log_ch.collectFile(name: "Tsv2fastaGff.log")
@@ -2519,7 +2557,7 @@ workflow {
     tree_nuc = Tree.out.tree_nuc_ch
     Tree.out.tree_log_ch.collectFile(name: "tree.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
-    MetaToITOL(
+    Meta2ITOL (
         meta_file,
         meta_seq_names
     )
@@ -2532,7 +2570,7 @@ workflow {
 
         ITOL(
             tree,
-            MetaToITOL.out.itol_out_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE MetaToITOL PROCESS\n\n========\n\n"},
+            Meta2ITOL .out.itol_out_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Meta2ITOL  PROCESS\n\n========\n\n"},
             phylo_tree_itolkey
         )
 
