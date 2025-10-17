@@ -72,6 +72,7 @@ script <- "Tsv2fastaGff"
 # Seq <- "trimmed"        # name of the columns containing the sequences to put in the fasta file (can be a single string or several strings seperated by "," if several columns are needed. the fastas will then be created in different folders)
 # clone_nb_seq <- 3                    # Minimum number of rows in the tsv file. The program expects this to be respected, otherwise raises an error.
 # cute <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/bin/cute_little_R_functions_v12.8.R"
+# seq_kind <- "CLONE"
 # log <- "Tsv2fastaGff.log"
 
 
@@ -98,6 +99,7 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
         "Seq",
         "clone_nb_seq",
         "cute", 
+        "seq_kind", 
         "log"
     ) # objects names exactly in the same order as in the bash code and recovered in args. Here only one, because only the path of the config file to indicate after the xlsx2fasta.R script execution
     if(length(args) != length(tempo.arg.names)){
@@ -139,6 +141,7 @@ param.list <- c(
     "Seq",
     "clone_nb_seq",
     "cute", 
+    "seq_kind", 
     "log"
 )
 if(any(duplicated(param.list))){
@@ -267,6 +270,8 @@ ee <- expression(arg.check <- c(arg.check, tempo$problem) , text.check <- c(text
 tempo <- fun_check(data = path, class = "vector", typeof = "character", length = 1) ; eval(ee)
 tempo <- fun_check(data = Name, class = "vector", typeof = "character", length = 1) ; eval(ee)
 tempo <- fun_check(data = Seq, options = c("query", "igblast_full", "trimmed", "fwr1", "fwr2", "fwr3", "fwr4", "cdr1", "cdr2", "cdr3", "junction", "sequence_alignment", "v_sequence_alignment", "d_sequence_alignment", "j_sequence_alignment", "c_sequence_alignment", "germline_alignment", "v_germline_alignment", "d_germline_alignment", "j_germline_alignment", "c_germline_alignment")) ; eval(ee)
+tempo <- fun_check(data = clone_nb_seq, class = "vector", typeof = "integer", length = 1, double.as.integer.allowed = TRUE) ; eval(ee)
+tempo <- fun_check(data = seq_kind, options = c("ALL", "CLONE")) ; eval(ee)
 # cute already tested above
 tempo <- fun_check(data = log, class = "vector", typeof = "character", length = 1) ; eval(ee)
 if(any(arg.check) == TRUE){ # normally no NA
@@ -296,9 +301,9 @@ if(Seq == "j_germline_alignment"){Seq2 <- c("j_germline_alignment", "j_germline_
 if(Seq == "c_germline_alignment"){Seq2 <- c("c_germline_alignment", "c_germline_alignment_aa")}
 
 Germline <- NULL
-if(base::grepl(x = Seq, pattern = "sequence_alignment")){
+if(base::grepl(x = Seq, pattern = "sequence_alignment") & seq_kind == "CLONE" ){
     Germline <- base::sub(x = Seq2, pattern = "sequence", replacement = "germline")
-}else if(Seq %in% c("query", "igblast_full", "trimmed")){
+}else if(Seq %in% c("query", "igblast_full", "trimmed") & seq_kind == "CLONE"){
     Germline <- c("germline_alignment", "germline_alignment_aa")
 }
 # end argument primary checking
@@ -447,7 +452,9 @@ for(i0 in Seq2){
         if(any(tempo.df$clone_id != tempo.df$clone_id[1])){
             stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL clone_id VALUES SHOULD BE THE SAME IN A clone_assigned_seq.tsv FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$clone_id, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
         }
-        if (any(tempo.df$v_gene != tempo.df$v_gene[1])) {
+        if(seq_kind == "ALL"){
+            multiple_v_genes <- TRUE
+        }else if(any(tempo.df$v_gene != tempo.df$v_gene[1])) {
             tempo.warn <- paste0(
                 "Different genes for the V cassette were found in this clonal group\n",
                 "Here they are:\n", paste0(tempo.df$v_gene, collapse = "\n"),
@@ -458,8 +465,9 @@ for(i0 in Seq2){
             warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
             multiple_v_genes <- TRUE
         }
-
-        if (any(tempo.df$j_gene != tempo.df$j_gene[1])) {
+        if(seq_kind == "ALL"){
+            multiple_j_genes <- TRUE
+        }else if(any(tempo.df$j_gene != tempo.df$j_gene[1])) {
              tempo.warn <- paste0(
                 "Different genes for the V cassette were found this clonal group\n",
                 "Here they are:\n", paste0(tempo.df$j_gene, collapse = "\n"),
@@ -476,8 +484,10 @@ for(i0 in Seq2){
         # if(any(tempo.df$j_gene != tempo.df$j_gene[1])){
         #     stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL j_gene VALUES SHOULD BE THE SAME IN A clone_assigned_seq.tsv FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$j_gene, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
         # }
-        if(any(tempo.df$junction_length != tempo.df$junction_length[1])){
-            stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL junction_length VALUES SHOULD BE THE SAME IN A clone_assigned_seq.tsv FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$junction_length, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
+        if(seq_kind == "CLONE"){
+            if(any(tempo.df$junction_length != tempo.df$junction_length[1])){
+                stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL junction_length VALUES SHOULD BE THE SAME IN A clone_assigned_seq.tsv FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(tempo.df$junction_length, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
+            }
         }
         # End check of columns relative to clonal groups
 
@@ -499,7 +509,11 @@ for(i0 in Seq2){
         v_gene_clean <- paste(sort(v_genes_all), collapse = "-") 
         j_gene_clean <- paste(sort(j_genes_all), collapse = "-")
 
-        tempo.name <- paste0(i0, "_clone_id_", tempo.df[1, "clone_id"], "_", v_gene_clean, "_", j_gene_clean, ".fasta") # Create the name of the file
+        if(seq_kind == "CLONE"){
+            tempo.name <- paste0(i0, "_clone_id_", tempo.df[1, "clone_id"], "_", v_gene_clean, "_", j_gene_clean, ".fasta") # Create the name of the file
+        }else{
+            tempo.name <- paste0(i0, ".fasta")
+        }
         for(i1 in 1:nrow(tempo.df)) {
             tempo.cat <- paste0(">", tempo.df[i1, Name], "\n", tempo.df[i1, i0], "\n")
             cat(tempo.cat, file = file.path(dir_name, tempo.name), append = TRUE)
@@ -552,14 +566,16 @@ for(i0 in Seq2){
 
 }
 
-if (multiple_j_genes || multiple_v_genes){
-    tempo.warn <- paste0(
-        "\n[WARNING] Multiple V or J genes detected in a clonal group. ",
-        "\nSet clone_strategy = \"first\" in nextflow.config to avoid this."
-    )
-    cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
-    fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
-    warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
+if(seq_kind == "ALL"){
+    if (multiple_j_genes || multiple_v_genes){
+        tempo.warn <- paste0(
+            "\n[WARNING] Multiple V or J genes detected in a clonal group. ",
+            "\nSet clone_strategy = \"first\" in nextflow.config to avoid this."
+        )
+        cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
+        fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+        warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
+    }
 }
 
 
