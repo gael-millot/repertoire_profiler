@@ -973,6 +973,7 @@ process TranslateGermline {
 
     input:
     path add_germ_ch // parallelization expected (by clonal groups)
+    val clone_germline_kind
 
     output:
     path "*-trans_germ-pass.tsv", emit: translate_germ_ch
@@ -988,19 +989,26 @@ process TranslateGermline {
     Rscript -e '
         file_name <- "${add_germ_ch}"
         df <- read.table(file_name, sep = "\\t", header = TRUE)
-
-        germ_nuc <- df[["germline_alignment_d_mask"]]
+        if("${clone_germline_kind}" == "dmask"){
+            germline_col_name <- "germline_alignment_d_mask"
+        }else if("${clone_germline_kind}" == "vonly"){
+            germline_col_name <- "germline_alignment_v_region"
+        }else if("${clone_germline_kind}" == "full"){
+            germline_col_name <- "germline_alignment"
+        }
+        germ_nuc <- df[[germline_col_name]]
         # Make sure all germline sequences are the same (which they are supposed to be since this is a single clonal group)
         if(any(germ_nuc != germ_nuc[1])){
             stop(paste0("\\n\\n================\\n\\nERROR IN ", script, ".R\\nTHE VALUES INSIDE THE Germline COLUMN SHOULD ALL BE THE SAME, BUT THEY ARE NOT.\\nHERE THEY ARE : ", paste0(tempo.df[[Germline]], collapse = "\\n"),"\\n\\n================\\n\\n"), call. = FALSE)
         }
         germ_without_gaps <- gsub("\\\\.", "", germ_nuc[1])
 
-        df[["germline_d_mask_no_gaps"]] <- germ_without_gaps
+        tempo_name <- paste0(germline_col_name, "_no_gaps")
+        df[[tempo_name]] <- germ_without_gaps
 
         length_no_gaps <- nchar(germ_without_gaps)
         if(length_no_gaps %% 3 != 0){
-            cat(paste0("\\nWARNING: THE germline_alignment_d_mask COLUMN CONTAINS ", length_no_gaps, " CHARACTERS WHEN GAPS ARE REMOVED, WHICH IS NOT A MULTIPLE OF 3. \\n"), file = "TranslateGermline.log", append = TRUE)
+            cat(paste0("\\nWARNING: THE ", germline_col_name, " COLUMN CONTAINS ", length_no_gaps, " CHARACTERS WHEN GAPS ARE REMOVED, WHICH IS NOT A MULTIPLE OF 3. \\n"), file = "TranslateGermline.log", append = TRUE)
         }
 
         germ_dna <- Biostrings::DNAString(germ_without_gaps)
@@ -1015,8 +1023,8 @@ process TranslateGermline {
                 invokeRestart("muffleWarning")
             }
         )
-
-        df[["germline_d_mask_aa_no_gaps"]] <- toString(germ_aa)
+        tempo_name <- paste0(germline_col_name, "_aa_no_gaps")
+        df[[tempo_name]] <- toString(germ_aa)
         file_base <- tools::file_path_sans_ext(basename(file_name))
         new_file_name <- paste0(file_base, "-trans_germ-pass.tsv")
         write.table(df, file = paste0("./", new_file_name), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
@@ -2314,7 +2322,8 @@ workflow {
 
 
     TranslateGermline(
-        AddGermlineSequences.out.add_germ_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE AddGermlineSequences PROCESS\n\n========\n\n"}
+        AddGermlineSequences.out.add_germ_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE AddGermlineSequences PROCESS\n\n========\n\n"},
+        clone_germline_kind
     )
     TranslateGermline.out.translate_germ_log_ch.collectFile(name: "TranslateGermline.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
