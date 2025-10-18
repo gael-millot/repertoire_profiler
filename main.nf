@@ -936,16 +936,16 @@ process closest_germline {
             db1 <- read.table(args[1], sep = "\\t", header = TRUE)
             db2 <- read.table(args[2], sep = "\\t", header = TRUE)
             if( ! all(sort(db1\$sequence_id) == sort(db2\$sequence_id))){
-                stop(paste0("\\n\\n================\\n\\nERROR IN closest_germline PROCESS.\\ndb1 and db2 DO NOT HAVE THE SAME NAMES IN THE sequence_id COLUMN."\\n\\n================\\n\\n"), call. = FALSE)
+                stop(paste0("\\n\\n================\\n\\nERROR IN closest_germline PROCESS.\\ndb1 and db2 DO NOT HAVE THE SAME NAMES IN THE sequence_id COLUMN.\\n\\n================\\n\\n"), call. = FALSE)
             }else{
-                db2 <- db2[match(db1\$sequence_id, db2db1\$sequence_id), ]
+                db2 <- db2[match(db1\$sequence_id, db1\$sequence_id), ]
             }
-            tempo <- data.frame(db1, germline_alignment_full = db1["germline_alignment"])
+            coord <- which(names(db1) == "germline_v_call")
+            tempo <- data.frame(db1[ , seq(1, coord - 1)], germline_alignment_full = db1\$germline_alignment, db1[ , seq(coord, length(db1))])
             tempo\$germline_alignment <- db2\$germline_alignment
             write.table(tempo, file = args[1], row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
         ' *_germ-pass.tsv tempo.tsv |& tee -a closest_germline.log
     fi
-
     """
 }
 
@@ -1017,12 +1017,12 @@ process TranslateGermline {
         }else if("${clone_germline_kind}" == "vonly"){
             germline_col_name <- "germline_alignment_v_region"
         }else if("${clone_germline_kind}" == "full"){
-            germline_col_name <- "germline_alignment"
+            germline_col_name <- "germline_alignment_full"
         }
         germ_nuc <- df[[germline_col_name]]
         # Make sure all germline sequences are the same (which they are supposed to be since this is a single clonal group)
         if(any(germ_nuc != germ_nuc[1])){
-            stop(paste0("\\n\\n================\\n\\nERROR IN TranslateGermline PROCESS.\\nTHE VALUES INSIDE THE Germline COLUMN SHOULD ALL BE THE SAME, BUT THEY ARE NOT.\\nHERE THEY ARE : ", paste0(tempo.df[[Germline]], collapse = "\\n"),"\\n\\n================\\n\\n"), call. = FALSE)
+            stop(paste0("\\n\\n================\\n\\nERROR IN TranslateGermline PROCESS.\\nTHE VALUES INSIDE THE Germline COLUMN SHOULD ALL BE THE SAME, BUT THEY ARE NOT.\\nHERE THEY ARE:\\n", paste0(germ_nuc, collapse = "\\n"),"\\n\\n================\\n\\n"), call. = FALSE)
         }
         germ_without_gaps <- gsub("\\\\.", "", germ_nuc[1])
 
@@ -1053,7 +1053,6 @@ process TranslateGermline {
         write.table(df, file = paste0("./", new_file_name), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
 
     '|& tee -a TranslateGermline.log
-
     """
 
 }
@@ -1090,6 +1089,7 @@ process Mutation_load_germ_genes {
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a Mutation_load_germ_genes.log
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a Mutation_load_germ_genes.log
     Rscript -e '
+        options(warning.length = 8170)
         args <- commandArgs(trailingOnly = TRUE)  # recover arguments written after the call of the Rscript
         tempo.arg.names <- c("file_name") # objects names exactly in the same order as in the bash code and recovered in args
         if(length(args) != length(tempo.arg.names)){
@@ -1101,10 +1101,10 @@ process Mutation_load_germ_genes {
         }
         VDJ_db <- read.table(file_name, sep = "\\t", header = TRUE)
         if( ! "${clone_mut_obs_seq}" %in% names(VDJ_db)){
-            stop(paste0("\\n\\n============\\n\\nERROR IN THE Mutation_load_germ_genes PROCESS OF NEXTFLOW\\nTHE clone_mut_obs_seq PARAMETER OF THE nextflow.config FILE MUST BE A COLUMN NAME OF THE clone_assigned_seq.tsv FILE.\\nSEE WHAT IS WRITTEN FOR THE clone_mut_germ_seq PARAMETER IN THE nextflow.config FILE.\\n\\n============\\n\\n"), call. = FALSE)
+            stop(paste0("\\n\\n============\\n\\nERROR IN THE Mutation_load_germ_genes PROCESS OF NEXTFLOW\\nTHE clone_mut_obs_seq PARAMETER OF THE nextflow.config FILE MUST BE A COLUMN NAME OF THE clone_assigned_seq.tsv FILE.\\nPLEASE, CHOOSE AMONG: ", paste0(names(VDJ_db), collapse = " "), "\\n\\n============\\n\\n"), call. = FALSE)
         }
         if( ! "${clone_mut_germ_seq}" %in% names(VDJ_db)){
-            stop(paste0("\\n\\n============\\n\\nERROR IN THE Mutation_load_germ_genes PROCESS OF NEXTFLOW\\nTHE clone_mut_germ_seq PARAMETER OF THE nextflow.config FILE MUST BE A COLUMN NAME OF THE clone_assigned_seq.tsv FILE.\\nSEE WHAT IS WRITTEN FOR THE clone_mut_germ_seq PARAMETER IN THE nextflow.config FILE.\\n\\n============\\n\\n"), call. = FALSE)
+            stop(paste0("\\n\\n============\\n\\nERROR IN THE Mutation_load_germ_genes PROCESS OF NEXTFLOW\\nTHE clone_mut_germ_seq PARAMETER OF THE nextflow.config FILE MUST BE A COLUMN NAME OF THE clone_assigned_seq.tsv FILE.\\nPLEASE, CHOOSE AMONG: ", paste0(names(VDJ_db), collapse = " "), "\\n\\n============\\n\\n"), call. = FALSE)
         }
         # Calculate R and S mutation counts
         regionDefinition <- if("${clone_mut_regionDefinition}" == "NULL"){NULL}else{eval(parse(text = "shazam::${clone_mut_regionDefinition}"))}
