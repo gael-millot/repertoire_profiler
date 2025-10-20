@@ -404,7 +404,7 @@ If the text is cut in the table, reload the page or change the width of the wind
             - productive_seq.tsv
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            Productive sequences. Productive <a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#productive">means</a>: (1) coding region has an open reading frame, (2) no defect in the start codon, splicing sites or regulatory elements, (3) no internal stop codons, (4) an in-frame <a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#junction-versus-cdr3">junction</a> region. See the <i>unproductive_seq.tsv</i> file for sequences that failed to be productive.<br><b>Names in bold</b> are columns that have been added or modified, compared to the output of <code>AssignGenes.py igblast --format airr</code>.<br><a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#coordinate-numbering">Coordinates</a> are 1-based numbering with closed intervals. This means that 1) the very first position in sequence is numbered 1 (not 0) and 2) both the start and the end positions are included in the range.<br>Warning: the germline sequences in this file are different from those added in <i>clone_assigned_seq.tsv</i> (see below). Here, they recontruct the putative germline sequences using the initial single sequence (one specific germline sequence per line), while in the clonal germline sequence of <i>clone_assigned_seq.tsv</i>, they uses all the sequences from the same clone (same germline sequence per group of lines). Thus, sequences with the same clone_ID can have different sequences in the <i>germline_aligment</i> column.<br>Column description (from <a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#fields">here</a> for the names not in bold, with fields not kept <a href="./bin/fields_not_kept.txt">here</a>):
+            Productive sequences. Productive <a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#productive">means</a>: (1) coding region has an open reading frame, (2) no defect in the start codon, splicing sites or regulatory elements, (3) no internal stop codons, (4) an in-frame <a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#junction-versus-cdr3">junction</a> region. See the <i>failed_productive_seq.tsv</i> file for sequences that failed to be productive.<br><b>Names in bold</b> are columns that have been added or modified, compared to the output of <code>AssignGenes.py igblast --format airr</code>.<br><a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#coordinate-numbering">Coordinates</a> are 1-based numbering with closed intervals. This means that 1) the very first position in sequence is numbered 1 (not 0) and 2) both the start and the end positions are included in the range.<br>Warning: the germline sequences in this file are different from those added in <i>clone_assigned_seq.tsv</i> (see below). Here, they recontruct the putative germline sequences using the initial single sequence (one specific germline sequence per line), while in the clonal germline sequence of <i>clone_assigned_seq.tsv</i>, they uses all the sequences from the same clone (same germline sequence per group of lines). Thus, sequences with the same clone_ID can have different sequences in the <i>germline_aligment</i> column.<br>Column description (from <a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#fields">here</a> for the names not in bold, with fields not kept <a href="./bin/fields_not_kept.txt">here</a>):
             <br><ul style="padding-left:1.2em; margin:0;"><li><b>sequence_id</b>: equivalent to <i>initial_sequence_id</i> column but modified with new names according to the <code>meta_name_replacement</code> parameter of the <i>nextflow.config</i> file.
             <br></li><li><b>initial_sequence_id</b>: optional. Only present if the <i>meta_path</i> and <code>meta_name_replacement</code> parameters of the <i>nextflow.config</i> file are non NULL. Originaly the <i>sequence_id</i> column of the <code>AssignGenes.py igblast --format airr</code> output. Unique query sequence identifier for the Rearrangement. Most often this will be the input sequence header or a substring thereof, but may also be a custom identifier defined by the tool in cases where query sequences have been combined in some fashion prior to alignment. When downloaded from an AIRR Data Commons repository, this will usually be a universally unique record locator for linking with other objects in the AIRR Data Model.
             <br></li><li>sequence: the query (input) nucleotide sequence. Usually, this is the unmodified input sequence, which may be reverse complemented if necessary. In some cases, this field may contain consensus sequences or other types of collapsed input sequences if these steps are performed prior to alignment.
@@ -539,7 +539,7 @@ If the text is cut in the table, reload the page or change the width of the wind
     </tr>
     <tr>
         <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            - unproductive_seq.tsv
+            - failed_productive_seq.tsv
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Sequences that failed in productive annotations by igblast (empty file if all the sequences are productively annotated). 
@@ -554,18 +554,42 @@ If the text is cut in the table, reload the page or change the width of the wind
              <br>Warning: the "full" option of the <code>clone_germline_kind</code> parameter of the <i>nextflow.config</i> file normally overwrites the <i>germline_alignment</i> column (column filled by AssignGenes.py igblast and overwritten by CreateGermlines.py). But this pipeline protects the initial <i>germline_alignment</i> column and create the <i>germline_alignment_full</i> column.<br>Warning: the number of sequences (i.e., rows) can be lower than in the <i>productive_seq.tsv</i> file due to sequences that failed to be clone assigned (see the <i>non_clone_assigned_sequence.tsv</i> file).
             <br>Additional columns description (from <a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#fields">here</a>):
             <br><ul style="padding-left:1.2em; margin:0;"><li>clone_id: Clone number. A same clone_id gathers all the sequences that putatively come from a same germline cell. See <a href="https://changeo.readthedocs.io/en/stable/examples/cloning.html#assigning-clones">here</a>, <a href="https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette/">here</a> and <a href="https://genomemedicine.biomedcentral.com/articles/10.1186/s13073-015-0243-2">this article</a> for details. In summary: 1) grouping the sequences according to "same V, J and junction length" (to facilitate the distance computation), 2) for each group, 2x2 distance computation using by default (<code>clone_model</code> and <code>clone_normalize</code> parameters of the <i>nextflow.config</i> file) the <a href="https://biology.stackexchange.com/questions/23523/hamming-distance-between-two-dna-strings">Hamming distance</a>, 3) cutoff definition , 4) using the cutoff (<code>clone_distance</code> parameter of the <i>nextflow.config</i> file) to define clonal groups inside each "same V, J and junction length" group.
-            <br></li><li>germline_alignment_(full | d_mask | v_region): germline sequence of the clonal group reconstructed by using respectively the full sequence, the VDJ segment, or the V segment only, depending on the selected option of the <code>clone_germline_kind</code> parameters of the <i>nextflow.config</i> file. With the VDJ segment, the resulting germline sequence is D masked (i.e., replaced by N, in the middle of the CDR3). Because the D-segment call for B cell receptor alignments is often low confidence, the default germline format ("dmask" option of the <code>clone_germline_kind</code> parameters of the <i>nextflow.config</i> file) places Ns in the N/P and D-segments of the junction region rather than using the D-segment assigned during reference alignment. This can be modified to generate a complete germline ("full" option) or a V-segment only germline ("vonly" option). This sequence is the assembly of the sequences in the <i>germline_v_seq</i>, <i>germline_d_seq</i> and <i>germline_j_seq</i> but with overlap of D on V and J and with the mask of D. Warning: this germline sequence is not necessarily identical to the one in the <i>germline_alignment</i> column. Indeed, the first one is identical to all sequences of the same clonal group. The latter is the reconstruction of the IMGT calling of each sequence. 
-            <br></li><li>germline_v_call: V germline cassette
-            <br></li><li>germline_d_call: D germline cassette (usually NA)
-            <br></li><li>germline_j_call: J germline cassette
-            <br></li><li>germline_v_seq: nucleotide sequence of the V germline cassette
-            <br></li><li>germline_v_seq_no_gaps: nucleotide sequence of the V germline cassette without IMGT gaps
-            <br></li><li>germline_d_seq: nucleotide sequence of the D germline cassette
-            <br></li><li>germline_d_seq_no_gaps: nucleotide sequence of the D germline cassette without IMGT gaps
-            <br></li><li>germline_j_seq: nucleotide sequence of the J germline cassette
-            <br></li><li>germline_j_seq_no_gaps: nucleotide sequence of the J germline cassette without IMGT gaps
-            <br></li><li>germline_d_mask_no_gaps: <i>germline_alignment_d_mask</i> column without IMGT gaps
-            <br></li><li>germline_d_mask_aa_no_gaps: translation of the <i>germline_d_mask_no_gaps</i> column into amino-acids
+            <br></li><li>germline_alignment_(full | d_mask | v_region): further called "clonal germline sequence", to make the distinction with the germline columns already present in the <i>productive_seq.tsv</i> file. This germline sequence of the clonal group is reconstructed by using respectively the full sequence, the VDJ segment, or the V segment only, depending on the selected option of the <code>clone_germline_kind</code> parameters of the <i>nextflow.config</i> file. With the VDJ segment, the resulting germline sequence is D masked (i.e., replaced by N, in the middle of the CDR3). Because the D-segment call for B cell receptor alignments is often low confidence, the default germline format ("dmask" option of the <code>clone_germline_kind</code> parameters of the <i>nextflow.config</i> file) places Ns in the N/P and D-segments of the junction region rather than using the D-segment assigned during reference alignment. This can be modified to generate a complete germline ("full" option) or a V-segment only germline ("vonly" option). This sequence is the assembly of the sequences in the <i>germline_v_seq</i>, <i>germline_d_seq</i> and <i>germline_j_seq</i> but with overlap of D on V and J and with the mask of D. Warning: this germline sequence is not necessarily identical to the one in the <i>germline_alignment</i> column. Indeed, the first one is identical to all sequences of the same clonal group. The latter is the reconstruction of the IMGT calling of each sequence. 
+            <br></li><li>germline_v_call: V allele of the clonal germline sequence.
+            <br></li><li>germline_d_call: D allele of the clonal germline sequence (usually NA).
+            <br></li><li>germline_j_call: J allele of the clonal germline sequence.
+            <br></li><li>clonal_germline_alignment: equivalent of the <i>sequence_alignment</i> column output but for the sequence of the germline_alignment_(full | d_mask | v_region) column processed by `AssignGenes.py igblast --format airr`. This sequence should be identical to the sequence of the <i>germline_alignment_(full | d_mask | v_region)_no_gaps</i> column.
+            <br></li><li>clonal_germline_alignment_aa: equivalent of the <i>sequence_alignment_aa</i> column output but for the sequence of the germline_alignment_(full | d_mask | v_region) column processed by `AssignGenes.py igblast --format airr`. This sequence should be identical to the sequence of the <i>germline_alignment_(full | d_mask | v_region)_aa_no_gaps</i> column.
+            <br></li><li>clonal_germline_v_start: start position of the V gene in the clonal germline sequence (i.e., <i>germline_alignment_(full | d_mask | v_region)</i> column, 1-based closed interval).
+            <br></li><li>clonal_germline_v_end: end position of the V gene in the clonal germline sequence (i.e., <i>germline_alignment_(full | d_mask | v_region)</i> column, 1-based closed interval).
+            <br></li><li>clonal_germline_d_start: as <i>clonal_germline_v_start</i> but for the D gene.
+            <br></li><li>clonal_germline_d_end: as <i>clonal_germline_v_end</i> but for the D gene.
+            <br></li><li>clonal_germline_j_start: as <i>clonal_germline_v_start</i> but for the J gene.
+            <br></li><li>clonal_germline_j_end: as <i>clonal_germline_v_end</i> but for the J gene.
+            <br></li><li>clonal_germline_c_start: as <i>clonal_germline_v_start</i> but for the C gene.
+            <br></li><li>clonal_germline_c_end: as <i>clonal_germline_v_end</i> but for the C gene.
+            <br></li><li>clonal_germline_fwr1_start: FWR1 start position in the clonal germline sequence  (i.e., <i>germline_alignment_(full | d_mask | v_region)</i> column, 1-based closed interval).
+            <br></li><li>clonal_germline_fwr1_end:  FWR1 end position in the clonal germline sequence  (i.e., <i>germline_alignment_(full | d_mask | v_region)</i> column, 1-based closed interval).
+            <br></li><li>clonal_germline_cdr1_start: as <i>clonal_germline_fwr1_start</i> but for CDR1.
+            <br></li><li>clonal_germline_cdr1_end: as <i>clonal_germline_fwr1_end</i> but for CDR1.
+            <br></li><li>clonal_germline_fwr2_start: as <i>clonal_germline_fwr1_start</i> but for FWR2.
+            <br></li><li>clonal_germline_fwr2_end: as <i>clonal_germline_fwr1_end</i> but for FWR2.
+            <br></li><li>clonal_germline_cdr2_start: as <i>clonal_germline_fwr1_start</i> but for CDR2.
+            <br></li><li>clonal_germline_cdr2_end: as <i>clonal_germline_fwr1_end</i> but for CDR2.
+            <br></li><li>clonal_germline_fwr3_start: as <i>clonal_germline_fwr1_start</i> but for FWR3.
+            <br></li><li>clonal_germline_fwr3_end: as <i>clonal_germline_fwr1_end</i> but for FWR3.
+            <br></li><li>clonal_germline_fwr4_start: as <i>clonal_germline_fwr1_start</i> but for FWR4.
+            <br></li><li>clonal_germline_fwr4_end: as <i>clonal_germline_fwr1_end</i> but for CDFWR4R1.
+            <br></li><li>clonal_germline_cdr3_start: as <i>clonal_germline_fwr1_start</i> but for CDR3.
+            <br></li><li>clonal_germline_cdr3_end: as <i>clonal_germline_fwr1_end</i> but for CDR3.
+            <br></li><li>germline_v_seq: nucleotide sequence of the V clonal germline sequence.
+            <br></li><li>germline_v_seq_no_gaps: as <i>germline_v_seq</i> without IMGT gaps.
+            <br></li><li>germline_d_seq: nucleotide sequence of the D clonal germline sequence.
+            <br></li><li>germline_d_seq_no_gaps: as <i>germline_d_seq</i> without IMGT gaps.
+            <br></li><li>germline_j_seq: nucleotide sequence of the J clonal germline sequence.
+            <br></li><li>germline_j_seq_no_gaps: as <i>germline_j_seq</i> without IMGT gaps.
+            <br></li><li>germline_alignment_(full | d_mask | v_region)_no_gaps: as <i>germline_alignment_(full | d_mask | v_region)</i> column without IMGT gaps.
+            <br></li><li>germline_alignment_(full | d_mask | v_region)_aa_no_gaps: translation of the <i>germline_alignment_(full | d_mask | v_region)_no_gaps</i> column into amino-acids (by `Biostrings::translate()`).
             <br></li><li>mu_count_*_r: number of replacement mutations in the region indicated by the <code>clone_mut_regionDefinition</code> parameter of the <i>nextflow.config</i> file. See details <a href="https://shazam.readthedocs.io/en/stable/topics/observedMutations/#value">here</a>).
             <br></li><li>mu_count_*_s: number of silent mutations.
             <br></li><li>mu_count: number of replacement and silent mutations (sum of the previous columns).
@@ -580,10 +604,19 @@ If the text is cut in the table, reload the page or change the width of the wind
     </tr>
     <tr>
         <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            - non_clone_assigned_sequence.tsv
+            - failed_clone_assigned_sequence.tsv
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Productive sequences that failed to be assigned to a clone ID by <code>DefineClones.py</code> (empty file if all the sequences are assigned). See details  <a href="https://changeo.readthedocs.io/en/latest/methods/clustering.html">here</a> but failure reasons are not explained. 
+        </td>
+    </tr>
+    <tr>
+    <tr>
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            - failed_clonal_germline_sequence.tsv
+        </th>
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            Productive sequences with clone ID but that failed to get the closest clonal germline sequence by <code>CreateGermlines.py</code> (empty file if all the sequences get a clonal germline sequence). See details  <a href="https://changeo.readthedocs.io/en/latest/examples/germlines.html">here</a>Failure could come from alleles called by the aligner that are missing from the reference set. 
         </td>
     </tr>
     <tr>

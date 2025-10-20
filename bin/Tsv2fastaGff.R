@@ -97,6 +97,7 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
         "path", 
         "Name", 
         "Seq",
+        "clone_germline_kind", 
         "clone_nb_seq",
         "cute", 
         "seq_kind", 
@@ -138,8 +139,9 @@ param.list <- c(
     if(run.way == "SCRIPT"){"command"}, 
     "path", 
     "Name", 
-    "Seq",
-    "clone_nb_seq",
+    "Seq", 
+    "clone_germline_kind", 
+    "clone_nb_seq", 
     "cute", 
     "seq_kind", 
     "log"
@@ -270,6 +272,7 @@ ee <- expression(arg.check <- c(arg.check, tempo$problem) , text.check <- c(text
 tempo <- fun_check(data = path, class = "vector", typeof = "character", length = 1) ; eval(ee)
 tempo <- fun_check(data = Name, class = "vector", typeof = "character", length = 1) ; eval(ee)
 tempo <- fun_check(data = Seq, options = c("query", "igblast_full", "trimmed", "fwr1", "fwr2", "fwr3", "fwr4", "cdr1", "cdr2", "cdr3", "junction", "sequence_alignment", "v_sequence_alignment", "d_sequence_alignment", "j_sequence_alignment", "c_sequence_alignment", "germline_alignment", "v_germline_alignment", "d_germline_alignment", "j_germline_alignment", "c_germline_alignment")) ; eval(ee)
+tempo <- fun_check(data = clone_germline_kind, options = c("full","dmask","vonly")) ; eval(ee)
 tempo <- fun_check(data = clone_nb_seq, class = "vector", typeof = "integer", length = 1, double.as.integer.allowed = TRUE) ; eval(ee)
 tempo <- fun_check(data = seq_kind, options = c("ALL", "CLONE")) ; eval(ee)
 # cute already tested above
@@ -301,10 +304,12 @@ if(Seq == "j_germline_alignment"){Seq2 <- c("j_germline_alignment", "j_germline_
 if(Seq == "c_germline_alignment"){Seq2 <- c("c_germline_alignment", "c_germline_alignment_aa")}
 
 Germline <- NULL
-if(base::grepl(x = Seq, pattern = "sequence_alignment") & seq_kind == "CLONE" ){
-    Germline <- base::sub(x = Seq2, pattern = "sequence", replacement = "germline")
-}else if(Seq %in% c("query", "igblast_full", "trimmed") & seq_kind == "CLONE"){
-    Germline <- c("germline_alignment", "germline_alignment_aa")
+if(clone_germline_kind == "dmask" & seq_kind == "CLONE" ){
+    Germline <- c("germline_alignment_d_mask", "germline_alignment_d_mask_aa_no_gaps")
+}else if(clone_germline_kind == "vonly" & seq_kind == "CLONE" ){
+    Germline <- c("germline_alignment_v_region", "germline_alignment_v_region_aa_no_gaps")
+}else if(clone_germline_kind == "full" & seq_kind == "CLONE" ){
+    Germline <- c("germline_alignment_full", "germline_alignment_full_aa_no_gaps")
 }
 # end argument primary checking
 # second round of checking and data preparation
@@ -313,7 +318,12 @@ if(base::grepl(x = Seq, pattern = "sequence_alignment") & seq_kind == "CLONE" ){
 # management of NULL arguments
 tempo.arg <-c(
     "path", 
+    "Name", 
+    "Seq",
+    "clone_germline_kind", 
+    "clone_nb_seq",
     "cute", 
+    "seq_kind", 
     "log"
 )
 tempo.log <- sapply(lapply(tempo.arg, FUN = get, env = sys.nframe(), inherit = FALSE), FUN = is.null)
@@ -325,7 +335,11 @@ if(any(tempo.log) == TRUE){# normally no NA with is.null()
 # management of ""
 tempo.arg <-c(
     "path", 
+    "Name", 
+    "Seq",
+    "clone_germline_kind", 
     "cute", 
+    "seq_kind", 
     "log"
 )
 tempo.log <- sapply(lapply(tempo.arg, FUN = get, env = sys.nframe(), inherit = FALSE), FUN = function(x){any(x == "")})
@@ -345,8 +359,6 @@ warn <- NULL
 # other checkings
 
 fun_source_test(path = path, script = script)
-
-
 
 # end other checkings
 # reserved word checking
