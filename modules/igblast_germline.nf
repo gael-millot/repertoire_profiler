@@ -38,7 +38,7 @@ process Igblast_germline_coords {
         args <- commandArgs(trailingOnly = TRUE)  # recover arguments written after the call of the Rscript
         coords <- read.table(args[1], sep = "\\t", header = TRUE)
         tsv <- read.table(args[2], sep = "\\t", header = TRUE)
-        col_names <- c("sequence_alignment", "sequence_alignment_aa", "v_sequence_start", "v_sequence_end", "d_sequence_start", "d_sequence_end", "j_sequence_start", "j_sequence_end", "c_sequence_start", "c_sequence_end", "fwr1_start", "fwr1_end", "cdr1_start", "cdr1_end", "fwr2_start", "fwr2_end", "cdr2_start", "cdr2_end", "fwr3_start", "fwr3_end", "fwr4_start", "fwr4_end", "cdr3_start", "cdr3_end")
+        col_names <- c("sequence_alignment", "sequence_alignment_aa", "v_sequence_start", "v_sequence_end", "d_sequence_start", "d_sequence_end", "j_sequence_start", "j_sequence_end", "c_sequence_start", "c_sequence_end", "fwr1_start", "fwr1_end", "cdr1_start", "cdr1_end", "fwr2_start", "fwr2_end", "cdr2_start", "cdr2_end", "fwr3_start", "fwr3_end", "cdr3_start", "cdr3_end", "fwr4_start", "fwr4_end")
         db <- coords[, match(col_names, names(coords))]
         names(db) <- sub(x = names(db), pattern = "sequence_", "")
         names(db) <- paste0("clonal_germline_", names(db))

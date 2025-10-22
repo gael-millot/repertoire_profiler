@@ -787,7 +787,7 @@ process Closest_germline {
         Rscript -e '
             args = commandArgs(trailingOnly=TRUE)
             db <- read.table(args[1], sep = "\\t", header = TRUE)
-            write.table(db[, c("sequence_id", "germline_alignment")], file = "tempo.tsv", row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t") # germline_alignment column data
+            write.table(db[, c("sequence_id", "germline_alignment", "clone_id")], file = "tempo.tsv", row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t") # germline_alignment column data
         ' \$FILENAME |& tee -a Closest_germline.log
     fi
     CreateGermlines.py -d \$FILENAME -g "${clone_germline_kind}" --cloned -r \${VDJ_FILES} |& tee -a Closest_germline.log
@@ -804,10 +804,10 @@ process Closest_germline {
                 if( ! all(sort(db1\$sequence_id) == sort(db2\$sequence_id))){
                     stop(paste0("\\n\\n================\\n\\nERROR IN Closest_germline PROCESS.\\ndb1 and db2 DO NOT HAVE THE SAME NAMES IN THE sequence_id COLUMN.\\n\\n================\\n\\n"), call. = FALSE)
                 }else{
-                    db2 <- db2[match(db1\$sequence_id, db1\$sequence_id), ]
+                    db2 <- db2[match(db2\$sequence_id, db1\$sequence_id), ]
                 }
                 coord <- which(names(db1) == "germline_v_call")
-                tempo <- data.frame(db1[ , seq(1, coord - 1)], germline_alignment_full = db1\$germline_alignment, db1[ , seq(coord, length(db1))]) # add the iitial germline_alignment column data in the modified germline_alignment column
+                tempo <- data.frame(db1[1:(coord - 1)], germline_alignment_full = db1\$germline_alignment, db1[coord:length(db1)]) # add the initial germline_alignment column data in the modified germline_alignment column
                 tempo\$germline_alignment <- db2\$germline_alignment
                 write.table(tempo, file = args[1], row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
             ' *_germ-pass.tsv tempo.tsv |& tee -a Closest_germline.log
@@ -825,11 +825,19 @@ process Closest_germline {
                 if(length(unique(db[, germline_col_name])) != 1){
                     stop(paste0("\\n\\n================\\n\\nERROR IN Closest_germline PROCESS.\\nSEQUENCES ARE NOT IDENTICAL IN THE ", germline_col_name, " COLUMN:\\n", paste0(db[, germline_col_name], collapse = "\\n"), "\\n\\n================\\n\\n"), call. = FALSE)
                 }
+                # make fasta file
                 fasta <- file("clonal_germline_seq.fasta", "w")
                 writeLines(paste0(">clone_id_", db\$clone_id[1]), fasta) #first line taken because clonal germline seq are identical
                 writeLines(db[1, germline_col_name], fasta)
                 close(fasta)
-                # write.table(db[, c("sequence_id", germline_col_name)], file = "clonal_germline_seq.tsv", row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t") # germline_alignment column data
+                # end make fasta file
+                # move clone_id
+                clone_id <- db\$clone_id
+                db <- db[ , ! names(db) %in% "clone_id"] # remove clone_id column
+                pos <- which(names(db) == "c_gene")
+                db <- data.frame(db[1:pos], clone_id = clone_id, db[(pos + 1):length(names(db))]) # reposition clone_id
+                # end move clone_id
+                write.table(db, file = args[1], row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
             ' *_germ-pass.tsv |& tee -a Closest_germline.log
     else
         cp \$FILENAME failed_clonal_germline.tsv
@@ -938,8 +946,10 @@ process TranslateGermline {
         df[[tempo_name]] <- toString(germ_aa)
         file_base <- tools::file_path_sans_ext(basename(file_name))
         new_file_name <- paste0(file_base, "-trans_germ-pass.tsv")
+        # add controls
+        df <- data.frame(df, clonal_germline_align_identical = df[ , paste0(germline_col_name, "_no_gaps")] == df\$clonal_germline_alignment, clonal_germline_align_aa_identical = df[ , paste0(germline_col_name, "_aa_no_gaps")] == df\$clonal_germline_alignment_aa)
+        # end add controls
         write.table(df, file = paste0("./", new_file_name), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
-
     '|& tee -a TranslateGermline.log
     """
 

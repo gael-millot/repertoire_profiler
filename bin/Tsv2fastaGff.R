@@ -305,11 +305,11 @@ if(Seq == "c_germline_alignment"){Seq2 <- c("c_germline_alignment", "c_germline_
 
 Germline <- NULL
 if(clone_germline_kind == "dmask" & seq_kind == "CLONE" ){
-    Germline <- c("germline_alignment_d_mask", "germline_alignment_d_mask_aa_no_gaps")
+    Germline <- c("germline_alignment_d_mask_no_gaps", "germline_alignment_d_mask_aa_no_gaps")
 }else if(clone_germline_kind == "vonly" & seq_kind == "CLONE" ){
-    Germline <- c("germline_alignment_v_region", "germline_alignment_v_region_aa_no_gaps")
+    Germline <- c("germline_alignment_v_region_no_gaps", "germline_alignment_v_region_aa_no_gaps")
 }else if(clone_germline_kind == "full" & seq_kind == "CLONE" ){
-    Germline <- c("germline_alignment_full", "germline_alignment_full_aa_no_gaps")
+    Germline <- c("germline_alignment_full_no_gaps", "germline_alignment_full_aa_no_gaps")
 }
 # end argument primary checking
 # second round of checking and data preparation
