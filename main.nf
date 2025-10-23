@@ -179,17 +179,19 @@ process parseDb_filtering {
     if [[ -s ${db_pass_ch} ]]; then # -s means "exists and non empty". Thus, return FALSE is the file does not exists or is empty
         # ParseDb.py select -d ${db_pass_ch} -f productive -u TRUE T |& tee -a ParseDb_filtering.log
         ParseDb.py split -d ${db_pass_ch} -f productive |& tee -a ParseDb_filtering.log  # Used to create 2 files with content that depends of if the FALSE F or TRUE T value is found in the productive field (select command only creates a select file if values specifies in -u flag are found, in this case TRUE or T). If only F in the input file, _productive-T.tsv is not created
-        if [ -s *_productive-T.tsv ]; then
-            cp *_productive-T.tsv productive_seq_init.tsv |& tee -a ParseDb_filtering.log # can be empty file (only header)
-        elif [ -s *_productive-TRUE.tsv ]; then
-            cp *_productive-T.tsv productive_seq_init.tsv |& tee -a ParseDb_filtering.log # can be empty file (only header)
+        if [ -s \${FILE}_productive-T.tsv ]; then
+            cp \${FILE}_productive-T.tsv productive_seq_init.tsv |& tee -a ParseDb_filtering.log # can be empty file (only header)
+        elif [ -s \${FILE}_productive-TRUE.tsv ]; then
+            cp \${FILE}_productive-TRUE.tsv productive_seq_init.tsv |& tee -a ParseDb_filtering.log # can be empty file (only header)
         fi
-        if [ -s *_productive-F.tsv ]; then # see above for -s
-            cp *_productive-F.tsv failed_productive_seq.tsv |& tee -a ParseDb_filtering.log
-        elif [ -s *_productive-FALSE.tsv ]; then # if not TRUE or T, the value in the "productive" field can be either F or FALSE
-            cp *_productive-FALSE.tsv failed_productive_seq.tsv |& tee -a ParseDb_filtering.log
+        if [ -s \${FILE}_productive-F.tsv ]; then # see above for -s
+            cp \${FILE}_productive-F.tsv failed_productive_seq.tsv |& tee -a ParseDb_filtering.log
+        elif [ -s \${FILE}_productive-FALSE.tsv ]; then # if not TRUE or T, the value in the "productive" field can be either F or FALSE
+            cp \${FILE}_productive-FALSE.tsv failed_productive_seq.tsv |& tee -a ParseDb_filtering.log
+        elif [ -s \${FILE}_productive-NA.tsv ]; then # if not TRUE or T, the value in the "productive" field can be either F or FALSE
+            cp \${FILE}_productive-NA.tsv failed_productive_seq.tsv |& tee -a ParseDb_filtering.log
         else
-            echo -e "\n\nEMPTY failed_productive_seq.tsv FILE RETURNED FOLLOWING THE parseDb_filtering PROCESS\n\n" |& tee -a ParseDb_filtering.log
+            echo -e "\\n\\nEMPTY failed_productive_seq.tsv FILE RETURNED FOLLOWING THE parseDb_filtering PROCESS\\n\\n" |& tee -a ParseDb_filtering.log
             # echo -n "" | cat > failed_productive_seq.tsv
             head -1 ${db_pass_ch} | cat > failed_productive_seq.tsv # only header in the file
         fi
@@ -622,7 +624,7 @@ process histogram_assembly {
 process clone_assignment {
     label 'immcantation'
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
-    publishDir path: "${out_path}/tsv", mode: 'copy', pattern: "failed_clone_assigned_sequence.tsv", overwrite: false
+    publishDir path: "${out_path}/tsv", mode: 'copy', pattern: "failed_clone_assigned_seq.tsv", overwrite: false
     cache 'true'
 
     input:
@@ -636,7 +638,7 @@ process clone_assignment {
 
     output:
     path "*_clone-pass.tsv", emit: clone_ch
-    path "failed_clone_assigned_sequence.tsv", emit: failed_clone_ch
+    path "failed_clone_assigned_seq.tsv", emit: failed_clone_ch
     path "*.log"
 
     script:
@@ -644,46 +646,50 @@ process clone_assignment {
     #!/bin/bash -ue
     # set -o pipefail # inactivated because DefineClones.py returns error that are handled
     # if [[ -s ${productive_ch} ]]; then # see above for -s # no need anymore
-        DefineClones.py -d ${productive_ch} --act ${clone_strategy} --model ${clone_model} --norm ${clone_normalize} --dist ${clone_distance} --fail |& tee -a clone_assignment.log
-        Rscript -e '
-            args = commandArgs(trailingOnly=TRUE)
-            db <- read.table(args[1], sep = "\\t", header = TRUE)
-            if("${meta_file}" != "NULL" & "${meta_legend}" != "NULL" ){
-                tempo_log <- names(db) == tolower("${meta_legend}")
-                if(any(tempo_log, na.rm = TRUE)){
-                    names(db)[tempo_log] <- "${meta_legend}"
-                }
+    FILENAME=\$(basename -- ${productive_ch}) # recover a file name without path
+    FILE=\${FILENAME%.*} # file name without extension
+    DefineClones.py -d ${productive_ch} --act ${clone_strategy} --model ${clone_model} --norm ${clone_normalize} --dist ${clone_distance} --fail |& tee -a clone_assignment.log
+    shopt -s nullglob
+    files=(\${FILE}_clone-{pass,fail}.tsv) # expend the two possibilities but assign only the existing ones
+    cp -Lr "\${files[0]}" "tempo.tsv" # copy whatever failed or succeeded
+    Rscript -e '
+        options(warning.length = 8170)
+        args = commandArgs(trailingOnly=TRUE)
+        db <- read.table(args[1], sep = "\\t", header = TRUE)
+        productive <- read.table(args[2], sep = "\\t", header = TRUE)
+        # put back meta_legend column name as in productive_seq.tsv, beacause in lowercase
+        if("${meta_file}" != "NULL" & "${meta_legend}" != "NULL" ){
+            tempo_log <- names(db) == tolower("${meta_legend}")
+            if(any(tempo_log, na.rm = TRUE)){
+                names(db)[tempo_log] <- "${meta_legend}"
             }
-            write.table(db, file = paste0(args[1]), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
-        ' *_clone-pass.tsv
-        if [ -s *_clone-fail.tsv ]; then # see above for -s
-            cp *_clone-fail.tsv failed_clone_assigned_sequence.tsv |& tee -a clone_assignment.log
-            Rscript -e '
-                db <- read.table("./failed_clone_assigned_sequence.tsv", sep = "\\t", header = TRUE)
-                if("${meta_file}" != "NULL" & "${meta_legend}" != "NULL" ){
-                    tempo_log <- names(db) == tolower("${meta_legend}")
-                    if(any(tempo_log, na.rm = TRUE)){
-                        names(db)[tempo_log] <- "${meta_legend}"
-                    }
-                }
-                # Reposition the column starting with "initial_" to the second position if it exists
-                initial_col <- grep("^initial_", colnames(db))
-                if (length(initial_col) > 0) {
-                    db <- db[, c(1, initial_col, setdiff(seq_along(db), c(1, initial_col)))]
-                }
-                write.table(db, file = paste0("./failed_clone_assigned_sequence.tsv"), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
-            '
-        else
-            set -o pipefail
-            echo -e "\n\nNOTE: EMPTY failed_clone_assigned_sequence.tsv FILE RETURNED FOLLOWING THE clone_assignment PROCESS\n\n" |& tee -a clone_assignment.log
-            echo -n "" | cat > failed_clone_assigned_sequence.tsv
-        fi
-    # else
-        # set -o pipefail
-        # echo -e "\\n\\n========\\n\\nINTERNAL ERROR IN NEXTFLOW EXECUTION\\n\\nEMPTY FILE GENERATED BY THE data_assembly PROCESS\\nCHECK THE clone_assignment.log IN THE report FOLDER INSIDE THE OUTPUT FOLDER\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n"
-        # exit 1
-    # fi
-    
+        }
+        # end put back meta_legend column names as in productive_seq.tsv, beacause in lowercase
+        # reorder as in productive_seq.tsv
+        if( ! all(names(productive) %in% names(db))){
+            stop(paste0("\\n\\n================\\n\\nERROR IN clone_assignment PROCESS.\\nNAMES OF productive_seq.tsv SHOULD ALL BE IN THE OUTPUT .tsv FILE OF DefineClones.py.\\nNAMES OF productive_seq.tsv:\\n", sort(names(productive)), "\\nNAMES OF THE OUTPUT:\\n", sort(names(db)), "\\n\\n================\\n\\n"), call. = FALSE)
+        }else{
+            tempo_log <- names(db) %in% names(productive)
+            tempo_db1 <- db[tempo_log]
+            tempo_db2 <- db[ ! tempo_log]
+            tempo_db1 <- tempo_db1[ , match(names(productive), names(tempo_db1))] # reorder as in productive_seq.tsv
+            db2 <- data.frame(tempo_db1, tempo_db2)
+            write.table(db2, file = "tempo2.tsv", row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
+        }
+        # end reorder as in productive_seq.tsv
+    ' tempo.tsv ${productive_ch}
+    if [ -s \${FILE}_clone-fail.tsv ]; then # see above for -s
+        cp tempo2.tsv failed_clone_assigned_seq.tsv |& tee -a clone_assignment.log
+    elif [ -s \${FILE}_clone-pass.tsv ] ; then # see above for -s
+        cp -f tempo2.tsv \${FILE}_clone-pass.tsv |& tee -a clone_assignment.log # force overwriting
+        set -o pipefail
+        echo -e "\\n\\nNOTE: EMPTY failed_clone_assigned_seq.tsv FILE RETURNED FOLLOWING THE clone_assignment PROCESS\\n\\n" |& tee -a clone_assignment.log
+        echo -n "" | cat > failed_clone_assigned_seq.tsv
+    else
+        set -o pipefail
+        echo -e "\\n\\n========\\n\\nINTERNAL ERROR IN NEXTFLOW EXECUTION\\n\\nOUTPUT FILE OF DefineClones.py IN THE clone_assignment PROCESS SHOULT BE EITHER *_clone-pass.tsv OR *_clone-fail.tsv.\\nCHECK THE clone_assignment.log IN THE report FOLDER INSIDE THE OUTPUT FOLDER\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n"
+        exit 1
+    fi
     """
 }
 
@@ -2236,8 +2242,7 @@ workflow {
     )
     // clone_assignment.out.clone_ch.view()
 
-    nb_failed_clone = clone_assignment.out.failed_clone_ch.countLines() - 1
-    
+    nb_failed_clone = clone_assignment.out.failed_clone_ch.map { file -> file.countLines() == 0 ? 0 : file.countLines() - 1} // either failed_clone_assigned_seq.tsv is empty (no lines) or has a header to remove to count the lines
 
     split_by_clones(
         clone_assignment.out.clone_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE clone_assignment PROCESS\n\n========\n\n"}
@@ -2251,6 +2256,10 @@ workflow {
         igblast_variable_ref_files, 
         clone_germline_kind
     )
+    nb_failed_clone = Closest_germline.out.failed_clonal_germline_ch
+    .map { file -> file.countLines() == 0 ? 0 : file.countLines() - 1 }
+    .combine(nb_failed_clone)
+    .map { new_count, old_count -> new_count + old_count } // to add the two kind of failure
     Closest_germline.out.failed_clonal_germline_ch.collectFile(name: "failed_clonal_germline.tsv", skip: 1, keepHeader: true).subscribe{it -> it.copyTo("${out_path}/tsv")}
     Closest_germline.out.closest_log_ch.collectFile(name: "Closest_germline.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 

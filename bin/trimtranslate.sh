@@ -124,9 +124,13 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
         # This assumes sequence B appears exactly once in sequence A. If there are multiple matches, it will use the last occurrence found.
         # Get sequence B as string
         NAME=$(cat NAME.txt) # recover the name of the line
-        SEQ_B=$(seqkit seq -s ./productive_nuc/align/"${NAME}"_align.fasta) 
+        SEQ_B=$(seqkit seq -s ./productive_nuc/align/"${NAME}"_align.fasta | sed 's/-//g') #call seq and remove ---
         # Find start position of B in A
         START_POS=$(seqkit locate -p "$SEQ_B" ./productive_nuc/query/"${NAME}"_query.fasta | tail -n 1 | cut -f5) # determine if trimming has been done by igblast when returning aligned VDJ seq
+        if ! [[ "$START_POS" =~ ^-?[0-9]+$ ]]; then
+            print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nSTART_POS MUST BE AN INTEGER OF POSITION.\nHERE IT IS:\n"$START_POS"\n\n========\n\n"
+            exit 1
+        fi
         # Trim A from the start position onwards
         if (( $START_POS > 1 )) ; then
             TRIM_LOG=TRUE

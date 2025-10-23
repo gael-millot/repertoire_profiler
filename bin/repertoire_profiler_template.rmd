@@ -118,7 +118,7 @@ Total: ```r params$nb_seq_aligned + params$nb_seq_not_aligned```
 
 Success ratio: ```r base::round(params$nb_seq_aligned / (params$nb_seq_aligned + params$nb_seq_not_aligned), 2)```
 
-See the passed_igblast_seq.tsv and the passed_igblast_seq.tsv files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output). 
+See the passed_igblast_seq.tsv and the failed_igblast_seq.tsv files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output). 
 
 <br>
 
@@ -138,11 +138,11 @@ kable(df, format = "markdown", row.names = FALSE)
 </details>
 <br>
 Number of unproductive sequences: ```r params$nb_unproductive``` &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-<span style="color:green">*unproductive_seq.tsv file in the [tsv](./tsv) folder*</span>
+<span style="color:green">*failed_productive_seq.tsv file in the [tsv](./tsv) folder*</span>
 ```{r, echo=FALSE, results='asis'}
-df <- read_tsv_with_dummy("tsv/unproductive_seq.tsv")
+df <- read_tsv_with_dummy("tsv/failed_productive_seq.tsv")
 if (is.data.frame(df) && attr(df, "truncated")) {
-  cat("\n**(Note: Table truncated to 10 rows. Full file available in the unproductive_seq.tsv file.)**\n\n")
+  cat("\n**(Note: Table truncated to 10 rows. Full file available in the failed_productive_seq.tsv file.)**\n\n")
 }
 kable(df, format = "markdown", row.names = FALSE)
 ```
@@ -151,7 +151,7 @@ kable(df, format = "markdown", row.names = FALSE)
 
 Productiveness ratio: ```r base::round(params$nb_productive / (params$nb_productive + params$nb_unproductive), 2)```
 
-See the productive_seq.tsv and the unproductive_seq.tsv files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output).
+See the productive_seq.tsv and the failed_productive_seq.tsv files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output).
 
 <br>
 
@@ -160,7 +160,7 @@ See the productive_seq.tsv and the unproductive_seq.tsv files in the [tsv](./tsv
 
 <br>
 
-Compilation of the [productive_seq.tsv](./tsv) file (and also of the [germ_tree_seq.tsv](./tsv) file for the donut plots).
+Compilation of the [productive_seq.tsv](./tsv) file (and also of the [clone_assigned_seq.tsv](./tsv) file for the donut plots).
 
 <br>
 
@@ -231,11 +231,11 @@ nb_failed_clone <- ifelse(params$nb_failed_clone > 0, params$nb_failed_clone, 0)
 ```
 <br>
 Number of failed clone-assigned sequences: ```r nb_failed_clone```&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-<span style="color:green">*non_clone_assigned_sequence.tsv file in the [tsv](./tsv) folder*</span>
+<span style="color:green">*failed_assigned_sequence.tsv file in the [tsv](./tsv) folder*</span>
 ```{r, echo=FALSE, results='asis'}
-df <- read_tsv_with_dummy("tsv/non_clone_assigned_sequence.tsv")
+df <- read_tsv_with_dummy("tsv/failed_clone_assigned_seq.tsv")
 if (is.data.frame(df) && attr(df, "truncated")) {
-  cat("\n**(Note: Table truncated to 10 rows. Full file available in the non_clone_assigned_sequence.tsv file.)**\n\n")
+  cat("\n**(Note: Table truncated to 10 rows. Full file available in the failed_clone_assigned_seq.tsv file.)**\n\n")
 }
 kable(df, format = "markdown", row.names = FALSE)
 ```
@@ -243,7 +243,7 @@ kable(df, format = "markdown", row.names = FALSE)
 <br>
 Passing ratio: ```r base::round(params$nb_clone_assigned / (params$nb_clone_assigned + nb_failed_clone), 2)```
 
-See the clone_assigned_seq.tsv and the non_clone_assigned_sequence.tsv (sequences from the productive file that fail to be clone-assigned by `DefineClones.py`) files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output).
+See the clone_assigned_seq.tsv and the failed_clone_assigned_seq.tsv (sequences from the productive file that fail to be clone-assigned by `DefineClones.py`) files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output).
 
 <br>
 Number of sequences per clone ID: &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
