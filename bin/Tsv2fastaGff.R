@@ -70,7 +70,7 @@ script <- "Tsv2fastaGff"
 # path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/b6/fe498b4e1e2a9cbdaa89cb9685d6cc/10_productive_seq_clone-pass_germ-pass_germ-seq-trans_germ-pass_shm-pass.tsv"      # tsv file containing data. needs to have all columns in Name, Seq and Germline
 # Name <- "sequence_id"                # name of the column containing the sequence ids
 # Seq <- "trimmed"        # name of the columns containing the sequences to put in the fasta file (can be a single string or several strings seperated by "," if several columns are needed. the fastas will then be created in different folders)
-# clone_nb_seq <- 3                    # Minimum number of rows in the tsv file. The program expects this to be respected, otherwise raises an error.
+# align_clone_nb <- 3                    # Minimum number of rows in the tsv file. The program expects this to be respected, otherwise raises an error.
 # cute <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/bin/cute_little_R_functions_v12.8.R"
 # seq_kind <- "CLONE"
 # log <- "Tsv2fastaGff.log"
@@ -98,7 +98,7 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
         "Name", 
         "Seq",
         "clone_germline_kind", 
-        "clone_nb_seq",
+        "align_clone_nb",
         "cute", 
         "seq_kind", 
         "log"
@@ -141,7 +141,7 @@ param.list <- c(
     "Name", 
     "Seq", 
     "clone_germline_kind", 
-    "clone_nb_seq", 
+    "align_clone_nb", 
     "cute", 
     "seq_kind", 
     "log"
@@ -161,7 +161,7 @@ param.ini.settings <- character(length = length(param.list))
 for(i in 1:length(param.list)){
     param.ini.settings[i] <- paste0("\n", param.list[i], paste0(rep(" ", space.add[i]), collapse = ""), paste0(get(param.list[i]), collapse = ",")) # no env = sys.nframe(), inherit = FALSE in get() because look for function in the classical scope
 }
-clone_nb_seq <- as.numeric(clone_nb_seq) # numeric string already checked by nextflow
+align_clone_nb <- as.numeric(align_clone_nb) # numeric string already checked by nextflow
 
 
 ################################ End Recording of the initial parameters
@@ -273,7 +273,7 @@ tempo <- fun_check(data = path, class = "vector", typeof = "character", length =
 tempo <- fun_check(data = Name, class = "vector", typeof = "character", length = 1) ; eval(ee)
 tempo <- fun_check(data = Seq, options = c("query", "igblast_full", "trimmed", "fwr1", "fwr2", "fwr3", "fwr4", "cdr1", "cdr2", "cdr3", "junction", "sequence_alignment", "v_sequence_alignment", "d_sequence_alignment", "j_sequence_alignment", "c_sequence_alignment", "germline_alignment", "v_germline_alignment", "d_germline_alignment", "j_germline_alignment", "c_germline_alignment")) ; eval(ee)
 tempo <- fun_check(data = clone_germline_kind, options = c("full","dmask","vonly")) ; eval(ee)
-tempo <- fun_check(data = clone_nb_seq, class = "vector", typeof = "integer", length = 1, double.as.integer.allowed = TRUE) ; eval(ee)
+tempo <- fun_check(data = align_clone_nb, class = "vector", typeof = "integer", length = 1, double.as.integer.allowed = TRUE) ; eval(ee)
 tempo <- fun_check(data = seq_kind, options = c("ALL", "CLONE")) ; eval(ee)
 # cute already tested above
 tempo <- fun_check(data = log, class = "vector", typeof = "character", length = 1) ; eval(ee)
@@ -321,7 +321,7 @@ tempo.arg <-c(
     "Name", 
     "Seq",
     "clone_germline_kind", 
-    "clone_nb_seq",
+    "align_clone_nb",
     "cute", 
     "seq_kind", 
     "log"
@@ -447,9 +447,9 @@ multiple_j_genes <- FALSE
 for(i0 in Seq2){
     count = count + 1
     tempo.log <- is.na(obs[ , i0]) | obs[ , i0] == ""
-    if(sum(!tempo.log, na.rm = TRUE) >= clone_nb_seq){
-        # Only create fasta files with at least <clone_nb_seq> sequences (Minimun number of non-identical sequences per clonal group for tree plotting)
-        # NB : clone_nb_seq is defined in nextflow.config
+    if(sum(!tempo.log, na.rm = TRUE) >= align_clone_nb){
+        # Only create fasta files with at least <align_clone_nb> sequences (Minimun number of non-identical sequences per clonal group for tree plotting)
+        # NB : align_clone_nb is defined in nextflow.config
         if(any(tempo.log)){
             tempo.warn <- paste0("IMPORTED FILE:\n", path, "\nHAS ", sum(tempo.log, na.rm = TRUE), " AMONG ", nrow(obs), " EMPTY SEQUENCES (NA OR \"\") IN THE ", i0, " COLUMN IN LINES:\n", paste(which(tempo.log), collapse = "\n"))
             cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
@@ -573,7 +573,7 @@ for(i0 in Seq2){
             }
         }
     } else {
-        stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nNO FASTA FILE CREATED BECAUSE THE IMPORTED FILE:\n", path, "\nHAS MORE THAN ", clone_nb_seq, " EMPTY SEQUENCES (NA OR \"\") IN THE ", i0, " COLUMN\n\n================\n\n"))
+        stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nNO FASTA FILE CREATED BECAUSE THE IMPORTED FILE:\n", path, "\nHAS LESS THAN ", align_clone_nb, " SEQUENCES (TOO MUCH NA OR \"\") IN THE ", i0, " COLUMN\n\n================\n\n"))
     }
 
 }

@@ -112,19 +112,20 @@ Number of initial input sequences: ```r params$nb_input```
 
 
 Succes number of sequences: ```r params$nb_seq_aligned```
+
 Failed number of sequences: ```r params$nb_seq_not_aligned```
 
 Total: ```r params$nb_seq_aligned + params$nb_seq_not_aligned```
 
 Success ratio: ```r base::round(params$nb_seq_aligned / (params$nb_seq_aligned + params$nb_seq_not_aligned), 2)```
 
-See the passed_igblast_seq.tsv and the failed_igblast_seq.tsv files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output). 
+See the igblast_seq.tsv and the failed_igblast_seq.tsv files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output). 
 
 <br>
 
 ### Productive sequences
 
-**Productive sequences** are sequences with:<br><ul><li>an open reading frame (start and stop codon).<br></li><li>no defect in the start codon, splicing sites or regulatory elements.<br></li><li>no internal stop codons.<br></li><li>in-frame junction between regions.<br></ul>
+**Productive sequences** are sequences with the following properties in their VDJ region:<br><ul><li>an open reading frame (start and stop codon).<br></li><li>no defect in the start codon, splicing sites or regulatory elements.<br></li><li>no internal stop codons.<br></li><li>in-frame junction between regions.<br></ul>
 
 Number of productive sequences: ```r params$nb_productive``` &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
 <span style="color:green">*productive_seq.tsv file in the [tsv](./tsv) folder*</span>
@@ -169,7 +170,7 @@ Compilation of the [productive_seq.tsv](./tsv) file (and also of the [clone_assi
 <br>
 Click on a figure to enlarge. Reclick to go back to the report.
 <br>
-Only V, J and C genes are displayed here. See the [donuts.pdf](./pdf/donuts.pdf) file in the [pdf](./pdf) folder for the complete results, including the alleles (different copies of a same gene) proportions.
+Only genes are displayed here. See the [donuts.pdf](./pdf/donuts.pdf) file in the [pdf](./pdf) folder for the complete results, including the alleles (different copies of a same gene) proportions.
 <br>
 Warning: only the first annotation is considered if several are presents in the v_call, j_call or c_call column of the productive_seq.tsv file.
 
@@ -193,7 +194,7 @@ Warning: only the first annotation is considered if several are presents in the 
 <br>
 Click on a figure to enlarge. Reclick to go back to the report.
 <br>
-Only V, J and C genes are displayed here. See the [gene_repertoire.pdf](./pdf/gene_repertoire.pdf) and [allele_repertoire.pdf](./pdf/allele_repertoire.pdf) files in the [pdf](./pdf) folder for the complete results, including the alleles (different copies of a same gene) counts.
+Only genes are displayed here. See the [gene_repertoire.pdf](./pdf/gene_repertoire.pdf) and [allele_repertoire.pdf](./pdf/allele_repertoire.pdf) files in the [pdf](./pdf) folder for the complete results, including the alleles (different copies of a same gene) counts.
 <br>
 Warning: only the first annotation is considered if several are presents in the v_call, j_call or c_call column of the productive_seq.tsv file.
 
@@ -214,7 +215,7 @@ Warning: only the first annotation is considered if several are presents in the 
 
 <br>
 
-**Clone-assigned sequences** are productive sequences with additionnal features:<br><ul><li>germline clustering (clone ID).<br></li><li>allele reannotation (germline_v_call and germline_j_call columns).<br></li><li>mutation load.<br></li><li>distance and sequence nickname (annotation from the metadata file) added.<br></ul> 
+**Clone-assigned sequences** are productive sequences with additionnal features:<br><ul><li>germline clustering (clone ID).<br></li><li>germline sequence inference.<br></li><li>mutation load.<br></ul> 
 
 Number of clone-assigned sequences: ```r params$nb_clone_assigned```&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
 <span style="color:green">*clone_assigned_seq.tsv file in the [tsv](./tsv) folder*</span>
@@ -230,20 +231,13 @@ kable(df, format = "markdown", row.names = FALSE)
 nb_failed_clone <- ifelse(params$nb_failed_clone > 0, params$nb_failed_clone, 0)
 ```
 <br>
-Number of failed clone-assigned sequences: ```r nb_failed_clone```&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-<span style="color:green">*failed_assigned_sequence.tsv file in the [tsv](./tsv) folder*</span>
-```{r, echo=FALSE, results='asis'}
-df <- read_tsv_with_dummy("tsv/failed_clone_assigned_seq.tsv")
-if (is.data.frame(df) && attr(df, "truncated")) {
-  cat("\n**(Note: Table truncated to 10 rows. Full file available in the failed_clone_assigned_seq.tsv file.)**\n\n")
-}
-kable(df, format = "markdown", row.names = FALSE)
-```
-</details>
+
+Number of failed clone-assigned or germline sequences: ```r nb_failed_clone```
+
 <br>
 Passing ratio: ```r base::round(params$nb_clone_assigned / (params$nb_clone_assigned + nb_failed_clone), 2)```
 
-See the clone_assigned_seq.tsv and the failed_clone_assigned_seq.tsv (sequences from the productive file that fail to be clone-assigned by `DefineClones.py`) files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output).
+See the clone_assigned_seq.tsv, as well as both the failed_clone_assigned_seq.tsv and the failed_clonal_germline.tsv (sequences from the productive file that fail to be clone-assigned by `DefineClones.py` and `CreateGermlines.py`) files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output).
 
 <br>
 Number of sequences per clone ID: &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
@@ -259,7 +253,7 @@ kable(df, format = "markdown", row.names = FALSE)
 <br>
 
 
-### Alignments of the variable regions for each clonal group
+### Sequence alignments
 
 <br>
 

@@ -662,9 +662,9 @@ if(nrow(obs) > 0){
 
 ################ saving plots
 
-ggplot2::ggsave(filename = paste0(col, "_", kind, "_donutchart.png"), plot = final.plot, device = "png", path = ".", width = 120, height = 120, units = "mm", dpi = 300)
-ggplot2::ggsave(filename = paste0(col, "_", kind, "_donutchart.svg"), plot = final.plot, device = "svg", path = ".", width = 120, height = 120, units = "mm", dpi = 300)
-ggplot2::ggsave(filename = paste0(col, "_", kind, "_donutchart.pdf"), plot = final.plot, device = "pdf", path = ".", width = 120, height = 120, units = "mm", dpi = 300)
+ggplot2::ggsave(filename = paste0(col, "_", kind, "_donutchart.png"), plot = final.plot, device = "png", path = ".", width = 120, height = 120, units = "mm", dpi = 300, bg = "white")
+ggplot2::ggsave(filename = paste0(col, "_", kind, "_donutchart.svg"), plot = final.plot, device = "svg", path = ".", width = 120, height = 120, units = "mm", dpi = 300, bg = "white")
+ggplot2::ggsave(filename = paste0(col, "_", kind, "_donutchart.pdf"), plot = final.plot, device = "pdf", path = ".", width = 120, height = 120, units = "mm", dpi = 300, bg = "white")
 
 
 ################ end saving plots

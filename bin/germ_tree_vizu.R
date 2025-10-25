@@ -960,17 +960,17 @@ if(length(tempo.list) == 0){
             dev.off()
             # saving plots
             plots[[i3]] <- final.plot # just for all_objects.RData
-            ggplot2::ggsave(filename = paste0("germ_tree_cloneID_", trees$clone_id[i3], ".png"), plot = final.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-            ggplot2::ggsave(filename = paste0("germ_tree_cloneID_", trees$clone_id[i3], ".svg"), plot = final.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-            ggplot2::ggsave(filename = paste0("germ_tree_cloneID_", trees$clone_id[i3], ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+            ggplot2::ggsave(filename = paste0("germ_tree_cloneID_", trees$clone_id[i3], ".png"), plot = final.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300, bg = "white")
+            ggplot2::ggsave(filename = paste0("germ_tree_cloneID_", trees$clone_id[i3], ".svg"), plot = final.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300, bg = "white")
+            ggplot2::ggsave(filename = paste0("germ_tree_cloneID_", trees$clone_id[i3], ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300, bg = "white")
         }else if( ! is.null(final.no.plot)){
             pdf(NULL)
             final.no.plot <- suppressMessages(suppressWarnings(gridExtra::arrangeGrob(grobs = list(final.no.plot, legend.final), ncol=2, widths=c(1, legend.width), top = title.grob, left = " ", right = " "))) # , left = " ", right = " " : trick to add margins in the plot. padding =  unit(0.5, "inch") is for top margin above the title
             dev.off()
             # saving plots
-            ggplot2::ggsave(filename = paste0("germ_no_tree_cloneID_", trees$clone_id[i3], ".png"), plot = final.no.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-            ggplot2::ggsave(filename = paste0("germ_no_tree_cloneID_", trees$clone_id[i3], ".svg"), plot = final.no.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-            ggplot2::ggsave(filename = paste0("germ_no_tree_cloneID_", trees$clone_id[i3], ".pdf"), plot = final.no.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+            ggplot2::ggsave(filename = paste0("germ_no_tree_cloneID_", trees$clone_id[i3], ".png"), plot = final.no.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300, bg = "white")
+            ggplot2::ggsave(filename = paste0("germ_no_tree_cloneID_", trees$clone_id[i3], ".svg"), plot = final.no.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300, bg = "white")
+            ggplot2::ggsave(filename = paste0("germ_no_tree_cloneID_", trees$clone_id[i3], ".pdf"), plot = final.no.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300, bg = "white")
         }else{
             stop("\n\n========\n\nINTERNAL CODE ERROR 20 IN germ_tree_vizu.R FOR CLONE ID ", clone.id[[i3]], ":\n\nfinal.plot AND final.no.plot CANNOT BE BOTH NULL.\n\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n========\n\n")
         }
@@ -994,18 +994,18 @@ if(length(tempo.list) == 0){
         tempo <- qpdf::pdf_combine(input = list.files(path = ".", pattern = "^germ_tree_cloneID_.*pdf$"), output = "./germ_tree.pdf") # assignation to prevent a returned element
     }else{
         final.plot <- fun_gg_empty_graph(text = "NO GRAPH PLOTTED\nNO GRONAL GROUP WITH AT LEAST 3 SEQUENCES", text.size = 3)
-        ggplot2::ggsave(filename = paste0("germ_tree.png"), plot = final.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        ggplot2::ggsave(filename = paste0("germ_tree.svg"), plot = final.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        ggplot2::ggsave(filename = paste0("germ_tree.pdf"), plot = final.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = paste0("germ_tree.png"), plot = final.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300, bg = "white")
+        ggplot2::ggsave(filename = paste0("germ_tree.svg"), plot = final.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300, bg = "white")
+        ggplot2::ggsave(filename = paste0("germ_tree.pdf"), plot = final.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300, bg = "white")
     }
     if(length(list.files(path = ".", pattern = "^germ_no_tree_cloneID_.*pdf$")) > 0){
         # dowser::treesToPDF(plots, file = "trees.pdf", nrow=2, ncol=2)
         tempo <- qpdf::pdf_combine(input = list.files(path = ".", pattern = "^germ_no_tree_cloneID_.*pdf$"), output = "./germ_no_tree.pdf") # assignation to prevent a returned element
     }else{
         final.no.plot <- fun_gg_empty_graph(text = "NO GRAPH PLOTTED\nONLY GRONAL GROUPS WITH AT LEAST 3 SEQUENCES", text.size = 3)
-        ggplot2::ggsave(filename = paste0("germ_no_tree.png"), plot = final.no.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        ggplot2::ggsave(filename = paste0("germ_no_tree.svg"), plot = final.no.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-        ggplot2::ggsave(filename = paste0("germ_no_tree.pdf"), plot = final.no.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+        ggplot2::ggsave(filename = paste0("germ_no_tree.png"), plot = final.no.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300, bg = "white")
+        ggplot2::ggsave(filename = paste0("germ_no_tree.svg"), plot = final.no.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300, bg = "white")
+        ggplot2::ggsave(filename = paste0("germ_no_tree.pdf"), plot = final.no.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300, bg = "white")
     }
 }
 
