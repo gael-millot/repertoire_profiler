@@ -1172,8 +1172,8 @@ process  Mafft_align {
     """
     #!/bin/bash -ue
     set -o pipefail
-    mafft --auto ${fasta_nuc} > ${fasta_nuc.baseName}_aligned_nuc.fasta
-    mafft --auto ${fasta_aa} > ${fasta_aa.baseName}_aligned_aa.fasta
+    mafft --auto ${fasta_nuc} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_nuc.baseName}_aligned_nuc.fasta
+    mafft --auto ${fasta_aa} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_aa.baseName}_aligned_aa.fasta
     echo "" > Mafft_align.log
     """
 }

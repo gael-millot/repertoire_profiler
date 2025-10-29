@@ -671,7 +671,11 @@ for(i0 in align_seq2){
                             }
                         }
                         gff_rows[[length(gff_rows) + 1]] <- c(
-                            df[selected_index[i3], Name],
+                            if(seq_kind == "ALL"){
+                                df[selected_index[i3], Name]
+                            }else{
+                                germ_seq_name
+                            },
                             ".",
                             "gene",
                             start_coord, 
