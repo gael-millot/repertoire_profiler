@@ -532,7 +532,7 @@ for(i0 in align_seq2){
         }
         tempo.name <- paste0(seq_name, ".fasta")
         for(i1 in 1:nrow(df)) {
-            tempo.cat <- paste0(">", df[i1, Name], "\n", df[i1, i0], "\n")
+            tempo.cat <- paste0(">", df[i1, Name], "\n", gsub(x = df[i1, i0], pattern = "-", replacement = ""), "\n")
             cat(tempo.cat, file = file.path(dir_name, tempo.name), append = TRUE)
         }
 
@@ -551,7 +551,7 @@ for(i0 in align_seq2){
 
             # Choose the first matching germline by order in df (sorted by Name)
             selected_index <- which(df[[germ]] %in% most_frequent_germs)[1] # warning: also used in gff
-            selected_germline_seq <- df[selected_index, germ]
+            selected_germline_seq <- gsub(x = df[selected_index, germ], pattern = "-", replacement = "")
 
             # Get cleaned v_gene and j_gene values for the chosen germline row
             germ_v_gene <- gsub(",", "-", df[selected_index, "germline_v_gene"])

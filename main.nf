@@ -1079,7 +1079,6 @@ process Tsv2fasta_gff {
 //              heavy_chain is TRUE if the input files are of heavy chains, and it is FALSE if the input files are light chains
 process Abalign_align_aa {
     label 'abalign'
-    publishDir path: "${out_path}/alignments/aa", mode: 'copy', pattern: "{*_aligned_aa.fasta}", overwrite: false
     
     input:
     tuple path(fasta_nuc), path(fasta_aa) // parallelization expected (by clonal groups over align_clone_nb sequences)
@@ -1087,7 +1086,7 @@ process Abalign_align_aa {
     val igblast_heavy_chain
     
     output:
-    tuple path(fasta_nuc), path("*_aligned_aa.fasta"), emit : aligned_aa_ch
+    tuple path(fasta_nuc), path(fasta_aa), path("*_align_aa.fasta"), emit : aligned_aa_ch
     path "Abalign_align_aa.log", emit: abalign_align_aa_log_ch
     
     script:
@@ -1125,13 +1124,52 @@ process Abalign_align_aa {
     /bin/Abalign_V2_Linux_Term/Abalign -z 0 -g -i ${fasta_aa} ${parms} ${fasta_aa.baseName}_align_aa.fasta -sp ${species}. |& tee -a Abalign_align_aa.log || true
     # -g   (IMGT Numbering scheme, default)
     # -lc length.txt -lg 1 # single length computed spanning the indicated regions. For instance, -lc length.txt -lg 1,2,3,4,5,6,7 returns a single length
-
-    # Abalign puts fasta headers in all caps. next script is meant to put those headers back to how they originally were
-    restore_headers.sh ${fasta_aa} ${fasta_aa.baseName}_align_aa.fasta ${fasta_aa.baseName}_aligned_aa.fasta Abalign_align_aa.log
     """
 }
 
 
+// Abalign puts fasta headers in all caps. next script is meant to put those headers back to how they originally were
+process Abalign_rename {
+    label 'r_ext'
+    publishDir path: "${out_path}/alignments/aa", mode: 'copy', pattern: "{*_aligned_aa.fasta}", overwrite: false
+    
+    input:
+    tuple path(fasta_nuc), path(fasta_aa), path(fasta_aa_align) // parallelization expected (by clonal groups over align_clone_nb sequences)
+    
+    output:
+    tuple path(fasta_nuc), path("*_aligned_aa.fasta"), emit : renamed_aligned_aa_ch
+    path "Abalign_rename.log", emit: abalign_rename_log_ch
+    
+    script:
+    """
+    #!/bin/bash -ue
+    set -o pipefail
+    Rscript -e '
+        options(warning.length = 8170)
+        args = commandArgs(trailingOnly=TRUE)
+        df_ini <- readLines(args[1])
+        df_align <- readLines(args[2])
+        ini_header_pos <- which(grepl(x = df_ini, pattern = "^>"))
+        align_header_pos <- which(grepl(x = df_align, pattern = "^>"))
+        if( ! all((ini_header_pos + 1) %% 2 == 0)){
+            stop(paste0("\\n\\n========\\n\\nERROR IN Abalign_rename PROCESS\\n\\nHEADER POSITIONS CANNOT BE ODDS ONLY.\\nHERE THEY ARE:\\n", ini_header_pos, "\\n\\n========\\n\\n"), call. = FALSE)
+        }
+        if( ! all((align_header_pos + 1) %% 2 == 0)){
+            stop(paste0("\\n\\n========\\n\\nERROR IN Abalign_rename PROCESS\\n\\nHEADER POSITIONS CANNOT BE ODDS ONLY.\\nHERE THEY ARE:\\n", align_header_pos, "\\n\\n========\\n\\n"), call. = FALSE)
+        }
+        df_ini_low <- tolower(df_ini)
+        for(i2 in align_header_pos){
+            tempo_header_align_low <- tolower(df_align[i2])
+            tempo_log <- df_ini_low %in% tempo_header_align_low
+            if(sum(tempo_log) != 1){
+                stop(paste0("\\n\\n========\\n\\nERROR IN Abalign_rename PROCESS\\n\\ntempo_header_align_low MUST EXIST IN df_ini_low.\\ntempo_header_align_low:\\n", tempo_header_align_low, "\\ndf_ini_low:\\n", df_ini_low, "\\n\\n========\\n\\n"), call. = FALSE)
+            }
+            df_align[i2] <- df_ini[tempo_log]
+        }
+        writeLines(df_align, con = "${fasta_aa.baseName}_aligned_aa.fasta")
+    ' ${fasta_aa} ${fasta_aa.baseName}_align_aa.fasta |& tee -a Abalign_rename.log
+    """
+}
 
 
 // This process aligns the nucleotidic fasta files by transfering amino-acidic alignments onto the nucleotidic ones
@@ -1152,6 +1190,7 @@ process Abalign_align_nuc {
     set -o pipefail
     FILENAME=\$(basename -- ${fasta_nuc}) # recover a file name without path
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a Abalign_align_nuc.log
+
     goalign codonalign -i ${aligned_aa} -f ${fasta_nuc} -o ${fasta_nuc.baseName}_aligned_nuc.fasta |& tee -a Abalign_align_nuc.log
     """
 }
@@ -1632,7 +1671,7 @@ workflow {
 
     //////// Checks
     //// check of the bin folder
-    tested_files_bin = ["circos.R", "circos_data_prep.R", "cute_little_R_functions_v12.8.R", "defineGroups.pl", "donut.R", "fields_not_kept.txt", "germ_tree_vizu.R", "GermlineSequences.py", "get_germ_tree.R", "histogram.R", "parse_coordinates.R", "repertoire.R", "repertoire_profiler_template.rmd", "restore_headers.sh", "trimtranslate.sh", "Tsv2fastaGff.R"]
+    tested_files_bin = ["circos.R", "circos_data_prep.R", "cute_little_R_functions_v12.8.R", "defineGroups.pl", "donut.R", "fields_not_kept.txt", "germ_tree_vizu.R", "GermlineSequences.py", "get_germ_tree.R", "histogram.R", "parse_coordinates.R", "repertoire.R", "repertoire_profiler_template.rmd", "trimtranslate.sh", "Tsv2fastaGff.R"]
     for(i1 in tested_files_bin){
         if( ! (file("${projectDir}/bin/${i1}").exists()) ){
             error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE ${i1} FILE MUST BE PRESENT IN THE ./bin FOLDER, WHERE THE main.nf file IS PRESENT\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
@@ -2408,9 +2447,15 @@ workflow {
             igblast_heavy_chain
         )
         Abalign_align_aa.out.abalign_align_aa_log_ch.collectFile(name: "Abalign_align_aa.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+
+        Abalign_rename(
+            Abalign_align_aa.out.aligned_aa_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Abalign_align_aa PROCESS\n\n========\n\n"}
+        )
+        Abalign_rename.out.abalign_rename_log_ch.collectFile(name: "Abalign_rename.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+
         // aligned_aa_only_ch = Abalign_align_aa.out.aligned_aa_ch.map { x, y, z -> y }
         Abalign_align_nuc(
-            Abalign_align_aa.out.aligned_aa_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Abalign_align_aa PROCESS\n\n========\n\n"}
+            Abalign_rename.out.renamed_aligned_aa_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Abalign_align_aa PROCESS\n\n========\n\n"}
         )
         align_nuc_ch = Abalign_align_nuc.out.aligned_all_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Abalign_align_nuc PROCESS\n\n========\n\n"}.map{ x, y -> x }
         align_aa_ch = Abalign_align_nuc.out.aligned_all_ch.map{ x, y -> y }
