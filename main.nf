@@ -1138,6 +1138,7 @@ process Abalign_rename {
     
     output:
     tuple path(fasta_nuc), path("*_aligned_aa.fasta"), emit : renamed_aligned_aa_ch
+    path "*_failed_abalign_align.tsv", emit: failed_abalign_align_ch
     path "Abalign_rename.log", emit: abalign_rename_log_ch
     
     script:
@@ -1152,12 +1153,21 @@ process Abalign_rename {
         ini_header_pos <- which(grepl(x = df_ini, pattern = "^>"))
         align_header_pos <- which(grepl(x = df_align, pattern = "^>"))
         if( ! all((ini_header_pos + 1) %% 2 == 0)){
-            stop(paste0("\\n\\n========\\n\\nERROR IN Abalign_rename PROCESS\\n\\nHEADER POSITIONS CANNOT BE ODDS ONLY.\\nHERE THEY ARE:\\n", ini_header_pos, "\\n\\n========\\n\\n"), call. = FALSE)
+            stop(paste0("\\n\\n========\\n\\nERROR IN Abalign_rename PROCESS\\n\\nHEADER POSITIONS CANNOT BE EVEN NUMBERS.\\nHERE THEY ARE:\\n", ini_header_pos, "\\n\\n========\\n\\n"), call. = FALSE)
         }
         if( ! all((align_header_pos + 1) %% 2 == 0)){
-            stop(paste0("\\n\\n========\\n\\nERROR IN Abalign_rename PROCESS\\n\\nHEADER POSITIONS CANNOT BE ODDS ONLY.\\nHERE THEY ARE:\\n", align_header_pos, "\\n\\n========\\n\\n"), call. = FALSE)
+            stop(paste0("\\n\\n========\\n\\nERROR IN Abalign_rename PROCESS\\n\\nHEADER POSITIONS CANNOT BE EVEN NUMBERS.\\nHERE THEY ARE:\\n", align_header_pos, "\\n\\n========\\n\\n"), call. = FALSE)
         }
+        failed_abalign_align <- c("fasta_name\\theader")
         df_ini_low <- tolower(df_ini)
+        df_align_low <- tolower(df_align)
+        tempo_log <-  ! df_ini_low[ini_header_pos] %in% df_align_low[align_header_pos]
+        if(any(tempo_log)){
+            tempo_txt <- paste0(paste0("${fasta_aa.baseName}", "\\t", sub(x = df_ini[ini_header_pos][tempo_log], pattern = "^>", replacement = "")), collapse = "\\n")
+            print(paste0("\\n\\nWARNING: ALIGNMENT FAILED FOR ", tempo_txt, "\\n\\n"))
+            failed_abalign_align <- paste0("fasta_name\\theader\\n", paste0(tempo_txt, collapse = "\\n"))
+        }
+        writeLines(failed_abalign_align, con = "${fasta_aa.baseName}_failed_abalign_align.tsv")
         for(i2 in align_header_pos){
             tempo_header_align_low <- tolower(df_align[i2])
             tempo_log <- df_ini_low %in% tempo_header_align_low
@@ -2451,6 +2461,7 @@ workflow {
         Abalign_rename(
             Abalign_align_aa.out.aligned_aa_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Abalign_align_aa PROCESS\n\n========\n\n"}
         )
+        Abalign_rename.out.failed_abalign_align_ch.collectFile(name: "failed_abalign_align.tsv", skip: 1, keepHeader: true).subscribe{it -> it.copyTo("${out_path}/tsv")}
         Abalign_rename.out.abalign_rename_log_ch.collectFile(name: "Abalign_rename.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
         // aligned_aa_only_ch = Abalign_align_aa.out.aligned_aa_ch.map { x, y, z -> y }
