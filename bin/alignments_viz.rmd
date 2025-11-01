@@ -1,0 +1,128 @@
+---
+title: 'Alignment visualization'
+date: ''
+output:
+  html_document:
+    toc: TRUE
+    toc_float: TRUE
+---
+
+\n\n<br><br>\n\n
+
+[comment]: <> (The following script is used to be able to zoom on images)
+
+<script>
+  function toggleFullscreen(img) {
+    if (img.classList.contains('fullscreen')) {
+      img.classList.remove('fullscreen');
+    } else {
+      document.querySelectorAll('.fullscreen').forEach(el => el.classList.remove('fullscreen'));
+      img.classList.add('fullscreen');
+    }
+  }
+</script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Images cliquables</title>
+    <style>
+        .image-container {
+            display: flex;
+            justify-content: space-around;
+            gap: 10px;
+        }
+        .image-container img {
+            width: 33%;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw !important;
+            height: 100vh !important;
+            object-fit: contain;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            transform: scale(1);
+        }
+    </style>
+</head>
+
+[comment]: <> (End of script to zoom on images)
+
+Several options are possible to visualize and save as picture:<br>
+<ul>
+<li>On the html file.<br>
+<ul>
+<li>Warning: use the horizontal scrollbar of the window + the right click of the mouse on the alignment to see the left part of the representation.</li><br>
+<li>To change the aligments colors ("Nucleotide" recommanded for nucleotides):<br><br><br>
+<div class="image-container">
+<img src="doc_images/color.png" onclick="toggleFullscreen(this)" />
+</div>
+</li><br>
+<li>To annotate the FR and CDR regions, use the .gff file in the same folder than the opened .html file:<br><br><br>
+<div class="image-container">
+<img src="doc_images/gff.png" onclick="toggleFullscreen(this)" />
+</div>
+</li><br>
+<li>Schematic illustration of these regions:<br><br><br>
+<div class="image-container">
+<img src="doc_images/FR_CDR.png" onclick="toggleFullscreen(this)" />
+</div>
+<div class="image-container">
+<img src="doc_images/collier_de_perle.png" onclick="toggleFullscreen(this)" />
+</div>
+</li><br>
+<li>Export as picture does not work well as part of the sequence not displayed are not exported (screenshot).</li><br><br><br>
+</ul>
+</li>
+<li>In [Jalview](https://www.jalview.org/download/).<br>
+<ul>
+<li>import the .fasta file with the same name as the .html file:<br><br><br>
+<div class="image-container">
+<img src="doc_images/jalview_open.png" onclick="toggleFullscreen(this)" />
+</div>
+</li><br>
+<li>Add colors:<br><br><br>
+<div class="image-container">
+<img src="doc_images/jalview_color.png" onclick="toggleFullscreen(this)" />
+</div>
+</li><br><li>Set a threshold to see the differences:<br><br><br>
+<div class="image-container">
+<img src="doc_images/jalview_diff.png" onclick="toggleFullscreen(this)" />
+</div>
+</li><br><li>A high threshold set all the columns with at least one difference in white:<br><br><br>
+<div class="image-container">
+<img src="doc_images/jalview_diff_threshold_high.png" onclick="toggleFullscreen(this)" />
+</div>
+</li><br><li>A low threshold set all the different minority events in each column in white:<br><br><br>
+<div class="image-container">
+<img src="doc_images/jalview_diff_threshold_low.png" onclick="toggleFullscreen(this)" />
+</div>
+</li><br><li>To export as .png for instance:<br><br><br>
+<div class="image-container">
+<img src="doc_images/jalview_export.png" onclick="toggleFullscreen(this)" />
+</div>
+</li>
+</ul>
+</li>
+</ul>
+<br><br><br>
+
+
+<style>
+  #TOC { max-width: 200px !important;}
+  /* .tocify-item { font-size: 100% !important; } */
+</style>
+
+<style> 
+  body .container, body .container-fluid { max-width: 90% !important; width: 100% !important; margin: 0 auto;  } 
+</style>
+
+<style>
+  .toc-content.col-xs-12.col-sm-8.col-md-9 { margin-left: 10px !important; padding-left: 0 !important; } 
+</style>
+
+<style> /* Force a fixated width, float left and add space on the right */ .col-xs-12.col-sm-4.col-md-3 { width: 250px !important; float: left; margin-right: 20px; /* reduce interior margin */ padding: 5px; } </style>

@@ -15,6 +15,7 @@ params:
   nb_failed_clone: -1
   constant_rep: ""
   vj_rep: ""
+  align_soft: "TRUE"
   itol_subscription: "TRUE"
 ---
 
@@ -215,7 +216,7 @@ Warning: only the first annotation is considered if several are presents in the 
 
 <br>
 
-**Clone-assigned sequences** are productive sequences with additionnal features:<br><ul><li>germline clustering (clone ID).<br></li><li>germline sequence inference.<br></li><li>mutation load.<br></ul> 
+**Clone-assigned sequences** are productive sequences with additionnal features:<br><ul><li>germline clustering (clone ID).<br></li><li>inference of clonal germline sequence (different from the sequence germline inference).<br></li><li>mutation load.<br></ul> 
 
 Number of clone-assigned sequences: ```r params$nb_clone_assigned```&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
 <span style="color:green">*clone_assigned_seq.tsv file in the [tsv](./tsv) folder*</span>
@@ -257,63 +258,39 @@ kable(df, format = "markdown", row.names = FALSE)
 
 <br>
 
-**Sequence Alignments** are available in the [alignments/nuc](./alignments/nuc) folder for nucleotide alignments and in the [alignments/aa](./alignments/aa) folder for amino acids alignments. Such alignments are performed using [Abalign](https://academic.oup.com/nar/article/51/W1/W17/7173809) (alignments guided by IMGT antibody numbering schemes).<br>Several options are possible to visualize and save as picture:<br>
-<ul>
-<li>Click on the html file to see the alignment.<br>
-<ul>
-<li>Warning: use the horizontal scrollbar of the window + the right click of the mouse on the alignment to see the left part of the representation.</li><br>
-<li>To change the aligments colors ("Nucleotide" recommanded for nucleotides):<br><br><br>
-<div class="image-container">
-<img src="doc_images/color.png" onclick="toggleFullscreen(this)" />
-</div>
-</li><br>
-<li>To annotate the FR and CDR regions, use the .gff file in the same folder than the opened .html file:<br><br><br>
-<div class="image-container">
-<img src="doc_images/gff.png" onclick="toggleFullscreen(this)" />
-</div>
-</li><br>
-<li>Schematic illustration of these regions:<br><br><br>
-<div class="image-container">
-<img src="doc_images/FR_CDR.png" onclick="toggleFullscreen(this)" />
-</div>
-<div class="image-container">
-<img src="doc_images/collier_de_perle.png" onclick="toggleFullscreen(this)" />
-</div>
-</li><br>
-<li>Export as picture does not work well as part of the sequence not displayed are not exported (screenshot).</li><br><br><br>
-</ul>
-</li>
-<li>In [Jalview](https://www.jalview.org/download/).<br>
-<ul>
-<li>import the .fasta file with the same name as the .html file:<br><br><br>
-<div class="image-container">
-<img src="doc_images/jalview_open.png" onclick="toggleFullscreen(this)" />
-</div>
-</li><br>
-<li>Add colors:<br><br><br>
-<div class="image-container">
-<img src="doc_images/jalview_color.png" onclick="toggleFullscreen(this)" />
-</div>
-</li><br><li>Set a threshold to see the differences:<br><br><br>
-<div class="image-container">
-<img src="doc_images/jalview_diff.png" onclick="toggleFullscreen(this)" />
-</div>
-</li><br><li>A high threshold set all the columns with at least one difference in white:<br><br><br>
-<div class="image-container">
-<img src="doc_images/jalview_diff_threshold_high.png" onclick="toggleFullscreen(this)" />
-</div>
-</li><br><li>A low threshold set all the different minority events in each column in white:<br><br><br>
-<div class="image-container">
-<img src="doc_images/jalview_diff_threshold_low.png" onclick="toggleFullscreen(this)" />
-</div>
-</li><br><li>To export as .png for instance:<br><br><br>
-<div class="image-container">
-<img src="doc_images/jalview_export.png" onclick="toggleFullscreen(this)" />
-</div>
-</li>
-</ul>
-</li>
-</ul>
+**Sequence Alignments** are available in the [alignments/nuc](./alignments/nuc) folder for nucleotide alignments and in the [alignments/aa](./alignments/aa) folder for amino acids alignments.
+
+```{r, echo=FALSE, results='asis'}
+if(align_soft == "abalign"){
+    cat('
+Such alignments are performed using [Abalign](https://academic.oup.com/nar/article/51/W1/W17/7173809) (alignments guided by IMGT antibody numbering schemes).<br>Warning: some sequences may not be aligned, because they are too short or out of the VDJ region.
+<br><br>
+Number of failed alignments: <code class="r-output">', nrow(failed_abalign_align) - 1, '</code>&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
+<span style="color:green">*failed_abalign_align.tsv file in the [tsv](.) folder*</span>
+    ')
+    df <- read_tsv_with_dummy("tsv/failed_abalign_align.tsv"))
+    if (is.data.frame(df) && attr(df, "truncated")) {
+        cat("\n**Note: Table truncated to 10 rows. Full file available in the [tsv](.) folder.**\n\n")
+    }
+    print(kable(df, format = "markdown", row.names = FALSE))
+    cat('
+</details>
+<br><br>
+    ')
+}else if(align_soft == "mafft"){
+    cat('
+Such alignments are performed using [Mafft](https://mafft.cbrc.jp/alignment/server/index.html).
+    ')
+}
+```
+<br><br>
+
+Click on the desired html files to see the alignments.
+
+<br><br>
+
+And see [here](reports/alignments_viz.html) the ways to deal with alignments.
+
 <br><br><br>
 
 ###  Phylogeny
