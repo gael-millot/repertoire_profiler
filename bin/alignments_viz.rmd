@@ -1,5 +1,5 @@
 ---
-title: 'Alignment visualization'
+title: 'Alignment visualization and saving'
 date: ''
 output:
   html_document:
@@ -52,9 +52,10 @@ output:
 
 [comment]: <> (End of script to zoom on images)
 
-Several options are possible to visualize and save as picture:<br>
-<ul>
-<li>On the html file.<br>
+### Clicking on the html file
+
+<br>
+
 <ul>
 <li>Warning: use the horizontal scrollbar of the window + the right click of the mouse on the alignment to see the left part of the representation.</li><br>
 <li>To change the aligments colors ("Nucleotide" recommanded for nucleotides):<br><br><br>
@@ -78,9 +79,16 @@ Several options are possible to visualize and save as picture:<br>
 <li>Export as picture does not work well as part of the sequence not displayed are not exported (screenshot).</li><br><br><br>
 </ul>
 </li>
-<li>In [Jalview](https://www.jalview.org/download/).<br>
+
+<br><br><br>
+
+### Jalview
+
+<br>
+
+In [Jalview](https://www.jalview.org/download/):<br>
 <ul>
-<li>import the .fasta file with the same name as the .html file:<br><br><br>
+<li>import the .fasta file with the same name as the .html file (in the [fasta/for_alignment_aa](../fasta/for_alignment_aa) or [fasta/for_alignment_nuc](../fasta/for_alignment_nuc) folder):<br><br><br>
 <div class="image-container">
 <img src="doc_images/jalview_open.png" onclick="toggleFullscreen(this)" />
 </div>
@@ -107,8 +115,15 @@ Several options are possible to visualize and save as picture:<br>
 </div>
 </li>
 </ul>
-</li>
-</ul>
+
+<br><br><br>
+
+### Abalign
+
+<br>
+
+In [Abalign](http://47.108.188.197/abalign/), import a fasta file from the [fasta/for_alignment_aa](../fasta/for_alignment_aa) or [fasta/for_alignment_nuc](../fasta/for_alignment_nuc) folder and analyze interactively.
+
 <br><br><br>
 
 

@@ -15,7 +15,7 @@ params:
   nb_failed_clone: -1
   constant_rep: ""
   vj_rep: ""
-  align_soft: "TRUE"
+  align_soft: ""
   itol_subscription: "TRUE"
 ---
 
@@ -206,10 +206,6 @@ Warning: only the first annotation is considered if several are presents in the 
   <img src="`r params$vj_rep`" onclick="toggleFullscreen(this)" style="border: 2px solid black; width: 25%"/> 
 </div>
 
-<br>
-
-
-
 <br><br><br>
 
 ###  Clonal prediction 
@@ -253,22 +249,21 @@ kable(df, format = "markdown", row.names = FALSE)
 </details>
 <br>
 
-
 ### Sequence alignments
 
 <br>
 
-**Sequence Alignments** are available in the [alignments/nuc](./alignments/nuc) folder for nucleotide alignments and in the [alignments/aa](./alignments/aa) folder for amino acids alignments.
+Sequence Alignments are available in the [alignments/nuc](./alignments/nuc) folder for nucleotide alignments and in the [alignments/aa](./alignments/aa) folder for amino acids alignments. Click on the desired html files to see the alignments.<br><br>See [here](reports/alignments_viz.html) the ways to deal with alignment visualization and saving.
 
 ```{r, echo=FALSE, results='asis'}
-if(align_soft == "abalign"){
+if(params$align_soft == "abalign"){
+    df <- read_tsv_with_dummy("tsv/failed_abalign_align.tsv")
     cat('
-Such alignments are performed using [Abalign](https://academic.oup.com/nar/article/51/W1/W17/7173809) (alignments guided by IMGT antibody numbering schemes).<br>Warning: some sequences may not be aligned, because they are too short or out of the VDJ region.
+Such alignments are performed using [Abalign](https://academic.oup.com/nar/article/51/W1/W17/7173809) (alignments guided by IMGT antibody numbering schemes).<br><br>Warning: some sequences may not be aligned, because they are too short or out of the VDJ region.
 <br><br>
-Number of failed alignments: <code class="r-output">', nrow(failed_abalign_align) - 1, '</code>&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
+Number of failed alignments: <code class="r-output">', nrow(df), '</code>&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
 <span style="color:green">*failed_abalign_align.tsv file in the [tsv](.) folder*</span>
     ')
-    df <- read_tsv_with_dummy("tsv/failed_abalign_align.tsv"))
     if (is.data.frame(df) && attr(df, "truncated")) {
         cat("\n**Note: Table truncated to 10 rows. Full file available in the [tsv](.) folder.**\n\n")
     }
@@ -277,21 +272,13 @@ Number of failed alignments: <code class="r-output">', nrow(failed_abalign_align
 </details>
 <br><br>
     ')
-}else if(align_soft == "mafft"){
+}else if(params$align_soft == "mafft"){
     cat('
 Such alignments are performed using [Mafft](https://mafft.cbrc.jp/alignment/server/index.html).
     ')
 }
 ```
-<br><br>
-
-Click on the desired html files to see the alignments.
-
-<br><br>
-
-And see [here](reports/alignments_viz.html) the ways to deal with alignments.
-
-<br><br><br>
+<br>
 
 ###  Phylogeny
 <br>
