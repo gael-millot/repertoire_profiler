@@ -1021,22 +1021,11 @@ process Clone_id_count {
 
 // Makes a fasta file with several sequences based on the sequences present in the tsv input in BOTH nucleotidic format and amino-acidic format
 // The tsv input is expected to already only contain sequences of one same clonal group. For each clonal group, both nuc and aa fastas will be emitted paired up.
-// Makes a gff file from the coordinates info contained inside the tsv and pairs it with the fastas
-// Inputs:
-//      - clone_assigned_seq_filtered_ch: tsv info files containing a "sequence" column (used to create nuc fasta file), a "sequence_aa" column (used to create aa fasta file), a "germline_d_mask_no_gaps" column, a "germline_d_mask_aa_no_gaps" column, "germline_v_gene" and "germline_j_gene" columns + region coordinates info (used to create gff) + "clone_id", "junction_length"
-//      - align_clone_nb: Minimun number of non-identical sequences per clonal group for tree plotting (defined in nextflow.config). It has to be checked beforehand that the elements in the germ_tree_ch channel contain more than align_clone_nb rows of data, or the program will stop.
-//      - cute_file: Several functions used in the Tsv2fasta_gff.R script
-// Outputs:
-//      - TUPLE: nuc_alignments_ch: - 1st element: sequences in fasta files, in nucleotidic format
-//                                    - 2nd element: sequences in fasta files, in amino-acidic format
-//                                    - 3rd element: joined with their corresponding gff files indicating region coordinates
-process Tsv2fasta_gff {
+process Tsv2fasta {
     label 'r_ig_clustering'
     cache 'true'
     publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{*_nuc/*.fasta}", overwrite: false
     publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{*_aa/*.fasta}", overwrite: false
-    publishDir path: "${out_path}/alignments/nuc", mode: 'copy', pattern: "{*_nuc.gff}", overwrite: false
-    publishDir path: "${out_path}/alignments/aa", mode: 'copy', pattern: "{*_aa.gff}", overwrite: false
 
     input:
     tuple path(all_files_ch), val(seq_kind) // parallelization expected (by clonal groups over align_clone_nb sequences)
@@ -1046,10 +1035,8 @@ process Tsv2fasta_gff {
     path cute_file
 
     output:
-    tuple path("*_nuc/*.fasta"), path("*_aa/*.fasta"), emit: fasta_gff_ch
-    path "*_nuc.gff", optional: true
-    path "*_aa.gff", optional: true
-    path "Tsv2fasta_gff.log", emit: fasta_gff_log_ch
+    tuple path("*_nuc/*.fasta"), path("*_aa/*.fasta"), val(seq_kind), emit: fasta_align_ch
+    path "Tsv2fasta.log", emit: tsv2fasta_log_ch
     path "warning.txt", emit: warning_ch, optional: true
 
     script:
@@ -1057,9 +1044,9 @@ process Tsv2fasta_gff {
     #!/bin/bash -ue
     set -o pipefail
     FILENAME=\$(basename -- ${all_files_ch}) # recover a file name without path
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a Tsv2fasta_gff.log
-    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a Tsv2fasta_gff.log
-    Tsv2fastaGff.R \
+    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a Tsv2fasta.log
+    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a Tsv2fasta.log
+    Tsv2fasta.R \
     "${all_files_ch}" \
     "sequence_id" \
     "${align_seq}" \
@@ -1067,26 +1054,22 @@ process Tsv2fasta_gff {
     "${align_clone_nb}" \
     "${cute_file}" \
     "${seq_kind}" \
-    "Tsv2fasta_gff.log"
+    "Tsv2fasta.log"
     """
 }
 
 
 // Align the amino-acidic sequences that are already in fasta files (grouped by clonal groups)
-// Input:
-//  - TUPLE:   this is a tuple input because the aa fasta files need to be kept with their respective nucleotide files for future processes.
-//              these nucleotide fasta files need to be kept with their corresponding gff files (containing region coordinates)
-//              heavy_chain is TRUE if the input files are of heavy chains, and it is FALSE if the input files are light chains
 process Abalign_align_aa {
     label 'abalign'
     
     input:
-    tuple path(fasta_nuc), path(fasta_aa) // parallelization expected (by clonal groups over align_clone_nb sequences)
+    tuple path(fasta_nuc), path(fasta_aa), val(seq_kind) // parallelization expected (by clonal groups over align_clone_nb sequences)
     val igblast_organism
     val igblast_heavy_chain
     
     output:
-    tuple path(fasta_nuc), path(fasta_aa), path("*_align_aa.fasta"), emit: aligned_aa_ch
+    tuple path(fasta_nuc), path(fasta_aa), path("*_align_aa.fasta"), val(seq_kind), emit: aligned_aa_ch
     path "Abalign_align_aa.log", emit: abalign_align_aa_log_ch
     
     script:
@@ -1134,10 +1117,10 @@ process Abalign_rename {
     publishDir path: "${out_path}/alignments/aa", mode: 'copy', pattern: "{*_aligned_aa.fasta}", overwrite: false
     
     input:
-    tuple path(fasta_nuc), path(fasta_aa), path(fasta_aa_align) // parallelization expected (by clonal groups over align_clone_nb sequences)
+    tuple path(fasta_nuc), path(fasta_aa), path(fasta_aa_align), val(seq_kind) // parallelization expected (by clonal groups over align_clone_nb sequences)
     
     output:
-    tuple path(fasta_nuc), path("*_aligned_aa.fasta"), emit: renamed_aligned_aa_ch
+    tuple path(fasta_nuc), path("*_aligned_aa.fasta"), val(seq_kind), emit: renamed_aligned_aa_ch
     path "*_failed_abalign_align.tsv", emit: failed_abalign_align_ch
     path "Abalign_rename.log", emit: abalign_rename_log_ch
     
@@ -1188,10 +1171,10 @@ process Abalign_align_nuc {
     publishDir path: "${out_path}/alignments/nuc", mode: 'copy', pattern: "{*_aligned_nuc.fasta}", overwrite: false
 
     input:
-    tuple path(fasta_nuc), path(aligned_aa) // parallelization expected (by clonal groups over align_clone_nb sequences)
+    tuple path(fasta_nuc), path(aligned_aa), val(seq_kind) // parallelization expected (by clonal groups over align_clone_nb sequences)
 
     output:
-    tuple path("*_aligned_nuc.fasta"), path(aligned_aa), emit: aligned_all_ch
+    tuple path("*_aligned_nuc.fasta"), path(aligned_aa), val(seq_kind), emit: aligned_all_ch
     path "Abalign_align_nuc.log", emit: abalign_align_nuc_log_ch
 
     script:
@@ -1211,10 +1194,10 @@ process  Mafft_align {
     publishDir path: "${out_path}/alignments/nuc", mode: 'copy', pattern: "{*_aligned_nuc.fasta}", overwrite: false
 
     input:
-    tuple path(fasta_nuc), path(fasta_aa) // parallelization expected (by clonal groups over align_clone_nb sequences)
+    tuple path(fasta_nuc), path(fasta_aa), val(seq_kind) // parallelization expected (by clonal groups over align_clone_nb sequences)
     
     output:
-    tuple path("*_aligned_nuc.fasta"), path("*_aligned_aa.fasta"), emit: aligned_all_ch
+    tuple path("*_aligned_nuc.fasta"), path("*_aligned_aa.fasta"), val(seq_kind), emit: aligned_all_ch
     path "Mafft_align.log", emit: mafft_align_log_ch
 
     script:
@@ -1226,6 +1209,8 @@ process  Mafft_align {
     echo "" > Mafft_align.log
     """
 }
+
+
 
 
 process Tree {
@@ -1664,6 +1649,8 @@ process backup {
 include { Igblast_query as Igblast_query } from './modules/igblast_query'
 include { Igblast_germline_coords as Igblast_germline_coords  } from './modules/igblast_germline'
 include { Closest_germline as Closest_germline  } from './modules/closest_germline'
+include { Gff as GffNuc } from './modules/gff'
+include { Gff as GffAa  } from './modules/gff'
 include { PrintAlignment as PrintAlignmentNuc } from './modules/print_alignment'
 include { PrintAlignment as PrintAlignmentAa  } from './modules/print_alignment'
 
@@ -1697,7 +1684,7 @@ workflow {
 
     //////// Checks
     //// check of the bin folder
-    tested_files_bin = ["circos.R", "circos_data_prep.R", "cute_little_R_functions_v12.8.R", "defineGroups.pl", "donut.R", "fields_not_kept.txt", "germ_tree_vizu.R", "GermlineSequences.py", "get_germ_tree.R", "histogram.R", "parse_coordinates.R", "repertoire.R", "repertoire_profiler_template.rmd", "trimtranslate.sh", "Tsv2fastaGff.R"]
+    tested_files_bin = ["circos.R", "circos_data_prep.R", "cute_little_R_functions_v12.8.R", "defineGroups.pl", "donut.R", "fields_not_kept.txt", "germ_tree_vizu.R", "GermlineSequences.py", "get_germ_tree.R", "histogram.R", "parse_coordinates.R", "repertoire.R", "repertoire_profiler_template.rmd", "trimtranslate.sh", "Tsv2fasta.R", "Gff.R"]
     for(i1 in tested_files_bin){
         if( ! (file("${projectDir}/bin/${i1}").exists()) ){
             error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE ${i1} FILE MUST BE PRESENT IN THE ./bin FOLDER, WHERE THE main.nf file IS PRESENT\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
@@ -1706,7 +1693,7 @@ workflow {
     //// end check of the bin folder
 
     //// check of the modules folder
-    tested_files_modules = ["print_alignment.nf", "igblast_query.nf", "igblast_germline.nf"]
+    tested_files_modules = ["print_alignment.nf", "igblast_query.nf", "igblast_germline.nf", "closest_germline.nf", "gff.nf"]
     for(i1 in tested_files_modules){
         if( ! (file("${projectDir}/modules/${i1}").exists()) ){
             error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nTHE ${i1} FILE MUST BE PRESENT IN THE ./modules FOLDER, WHERE THE main.nf file IS PRESENT\nIF POINTING TO A DISTANT SERVER, CHECK THAT IT IS MOUNTED\n\n========\n\n"
@@ -2437,39 +2424,39 @@ workflow {
     clone_labeled_ch = clone_assigned_seq_filtered_ch.map { file -> tuple(file, 'CLONE') }
     productive_labeled_ch = data_assembly.out.productive_ch.map { file -> tuple(file, 'ALL') }
     all_files_ch = clone_labeled_ch.mix(productive_labeled_ch)
-    Tsv2fasta_gff(
+    Tsv2fasta(
         all_files_ch,
         align_seq, 
         clone_germline_kind, 
         align_clone_nb, 
         cute_path
     )
-    fasta_gff_log_ch2 = Tsv2fasta_gff.out.fasta_gff_log_ch.collectFile(name: "Tsv2fasta_gff.log")
-    fasta_gff_log_ch2.subscribe{it -> it.copyTo("${out_path}/reports")}
-    fastagff_warn = Tsv2fasta_gff.out.warning_ch
+    tsv2fasta_log_ch2 = Tsv2fasta.out.tsv2fasta_log_ch.collectFile(name: "Tsv2fasta.log")
+    tsv2fasta_log_ch2.subscribe{it -> it.copyTo("${out_path}/reports")}
+    fasta_align_warn = Tsv2fasta.out.warning_ch
 
     // Print warnings on the terminal:
-    fastagff_warn.filter { file(it). exists() }
+    fasta_align_warn.filter { file(it). exists() }
                 .map {file -> 
                     file.text  // contenu du fichier
                 }
                 .view()
 
-    if(align_soft == "abalign" && (align_seq == "query" || align_seq == "igblast_full" || align_seq == "trimmed")){
+    if(align_soft == "abalign" && (align_seq == "query" || align_seq == "igblast_full" || align_seq == "trimmed" || align_seq == "c_sequence_alignment" || align_seq == "c_germline_alignment")){
         align_soft == "mafft"
         print("\n\nWARNING: align_soft PARAMETER RESET TO \"mafft\" SINCE align_seq PARAMETER IS:\n${align_seq}\n\n")
     }
     if(align_soft == "mafft"){
         Mafft_align(
-            Tsv2fasta_gff.out.fasta_gff_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Tsv2fasta_gff PROCESS\n\n========\n\n"}
+            Tsv2fasta.out.fasta_align_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Tsv2fasta PROCESS\n\n========\n\n"}
         )
-        align_aa_ch = Mafft_align.out.aligned_all_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Mafft_align PROCESS\n\n========\n\n"}.map{ x, y -> y }
-        align_nuc_ch = Mafft_align.out.aligned_all_ch.map{ x, y -> x }
-        aligned_all_ch2 = Mafft_align.out.aligned_all_ch
+        align_aa_ch = Mafft_align.out.aligned_all_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Mafft_align PROCESS\n\n========\n\n"}.map{ x, y, z -> [y, z] }
+        align_nuc_ch = Mafft_align.out.aligned_all_ch.map{ x, y, z -> [x, z] }
+        aligned_all_ch2 = Mafft_align.out.aligned_all_ch.map{ x, y, z -> [x, y] }
         Mafft_align.out.mafft_align_log_ch.collectFile(name: "Mafft_align.log").subscribe{it -> it.copyTo("${out_path}/reports")}
     }else if(align_soft == "abalign"){
         Abalign_align_aa(
-            Tsv2fasta_gff.out.fasta_gff_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Tsv2fasta_gff PROCESS\n\n========\n\n"},
+            Tsv2fasta.out.fasta_align_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Tsv2fasta PROCESS\n\n========\n\n"},
             igblast_organism,
             igblast_heavy_chain
         )
@@ -2485,29 +2472,44 @@ workflow {
         Abalign_align_nuc(
             Abalign_rename.out.renamed_aligned_aa_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Abalign_align_aa PROCESS\n\n========\n\n"}
         )
-        align_nuc_ch = Abalign_align_nuc.out.aligned_all_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Abalign_align_nuc PROCESS\n\n========\n\n"}.map{ x, y -> x }
-        align_aa_ch = Abalign_align_nuc.out.aligned_all_ch.map{ x, y -> y }
-        aligned_all_ch2 = Abalign_align_nuc.out.aligned_all_ch
+        align_nuc_ch = Abalign_align_nuc.out.aligned_all_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Abalign_align_nuc PROCESS\n\n========\n\n"}.map{ x, y, z -> [x, z] }
+        align_aa_ch = Abalign_align_nuc.out.aligned_all_ch.map{ x, y, z -> [y, z] }
+        aligned_all_ch2 = Abalign_align_nuc.out.aligned_all_ch.map{ x, y, z -> [x, y] }
         Abalign_align_nuc.out.abalign_align_nuc_log_ch.collectFile(name: "Abalign_align_nuc.log").subscribe{it -> it.copyTo("${out_path}/reports")}
     }else{
         error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nINVALID align_soft PARAMETER IN nextflow.config FILE:\n${align_soft}\n\n========\n\n"
     }
 
 
-    // aligned_nuc_gff_only_ch = Abalign_align_nuc.out.aligned_all_ch.map { x, y, z -> tuple(x, z) }
-    // aligned_nuc_aa_tuple_ch = Abalign_align_nuc.out.aligned_all_ch.map { x, y, z -> tuple(x, y) } // Nuc and aa aligned, without their gff
 
+    GffNuc( // module
+        align_nuc_ch,
+        align_seq, 
+        align_clone_nb, 
+        cute_path
+    )
+    GffNuc.out.gff_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE GffNuc PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/nuc")}
+    GffNuc.out.gff_log_ch.collectFile(name: "GffNuc.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+
+    GffAa( // module
+        align_aa_ch,
+        align_seq, 
+        align_clone_nb, 
+        cute_path
+    )
+    GffAa.out.gff_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE GffAa PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/aa")}
+    GffAa.out.gff_log_ch.collectFile(name: "GffAa.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
 
     PrintAlignmentNuc( // module
         align_nuc_ch
     )
-    PrintAlignmentNuc.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignment PROCESS FOR NUC\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/nuc")}
+    PrintAlignmentNuc.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentNuc PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/nuc")}
 
     PrintAlignmentAa( // module
         align_aa_ch
     )
-    PrintAlignmentAa.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignment PROCESS FOR AA\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/aa")}
+    PrintAlignmentAa.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentAa PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/aa")}
 
     Tree(
         aligned_all_ch2,

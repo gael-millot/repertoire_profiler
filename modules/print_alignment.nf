@@ -2,7 +2,8 @@ process PrintAlignment{
     label 'goalign'
 
     input:
-    path align_ch // parallelization expected (by clonal groups over clone_nb_seq sequences)
+    tuple path(align_ch), val(seq_kind)  // parallelization expected (by clonal groups over clone_nb_seq sequences)
+
 
     output:
     path "*.html", emit : alignment_html
