@@ -1159,8 +1159,9 @@ process Abalign_rename {
             }
             df_align[i2] <- df_ini[tempo_log]
         }
-        writeLines(df_align, con = "${fasta_aa.baseName}_aligned_aa.fasta")
+        writeLines(df_align, con = "${fasta_aa.baseName}_aligned_aa_tempo.fasta")
     ' ${fasta_aa} ${fasta_aa.baseName}_align_aa.fasta |& tee -a Abalign_rename.log
+    awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' ${fasta_aa.baseName}_aligned_aa_tempo.fasta > ${fasta_aa.baseName}_aligned_aa.fasta # remove \\n in seq
     """
 }
 
@@ -1184,7 +1185,8 @@ process Abalign_align_nuc {
     FILENAME=\$(basename -- ${fasta_nuc}) # recover a file name without path
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a Abalign_align_nuc.log
 
-    goalign codonalign -i ${aligned_aa} -f ${fasta_nuc} -o ${fasta_nuc.baseName}_aligned_nuc.fasta |& tee -a Abalign_align_nuc.log
+    goalign codonalign -i ${aligned_aa} -f ${fasta_nuc} -o ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta |& tee -a Abalign_align_nuc.log
+    awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta > ${fasta_nuc.baseName}_aligned_nuc.fasta # remove \\n in seq
     """
 }
 
@@ -1204,8 +1206,10 @@ process  Mafft_align {
     """
     #!/bin/bash -ue
     set -o pipefail
-    mafft --auto ${fasta_nuc} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_nuc.baseName}_aligned_nuc.fasta
-    mafft --auto ${fasta_aa} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_aa.baseName}_aligned_aa.fasta
+    mafft --auto ${fasta_nuc} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta
+    awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta > ${fasta_nuc.baseName}_aligned_nuc.fasta # remove \\n in seq
+    mafft --auto ${fasta_aa} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_aa.baseName}_aligned_aa_tempo.fasta
+    awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' ${fasta_aa.baseName}_aligned_aa_tempo.fasta > ${fasta_aa.baseName}_aligned_aa.fasta # remove \\n in seq
     echo "" > Mafft_align.log
     """
 }
@@ -2480,33 +2484,54 @@ workflow {
         error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nINVALID align_soft PARAMETER IN nextflow.config FILE:\n${align_soft}\n\n========\n\n"
     }
 
+    //Abalign_align_nuc.out.aligned_all_ch.map{ x, y, z -> [y, z] }.view()
+    //Mutation_load_germ_genes.out.mutation_load_ch.view()
+    branches_nuc = align_nuc_ch.branch {
+        CLONE: it[1] == 'CLONE'
+        ALL  : it[1] == 'ALL'
+    }
+    clone_for_gff_nuc_ch = branches_nuc.CLONE.combine(clone_assigned_seq_filtered_ch.first())
+    all_for_gff_nuc_ch  = branches_nuc.ALL.combine(data_assembly.out.productive_ch.first())
+    for_gff_nuc_ch = clone_for_gff_nuc_ch.mix(all_for_gff_nuc_ch)
+    branches_aa = align_aa_ch.branch {
+        CLONE: it[1] == 'CLONE'
+        ALL  : it[1] == 'ALL'
+    }
+    clone_for_gff_aa_ch = branches_aa.CLONE.combine(clone_assigned_seq_filtered_ch.first())
+    all_for_gff_aa_ch  = branches_aa.ALL.combine(data_assembly.out.productive_ch.first())
+    for_gff_aa_ch = clone_for_gff_aa_ch.mix(all_for_gff_aa_ch)
 
 
-    GffNuc( // module
-        align_nuc_ch,
+    GffNuc( // module gff.nf
+        for_gff_nuc_ch,
         align_seq, 
+        clone_germline_kind, 
         align_clone_nb, 
         cute_path
     )
-    GffNuc.out.gff_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE GffNuc PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/nuc")}
+    GffNuc.out.gff_ch.flatten().ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE GffNuc PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/nuc")} // flatten because several files. Otherwise, copyTo does not like it
     GffNuc.out.gff_log_ch.collectFile(name: "GffNuc.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
-    GffAa( // module
-        align_aa_ch,
+
+    //for_gff_aa_ch.view()
+    GffAa( // module gff.nf
+        for_gff_aa_ch,
         align_seq, 
+        clone_germline_kind, 
         align_clone_nb, 
         cute_path
     )
-    GffAa.out.gff_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE GffAa PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/aa")}
+    GffAa.out.gff_ch.flatten().ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE GffAa PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/aa")}
     GffAa.out.gff_log_ch.collectFile(name: "GffAa.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+//GffAa.out.gff_ch.flatten().view()
 
 
-    PrintAlignmentNuc( // module
+    PrintAlignmentNuc( // module print_alignment.nf
         align_nuc_ch
     )
     PrintAlignmentNuc.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentNuc PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/nuc")}
 
-    PrintAlignmentAa( // module
+    PrintAlignmentAa( // module print_alignment.nf
         align_aa_ch
     )
     PrintAlignmentAa.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentAa PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/aa")}
@@ -2543,8 +2568,7 @@ workflow {
         itol_nuc_ch.subscribe{it -> it.copyTo("${out_path}/phylo/nuc")}
 
     }
-        
-    
+
 
 
     repertoire_constant_ch =repertoire.out.repertoire_png_ch

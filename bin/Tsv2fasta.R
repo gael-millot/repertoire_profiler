@@ -282,36 +282,7 @@ if(any(arg.check) == TRUE){ # normally no NA
     stop(paste0("\n\n================\n\n", paste(text.check[arg.check], collapse = "\n"), "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between == #
 }
 
-if(align_seq == "query"){align_seq2 <- c("sequence", "query_sequence_aa")}
-if(align_seq == "igblast_full"){align_seq2 <- c("sequence", "sequence_aa")}
-if(align_seq == "trimmed"){align_seq2 <- c("trimmed_sequence", "trimmed_sequence_aa")}
-if(align_seq == "fwr1"){align_seq2 <- c("fwr1", "fwr1_aa")}
-if(align_seq == "fwr2"){align_seq2 <- c("fwr2", "fwr2_aa")}
-if(align_seq == "fwr3"){align_seq2 <- c("fwr3", "fwr3_aa")}
-if(align_seq == "fwr4"){align_seq2 <- c("fwr4", "fwr4_aa")}
-if(align_seq == "cdr1"){align_seq2 <- c("cdr1", "cdr1_aa")}
-if(align_seq == "cdr2"){align_seq2 <- c("cdr2", "cdr2_aa")}
-if(align_seq == "cdr3"){align_seq2 <- c("cdr3", "cdr3_aa")}
-if(align_seq == "junction"){align_seq2 <- c("junction", "junction_aa")}
-if(align_seq == "sequence_alignment"){align_seq2 <- c("sequence_alignment", "sequence_alignment_aa")}
-if(align_seq == "v_sequence_alignment"){align_seq2 <- c("v_sequence_alignment", "v_sequence_alignment_aa")}
-if(align_seq == "d_sequence_alignment"){align_seq2 <- c("d_sequence_alignment", "d_sequence_alignment_aa")}
-if(align_seq == "j_sequence_alignment"){align_seq2 <- c("j_sequence_alignment", "j_sequence_alignment_aa")}
-if(align_seq == "c_sequence_alignment"){align_seq2 <- c("c_sequence_alignment", "c_sequence_alignment_aa")}
-if(align_seq == "germline_alignment"){align_seq2 <- c("germline_alignment", "germline_alignment_aa")}
-if(align_seq == "v_germline_alignment"){align_seq2 <- c("v_germline_alignment", "v_germline_alignment_aa")}
-if(align_seq == "d_germline_alignment"){align_seq2 <- c("d_germline_alignment", "d_germline_alignment_aa")}
-if(align_seq == "j_germline_alignment"){align_seq2 <- c("j_germline_alignment", "j_germline_alignment_aa")}
-if(align_seq == "c_germline_alignment"){align_seq2 <- c("c_germline_alignment", "c_germline_alignment_aa")}
 
-Germline <- NULL
-if(clone_germline_kind == "dmask" & seq_kind == "CLONE" ){
-    Germline <- c("germline_alignment_d_mask_no_gaps", "germline_alignment_d_mask_aa_no_gaps")
-}else if(clone_germline_kind == "vonly" & seq_kind == "CLONE" ){
-    Germline <- c("germline_alignment_v_region_no_gaps", "germline_alignment_v_region_aa_no_gaps")
-}else if(clone_germline_kind == "full" & seq_kind == "CLONE" ){
-    Germline <- c("germline_alignment_full_no_gaps", "germline_alignment_full_aa_no_gaps")
-}
 # end argument primary checking
 # second round of checking and data preparation
 # management of NA arguments
@@ -417,9 +388,6 @@ if(any(duplicated(obs[, Name]))){
     stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nDUPLICATED VALUE NOT AUTHORIZED IN THE COLUMN OF THE Name PARAMETER\n\nDUPLICATED VALUES ARE:\n", obs[duplicated(obs[, Name]), Name], "\n\nIN POSITIONS:\n", paste(which(obs[ , Name] %in% obs[duplicated(obs[, Name]), Name]), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
 }
 
-if( ! all(align_seq2 %in% names(obs))){
-    stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nTHE align_seq2 PARAMETER MUST BE COLUMN NAMES OF THE IMPORTED FILE:\n", path, "\n\nHERE IT IS align_seq2:\n", paste(align_seq2, collapse = "\n"), "\n\nCOLUMN NAMES:\n", paste(names(obs), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
-}
 
 tempo.log <- is.na(obs[ , Name]) | obs[ , Name] == ""
 if(any(tempo.log)){
@@ -439,7 +407,41 @@ for(i0 in names(obs)){ # NA in xlsx file become "NA". Thus, has to be replaced b
 
 ############ main
 
+if(align_seq == "query"){align_seq2 <- c("sequence", "query_sequence_aa")}
+if(align_seq == "igblast_full"){align_seq2 <- c("sequence", "sequence_aa")}
+if(align_seq == "trimmed"){align_seq2 <- c("trimmed_sequence", "trimmed_sequence_aa")}
+if(align_seq == "fwr1"){align_seq2 <- c("fwr1", "fwr1_aa")}
+if(align_seq == "fwr2"){align_seq2 <- c("fwr2", "fwr2_aa")}
+if(align_seq == "fwr3"){align_seq2 <- c("fwr3", "fwr3_aa")}
+if(align_seq == "fwr4"){align_seq2 <- c("fwr4", "fwr4_aa")}
+if(align_seq == "cdr1"){align_seq2 <- c("cdr1", "cdr1_aa")}
+if(align_seq == "cdr2"){align_seq2 <- c("cdr2", "cdr2_aa")}
+if(align_seq == "cdr3"){align_seq2 <- c("cdr3", "cdr3_aa")}
+if(align_seq == "junction"){align_seq2 <- c("junction", "junction_aa")}
+if(align_seq == "sequence_alignment"){align_seq2 <- c("sequence_alignment", "sequence_alignment_aa")}
+if(align_seq == "v_sequence_alignment"){align_seq2 <- c("v_sequence_alignment", "v_sequence_alignment_aa")}
+if(align_seq == "d_sequence_alignment"){align_seq2 <- c("d_sequence_alignment", "d_sequence_alignment_aa")}
+if(align_seq == "j_sequence_alignment"){align_seq2 <- c("j_sequence_alignment", "j_sequence_alignment_aa")}
+if(align_seq == "c_sequence_alignment"){align_seq2 <- c("c_sequence_alignment", "c_sequence_alignment_aa")}
+if(align_seq == "germline_alignment"){align_seq2 <- c("germline_alignment", "germline_alignment_aa")}
+if(align_seq == "v_germline_alignment"){align_seq2 <- c("v_germline_alignment", "v_germline_alignment_aa")}
+if(align_seq == "d_germline_alignment"){align_seq2 <- c("d_germline_alignment", "d_germline_alignment_aa")}
+if(align_seq == "j_germline_alignment"){align_seq2 <- c("j_germline_alignment", "j_germline_alignment_aa")}
+if(align_seq == "c_germline_alignment"){align_seq2 <- c("c_germline_alignment", "c_germline_alignment_aa")}
 
+if( ! all(align_seq2 %in% names(obs))){
+    stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nTHE align_seq2 PARAMETER MUST BE COLUMN NAMES OF THE IMPORTED FILE:\n", path, "\n\nHERE IT IS align_seq2:\n", paste(align_seq2, collapse = "\n"), "\n\nCOLUMN NAMES:\n", paste(names(obs), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
+}
+
+
+Germline <- NULL
+if(clone_germline_kind == "dmask" & seq_kind == "CLONE" ){
+    Germline <- c("germline_alignment_d_mask_no_gaps", "germline_alignment_d_mask_aa_no_gaps")
+}else if(clone_germline_kind == "vonly" & seq_kind == "CLONE" ){
+    Germline <- c("germline_alignment_v_region_no_gaps", "germline_alignment_v_region_aa_no_gaps")
+}else if(clone_germline_kind == "full" & seq_kind == "CLONE" ){
+    Germline <- c("germline_alignment_full_no_gaps", "germline_alignment_full_aa_no_gaps")
+}
 
 count = 0
 multiple_v_genes <- FALSE
@@ -449,7 +451,7 @@ for(i0 in align_seq2){
     count = count + 1
     tempo.log <- is.na(obs[ , i0]) | obs[ , i0] == ""
     if(sum(!tempo.log, na.rm = TRUE) >= align_clone_nb){
-        # Only create fasta and gff files with at least <align_clone_nb> sequences (Minimun number of non-identical sequences per clonal group for tree plotting)
+        # Only create fasta  files with at least <align_clone_nb> sequences (Minimun number of non-identical sequences per clonal group for tree plotting)
         # NB : align_clone_nb is defined in nextflow.config
         # Create the fasta files :
         if(any(tempo.log)){
@@ -462,9 +464,11 @@ for(i0 in align_seq2){
             fun_report(data = tempo.cat, output = log, path = "./", overwrite = FALSE)
         }
         df <- obs[ ! tempo.log, ] # .tsv file with lines removed whem empty align_seq2
-        # Sequences in the same clone_assigned_seq.tsv file belong to the same clonal group and should have the same values in columns relative to clonal groups
-        if(any(df$clone_id != df$clone_id[1])){
-            stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL clone_id VALUES SHOULD BE THE SAME IN A clone_assigned_seq.tsv FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(df$clone_id, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
+        if(seq_kind == "CLONE"){
+            # Sequences in the same clone_assigned_seq.tsv file belong to the same clonal group and should have the same values in columns relative to clonal groups
+            if(any(df$clone_id != df$clone_id[1])){
+                stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL clone_id VALUES SHOULD BE THE SAME IN A clone_assigned_seq.tsv FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(df$clone_id, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
+            }
         }
         if(seq_kind == "ALL"){
             multiple_v_genes <- TRUE
@@ -549,7 +553,7 @@ for(i0 in align_seq2){
             most_frequent_germs <- names(germ_table[germ_table == max_freq])
 
             # Choose the first matching germline by order in df (sorted by Name)
-            selected_index <- which(df[[germ]] %in% most_frequent_germs)[1] # warning: also used in gff
+            selected_index <- which(df[[germ]] %in% most_frequent_germs)[1]
             selected_germline_seq <- gsub(x = df[selected_index, germ], pattern = "-", replacement = "")
 
             # Get cleaned v_gene and j_gene values for the chosen germline row
@@ -576,129 +580,8 @@ for(i0 in align_seq2){
                 fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
                 warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
             }
-        }else{
-            selected_index <- 1:nrow(df) # for gff
         }
-        # end  of creating the fasta files
-
-        # Create the gff file
-        # https://shazam.readthedocs.io/en/stable/topics/setRegionBoundaries/
-        # define the column names of the coordinates in the tsv file
-        vdjc_features <- c("v", "d", "j", "c")
-        fwr_cdr_features <- c("fwr1", "cdr1", "fwr2", "cdr2", "fwr3", "cdr3", "fwr4") 
-        vdjc_features_colors <- c("red", "green", "blue", "yellow")
-        fwr_cdr_features_colors <- c("yellow", "pink", "yellow", "pink", "yellow", "pink", "yellow")
-        if(seq_kind == "CLONE"){ # means that the column taken are coordinates of the germline sequence only. All the columns in the clone_assign_seq.tsv start by "clonal_germline_"
-            vdjc_column_start <- paste0("clonal_germline_", vdjc_features, "_start")
-            vdjc_column_end <- paste0("clonal_germline_", vdjc_features, "_end")
-            fwr_cdr_column_start <- paste0("clonal_germline_", fwr_cdr_features, "_start")
-            fwr_cdr_column_end <- paste0("clonal_germline_", fwr_cdr_features, "_end")
-        }else{ # seq_kind == "ALL"
-            if(grepl(x = align_seq, pattern = ".*_alignment")){ # for align_seq %in% sequence_alignment|v_sequence_alignment|d_sequence_alignment|j_sequence_alignment|c_sequence_alignment|germline_alignment|v_germline_alignment|d_germline_alignment|j_germline_alignment|c_germline_alignment. These coordinates are for both aligned germline and sequence 
-                vdjc_column_start <- paste0(vdjc_features, "_alignment_start")
-                vdjc_column_end <- paste0(vdjc_features, "_alignment_end")
-                fwr_cdr_column_start <- NULL
-                fwr_cdr_column_end <- NULL
-            }else if(align_seq %in% c("query", "igblast_full", "trimmed", "")){
-                vdjc_column_start <- paste0(vdjc_features, "_sequence_start")
-                vdjc_column_end <- paste0(vdjc_features, "_sequence_end")
-                fwr_cdr_column_start <- paste0(fwr_cdr_features, "_start")
-                fwr_cdr_column_end <- paste0(fwr_cdr_features, "_end")
-            }else{ # for align_seq %in% fwr1|fwr2|fwr3|fwr4|cdr1|cdr2|cdr3|junction
-                vdjc_column_start <- NULL
-                vdjc_column_end <- NULL
-                fwr_cdr_column_start <- NULL
-                fwr_cdr_column_end <- NULL
-            }
-        }
-        # end define the column names of the coordinates in the tsv file
-        # Check that all expected columns exist
-        not_exist <- NULL
-        for(i2 in c("vdjc_column_start", "vdjc_column_end", "fwr_cdr_column_start", "fwr_cdr_column_end")){
-            if( ! is.null(get(i2))){
-                tempo_log <- ! get(i2) %in% names(df)
-                if(any(tempo_log, na.rm = TRUE)){
-                    not_exist <- c(not_exist, get(i2)[tempo_log])
-                }
-            }
-        }
-        if (length(not_exist) > 0) {
-            stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nONE OR MORE COORDINATE COLUMNS MISSING FROM THE IMPORTED FILE:\n", path, "\nHERE IS THE MISSING COLUMN : ", paste0(not_exist, collapse = "\n"), "\n\n================\n\n"), call. = FALSE)
-        }
-        for(i2 in c("vdjc_column", "fwr_cdr_column")){
-            if((is.null(paste0(i2, "_start")) & ! is.null(paste0(i2, "_end"))) | ( ! is.null(paste0(i2, "_start")) & is.null(paste0(i2, "_end")))){
-                stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nNEITHER OR BOTH ", i2, " _start AND _end OBJECTS MUST BE NULL", paste0(not_exist, collapse = "\n"), "\n\n================\n\n"), call. = FALSE)
-            }
-        }
-        # end Check that all expected columns exist
-        for(i2 in c("vdjc", "fwr_cdr")){
-            gff_rows <- list()
-            for(i3 in 1:length(selected_index)){
-                for(i4 in 1:length(get(paste0(i2, "_features")))){
-                    if( ! is.null(get(paste0(i2, "_column_start")))){
-                        start_coord <- df[selected_index[i3], get(paste0(i2, "_column_start"))[i4]]
-                        end_coord <- df[selected_index[i3], get(paste0(i2, "_column_end"))[i4]]
-                        if(nuc_or_aa == "aa"){
-                            for(i7 in c("start", "end")){
-                                tempo <- paste0(i7, "_coord")
-                                if(is.na(get(tempo))){
-                                    assign(tempo, NA)
-                                }else{
-                                    if(i7 == "start"){
-                                        coord <- as.integer(get(tempo)) - 1
-                                    }else{
-                                        coord <- as.integer(get(tempo))
-                                    }
-                                    if(as.integer(coord) %% 3 == 0){
-                                        if(i7 == "start"){
-                                            assign(tempo, as.integer(coord / 3 + 1))
-                                        }else{
-                                            assign(tempo, as.integer(coord / 3))
-                                        }
-                                    }else{
-                                        if(i7 == "start"){
-                                            assign(tempo, as.integer(trunc(coord / 3) + 1))
-                                        }else{
-                                            assign(tempo, as.integer(trunc(coord / 3)))
-                                        }
-                                        tempo.warn <- paste0("APPROXIMATE AA COORDINATES FOR ", df[selected_index[i3], Name], ", FOR THE ", get(paste0(i2, "_column_", i7))[i4], " COLUMN, SINCE NUC COORDINATES ARE NOT MULTIPLE OF 3.")
-                                        cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
-                                        fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
-                                        warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
-                                    }
-                                }
-                            }
-                        }
-                        gff_rows[[length(gff_rows) + 1]] <- c(
-                            if(seq_kind == "ALL"){
-                                df[selected_index[i3], Name]
-                            }else{
-                                germ_seq_name
-                            },
-                            ".",
-                            "gene",
-                            start_coord, 
-                            end_coord, 
-                            ".",
-                            ".",
-                            ".",
-                            paste0("Name=", get(paste0(i2, "_features"))[i4], ";Color=", get(paste0(i2, "_features_colors"))[i4])
-                        )
-                    }
-                }
-            }
-            gff_table <- do.call(rbind, gff_rows)
-            if(length(gff_table) > 0){
-                gff_lines <- apply(gff_table, 1, function(x) paste(x, collapse="\t"))
-            }else{
-                gff_lines <- character()
-            }
-            gff_lines <- c("##gff-version 3", gff_lines)
-            output_gff <- paste0(i2, "_", seq_name, "_", nuc_or_aa, ".gff")
-            writeLines(gff_lines, con = output_gff)
-        }
-        # end Create the gff file
-    } else {
+    }else{
         stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nNO FASTA AND GFF FILES CREATED BECAUSE THE IMPORTED FILE:\n", path, "\nHAS LESS THAN ", align_clone_nb, " SEQUENCES (TOO MUCH NA OR \"\") IN THE ", i0, " COLUMN\n\n================\n\n"))
     }
 

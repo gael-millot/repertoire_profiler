@@ -4,8 +4,9 @@ process Gff {
     cache 'true'
 
     input:
-    tuple path(all_files_ch), val(seq_kind) // parallelization expected (by clonal groups over align_clone_nb sequences)
+    tuple path(fasta), val(tag), path(tsv) // parallelization expected (by clonal groups over align_clone_nb sequences)
     val align_seq
+    val clone_germline_kind
     val align_clone_nb
     path cute_file
 
@@ -17,16 +18,18 @@ process Gff {
     """
     #!/bin/bash -ue
     set -o pipefail
-    FILENAME=\$(basename -- ${all_files_ch}) # recover a file name without path
+    FILENAME=\$(basename -- ${fasta}) # recover a file name without path
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a Gff.log
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a Gff.log
     Gff.R \
-    "${all_files_ch}" \
+    "${fasta}" \
+    "${tsv}" \
     "sequence_id" \
     "${align_seq}" \
+    "${clone_germline_kind}" \
     "${align_clone_nb}" \
     "${cute_file}" \
-    "${seq_kind}" \
+    "${tag}" \
     "Gff.log"
     """
 }
