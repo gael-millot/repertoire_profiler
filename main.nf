@@ -1206,9 +1206,14 @@ process  Mafft_align {
     """
     #!/bin/bash -ue
     set -o pipefail
-    mafft --auto ${fasta_nuc} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta
+    # --op N	Increase gap opening penalty (fewer gaps).
+    # --ep N	Gap extension penalty (usually leave default).
+    # --leavegappyregion	Don’t over-align ends or regions with many gaps.
+    # --keeplength	Preserve sequence end lengths.
+    # --localpair --maxiterate N	Use accurate local iterative refinement.
+    mafft --localpair --maxiterate 1000 --op 10 --leavegappyregion ${fasta_nuc} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta
     awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta > ${fasta_nuc.baseName}_aligned_nuc.fasta # remove \\n in seq
-    mafft --auto ${fasta_aa} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_aa.baseName}_aligned_aa_tempo.fasta
+    mafft --localpair --maxiterate 1000 --op 10 --leavegappyregion ${fasta_aa} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_aa.baseName}_aligned_aa_tempo.fasta
     awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' ${fasta_aa.baseName}_aligned_aa_tempo.fasta > ${fasta_aa.baseName}_aligned_aa.fasta # remove \\n in seq
     echo "" > Mafft_align.log
     """
@@ -2447,7 +2452,7 @@ workflow {
                 .view()
 
     if(align_soft == "abalign" && (align_seq == "query" || align_seq == "igblast_full" || align_seq == "trimmed" || align_seq == "c_sequence_alignment" || align_seq == "c_germline_alignment")){
-        align_soft == "mafft"
+        align_soft = "mafft"
         print("\n\nWARNING: align_soft PARAMETER RESET TO \"mafft\" SINCE align_seq PARAMETER IS:\n${align_seq}\n\n")
     }
     if(align_soft == "mafft"){

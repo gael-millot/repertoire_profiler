@@ -122,7 +122,8 @@ In [Jalview](https://www.jalview.org/download/):<br>
 
 <br>
 
-In [Abalign](http://47.108.188.197/abalign/), import a fasta file from the [fasta/for_alignment_aa](../fasta/for_alignment_aa) or [fasta/for_alignment_nuc](../fasta/for_alignment_nuc) folder and analyze interactively.
+In [Abalign](http://47.108.188.197/abalign/), import a fasta file from the [fasta/for_alignment_aa](../fasta/for_alignment_aa) or [fasta/for_alignment_nuc](../fasta/for_alignment_nuc) folder and analyze interactively.<br><br>
+Warning: if the <code>align_seq</code> parameter of the <i>nextflow.config</i> file is <code>query</code>, then the vizualization is performed only for the aa sequences that are in phase (i.e., that have identifiable v, d or j regions).
 
 <br><br><br>
 

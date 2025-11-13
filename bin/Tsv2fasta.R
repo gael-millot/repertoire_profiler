@@ -535,7 +535,11 @@ for(i0 in align_seq2){
         }
         tempo.name <- paste0(seq_name, ".fasta")
         for(i1 in 1:nrow(df)) {
-            tempo.cat <- paste0(">", df[i1, Name], "\n", gsub(x = df[i1, i0], pattern = "-", replacement = ""), "\n")
+            tempo_seq <- gsub(x = df[i1, i0], pattern = "-", replacement = "")
+            if(nuc_or_aa == "aa"){
+                tempo_seq <- gsub(x = tempo_seq, pattern = "\\*", replacement = "X")
+            }
+            tempo.cat <- paste0(">", df[i1, Name], "\n",tempo_seq, "\n")
             cat(tempo.cat, file = file.path(dir_name, tempo.name), append = TRUE)
         }
 

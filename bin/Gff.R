@@ -67,8 +67,8 @@ script <- "Gff"
 
 ### Arguments : 
 
-# fasta_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/example_of_results/repertoire_profiler_1762523781/alignments/nuc/sequence_alignment_aligned_nuc.fasta"
-# tsv_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/example_of_results/repertoire_profiler_1762523781/tsv/productive_seq.tsv"
+# fasta_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/example_of_results/repertoire_profiler_1762527194/alignments/aa/sequence_alignment_aa_clone_id_10_IGHV4-34_IGHJ6_aligned_aa.fasta"
+# tsv_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/example_of_results/repertoire_profiler_1762527194/tsv/clone_assigned_seq.tsv"
 # Name <- "sequence_id"                # name of the column containing the sequence ids
 # align_seq <- "sequence_alignment"        # name of the columns containing the sequences to put in the fasta file (can be a single string or several strings seperated by "," if several columns are needed. the fastas will then be created in different folders)
 # clone_germline_kind <- "dmask"
@@ -76,6 +76,9 @@ script <- "Gff"
 # cute <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/bin/cute_little_R_functions_v12.8.R"
 # tag <- "CLONE"
 # log <- "Tsv2fastaGff.log"
+
+
+
 
 
 ################################# End test
@@ -419,6 +422,17 @@ for(i0 in names(df)){ # NA in xlsx file become "NA". Thus, has to be replaced by
     }
 }
 
+# test that all non trimmed sequences start at 1 for fwr1_start, or NA
+tempo_log <- df$fwr1_start != 1 & df$is_sequence_trimmed == FALSE
+if(any(tempo_log, na.rm = TRUE)){ # NA not considered
+    stop(paste0("\n\n============\n\nERROR IN ", script, ".R\nIMPORTED FILE:\n", tsv_path, "\nHAS fwr1_start COLUMN THAT IS NOT 1, WHILE is_sequence_trimmed COLUMN IS TRUE, IN LINES:\n", paste(which(tempo_log), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
+}
+tempo_log <- df$fwr1_start == 1 & ! is.na(df$removed_sequence)
+if(any(tempo_log, na.rm = TRUE)){ # NA not considered
+    stop(paste0("\n\n============\n\nERROR IN ", script, ".R\nIMPORTED FILE:\n", tsv_path, "\nHAS fwr1_start COLUMN THAT IS 1, WHILE removed_sequence COLUMN IS NOT NA, IN LINES:\n", paste(which(tempo_log), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
+}
+# end test that all non trimmed sequences start at 1 for fwr1_start, or NA
+
 
 ############ end check
 
@@ -468,6 +482,7 @@ if(base::grepl(x = fasta_path, pattern = "*aa.fasta$")){
         align_seq3 <- align_seq2[2]
     }else{
         align_seq3 <- Germline[2]
+        align_seq4 <- Germline[1] # to get the name of the germline seq in the fasta file, even if aa
     }
 }else if(base::grepl(x = fasta_path, pattern = "*nuc.fasta$")){
     nuc_or_aa <- "nuc"
@@ -475,6 +490,7 @@ if(base::grepl(x = fasta_path, pattern = "*aa.fasta$")){
         align_seq3 <- align_seq2[1]
     }else{
         align_seq3 <- Germline[1]
+        align_seq4 <- Germline[1] # to get the name of the germline seq in the fasta file, even if aa
     }
 }
 
@@ -485,8 +501,8 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
     # define the column names of the coordinates in the tsv file
     vdjc_features <- c("v", "d", "j", "c")
     fwr_cdr_features <- c("fwr1", "cdr1", "fwr2", "cdr2", "fwr3", "cdr3", "fwr4") 
-    vdjc_features_colors <- c("red", "green", "blue", "yellow")
-    fwr_cdr_features_colors <- c("yellow", "pink", "yellow", "pink", "yellow", "pink", "yellow")
+    vdjc_features_colors <- c("#FFB6C1", "#90EE90", "#a5e4f9ff", "#FFC878")
+    fwr_cdr_features_colors <- c("#FFB6C1", "#90EE90", "#a5e4f9ff", "#FFC878", "#f17cf1ff", "#aefafaff", "#f9f971ff")
     if(tag == "CLONE"){ # means that the column taken are coordinates of the germline sequence only. All the columns in the clone_assign_seq.tsv start by "clonal_germline_"
         vdjc_column_start <- paste0("clonal_germline_", vdjc_features, "_start")
         vdjc_column_end <- paste0("clonal_germline_", vdjc_features, "_end")
@@ -494,14 +510,31 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
         fwr_cdr_column_end <- paste0("clonal_germline_", fwr_cdr_features, "_end")
     }else{ # tag == "ALL"
         if(grepl(x = align_seq, pattern = ".*_alignment")){ # for align_seq %in% sequence_alignment|v_sequence_alignment|d_sequence_alignment|j_sequence_alignment|c_sequence_alignment|germline_alignment|v_germline_alignment|d_germline_alignment|j_germline_alignment|c_germline_alignment. These coordinates are for both aligned germline and sequence 
-            vdjc_column_start <- paste0(vdjc_features, "_alignment_start")
-            vdjc_column_end <- paste0(vdjc_features, "_alignment_end")
-            fwr_cdr_column_start <- NULL
-            fwr_cdr_column_end <- NULL
-        }else if(align_seq %in% c("query", "igblast_full", "trimmed")){
-            vdjc_column_start <- paste0(vdjc_features, "_sequence_start")
-            vdjc_column_end <- paste0(vdjc_features, "_sequence_end")
-            fwr_cdr_column_start <- paste0(fwr_cdr_features, "_start")
+            vdjc_column_start <- paste0(vdjc_features, "_alignment_start") # use v_alignment_start, etc. (no trim correction needed)
+            vdjc_column_end <- paste0(vdjc_features, "_alignment_end") # use v_alignment_start, etc. (no trim correction needed)
+            fwr_cdr_column_start <- paste0(fwr_cdr_features, "_start") # use fwr1_start, etc., but needs trim correction (add removed seq length)
+            fwr_cdr_column_end <- paste0(fwr_cdr_features, "_start") # use fwr1_start, etc., but needs trim correction (add removed seq length)
+        }else if(align_seq %in% c("trimmed")){
+            vdjc_column_start <- paste0(vdjc_features, "_sequence_start") # use v_alignment_start, etc. (no trim correction needed)
+            vdjc_column_end <- paste0(vdjc_features, "_sequence_end") # use v_alignment_start, etc. (no trim correction needed)
+            fwr_cdr_column_start <- paste0(fwr_cdr_features, "_start") # use fwr1_start, etc., but needs trim correction (subtract removed seq length)
+            fwr_cdr_column_end <- paste0(fwr_cdr_features, "_end") # use fwr1_start, etc., but needs trim correction (subtract removed seq length)
+        }else if(align_seq %in% c("igblast_full")){
+            if(nuc_or_aa == "nuc"){
+                vdjc_column_start <- NULL # because positions starts at the v regions while igblast_full has the query seq as nuc sequence
+                vdjc_column_end <- NULL
+                fwr_cdr_column_start <- paste0(fwr_cdr_features, "_start") # because positions starts at the query region
+                fwr_cdr_column_end <- paste0(fwr_cdr_features, "_end")
+            }else if(nuc_or_aa == "aa"){
+                vdjc_column_start <- paste0(vdjc_features, "_sequence_start") # because igblast_full trims the nuc before translating. So the aa seq starts at the v regions 
+                vdjc_column_end <- paste0(vdjc_features, "_sequence_end")
+                fwr_cdr_column_start <- paste0(fwr_cdr_features, "_start")
+                fwr_cdr_column_end <- paste0(fwr_cdr_features, "_end")
+            }
+        }else if(align_seq %in% c("query")){
+            vdjc_column_start <- NULL # because positions starts at the v regions 
+            vdjc_column_end <- NULL
+            fwr_cdr_column_start <- paste0(fwr_cdr_features, "_start") # because positions starts at the query region
             fwr_cdr_column_end <- paste0(fwr_cdr_features, "_end")
         }else{ # for align_seq %in% fwr1|fwr2|fwr3|fwr4|cdr1|cdr2|cdr3|junction
             vdjc_column_start <- NULL
@@ -534,64 +567,66 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
     seq_names <- fasta[grepl(x = fasta, pattern = "^>")]
     seq_aligned <- fasta[ ! grepl(x = fasta, pattern = "^>")]
     seq_names_for_tsv <- sub(x = seq_names, pattern = "^>", replacement = "")
-    selected_index <- match(seq_names_for_tsv, df$sequence_id) # line number in df
+    selected_index <- match(seq_names_for_tsv, df$sequence_id) # line number in df. Warning: only use this in df
     if(tag == "CLONE"){ # coordinates only for germline seq
-        tempo_log <- grepl(x = seq_names_for_tsv, pattern = paste0("^>", align_seq3))
+        tempo_log <- grepl(x = seq_names_for_tsv, pattern = paste0("^", align_seq4))
         seq_names <- seq_names[tempo_log]
         seq_aligned <- seq_aligned[tempo_log]
         seq_names_for_tsv <- seq_names_for_tsv[tempo_log]
         clone_id <- as.integer(sub(pattern = ".*clone_id_([0-9]+)_.*", replacement = "\\1", x = seq_names_for_tsv))
-        selected_index <- which(df$clone_id == clone_id)[1] # first line taken for coordinates
+        selected_index <- which(df$clone_id == clone_id)[1] # first line taken for coordinates. Warning: only use this in df
     }
     # end get the names of sequences
     # get coordinates
     for(i2 in c("vdjc", "fwr_cdr")){
         gff_rows <- list()
         for(i3 in 1:length(selected_index)){
+            # to deal with trimming (seq before start of V region): 
+            rm_seq <- df[selected_index[i3], "removed_sequence"] # can be NA if no trimming
+            if(is.na(rm_seq)){
+                length_to_rm <- 0
+            }else{
+                length_to_rm <- length(rm_seq)
+            }
+            # end to deal with trimming (seq before start of V region)
             for(i4 in 1:length(get(paste0(i2, "_features")))){
                 if( ! is.null(get(paste0(i2, "_column_start")))){
                     # nuc coordinates
                     start_coord <- df[selected_index[i3], get(paste0(i2, "_column_start"))[i4]]
                     end_coord <- df[selected_index[i3], get(paste0(i2, "_column_end"))[i4]]
                     if(nuc_or_aa == "nuc"){
-                        if( ! is.na(start_coord)){
                             # coord subtraction for the trimmed sequence, because coordinates are those of the query sequence
-                            if(tag == "ALL" & align_seq == "trimmed"){
-                                rm_seq <- df[selected_index[i3], "removed_sequence"]
-                                if(is.na(rm_seq)){
-                                    length_to_rm <- 0
-                                }else{
-                                    length_to_rm <- length(rm_seq)
+                            if(tag == "ALL"){
+                                if(grepl(x = align_seq, pattern = ".*_alignment")){
+                                    if(i2 == "fwr_cdr"){
+                                        start_coord <- start_coord + length_to_rm
+                                        end_coord <- end_coord + length_to_rm
+                                    }
                                 }
+
+
+
+
+
+
+
                                 start_coord <- start_coord - length_to_rm
-                                if (start_coord < 1) {
-                                    stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nAFTER CORRECTION OF THE START COORDINATE ACCORDING TO THE LENGTH OF THE REMOVED PART IN THE TRIMMED SEQ, IT IS LESS THAN 1:\n", start_coord, "\nSEQ NAME:\n", seq_names_for_tsv[selected_index[i3]], "\nALIGNED SEQ:\n", seq_aligned[selected_index[i3]], "REMOVED SEQ:\n", rm_seq, "\n\n================\n\n"), call. = FALSE)
+                                if( ! is.na(end_coord)){
+                                    if(start_coord < 1){
+                                        stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nAFTER CORRECTION OF THE START COORDINATE ACCORDING TO THE LENGTH OF THE REMOVED PART IN THE TRIMMED SEQ, IT IS LESS THAN 1:\n", start_coord, "\nSEQ NAME:\n", seq_names_for_tsv[i3], "\nALIGNED SEQ:\n", seq_aligned[i3], "REMOVED SEQ:\n", rm_seq, "\n\n================\n\n"), call. = FALSE)
+                                    }
+                                }
+                                if( ! is.na(end_coord)){
+                                    if(end_coord < 1){
+                                        stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nAFTER CORRECTION OF THE END COORDINATE ACCORDING TO THE LENGTH OF THE REMOVED PART IN THE TRIMMED SEQ, IT IS LESS THAN 1 (AND START SEQ IS NOT !?):\n", end_coord, "\nSEQ NAME:\n", seq_names_for_tsv[i3], "\nALIGNED SEQ:\n", seq_aligned[i3], "REMOVED SEQ:\n", rm_seq, "\n\n================\n\n"), call. = FALSE)
+                                    }
                                 }
                             }
                             # end coord subtraction for the trimmed sequence, because coordinates are those of the query sequence
                                 # nuc column
                             # shifed coordinates due to hyphens in the aligned seq
-                            start_coord <- map_ungapped_to_gapped(seq_aligned = seq_aligned[selected_index[i3]], ungapped_pos = start_coord)
-                            # end shifed coordinates due to hyphens in the aligned seq
-                        }
-                        if( ! is.na(end_coord)){
-                            # coord subtraction for the trimmed sequence, because coordinates are those of the query sequence
-                            if(tag == "ALL" & align_seq == "trimmed"){
-                                rm_seq <- df[selected_index[i3], "removed_sequence"]
-                                if(is.na(rm_seq)){
-                                    length_to_rm <- 0
-                                }else{
-                                    length_to_rm <- length(rm_seq)
-                                }
-                                end_coord <- end_coord - length_to_rm
-                                if (end_coord < 1) {
-                                    stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nAFTER CORRECTION OF THE END COORDINATE ACCORDING TO THE LENGTH OF THE REMOVED PART IN THE TRIMMED SEQ, IT IS LESS THAN 1 (AND START SEQ IS NOT !?):\n", end_coord, "\nSEQ NAME:\n", seq_names_for_tsv[selected_index[i3]], "\nALIGNED SEQ:\n", seq_aligned[selected_index[i3]], "REMOVED SEQ:\n", rm_seq, "\n\n================\n\n"), call. = FALSE)
-                                }
-                            }
-                            # end coord subtraction for the trimmed sequence, because coordinates are those of the query sequence
-                                # nuc column
-                            # shifed coordinates due to hyphens in the aligned seq
-                            end_coord <- map_ungapped_to_gapped(seq_aligned = seq_aligned[selected_index[i3]], ungapped_pos = end_coord)
+                            start_coord <- map_ungapped_to_gapped(seq_aligned = seq_aligned[i3], ungapped_pos = start_coord)
+                            end_coord <- map_ungapped_to_gapped(seq_aligned = seq_aligned[i3], ungapped_pos = end_coord)
                             # end shifed coordinates due to hyphens in the aligned seq
                         }
                         # end nuc coordinates
