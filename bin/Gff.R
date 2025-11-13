@@ -431,6 +431,11 @@ tempo_log <- df$fwr1_start == 1 & ! is.na(df$removed_sequence)
 if(any(tempo_log, na.rm = TRUE)){ # NA not considered
     stop(paste0("\n\n============\n\nERROR IN ", script, ".R\nIMPORTED FILE:\n", tsv_path, "\nHAS fwr1_start COLUMN THAT IS 1, WHILE removed_sequence COLUMN IS NOT NA, IN LINES:\n", paste(which(tempo_log), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
 }
+length()
+tempo_log <- df$fwr1_start == 1 & ! is.na(df$removed_sequence)
+if(any(tempo_log, na.rm = TRUE)){ # NA not considered
+    stop(paste0("\n\n============\n\nERROR IN ", script, ".R\nIMPORTED FILE:\n", tsv_path, "\nHAS fwr1_start COLUMN THAT IS 1, WHILE removed_sequence COLUMN IS NOT NA, IN LINES:\n", paste(which(tempo_log), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
+}
 # end test that all non trimmed sequences start at 1 for fwr1_start, or NA
 
 
@@ -587,6 +592,9 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
                 length_to_rm <- 0
             }else{
                 length_to_rm <- length(rm_seq)
+                if(nuc_or_aa == "aa"){
+
+                }
             }
             # end to deal with trimming (seq before start of V region)
             for(i4 in 1:length(get(paste0(i2, "_features")))){

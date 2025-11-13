@@ -176,17 +176,49 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
         {
             if(FNR==1){ # first line
                 gsub(/\r/, "") # remove CR
-                print $0"\ttrimmed_sequence\tis_sequence_trimmed\tremoved_sequence\tremoved_sequence_length\ttrimmed_sequence_aa\tquery_sequence_aa\talign_seq_identical\taa_identical\tsequence_aa_stop\tsequence_alignment_aa_stop\tgermline_alignment_aa_stop\ttrimmed_sequence_aa_stop\tquery_sequence_aa_stop\n" > "trimtranslate.tsv"
+                print $0"\ttrimmed_sequence\tis_sequence_trimmed\tremoved_sequence\tremoved_sequence_length\ttrimmed_sequence_aa\tquery_sequence_aa\talign_seq_identical\taa_identical\tsequence_aa_stop\tsequence_alignment_aa_stop\tgermline_alignment_aa_stop\ttrimmed_sequence_aa_stop\tquery_sequence_aa_stop\tfwr1_alignment_start\tfwr1_alignment_end\tcdr1_alignment_start\tcdr1_alignment_end\tfwr2_alignment_start\tfwr2_alignment_end\tcdr2_alignment_start\tcdr2_alignment_end\tfwr3_alignment_start\tfwr3_alignment_end\tcdr3_alignment_start\tcdr3_alignment_end\tfwr4_alignment_start\tfwr4_alignment_end\n" > "trimtranslate.tsv"
                 # header added to trimtranslate.tsv
+                NAME_COL_NB=i4="FALSE"
                 SEQ_COL_NB="FALSE"
                 SEQ_AA_COL_NB="FALSE"
+                fwr1_start_NB="FALSE"
+                fwr1_end_NB="FALSE"
+                cdr1_start_NB="FALSE"
+                cdr1_end_NB="FALSE"
+                fwr2_start_NB="FALSE"
+                fwr2_end_NB="FALSE"
+                cdr2_start_NB="FALSE"
+                cdr2_end_NB="FALSE"
+                fwr3_start_NB="FALSE"
+                fwr3_end_NB="FALSE"
+                cdr3_start_NB="FALSE"
+                cdr3_end_NB="FALSE"
+                fwr4_start_NB="FALSE"
+                fwr4_end_NB="FALSE"
+                v_alignment_start_NB="FALSE"
                 SEQ_ALIGN_AA_COL_NB="FALSE"
                 GERM_ALIGN_AA_COL_NB="FALSE"
                 SEQ_ALIGN_COL_NB="FALSE"
                 SEQ_ALIGN_GAP_COL_NB="FALSE"
                 for(i4=1; i4<=NF; i4++){
+                    if($i4=="sequence_id"){NAME_COL_NB=i4}
                     if($i4==var1){SEQ_COL_NB=i4}
                     if($i4==var7){SEQ_AA_COL_NB=i4}
+                    if($i4=="fwr1_start"){fwr1_start_NB=i4}
+                    if($i4=="fwr1_end"){fwr1_end_NB=i4}
+                    if($i4=="cdr1_start"){cdr1_start_NB=i4}
+                    if($i4=="cdr1_end"){cdr1_end_NB=i4}
+                    if($i4=="fwr2_start"){fwr2_start_NB=i4}
+                    if($i4=="fwr2_end"){fwr2_end_NB=i4}
+                    if($i4=="cdr2_start"){cdr2_start_NB=i4}
+                    if($i4=="cdr2_end"){cdr2_end_NB=i4}
+                    if($i4=="fwr3_start"){fwr3_start_NB=i4}
+                    if($i4=="fwr3_end"){fwr3_end_NB=i4}
+                    if($i4=="cdr3_start"){cdr3_start_NB=i4}
+                    if($i4=="cdr3_end"){cdr3_end_NB=i4}
+                    if($i4=="fwr4_start"){fwr4_start_NB=i4}
+                    if($i4=="fwr4_end"){fwr4_end_NB=i4}
+                    if($i4=="v_alignment_start"){v_alignment_start_NB=i4}
                     if($i4=="sequence_alignment_aa"){SEQ_ALIGN_AA_COL_NB=i4}
                     if($i4=="germline_alignment_aa"){GERM_ALIGN_AA_COL_NB=i4}
                     if($i4=="sequence_alignment"){SEQ_ALIGN_COL_NB=i4}
@@ -198,6 +230,66 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
                 }
                 if(SEQ_AA_COL_NB=="FALSE"){
                     print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO "var7" COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                    exit 1
+                }
+                if(fwr1_start_NB=="FALSE"){
+                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO fwr1_start COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                    exit 1
+                }
+                if(fwr1_end_NB=="FALSE"){
+                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO fwr1_end COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                    exit 1
+                }
+                if(cdr1_start_NB=="FALSE"){
+                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO cdr1_start COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                    exit 1
+                }
+                if(cdr1_end_NB=="FALSE"){
+                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO cdr1_end COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                    exit 1
+                }
+                if(fwr2_start_NB=="FALSE"){
+                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO fwr2_start COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                    exit 1
+                }
+                if(fwr2_end_NB=="FALSE"){
+                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO fwr2_end COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                    exit 1
+                }
+                if(cdr2_start_NB=="FALSE"){
+                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO cdr2_start COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                    exit 1
+                }
+                if(cdr2_end_NB=="FALSE"){
+                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO cdr2_end COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                    exit 1
+                }
+                if(fwr3_start_NB=="FALSE"){
+                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO fwr3_start COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                    exit 1
+                }
+                if(fwr3_end_NB=="FALSE"){
+                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO fwr3_end COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                    exit 1
+                }
+                if(cdr3_start_NB=="FALSE"){
+                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO cdr3_start COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                    exit 1
+                }
+                if(cdr3_end_NB=="FALSE"){
+                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO cdr3_end COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                    exit 1
+                }
+                if(fwr4_start_NB=="FALSE"){
+                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO fwr4_start COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                    exit 1
+                }
+                if(fwr4_end_NB=="FALSE"){
+                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO fwr4_end COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
+                    exit 1
+                }
+                if(v_alignment_start_NB=="FALSE"){
+                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nNO v_alignment_start COLUMN NAME FOUND IN THE INPUT FILE\n\n========\n\n"
                     exit 1
                 }
                 if(SEQ_ALIGN_AA_COL_NB=="FALSE"){
@@ -230,6 +322,22 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
                 #         if(i5!=FN){print "\t" > "trimtranslate.tsv"} # because of BEGIN
                 #     }
                 # }
+                REMOVED_SEQ_LENGTH=length(var4)
+                if($v_alignment_start_NB!=1){
+                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nv_alignment_start SHOULD BE 1 AND NOT "$v_alignment_start_NB" FOR "$NAME_COL_NB"\n\n========\n\n"
+                    exit 1
+                }
+                if($v_alignment_start_NB!=1){
+                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nv_alignment_start SHOULD BE 1 AND NOT "$v_alignment_start_NB" FOR "$NAME_COL_NB"\n\n========\n\n"
+                    exit 1
+                }
+                if($fwr1_start_NB!="NA"){
+                    DIFF=REMOVED_SEQ_LENGTH+1-$fwr1_start_NB
+                    if(DIFF!=0){
+                        print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nremoved_sequence_length + 1 - fwr1_start SHOULD BE EQUAL TO ZERO AND NOT "DIFF" FOR "$NAME_COL_NB"\n\n========\n\n"
+                        exit 1
+                    }
+                }
                 if($SEQ_AA_COL_NB==var5){
                     IDENTICAL="TRUE"
                 }else{
@@ -267,7 +375,21 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
                 }else{
                     IDENT_SEQ_ALIGN="FALSE"
                 }
-                print $0"\t"var2"\t"var3"\t"var4"\t"length(var4)"\t"var5"\t"var6"\t"IDENT_SEQ_ALIGN"\t"IDENTICAL"\t"SEQ_AA_STOP"\t"SEQ_ALIGN_AA_STOP"\t"GERM_ALIGN_AA_STOP"\t"TRIM_AA_SEQ_STOP"\t"INI_AA_SEQ_STOP"\n" > "trimtranslate.tsv"
+                if($fwr1_start_NB!=NA){fwr1_start_NB=$fwr1_start_NB-REMOVED_SEQ_LENGTH}
+                if($fwr1_end_NB!=NA){$fwr1_end_NB-REMOVED_SEQ_LENGTH}
+                if($cdr1_start_NB!=NA){$cdr1_start_NB-REMOVED_SEQ_LENGTH}
+                if($cdr1_end_NB!=NA){$cdr1_end_NB-REMOVED_SEQ_LENGTH}
+                if($fwr2_start_NB!=NA){$fwr2_start_NB-REMOVED_SEQ_LENGTH}
+                if($fwr2_end_NB!=NA){$fwr2_end_NB-REMOVED_SEQ_LENGTH}
+                if($cdr2_start_NB!=NA){$cdr2_start_NB-REMOVED_SEQ_LENGTH}
+                if($cdr2_end_NB!=NA){$cdr2_end_NB-REMOVED_SEQ_LENGTH}
+                if($fwr3_start_NB!=NA){$fwr3_start_NB-REMOVED_SEQ_LENGTH}
+                if($fwr3_end_NB!=NA){$fwr3_end_NB-REMOVED_SEQ_LENGTH}
+                if($cdr3_start_NB!=NA){$cdr3_start_NB-REMOVED_SEQ_LENGTH}
+                if($cdr3_end_NB!=NA){$cdr3_end_NB-REMOVED_SEQ_LENGTH}
+                if($fwr4_start_NB!=NA){$fwr4_start_NB-REMOVED_SEQ_LENGTH}
+                if($fwr4_end_NB!=NA){$fwr4_end_NB-REMOVED_SEQ_LENGTH}
+                print $0"\t"var2"\t"var3"\t"var4"\t"REMOVED_SEQ_LENGTH"\t"var5"\t"var6"\t"IDENT_SEQ_ALIGN"\t"IDENTICAL"\t"SEQ_AA_STOP"\t"SEQ_ALIGN_AA_STOP"\t"GERM_ALIGN_AA_STOP"\t"TRIM_AA_SEQ_STOP"\t"INI_AA_SEQ_STOP"\t"fwr1_start_NB"\t"fwr1_end_NB"\t"cdr1_start_NB"\t"cdr1_end_NB"\t"fwr2_start_NB"\t"fwr2_end_NB"\t"cdr2_start_NB"\t"cdr2_end_NB"\t"fwr3_start_NB"\t"fwr3_end_NB"\t"cdr3_start_NB"\t"cdr3_end_NB"\t"fwr4_start_NB"\t"fwr4_end_NB"\n" > "trimtranslate.tsv"
             }
         }
     ' ${select_ch} |& tee -a trimtranslate.log
