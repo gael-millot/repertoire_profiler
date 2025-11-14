@@ -2451,9 +2451,9 @@ workflow {
                 }
                 .view()
 
-    if(align_soft == "abalign" && (align_seq == "query" || align_seq == "igblast_full" || align_seq == "trimmed" || align_seq == "c_sequence_alignment" || align_seq == "c_germline_alignment")){
+    if(align_soft == "abalign" && (align_seq == "query" || align_seq == "igblast_full" || align_seq == "trimmed" || align_seq == "fwr1" || align_seq == "fwr2" || align_seq == "fwr3" || align_seq == "fwr4" || align_seq == "cdr1" || align_seq == "cdr2" || align_seq == "cdr3" || align_seq == "junction" || align_seq == "d_sequence_alignment" || align_seq == "j_sequence_alignment" || align_seq == "c_sequence_alignment" || align_seq == "d_germline_alignment" || align_seq == "j_germline_alignment" || align_seq == "c_germline_alignment")){
         align_soft = "mafft"
-        print("\n\nWARNING: align_soft PARAMETER RESET TO \"mafft\" SINCE align_seq PARAMETER IS:\n${align_seq}\n\n")
+        print("\n\nWARNING: align_soft PARAMETER RESET TO \"mafft\" SINCE align_soft PARAMETER WAS SET TO \"abalign\" BUT THAT IT REQUIRES AT LEAST A V DOMAIN IN THE SEQUENCES,\nWHILE align_seq PARAMETER IS SET TO \"${align_seq}\"\n\n")
     }
     if(align_soft == "mafft"){
         Mafft_align(

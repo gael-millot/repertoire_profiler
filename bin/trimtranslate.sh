@@ -323,13 +323,11 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
                 #     }
                 # }
                 REMOVED_SEQ_LENGTH=length(var4)
-                if($v_alignment_start_NB!=1){
-                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nv_alignment_start SHOULD BE 1 AND NOT "$v_alignment_start_NB" FOR "$NAME_COL_NB"\n\n========\n\n"
-                    exit 1
-                }
-                if($v_alignment_start_NB!=1){
-                    print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nv_alignment_start SHOULD BE 1 AND NOT "$v_alignment_start_NB" FOR "$NAME_COL_NB"\n\n========\n\n"
-                    exit 1
+                if($v_alignment_start_NB!="NA"){
+                    if($v_alignment_start_NB!=1){
+                        print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nv_alignment_start SHOULD BE 1 OR NA AND NOT "$v_alignment_start_NB" FOR "$NAME_COL_NB"\n\n========\n\n"
+                        exit 1
+                    }
                 }
                 if($fwr1_start_NB!="NA"){
                     DIFF=REMOVED_SEQ_LENGTH+1-$fwr1_start_NB
@@ -375,21 +373,21 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
                 }else{
                     IDENT_SEQ_ALIGN="FALSE"
                 }
-                if($fwr1_start_NB!=NA){fwr1_start_NB=$fwr1_start_NB-REMOVED_SEQ_LENGTH}
-                if($fwr1_end_NB!=NA){$fwr1_end_NB-REMOVED_SEQ_LENGTH}
-                if($cdr1_start_NB!=NA){$cdr1_start_NB-REMOVED_SEQ_LENGTH}
-                if($cdr1_end_NB!=NA){$cdr1_end_NB-REMOVED_SEQ_LENGTH}
-                if($fwr2_start_NB!=NA){$fwr2_start_NB-REMOVED_SEQ_LENGTH}
-                if($fwr2_end_NB!=NA){$fwr2_end_NB-REMOVED_SEQ_LENGTH}
-                if($cdr2_start_NB!=NA){$cdr2_start_NB-REMOVED_SEQ_LENGTH}
-                if($cdr2_end_NB!=NA){$cdr2_end_NB-REMOVED_SEQ_LENGTH}
-                if($fwr3_start_NB!=NA){$fwr3_start_NB-REMOVED_SEQ_LENGTH}
-                if($fwr3_end_NB!=NA){$fwr3_end_NB-REMOVED_SEQ_LENGTH}
-                if($cdr3_start_NB!=NA){$cdr3_start_NB-REMOVED_SEQ_LENGTH}
-                if($cdr3_end_NB!=NA){$cdr3_end_NB-REMOVED_SEQ_LENGTH}
-                if($fwr4_start_NB!=NA){$fwr4_start_NB-REMOVED_SEQ_LENGTH}
-                if($fwr4_end_NB!=NA){$fwr4_end_NB-REMOVED_SEQ_LENGTH}
-                print $0"\t"var2"\t"var3"\t"var4"\t"REMOVED_SEQ_LENGTH"\t"var5"\t"var6"\t"IDENT_SEQ_ALIGN"\t"IDENTICAL"\t"SEQ_AA_STOP"\t"SEQ_ALIGN_AA_STOP"\t"GERM_ALIGN_AA_STOP"\t"TRIM_AA_SEQ_STOP"\t"INI_AA_SEQ_STOP"\t"fwr1_start_NB"\t"fwr1_end_NB"\t"cdr1_start_NB"\t"cdr1_end_NB"\t"fwr2_start_NB"\t"fwr2_end_NB"\t"cdr2_start_NB"\t"cdr2_end_NB"\t"fwr3_start_NB"\t"fwr3_end_NB"\t"cdr3_start_NB"\t"cdr3_end_NB"\t"fwr4_start_NB"\t"fwr4_end_NB"\n" > "trimtranslate.tsv"
+                if($fwr1_start_NB!="NA"){fwr1_start2=$fwr1_start_NB-REMOVED_SEQ_LENGTH}else{fwr1_start2="NA"}
+                if($fwr1_end_NB!="NA"){fwr1_end2=$fwr1_end_NB-REMOVED_SEQ_LENGTH}else{fwr1_end2="NA"}
+                if($cdr1_start_NB!="NA"){cdr1_start2=$cdr1_start_NB-REMOVED_SEQ_LENGTH}else{cdr1_start2="NA"}
+                if($cdr1_end_NB!="NA"){cdr1_end2=$cdr1_end_NB-REMOVED_SEQ_LENGTH}else{cdr1_end2="NA"}
+                if($fwr2_start_NB!="NA"){fwr2_start2=$fwr2_start_NB-REMOVED_SEQ_LENGTH}else{fwr2_start2="NA"}
+                if($fwr2_end_NB!="NA"){fwr2_end2=$fwr2_end_NB-REMOVED_SEQ_LENGTH}else{fwr2_end2="NA"}
+                if($cdr2_start_NB!="NA"){cdr2_start2=$cdr2_start_NB-REMOVED_SEQ_LENGTH}else{cdr2_start2="NA"}
+                if($cdr2_end_NB!="NA"){cdr2_end2=$cdr2_end_NB-REMOVED_SEQ_LENGTH}else{cdr2_end2="NA"}
+                if($fwr3_start_NB!="NA"){fwr3_start2=$fwr3_start_NB-REMOVED_SEQ_LENGTH}else{fwr3_start2="NA"}
+                if($fwr3_end_NB!="NA"){fwr3_end2=$fwr3_end_NB-REMOVED_SEQ_LENGTH}else{fwr3_end2="NA"}
+                if($cdr3_start_NB!="NA"){cdr3_start2=$cdr3_start_NB-REMOVED_SEQ_LENGTH}else{cdr3_start2="NA"}
+                if($cdr3_end_NB!="NA"){cdr3_end2=$cdr3_end_NB-REMOVED_SEQ_LENGTH}else{cdr3_end2="NA"}
+                if($fwr4_start_NB!="NA"){fwr4_start2=$fwr4_start_NB-REMOVED_SEQ_LENGTH}else{fwr4_start2="NA"}
+                if($fwr4_end_NB!="NA"){fwr4_end2=$fwr4_end_NB-REMOVED_SEQ_LENGTH}else{fwr4_end2="NA"}
+                print $0"\t"var2"\t"var3"\t"var4"\t"REMOVED_SEQ_LENGTH"\t"var5"\t"var6"\t"IDENT_SEQ_ALIGN"\t"IDENTICAL"\t"SEQ_AA_STOP"\t"SEQ_ALIGN_AA_STOP"\t"GERM_ALIGN_AA_STOP"\t"TRIM_AA_SEQ_STOP"\t"INI_AA_SEQ_STOP"\t"fwr1_start2"\t"fwr1_end2"\t"cdr1_start2"\t"cdr1_end2"\t"fwr2_start2"\t"fwr2_end2"\t"cdr2_start2"\t"cdr2_end2"\t"fwr3_start2"\t"fwr3_end2"\t"cdr3_start2"\t"cdr3_end2"\t"fwr4_start2"\t"fwr4_end2"\n" > "trimtranslate.tsv"
             }
         }
     ' ${select_ch} |& tee -a trimtranslate.log
