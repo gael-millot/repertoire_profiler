@@ -97,10 +97,16 @@ process Closest_germline {
             if(length(unique(db[, germline_col_name])) != 1){
                 stop(paste0("\\n\\n================\\n\\nERROR IN Closest_germline PROCESS.\\nSEQUENCES ARE NOT IDENTICAL IN THE ", germline_col_name, " COLUMN:\\n", paste0(db[, germline_col_name], collapse = "\\n"), "\\n\\n================\\n\\n"), call. = FALSE)
             }
+            # add clonal_germline_seq columns
+            db <- data.frame(db, TEMPO_NAME_1 = db[ , germline_col_name])
+            names(db)[names(db) == "TEMPO_NAME_1"] <- "clonal_germline_sequence_with_gaps"
+            db <- data.frame(db, TEMPO_NAME_2 = gsub(x = db[ , germline_col_name], pattern = "\\\\.", replacement = ""))
+            names(db)[names(db) == "TEMPO_NAME_2"] <- "clonal_germline_sequence_no_gaps"
+            # end add clonal_germline_seq columns
             # make fasta file
             fasta <- file("clonal_germline_seq.fasta", "w")
-            writeLines(paste0(">clone_id_", db\$clone_id[1]), fasta) #first line taken because clonal germline seq are identical
-            writeLines(db[1, germline_col_name], fasta)
+            writeLines(paste0(">clone_id_", db\$clone_id[1]), fasta) # first line taken because clonal germline seq are identical
+            writeLines(db[1, "clonal_germline_sequence_no_gaps"], fasta)
             close(fasta)
             # end make fasta file
             # move clone_id

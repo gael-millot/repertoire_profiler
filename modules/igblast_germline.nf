@@ -42,6 +42,8 @@ process Igblast_germline_coords {
         db <- coords[, match(col_names, names(coords))]
         names(db) <- sub(x = names(db), pattern = "sequence_", "")
         names(db) <- paste0("clonal_germline_", names(db))
+        names(db)[names(db) == "clonal_germline_alignment"] <- "clonal_germline_alignment_igblast_airr"
+        names(db)[names(db) == "clonal_germline_alignment_aa"] <- "clonal_germline_alignment_aa_igblast_airr"
         tsv <- data.frame(tsv, db)
         write.table(tsv, file = "with_germ_coords.tsv", row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
     ' *_igblast.tsv *_germ-pass.tsv |& tee -a igblast_germline_report.log
