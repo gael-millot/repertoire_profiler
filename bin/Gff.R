@@ -77,6 +77,17 @@ script <- "Gff"
 # tag <- "CLONE"
 # log <- "Tsv2fastaGff.log"
 
+fasta_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1763116057/alignments/aa/trimmed_sequence_aa_clone_id_10_IGHV4-34_IGHJ6_aligned_aa.fasta"
+tsv_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1763116057/tsv/clone_assigned_seq.tsv"
+Name <- "sequence_id"                # name of the column containing the sequence ids
+align_seq <- "trimmed"        # name of the columns containing the sequences to put in the fasta file (can be a single string or several strings seperated by "," if several columns are needed. the fastas will then be created in different folders)
+clone_germline_kind <- "dmask"
+align_clone_nb <- 3                    # Minimum number of rows in the tsv file. The program expects this to be respected, otherwise raises an error.
+cute <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/bin/cute_little_R_functions_v12.8.R"
+tag <- "CLONE"
+log <- "Tsv2fastaGff.log"
+
+
 
 
 

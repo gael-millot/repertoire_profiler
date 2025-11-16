@@ -100,8 +100,7 @@ process Closest_germline {
             # make fasta file
             fasta <- file("clonal_germline_seq.fasta", "w")
             writeLines(paste0(">clone_id_", db\$clone_id[1]), fasta) #first line taken because clonal germline seq are identical
-            tempo_seq <- gsub(x = db[1, germline_col_name], pattern = "\\\\.", replacement = "") # remove alignments dots dots
-            writeLines(tempo_seq, fasta)
+            writeLines(db[1, germline_col_name], fasta)
             close(fasta)
             # end make fasta file
             # move clone_id

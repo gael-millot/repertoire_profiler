@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 """
 Adds germline sequences to tsv database file
-Parses the imgt database reference files and creates new column for each germline_._call specified in the tsv
-Does not check if the all the reference files genes are present in the the germline_._call columns already present in the tsv, to allow flexibility in the input for references (there can be more than needed)
+Parses the imgt database reference files and creates new column for each germline_(v|d|j)_call specified in the tsv
+Does not check if the all the reference files genes are present in the the germline_(v|d|j)_call columns already present in the tsv, to allow flexibility in the input for references (there can be more than needed)
 """
 
 print("Debut")
@@ -101,7 +101,7 @@ def getArgParser():
              '''
              output files:
                  germ-pass
-                    tsv file with assigned germline sequences for each germline_._call column found in the input file.
+                    tsv file with assigned germline sequences for each germline_(v|d|j)_call column found in the input file.
 
              required fields:
                  germline_v_call, germline_j_call or germline_d_call (at least one)

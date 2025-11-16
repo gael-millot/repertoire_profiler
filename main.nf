@@ -755,9 +755,9 @@ process split_by_clones { // split the file into multiple files according to the
 
 
 
-// This process adds the germline sequences for each v,d,j gene specified in the germline_._call columns present in the tsv file
+// This process adds the germline sequences for each v,d,j gene specified in the germline_(v|d|j)_call columns present in the tsv file
 // Inputs:
-//      - closest_ch: tsv file containing at least germline_._call column (otherwise error), sequences already regrouped in clonal groups
+//      - closest_ch: tsv file containing at least germline_(v|d|j)_call column (otherwise error), sequences already regrouped in clonal groups
 //      - igblast_organism: value specified in nextflow.config
 //      - igblast_variable_ref_files: also specified in nextflow.config, contains germline ref sequences of IMGT database
 //                                     allele names already contained in the tsv will be used to search in thos files for the corresponding sequence
@@ -828,17 +828,18 @@ process TranslateGermline {
         if(any(germ_nuc != germ_nuc[1])){
             stop(paste0("\\n\\n================\\n\\nERROR IN TranslateGermline PROCESS.\\nTHE VALUES INSIDE THE Germline COLUMN SHOULD ALL BE THE SAME, BUT THEY ARE NOT.\\nHERE THEY ARE:\\n", paste0(germ_nuc, collapse = "\\n"),"\\n\\n================\\n\\n"), call. = FALSE)
         }
-        germ_without_gaps_seq <- gsub("\\\\.", "", germ_nuc[1])
-        germ_with_gaps_seq <- germ_nuc[1] 
-        germ_without_gaps_name <- "clonal_germline_alignment"
-        germ_with_gaps_name <- "clonal_germline_alignment_with_gaps"
-        df[[germ_without_gaps_name]] <- germ_without_gaps_seq
-        df[[germ_with_gaps_name]] <- germ_with_gaps_seq
-        length_no_gaps <- nchar(germ_without_gaps_seq)
+        germ_without_gaps <- gsub("\\\\.", "", germ_nuc[1])
+
+        tempo_name <- paste0(germline_col_name, "_no_gaps")
+        df[[tempo_name]] <- germ_without_gaps
+
+        length_no_gaps <- nchar(germ_without_gaps)
         if(length_no_gaps %% 3 != 0){
             cat(paste0("\\nWARNING: THE ", germline_col_name, " COLUMN CONTAINS ", length_no_gaps, " CHARACTERS WHEN GAPS ARE REMOVED, WHICH IS NOT A MULTIPLE OF 3. \\n"), file = "TranslateGermline.log", append = TRUE)
         }
-        germ_dna <- Biostrings::DNAString(germ_without_gaps_seq)
+
+        germ_dna <- Biostrings::DNAString(germ_without_gaps)
+
         # Catch a warning in the log file if raised
         withCallingHandlers(
             expr = {
@@ -849,12 +850,12 @@ process TranslateGermline {
                 invokeRestart("muffleWarning")
             }
         )
-        tempo_name <- "clonal_germline_alignment_aa"
+        tempo_name <- paste0(germline_col_name, "_aa_no_gaps")
         df[[tempo_name]] <- toString(germ_aa)
         file_base <- tools::file_path_sans_ext(basename(file_name))
         new_file_name <- paste0(file_base, "-trans_germ-pass.tsv")
         # add controls
-        df <- data.frame(df, clonal_germline_align_identical = df[ , germline_col_name] == df\$clonal_germline_alignment_with_gaps)
+        df <- data.frame(df, clonal_germline_align_identical = df[ , paste0(germline_col_name, "_no_gaps")] == df\$clonal_germline_alignment, clonal_germline_align_aa_identical = df[ , paste0(germline_col_name, "_aa_no_gaps")] == df\$clonal_germline_alignment_aa)
         # end add controls
         write.table(df, file = paste0("./", new_file_name), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
     '|& tee -a TranslateGermline.log
