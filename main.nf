@@ -1183,7 +1183,9 @@ process  Mafft_align {
 
     input:
     tuple path(fasta_nuc), path(fasta_aa), val(seq_kind) // parallelization expected (by clonal groups over align_clone_nb sequences)
-    
+    val align_mafft_all_options
+    val align_mafft_clonal_options
+
     output:
     tuple path("*_aligned_nuc.fasta"), path("*_aligned_aa.fasta"), val(seq_kind), emit: aligned_all_ch
     path "Mafft_align.log", emit: mafft_align_log_ch
@@ -1197,9 +1199,15 @@ process  Mafft_align {
     # --leavegappyregion	Don’t over-align ends or regions with many gaps.
     # --keeplength	Preserve sequence end lengths.
     # --localpair --maxiterate N	Use accurate local iterative refinement.
-    mafft --localpair --maxiterate 1000 --op 10 --leavegappyregion ${fasta_nuc} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta
+    if [[ "${seq_kind}" == "ALL" ]] ; then
+        PARAM=${align_mafft_all_options}
+    elif [[ "${seq_kind}" == "CLONE" ]] ; then
+        PARAM=${align_mafft_clone_options}
+    fi
+
+    mafft \$PARAM ${fasta_nuc} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta
     awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta > ${fasta_nuc.baseName}_aligned_nuc.fasta # remove \\n in seq
-    mafft --localpair --maxiterate 1000 --op 10 --leavegappyregion ${fasta_aa} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_aa.baseName}_aligned_aa_tempo.fasta
+    mafft \$PARAM ${fasta_aa} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_aa.baseName}_aligned_aa_tempo.fasta
     awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' ${fasta_aa.baseName}_aligned_aa_tempo.fasta > ${fasta_aa.baseName}_aligned_aa.fasta # remove \\n in seq
     echo "" > Mafft_align.log
     """
@@ -1814,7 +1822,15 @@ workflow {
     }else if( ! (align_seq =~ /^(query|igblast_full|trimmed|fwr1|fwr2|fwr3|fwr4|cdr1|cdr2|cdr3|junction|sequence_alignment|v_sequence_alignment|d_sequence_alignment|j_sequence_alignment|c_sequence_alignment|germline_alignment|v_germline_alignment|d_germline_alignment|j_germline_alignment|c_germline_alignment)$/) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID align_seq PARAMETER IN nextflow.config FILE:\n${align_seq}\nMUST BE EITHER \"query\", \"igblast_full\", \"trimmed\", \"fwr1\", \"fwr2\", \"fwr3\", \"fwr4\", \"cdr1\", \"cdr2\", \"cdr3\", \"junction\", \"sequence_alignment\", \"v_sequence_alignment\", \"d_sequence_alignment\", \"j_sequence_alignment\", \"c_sequence_alignment\", \"germline_alignment\", \"v_germline_alignment\", \"d_germline_alignment\", \"j_germline_alignment\", \"c_germline_alignment\".\n\n========\n\n"
     }
-
+    if( ! (align_abalign_options in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID align_abalign_options PARAMETER IN nextflow.config FILE:\n${align_abalign_options}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }
+    if( ! (align_mafft_all_options in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID align_mafft_all_options PARAMETER IN nextflow.config FILE:\n${align_mafft_all_options}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }
+    if( ! (align_mafft_clonal_options in String) ){
+        error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID align_mafft_clonal_options PARAMETER IN nextflow.config FILE:\n${align_mafft_clonal_options}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
+    }
     if( ! (meta_legend in String) ){
         error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID meta_legend PARAMETER IN nextflow.config FILE:\n${meta_legend}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
     }
@@ -2442,7 +2458,9 @@ workflow {
     }
     if(align_soft == "mafft"){
         Mafft_align(
-            Tsv2fasta.out.fasta_align_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Tsv2fasta PROCESS\n\n========\n\n"}
+            Tsv2fasta.out.fasta_align_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Tsv2fasta PROCESS\n\n========\n\n"},
+            align_mafft_all_options,
+            align_mafft_clonal_options
         )
         align_aa_ch = Mafft_align.out.aligned_all_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Mafft_align PROCESS\n\n========\n\n"}.map{ x, y, z -> [y, z] }
         align_nuc_ch = Mafft_align.out.aligned_all_ch.map{ x, y, z -> [x, z] }
