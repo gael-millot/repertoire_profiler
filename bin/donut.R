@@ -480,8 +480,8 @@ if(nrow(obs) > 0){
             tempo.primary <- obs$germline_v_call
             tempo.secondary <- obs$germline_j_call
         } else if (col == "vj_gene") {
-            tempo.primary <- obs$germline_v_gene
-            tempo.secondary <- obs$germline_j_gene
+            tempo.primary <- obs$clonal_germline_v_gene
+            tempo.secondary <- obs$clonal_germline_j_gene
         } else if (col == "c_allele") {
             tempo.primary <- obs$c_call
             tempo.secondary <- NULL

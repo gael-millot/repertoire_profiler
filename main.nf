@@ -966,7 +966,7 @@ process Mutation_load_germ_genes {
         })
         tempo_j <- strsplit(VDJ_db\$germline_j_call, ",")
         sub_j <- sapply(X = tempo_j, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; paste0(unique(y), collapse = ",")})
-        VDJ_db <- data.frame(VDJ_db, germline_v_gene = sub_v, germline_d_gene = sub_d, germline_j_gene = sub_j)
+        VDJ_db <- data.frame(VDJ_db, clonal_germline_v_gene = sub_v, clonal_germline_d_gene = sub_d, clonal_germline_j_gene = sub_j)
         # end add germline vdj genes
         write.table(VDJ_db, file = paste0("./", tools::file_path_sans_ext(file_name), "_shm-pass.tsv"), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
     ' "\${FILENAME}" |& tee -a Mutation_load_germ_genes.log

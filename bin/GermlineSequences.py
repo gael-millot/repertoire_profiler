@@ -51,8 +51,8 @@ def addGermlineSequences(tsv_file, references, gaps, nogaps):
 
     for col in matching_cols:
         x = col[len("germline") : -len("_call")]
-        seq_col = f"germline{x}_seq"
-        seq_col_nogap = f"germline{x}_seq_no_gaps"
+        seq_col = f"clonal_germline{x}_seq_with_gaps"
+        seq_col_nogap = f"clonal_germline{x}_seq_no_gaps"
 
         unique_vals = df[col].dropna().unique()
         missing = [val for val in unique_vals if val not in dict_ref]
