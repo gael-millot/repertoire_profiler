@@ -71,22 +71,10 @@ script <- "Gff"
 # tsv_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/example_of_results/repertoire_profiler_1762527194/tsv/clone_assigned_seq.tsv"
 # Name <- "sequence_id"                # name of the column containing the sequence ids
 # align_seq <- "sequence_alignment"        # name of the columns containing the sequences to put in the fasta file (can be a single string or several strings seperated by "," if several columns are needed. the fastas will then be created in different folders)
-# clone_germline_kind <- "dmask"
 # align_clone_nb <- 3                    # Minimum number of rows in the tsv file. The program expects this to be respected, otherwise raises an error.
 # cute <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/bin/cute_little_R_functions_v12.8.R"
 # tag <- "CLONE"
 # log <- "Tsv2fastaGff.log"
-
-fasta_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1763116057/alignments/aa/trimmed_sequence_aa_clone_id_10_IGHV4-34_IGHJ6_aligned_aa.fasta"
-tsv_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1763116057/tsv/clone_assigned_seq.tsv"
-Name <- "sequence_id"                # name of the column containing the sequence ids
-align_seq <- "trimmed"        # name of the columns containing the sequences to put in the fasta file (can be a single string or several strings seperated by "," if several columns are needed. the fastas will then be created in different folders)
-clone_germline_kind <- "dmask"
-align_clone_nb <- 3                    # Minimum number of rows in the tsv file. The program expects this to be respected, otherwise raises an error.
-cute <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/bin/cute_little_R_functions_v12.8.R"
-tag <- "CLONE"
-log <- "Tsv2fastaGff.log"
-
 
 
 
@@ -113,7 +101,6 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
         "tsv_path", 
         "Name", # sequence_id column
         "align_seq",
-        "clone_germline_kind", 
         "align_clone_nb",
         "cute", 
         "tag", # ALL or CLONE
@@ -157,7 +144,6 @@ param.list <- c(
     "tsv_path", 
     "Name", 
     "align_seq", 
-    "clone_germline_kind", 
     "align_clone_nb", 
     "cute", 
     "tag", 
@@ -302,7 +288,6 @@ ee <- expression(arg.check <- c(arg.check, tempo$problem) , text.check <- c(text
 tempo <- fun_check(data = fasta_path, class = "vector", typeof = "character", length = 1) ; eval(ee)
 tempo <- fun_check(data = Name, class = "vector", typeof = "character", length = 1) ; eval(ee)
 tempo <- fun_check(data = align_seq, options = c("query", "igblast_full", "trimmed", "fwr1", "fwr2", "fwr3", "fwr4", "cdr1", "cdr2", "cdr3", "junction", "sequence_alignment", "v_sequence_alignment", "d_sequence_alignment", "j_sequence_alignment", "c_sequence_alignment", "germline_alignment", "v_germline_alignment", "d_germline_alignment", "j_germline_alignment", "c_germline_alignment")) ; eval(ee)
-tempo <- fun_check(data = clone_germline_kind, options = c("full","dmask","vonly")) ; eval(ee)
 tempo <- fun_check(data = align_clone_nb, class = "vector", typeof = "integer", length = 1, double.as.integer.allowed = TRUE) ; eval(ee)
 tempo <- fun_check(data = tag, options = c("ALL", "CLONE")) ; eval(ee)
 # cute already tested above
@@ -321,7 +306,6 @@ tempo.arg <-c(
     "tsv_path", 
     "Name", 
     "align_seq", 
-    "clone_germline_kind", 
     "align_clone_nb",
     "cute", 
     "tag", 
@@ -339,7 +323,6 @@ tempo.arg <-c(
     "tsv_path", 
     "Name", 
     "align_seq", 
-    "clone_germline_kind", 
     "cute", 
     "tag", 
     "log"
@@ -477,12 +460,8 @@ if(align_seq == "j_germline_alignment"){align_seq2 <- c("j_germline_alignment", 
 if(align_seq == "c_germline_alignment"){align_seq2 <- c("c_germline_alignment", "c_germline_alignment_aa")}
 
 Germline <- NULL
-if(clone_germline_kind == "dmask" & tag == "CLONE" ){
-    Germline <- c("germline_alignment_d_mask_no_gaps", "germline_alignment_d_mask_aa_no_gaps")
-}else if(clone_germline_kind == "vonly" & tag == "CLONE" ){
-    Germline <- c("germline_alignment_v_region_no_gaps", "germline_alignment_v_region_aa_no_gaps")
-}else if(clone_germline_kind == "full" & tag == "CLONE" ){
-    Germline <- c("germline_alignment_full_no_gaps", "germline_alignment_full_aa_no_gaps")
+if(tag == "CLONE" ){
+    Germline <- c("clonal_germline_sequence_no_gaps", "clonal_germline_sequence_aa")
 }
 
 

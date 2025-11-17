@@ -6,7 +6,6 @@ process Gff {
     input:
     tuple path(fasta), val(tag), path(tsv) // parallelization expected (by clonal groups over align_clone_nb sequences)
     val align_seq
-    val clone_germline_kind
     val align_clone_nb
     path cute_file
 
@@ -26,7 +25,6 @@ process Gff {
     "${tsv}" \
     "sequence_id" \
     "${align_seq}" \
-    "${clone_germline_kind}" \
     "${align_clone_nb}" \
     "${cute_file}" \
     "${tag}" \

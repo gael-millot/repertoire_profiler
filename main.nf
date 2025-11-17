@@ -800,7 +800,6 @@ process TranslateGermline {
 
     input:
     path add_germ_ch // parallelization expected (by clonal groups)
-    val clone_germline_kind
 
     output:
     path "*-trans_germ-pass.tsv", emit: translate_germ_ch
@@ -816,30 +815,16 @@ process TranslateGermline {
     Rscript -e '
         file_name <- "${add_germ_ch}"
         df <- read.table(file_name, sep = "\\t", header = TRUE)
-        if("${clone_germline_kind}" == "dmask"){
-            germline_col_name <- "germline_alignment_d_mask"
-        }else if("${clone_germline_kind}" == "vonly"){
-            germline_col_name <- "germline_alignment_v_region"
-        }else if("${clone_germline_kind}" == "full"){
-            germline_col_name <- "germline_alignment_full"
-        }
-        germ_nuc <- df[[germline_col_name]]
+        germ_nuc <- df\$clonal_germline_sequence_no_gaps
         # Make sure all germline sequences are the same (which they are supposed to be since this is a single clonal group)
         if(any(germ_nuc != germ_nuc[1])){
             stop(paste0("\\n\\n================\\n\\nERROR IN TranslateGermline PROCESS.\\nTHE VALUES INSIDE THE Germline COLUMN SHOULD ALL BE THE SAME, BUT THEY ARE NOT.\\nHERE THEY ARE:\\n", paste0(germ_nuc, collapse = "\\n"),"\\n\\n================\\n\\n"), call. = FALSE)
         }
-        germ_without_gaps <- gsub("\\\\.", "", germ_nuc[1])
-
-        tempo_name <- paste0(germline_col_name, "_no_gaps")
-        df[[tempo_name]] <- germ_without_gaps
-
-        length_no_gaps <- nchar(germ_without_gaps)
+        length_no_gaps <- nchar(germ_nuc[1])
         if(length_no_gaps %% 3 != 0){
-            cat(paste0("\\nWARNING: THE ", germline_col_name, " COLUMN CONTAINS ", length_no_gaps, " CHARACTERS WHEN GAPS ARE REMOVED, WHICH IS NOT A MULTIPLE OF 3. \\n"), file = "TranslateGermline.log", append = TRUE)
+            cat(paste0("\\nWARNING: THE clonal_germline_sequence_no_gaps COLUMN CONTAINS ", length_no_gaps, " CHARACTERS WHEN GAPS ARE REMOVED, WHICH IS NOT A MULTIPLE OF 3. \\n"), file = "TranslateGermline.log", append = TRUE)
         }
-
-        germ_dna <- Biostrings::DNAString(germ_without_gaps)
-
+        germ_dna <- Biostrings::DNAString(germ_nuc[1])
         # Catch a warning in the log file if raised
         withCallingHandlers(
             expr = {
@@ -850,12 +835,12 @@ process TranslateGermline {
                 invokeRestart("muffleWarning")
             }
         )
-        tempo_name <- paste0(germline_col_name, "_aa_no_gaps")
+        tempo_name <- "clonal_germline_sequence_aa"
         df[[tempo_name]] <- toString(germ_aa)
         file_base <- tools::file_path_sans_ext(basename(file_name))
         new_file_name <- paste0(file_base, "-trans_germ-pass.tsv")
         # add controls
-        df <- data.frame(df, clonal_germline_align_identical = df[ , paste0(germline_col_name, "_no_gaps")] == df\$clonal_germline_alignment, clonal_germline_align_aa_identical = df[ , paste0(germline_col_name, "_aa_no_gaps")] == df\$clonal_germline_alignment_aa)
+        df <- data.frame(df, clonal_germline_identical = df\$clonal_germline_sequence_no_gaps == df\$clonal_germline_alignment_igblast_airr, clonal_germline_aa_identical = df\$clonal_germline_sequence_aa == df\$clonal_germline_alignment_aa_igblast_airr)
         # end add controls
         write.table(df, file = paste0("./", new_file_name), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
     '|& tee -a TranslateGermline.log
@@ -1067,6 +1052,7 @@ process Abalign_align_aa {
     tuple path(fasta_nuc), path(fasta_aa), val(seq_kind) // parallelization expected (by clonal groups over align_clone_nb sequences)
     val igblast_organism
     val igblast_heavy_chain
+    val align_abalign_options
     
     output:
     tuple path(fasta_nuc), path(fasta_aa), path("*_align_aa.fasta"), val(seq_kind), emit: aligned_aa_ch
@@ -1104,7 +1090,7 @@ process Abalign_align_aa {
     FILENAME=\$(basename -- ${fasta_aa}) # recover a file name without path
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a Abalign_align_aa.log
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a Abalign_align_aa.log
-    /bin/Abalign_V2_Linux_Term/Abalign -z 0 -g -i ${fasta_aa} ${parms} ${fasta_aa.baseName}_align_aa.fasta -sp ${species}. |& tee -a Abalign_align_aa.log || true
+    /bin/Abalign_V2_Linux_Term/Abalign ${align_abalign_options} -i ${fasta_aa} ${parms} ${fasta_aa.baseName}_align_aa.fasta -sp ${species}. |& tee -a Abalign_align_aa.log || true
     # -g   (IMGT Numbering scheme, default)
     # -lc length.txt -lg 1 # single length computed spanning the indicated regions. For instance, -lc length.txt -lg 1,2,3,4,5,6,7 returns a single length
     """
@@ -2255,8 +2241,7 @@ workflow {
 
 
     TranslateGermline(
-        AddGermlineSequences.out.add_germ_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE AddGermlineSequences PROCESS\n\n========\n\n"},
-        clone_germline_kind
+        AddGermlineSequences.out.add_germ_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE AddGermlineSequences PROCESS\n\n========\n\n"}
     )
     TranslateGermline.out.translate_germ_log_ch.collectFile(name: "TranslateGermline.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
@@ -2467,7 +2452,8 @@ workflow {
         Abalign_align_aa(
             Tsv2fasta.out.fasta_align_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Tsv2fasta PROCESS\n\n========\n\n"},
             igblast_organism,
-            igblast_heavy_chain
+            igblast_heavy_chain,
+            align_abalign_options
         )
         Abalign_align_aa.out.abalign_align_aa_log_ch.collectFile(name: "Abalign_align_aa.log").subscribe{it -> it.copyTo("${out_path}/reports")}
 
@@ -2510,7 +2496,6 @@ workflow {
     GffNuc( // module gff.nf
         for_gff_nuc_ch,
         align_seq, 
-        clone_germline_kind, 
         align_clone_nb, 
         cute_path
     )
@@ -2522,7 +2507,6 @@ workflow {
     GffAa( // module gff.nf
         for_gff_aa_ch,
         align_seq, 
-        clone_germline_kind, 
         align_clone_nb, 
         cute_path
     )
