@@ -1,0 +1,90 @@
+#--------------------------------------------------------------
+# Abalign: a Tool for Antibodies Numbering and CDRs delimitation
+#         Yang Cao, 2022, All Rights Reserved.
+#                          V 2.00
+#                  Mon Nov 17 09:31:31 2025
+
+#--------------------------------------------------------------
+
+Usage: Abalign -i [Query protein FASTA file] -ah\-al [Output multiple sequence alignment file for heavy\light chain, FASTA format]
+Or:    Abalign -n [Query DNA FASTA file] -p [Output the translated protein file] -ah\-al [Output multiple sequence alignment file for heavy\light chain, FASTA format]
+Option:
+        -o   [Output antibody numbering file]
+        -t   [Thread number for parallel computing, which depends on your CPU core number, default: 1]
+        -ssa [Output the pairwise similarity matrix file]
+        -vh  (Print variable domain of heavy chain)
+        -vl  (Print variable domain of light chain)
+        -s   (Silence mode for high-throughput computation, no detailed information on the screen)
+        -gc  (Group by heavy chain constant region)
+        -h   (Help information)
+        -fn [output consisitent numbering of all sequences file for the MSA]
+
+   Numbering schemes
+        -g   (IMGT Numbering scheme, default)
+        -c   (Chothia Numbering scheme)
+        -k   (Kabat Numbering scheme)
+
+   Translation parameters
+        -l   [Minimum protein length for calculation, default: 70]
+        -sc  (DNA to protein, considering start codon)
+        -nr  (Remove 'N' in DNA sequences)
+        -xr  (Remove 'X' in protein sequences)
+
+   Alignment parameters
+        -z   [Similarity cutoff, default value = 70]
+        -x   (Remove insertions in multiple alignment)
+        -bd  (Calculation sequence abundance)
+        -mg  (Remove redundant sequences)
+        -ra  [Threshold to remove sequences with low abundance, default threshold = 0]
+
+   Region enrichment
+        -re [Output region enrichment file]
+        -rg [Choose region to enrich, 1=FR1、2=CDR1、3=FR2、4=CDR2、5=FR3、6=CDR3、7=FR4、8=All region, default=8, use ',' to separate between different region]
+
+   Length calculation
+        -lc [Output length calculation file]
+        -lg [Choose region to calculation, 1=FR1、2=CDR1、3=FR2、4=CDR2、5=FR3、6=CDR3、7=FR4、8=All region, default=6, use ',' to separate between different region]
+
+   Residue frequency calculation
+        -mf [Input MSA file] [Output Residue frequency file(csv)]
+        -in [Input MSA-Related Antibody Numbering file]
+   Germline gene identification
+        -v  [Output the result file of V-gene identification]
+        -vn [Output TOP-number(1~100) V-Gene, default: 3]
+        -va [Display top-n vegne, max value=20] [output vgene align file]
+        -sp [Species_name for germline gene identification. default: ALL]
+            Note:    Please end the species parameter with a period(ex: -sp HS.) at the end.
+                     If you need to look in multiple species ranges, separate the species with commas(ex: -sp HS,BT.)
+                     Species_name: BT\HS\MM\MU\OC\RN\SS\VP\ALL
+                     "BT" means "BOS TAURUS"
+                     "HS" means "HOMO SAPIENS"
+                     "MM" means "MACACA MULATTA"
+                     "MU" means "MUS"
+                     "OC" means "ORYCTOLAGUS CUNICULUS"
+                     "RN" means "RATTUS NORVEGICUS"
+                     "SS" means "SUS SCROFA"
+                     "VP" means "VICUGNA PACOS"
+                     "CLF" means "CANIS LUPUS FAMILIARIS"
+                     "DR" means "DANIO RERIO"
+                     "EC" means "EQUUS CABALLUS"
+                     "GG" means "GALLUS GALLUS"
+                     "GGG" means "GORILLA GORILLA GORILLA"
+                     "LC" means "LEMUR CATTA"
+                     "MF" means "MACACA FASCICULARIS"
+                     "OM" means "ONCORHYNCHUS MYKISS"
+                     "OA" means "ORNITHORHYNCHUS ANATINUS"
+                     "SSR" means "SALMO SALAR"
+                     "CD" means "CAMELUS DROMEDARIUS"
+                     "CH" means "CAPRA HIRCUS"
+                     "FC" means "FELIS CATUS"
+                     "VA" means "OVIS ARIES"
+                     "ALL" means "ALL the above SPECIES"
+        -vct [Output the result of Clonotype(Same V and J genes as well as CDR3), 0 means the clonotype has the same VJ gene combination and the same CDR3, 1 means a CDR3 with high identity]        -ctc [This parameter can be used only when -vct 1, which can specify the identity threshold of CDR3, the default is 0.90]        -sec [This parameter can be used only when -vct 1, which can specify the the Shannon entropy of a position in the CDR3 region within the same clonetype is less than value,it is considered a conserved position, otherwise it is indicated with a '?' symbol,the default is 0.90]
+   Halfway Mode(Input temp.txt file rather than Fasta file)
+        -tc [Input temp.txt file]
+        -re [Output region enrichment file]
+        -rg [Choose region to enrich, 1=FR1、2=CDR1、3=FR2、4=CDR2、5=FR3、6=CDR3、7=FR4、8=All region, default=8, use ',' to separate between different region]
+        -lc [Output length calculation file]
+        -lg [Choose region to calculation, 1=FR1、2=CDR1、3=FR2、4=CDR2、5=FR3、6=CDR3、7=FR4、8=All region, default=6, use ',' to separate between different region]
+Example: ./Abalign -n dna.fas -p protein.fas -ah msa.txt -v vgene.txt -s -t 6
+If you have more questions, please contact cy_scu@yeah.net
