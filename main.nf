@@ -1200,15 +1200,16 @@ process  Mafft_align {
     # --keeplength	Preserve sequence end lengths.
     # --localpair --maxiterate N	Use accurate local iterative refinement.
     if [[ "${seq_kind}" == "ALL" ]] ; then
-        PARAM=${align_mafft_all_options}
+        mafft ${align_mafft_all_options} ${fasta_nuc} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta
+        awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta > ${fasta_nuc.baseName}_aligned_nuc.fasta # remove \\n in seq
+        mafft ${align_mafft_all_options} ${fasta_aa} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_aa.baseName}_aligned_aa_tempo.fasta
+        awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' ${fasta_aa.baseName}_aligned_aa_tempo.fasta > ${fasta_aa.baseName}_aligned_aa.fasta # remove \\n in seq
     elif [[ "${seq_kind}" == "CLONE" ]] ; then
-        PARAM=${align_mafft_clone_options}
+        mafft ${align_mafft_clonal_options} ${fasta_nuc} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta
+        awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta > ${fasta_nuc.baseName}_aligned_nuc.fasta # remove \\n in seq
+        mafft ${align_mafft_clonal_options} ${fasta_aa} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_aa.baseName}_aligned_aa_tempo.fasta
+        awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' ${fasta_aa.baseName}_aligned_aa_tempo.fasta > ${fasta_aa.baseName}_aligned_aa.fasta # remove \\n in seq
     fi
-
-    mafft \$PARAM ${fasta_nuc} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta
-    awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta > ${fasta_nuc.baseName}_aligned_nuc.fasta # remove \\n in seq
-    mafft \$PARAM ${fasta_aa} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_aa.baseName}_aligned_aa_tempo.fasta
-    awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' ${fasta_aa.baseName}_aligned_aa_tempo.fasta > ${fasta_aa.baseName}_aligned_aa.fasta # remove \\n in seq
     echo "" > Mafft_align.log
     """
 }
@@ -1545,8 +1546,9 @@ process print_report{
     val nb_unproductive
     val nb_clone_assigned
     val nb_failed_clone
+    path distance_hist_ch
     path donuts_png
-    path reperoire_png
+    path repertoire_png
     val repertoire_constant_ch
     val repertoire_vj_ch
     val align_soft
@@ -2454,7 +2456,7 @@ workflow {
 
     if(align_soft == "abalign" && (align_seq == "query" || align_seq == "igblast_full" || align_seq == "trimmed" || align_seq == "fwr1" || align_seq == "fwr2" || align_seq == "fwr3" || align_seq == "fwr4" || align_seq == "cdr1" || align_seq == "cdr2" || align_seq == "cdr3" || align_seq == "junction" || align_seq == "d_sequence_alignment" || align_seq == "j_sequence_alignment" || align_seq == "c_sequence_alignment" || align_seq == "d_germline_alignment" || align_seq == "j_germline_alignment" || align_seq == "c_germline_alignment")){
         align_soft = "mafft"
-        print("\n\nWARNING: align_soft PARAMETER RESET TO \"mafft\" SINCE align_soft PARAMETER WAS SET TO \"abalign\" BUT THAT IT REQUIRES AT LEAST A V DOMAIN IN THE SEQUENCES,\nWHILE align_seq PARAMETER IS SET TO \"${align_seq}\"\n\n")
+        print("\n\nWARNING: align_soft PARAMETER RESET TO \"mafft\" SINCE align_soft PARAMETER WAS SET TO \"abalign\" BUT Abalign EITHER 1) REQUIRES AT LEAST A V DOMAIN IN THE SEQUENCES OR 2) TRUNKS THE C CONSTANT REGION,\nWHILE align_seq PARAMETER IS SET TO \"${align_seq}\"\n\n")
     }
     if(align_soft == "mafft"){
         Mafft_align(
@@ -2601,6 +2603,7 @@ workflow {
         nb2_b - 1, // Minus 1 because the 1st line = the column names
         nb_clone_assigned,
         nb_failed_clone,
+        distance_hist.out.distance_hist_ch, 
         donut.out.donuts_png.collect(),
         repertoire.out.repertoire_png_ch.collect(),
         repertoire_constant_ch,

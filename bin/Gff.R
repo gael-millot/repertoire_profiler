@@ -228,11 +228,16 @@ map_ungapped_to_gapped <- function(seq_aligned, ungapped_pos) {
 # map_ungapped_to_gapped("atg--t---g", c(3,4,5)) # initial sequence is atgtg, input coords are third g, fourth t and fifth g
 # DEBUGGING
 # seq_aligned = "atg--t---g" ; ungapped_pos = c(3,4,5)
-  # Remove gaps but keep index positions of non-gaps
-  aligned_chars <- strsplit(seq_aligned, "")[[1]]
-  non_gap_indices <- which(aligned_chars != "-")
-  # Return the gapped index corresponding to the ungapped position
-  return(non_gap_indices[ungapped_pos])
+    # Remove gaps but keep index positions of non-gaps
+    aligned_chars <- strsplit(seq_aligned, "")[[1]]
+    non_gap_indices <- which(aligned_chars != "-")
+    hyphens_nb <- sum(aligned_chars == "-", na.rm = TRUE)
+    # Return the gapped index corresponding to the ungapped position
+    if(length(non_gap_indices) < ungapped_pos){
+        return(ungapped_pos + hyphens_nb)
+    }else{
+        return(non_gap_indices[ungapped_pos])
+    }
 }
 
 ################ import functions from cute little functions toolbox
@@ -462,12 +467,16 @@ if(align_seq == "c_germline_alignment"){align_seq2 <- c("c_germline_alignment", 
 Germline <- NULL
 if(tag == "CLONE" ){
     Germline <- c("clonal_germline_sequence_no_gaps", "clonal_germline_sequence_aa")
+    if( ! all(Germline %in% names(df))){
+        stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nTHE align_seq2 PARAMETER MUST BE COLUMN NAMES OF THE IMPORTED FILE:\n", tsv_path, "\n\nHERE IT IS align_seq2:\n", paste(Germline, collapse = "\n"), "\n\nCOLUMN NAMES:\n", paste(names(df), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
+    }
 }
 
 
 if( ! all(align_seq2 %in% names(df))){
     stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nTHE align_seq2 PARAMETER MUST BE COLUMN NAMES OF THE IMPORTED FILE:\n", tsv_path, "\n\nHERE IT IS align_seq2:\n", paste(align_seq2, collapse = "\n"), "\n\nCOLUMN NAMES:\n", paste(names(df), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
 }
+
 
 if(base::grepl(x = fasta_path, pattern = "*aa.fasta$")){
     nuc_or_aa <- "aa"
@@ -505,15 +514,15 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
         fwr_cdr_column_end <- paste0("clonal_germline_", fwr_cdr_features, "_end")
     }else{ # tag == "ALL"
         if(grepl(x = align_seq, pattern = ".*_alignment") | align_seq %in% c("trimmed")){ # for align_seq %in% trimmed|sequence_alignment|v_sequence_alignment|d_sequence_alignment|j_sequence_alignment|c_sequence_alignment|germline_alignment|v_germline_alignment|d_germline_alignment|j_germline_alignment|c_germline_alignment. These coordinates are for both aligned germline and sequence 
-            vdjc_column_start <- paste0(vdjc_features, "_alignment_start") # use v_alignment_start, etc. (no trim correction needed)
-            vdjc_column_end <- paste0(vdjc_features, "_alignment_end") # use v_alignment_start, etc. (no trim correction needed)
-            fwr_cdr_column_start <- paste0(fwr_cdr_features, "_alignment_start") # use fwr1_start, etc., but needs trim correction (add removed seq length)
-            fwr_cdr_column_end <- paste0(fwr_cdr_features, "_alignment_end") # use fwr1_start, etc., but needs trim correction (add removed seq length)
+            vdjc_column_start <- paste0(vdjc_features, "_alignment_start") 
+            vdjc_column_end <- paste0(vdjc_features, "_alignment_end") 
+            fwr_cdr_column_start <- paste0(fwr_cdr_features, "_alignment_start") 
+            fwr_cdr_column_end <- paste0(fwr_cdr_features, "_alignment_end") 
         }else if(align_seq %in% c("igblast_full", "query")){
-            vdjc_column_start <- paste0(vdjc_features, "_sequence_start") # use v_alignment_start, etc. (no trim correction needed)
-            vdjc_column_end <- paste0(vdjc_features, "_sequence_end") # use v_alignment_start, etc. (no trim correction needed)
-            fwr_cdr_column_start <- paste0(fwr_cdr_features, "_start") # use fwr1_start, etc., but needs trim correction (subtract removed seq length)
-            fwr_cdr_column_end <- paste0(fwr_cdr_features, "_end") # use fwr1_start, etc., but needs trim correction (subtract removed seq length)
+            vdjc_column_start <- paste0(vdjc_features, "_sequence_start") 
+            vdjc_column_end <- paste0(vdjc_features, "_sequence_end") 
+            fwr_cdr_column_start <- paste0(fwr_cdr_features, "_start") 
+            fwr_cdr_column_end <- paste0(fwr_cdr_features, "_end") 
         }else{ # for align_seq %in% fwr1|fwr2|fwr3|fwr4|cdr1|cdr2|cdr3|junction
             vdjc_column_start <- NULL
             vdjc_column_end <- NULL

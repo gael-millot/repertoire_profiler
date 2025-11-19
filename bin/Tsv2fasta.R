@@ -433,14 +433,11 @@ if( ! all(align_seq2 %in% names(obs))){
     stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nTHE align_seq2 PARAMETER MUST BE COLUMN NAMES OF THE IMPORTED FILE:\n", path, "\n\nHERE IT IS align_seq2:\n", paste(align_seq2, collapse = "\n"), "\n\nCOLUMN NAMES:\n", paste(names(obs), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
 }
 
-
-Germline <- NULL
-if(clone_germline_kind == "dmask" & seq_kind == "CLONE" ){
-    Germline <- c("germline_alignment_d_mask_no_gaps", "germline_alignment_d_mask_aa_no_gaps")
-}else if(clone_germline_kind == "vonly" & seq_kind == "CLONE" ){
-    Germline <- c("germline_alignment_v_region_no_gaps", "germline_alignment_v_region_aa_no_gaps")
-}else if(clone_germline_kind == "full" & seq_kind == "CLONE" ){
-    Germline <- c("germline_alignment_full_no_gaps", "germline_alignment_full_aa_no_gaps")
+if(seq_kind == "CLONE"){
+    Germline <- c("clonal_germline_sequence_no_gaps", "clonal_germline_sequence_aa")
+    if( ! all(Germline %in% names(obs))){
+        stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nTHE align_seq2 PARAMETER MUST BE COLUMN NAMES OF THE IMPORTED FILE:\n", path, "\n\nHERE IT IS align_seq2:\n", paste(Germline, collapse = "\n"), "\n\nCOLUMN NAMES:\n", paste(names(obs), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
+    }
 }
 
 count = 0
@@ -546,7 +543,7 @@ for(i0 in align_seq2){
         # Germline addition to the fasta
         # this step is complicate in case of several germline sequences in the same clonal group but with clone_strategy = "first" in nextflow.config, it should be alright
         # Sort the dataframe by the column specified in Name
-        if( ! base::is.null(Germline)){
+        if(seq_kind == "CLONE"){
             germ = Germline[count]
             df <- df[order(df[[Name]]), ]
 
@@ -561,8 +558,8 @@ for(i0 in align_seq2){
             selected_germline_seq <- gsub(x = df[selected_index, germ], pattern = "-", replacement = "")
 
             # Get cleaned v_gene and j_gene values for the chosen germline row
-            germ_v_gene <- gsub(",", "-", df[selected_index, "germline_v_gene"])
-            germ_j_gene <- gsub(",", "-", df[selected_index, "germline_j_gene"])
+            germ_v_gene <- gsub(pattern = ",", replacement = "-", x = df[selected_index, "clonal_germline_v_gene"])
+            germ_j_gene <- gsub(pattern = ",", replacement = "-", x = df[selected_index, "clonal_germline_j_gene"])
 
             # Write germline to the same fasta file as above
             germ_seq_name <- paste0(Germline[1], "_clone_id_", df[1, "clone_id"], "_", germ_v_gene, "_", germ_j_gene) # no choice to use Germline[1], otherwise goalign codonalign cannot align (because nuc and aa must have the same name)
@@ -574,8 +571,8 @@ for(i0 in align_seq2){
                 tempo.warn <- paste0(
                     "Multiple germline sequences found for clone_id ", df[1, "clone_id"], ".\n",
                     "Selected germline from sequence: ", df[selected_index, Name], "\n",
-                    "Associated germline_v_gene: ", df[selected_index, "germline_v_gene"], "\n",
-                    "Associated germline_j_gene: ", df[selected_index, "germline_j_gene"], "\n",
+                    "Associated clonal_germline_v_gene: ", df[selected_index, "clonal_germline_v_gene"], "\n",
+                    "Associated clonal_germline_j_gene: ", df[selected_index, "clonal_germline_j_gene"], "\n",
                     "Associated v_gene: ", df[selected_index, "v_gene"], "\n",
                     "Associated j_gene: ", df[selected_index, "j_gene"], "\n",
                     "Used germline sequence: ", selected_germline_seq

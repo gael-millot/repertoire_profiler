@@ -304,17 +304,8 @@ If the text is cut in the table, reload the page or change the width of the wind
     max-width:100%;">
                 <li>*.html: visualization of the alignments. For clonal groups, each file is named as <i>&lt;ALIGN_SEQ&gt;&#8203;_clone_id_&#8203;&lt;CLONE_ID&gt;&#8203;_&lt;V_GENE&gt;&#8203;_&lt;J_GENE&gt;&#8203;_aligned_&lt;&#8203;nuc OR aa&gt;&#8203;.html</i>. For all sequences, the name is <i>&lt;ALIGN_SEQ&gt;&#8203;_aligned_&lt;&#8203;nuc OR aa&gt;&#8203;.html</i>.
                 </li><li>*.fasta: aligned sequences. Each file is named as the corresponding <i>.html</i> file. Warning: in aa files, all the * (stop) are replaced by X. Thus, X means either "unknown" or "stop" specifically in these files.
-                </li><li>*.gff: file used to add domain features in the corresponding <i>.html</i> file, and named as this one. Coordinates are provided depending on 1) their availability in the <i>productive_seq_.tsv</i> (all sequences) and the <i>clone_assigned_seq.tsv</i> (clonal group sequences) files, and 2) the <code>align_seq</code> parameter setting in the <i>nextflow.config</i> file. Coordinates in the .gff files are those in the .tsv files but adjusted to the number of hyphens inserted in the aligned sequences. Warning: coordinates provided for the aa sequences can be approximated if the coordinates of the nuc sequences in the .tsv files are not multiple of 3. See the <i>GffAa.log</i> in the <i>report</i> folder. Coordinates are returned in the .gff files according to these rules (compatibility of the available coordinates in the <i>.tsv</i> file and kind of aligned sequences):
-                    <ul style="padding-left:1.2em; margin:0;">
-                        <li>For clonal groups sequences, coordinates are provided whatever the <code>align_seq</code> parameter setting.
-                        </li><li>For all sequences:
-                        <ul style="padding-left:1.2em; margin:0;">
-                            <li>If the align_seq</code> parameter contains the string <code>_alignment</code>, then only coordinates of vdjc features are provided (<i>fwr_cdr_*.gff</i> file is empty).
-                            </li><li>If the align_seq</code> parameter is <code>query</code>, then coordinates of fwr/cdr features are provided (<i>vdjc_*.gff</i> file is empty).
-                            </li><li>If the align_seq</code> parameter is <code>trimmed</code>, then coordinates of vdjc and fwr/cdr features are provided.
-                            </li><li>If the align_seq</code> parameter is <code>igblast_full</code>, then coordinates of vdjc and fwr/cdr features are provided for aa alignments but only fwr/cdr coordinates for nuc alignments (<i>vdjc_*.gff</i> file is empty).
-                            </li><li>Else nothing is provided (<i>vdjc_*.gff</i> and <i>fwr_cdr_*.gff</i> files are empty).
-                            </ul><br>
+                </li><li>*.gff: file used to add domain features in the corresponding <i>.html</i> file, and named as this one. Coordinates are provided depending on 1) their availability in the <i>productive_seq_.tsv</i> (all sequences) and the <i>clone_assigned_seq.tsv</i> (clonal group sequences) files, and 2) the <code>align_seq</code> parameter setting in the <i>nextflow.config</i> file. Coordinates in the <i>.gff</i> files are those in the <i>.tsv</i> files but adjusted to the number of hyphens inserted in the aligned sequences. Warning: coordinates provided for the aa sequences can be approximated if the coordinates of the nuc sequences in the .tsv files are not multiple of 3. See the <i>GffAa.log</i> in the <i>report</i> folder.  Coordinates are returned in the .gff files, except if the <code>align_seq</code> parameter of the <i>nextflow.config</i> file is <code>fwr1|fwr2|fwr3|fwr4|cdr1|cdr2|cdr3|junction</code> (<i>vdjc_*.gff</i> and <i>fwr_cdr_*.gff</i> files are empty). Warning: coordinates might not be correct in the masked region when the <code>clone_germline_kind</code> parameter of the <i>nextflow.config</i> file is set to "dmask".
+                </ul><br>
             See the <i>fasta/for_alignment_nuc</i> and <i>fasta/for_alignment_aa</i> below for the sequences used.<br><br>
             Alignments are perfomed using <a href="http://cao.labshare.cn/abalign/">Abalign</a> (default, using <code>Abalign -z 0 -g</code>), or <a href="https://mafft.cbrc.jp/alignment/server/index.html">Mafft</a> (using <code>mafft --localpair --maxiterate 1000 --op 10 --leavegappyregion</code>) depending on the <code>align_soft</code> parameter of the <i>nextflow.config</i> file, but systematically by Mafft if the <code>align_seq</code> parameter of the <i>nextflow.config</i> file is <code>query</code>, <code>igblast_full</code>, <code>trimmed</code>, <code>c_sequence_alignment</code> or <code>c_germline_alignment</code>.<br><br>
             Warning: html, fasta and gff files can be absent for clonal groups if none have at least the number of sequences indicated in the <code>align_clone_nb</code> parameter in the <i>nextflow.config</i> file.<br><br>
@@ -612,12 +603,12 @@ If the text is cut in the table, reload the page or change the width of the wind
             <br></li><li><b>clonal_germline_cdr3_end</b>: as <i>clonal_germline_fwr1_end</i> but for CDR3.
             <br></li><li><b>clonal_germline_fwr4_start</b>: as <i>clonal_germline_fwr1_start</i> but for FWR4.
             <br></li><li><b>clonal_germline_fwr4_end</b>: as <i>clonal_germline_fwr1_end</i> but for CDFWR4R1.
-            <br></li><li><b>germline_v_seq</b>: nucleotide sequence of the V clonal germline sequence.
-            <br></li><li><b>germline_v_seq_no_gaps</b>: as <i>germline_v_seq</i> without IMGT gaps.
-            <br></li><li><b>germline_d_seq</b>: nucleotide sequence of the D clonal germline sequence.
-            <br></li><li><b>germline_d_seq_no_gaps</b>: as <i>germline_d_seq</i> without IMGT gaps.
-            <br></li><li><b>germline_j_seq</b>: nucleotide sequence of the J clonal germline sequence.
-            <br></li><li><b>germline_j_seq_no_gaps</b>: as <i>germline_j_seq</i> without IMGT gaps.
+            <br></li><li><b>clonal_germline_v_seq</b>: nucleotide sequence of the V clonal germline sequence.
+            <br></li><li><b>clonal_germline_v_seq_no_gaps</b>: as <i>germline_v_seq</i> without IMGT gaps.
+            <br></li><li><b>clonal_germline_d_seq</b>: nucleotide sequence of the D clonal germline sequence.
+            <br></li><li><b>clonal_germline_d_seq_no_gaps</b>: as <i>germline_d_seq</i> without IMGT gaps.
+            <br></li><li><b>clonal_germline_j_seq</b>: nucleotide sequence of the J clonal germline sequence.
+            <br></li><li><b>clonal_germline_j_seq_no_gaps</b>: as <i>germline_j_seq</i> without IMGT gaps.
             <br></li><li><b>clonal_germline_sequence_aa</b>: translation of the <i>clonal_germline_sequence_no_gaps</i> column into amino-acids (by <code>Biostrings::translate()</code>).
             <br></li><li><b>clonal_germline_identical</b>: if TRUE, it means that both the sequences in the <i>clonal_germline_sequence_no_gaps</i> and <i>clonal_germline_alignment_igblast_airr</i> columns are identical, i.e., that the command returns a sequence witout IMGT gaps. It FALSE, please report <a href="https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues">here</a>.
             <br></li><li><b>clonal_germline_aa_identical</b>: if TRUE, it means that both the sequences in the <i>clonal_germline_sequence_aa</i> and <i>clonal_germline_alignment_aa_igblast_airr</i> columns are identical. If FALSE, it can be because of the masked area using the <code>d_mask</code> option.
@@ -627,9 +618,9 @@ If the text is cut in the table, reload the page or change the width of the wind
             <br></li><li>mu_freq_*_r: frequency of replacement mutations.
             <br></li><li>mu_freq_*_s: frequency of silent mutations.
             <br></li><li>mu_freq: frequency of replacement and silent mutations (sum of the previous columns).
-            <br></li><li><b>germline_v_gene</b>: extracted from the <i>germline_v_call</i> column but removing the allele specification after the *.
-            <br></li><li><b>germline_d_gene</b>: extracted from the <i>germline_d_call</i> column but removing the allele specification after the *.
-            <br></li><li><b>germline_j_gene</b>: extracted from the <i>germline_j_call</i> column but removing the allele specification after the *.
+            <br></li><li><b>clonal_germline_v_gene</b>: extracted from the <i>germline_v_call</i> column but removing the allele specification after the *.
+            <br></li><li><b>clonal_germline_d_gene</b>: extracted from the <i>germline_d_call</i> column but removing the allele specification after the *.
+            <br></li><li><b>clonal_germline_j_gene</b>: extracted from the <i>germline_j_call</i> column but removing the allele specification after the *.
             </li> 
         </td>
     </tr>
