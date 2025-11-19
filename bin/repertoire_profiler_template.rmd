@@ -13,6 +13,7 @@ params:
   nb_unproductive: -1
   nb_clone_assigned: -1
   nb_failed_clone: -1
+  clone_distance: -1
   constant_rep: ""
   vj_rep: ""
   align_soft: ""
@@ -249,7 +250,7 @@ kable(df, format = "markdown", row.names = FALSE)
 </details>
 <br>
 
-Threshold value set in the `clone_distance` parameter of the *nextflow.config* file: 
+Threshold value set in the `clone_distance` parameter of the *nextflow.config* file: ```r params$clone_distance```
 
 This value is used to assemble sequences into clonal groups.
 

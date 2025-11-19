@@ -1390,6 +1390,7 @@ process print_report{
     path repertoire_png
     val repertoire_constant_ch
     val repertoire_vj_ch
+    val clone_distance
     val align_soft
     val itol_subscription
 
@@ -1436,6 +1437,7 @@ process print_report{
             nb_unproductive = ${nb_unproductive},
             nb_clone_assigned = ${nb_clone_assigned},
             nb_failed_clone = ${nb_failed_clone},
+            clone_distance = ${clone_distance},
             constant_rep = constant_rep,
             vj_rep = vj_rep,
             align_soft = "${align_soft}",
@@ -2457,6 +2459,7 @@ workflow {
         repertoire.out.repertoire_png_ch.collect(),
         repertoire_constant_ch,
         repertoire_vj_ch,
+        clone_distance, 
         align_soft,
         phylo_tree_itol_subscription
     )
