@@ -443,6 +443,9 @@ if(seq_kind == "CLONE"){
 # print the sequence_alignment_with_gaps sequences as aligned fasta
 if(seq_kind == "ALL"){
     tempo_name <- "sequence_alignment_with_gaps"
+    if( ! tempo_name %in% names(obs)){
+        stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nsequence_alignment_with_gaps MUST BE COLUMN A COLUMN NAME OF THE IMPORTED FILE:\n", path, "\n\nCOLUMN NAMES:\n", paste(names(obs), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
+    }
     # 1. Find the maximum sequence length
     # obs[[tempo_name]] <- sapply(X = obs[[tempo_name]], FUN = function(x){gsub(x = x, pattern = "-", replacement = "")}) # do not remove the hyphens already here because alignments are not good anymore
     max_len <- max(nchar(obs[[tempo_name]]))
