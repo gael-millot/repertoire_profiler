@@ -850,6 +850,7 @@ process Tsv2fasta {
     cache 'true'
     publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{*_nuc/*.fasta}", overwrite: false
     publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{*_aa/*.fasta}", overwrite: false
+    publishDir path: "${out_path}/alignments/nuc", mode: 'copy', pattern: "{*_imgt.fasta}", overwrite: false // already aligned fasta file
 
     input:
     tuple path(all_files_ch), val(seq_kind) // parallelization expected (by clonal groups over align_clone_nb sequences)
@@ -860,6 +861,7 @@ process Tsv2fasta {
 
     output:
     tuple path("*_nuc/*.fasta"), path("*_aa/*.fasta"), val(seq_kind), emit: fasta_align_ch
+    tuple path("*_imgt.fasta"), val(seq_kind), emit: imgt_align_ch, optional: true
     path "Tsv2fasta.log", emit: tsv2fasta_log_ch
     path "warning.txt", emit: warning_ch, optional: true
 
@@ -1430,7 +1432,8 @@ process print_report{
         input = "report_file.rmd",
         output_file = "report.html",
         # list of the variables waiting to be replaced in the rmd file:
-        params = list(nb_input = ${nb_input},
+        params = list(
+            nb_input = ${nb_input},
             nb_seq_aligned = ${nb_seq_aligned}, 
             nb_seq_not_aligned = ${nb_seq_not_aligned},
             nb_productive = ${nb_productive},
@@ -1501,6 +1504,7 @@ include { Igblast_germline_coords } from './modules/igblast_germline'
 include { Closest_germline } from './modules/closest_germline'
 include { Gff as GffNuc } from './modules/gff'
 include { Gff as GffAa } from './modules/gff'
+include { PrintAlignment as PrintAlignmentIMGT } from './modules/print_alignment'
 include { PrintAlignment as PrintAlignmentNuc } from './modules/print_alignment'
 include { PrintAlignment as PrintAlignmentAa } from './modules/print_alignment'
 
@@ -2089,7 +2093,7 @@ workflow {
     failed_clonal_germline_file = Closest_germline.out.failed_clonal_germline_ch.collectFile(name: "failed_clonal_germline.tsv", skip: 1, keepHeader: true)
     failed_clonal_germline_file.subscribe{it -> it.copyTo("${out_path}/tsv")} // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
     nb_failed_clone_2 = failed_clonal_germline_file.countLines() - 1
-    nb_failed_clone = nb_failed_clone_2.combine(nb_failed_clone_1).map { new_count, old_count -> new_count + old_count }.view() // to add the two kind of failure
+    nb_failed_clone = nb_failed_clone_2.combine(nb_failed_clone_1).map { new_count, old_count -> new_count + old_count } // to add the two kind of failure
     copyLogFile('Closest_germline.log', Closest_germline.out.closest_log_ch, out_path)
 
 
@@ -2385,6 +2389,10 @@ workflow {
     copyLogFile('GffAa.log', GffAa.out.gff_log_ch, out_path)
 //GffAa.out.gff_ch.flatten().view()
 
+    PrintAlignmentIMGT( // module print_alignment.nf
+        Tsv2fasta.out.imgt_align_ch
+    )
+    PrintAlignmentIMGT.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentIMGT PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/nuc")}
 
     PrintAlignmentNuc( // module print_alignment.nf
         align_nuc_ch

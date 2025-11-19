@@ -440,10 +440,25 @@ if(seq_kind == "CLONE"){
     }
 }
 
+# print the sequence_alignment_with_gaps sequences as aligned fasta
+if(seq_kind == "ALL"){
+    tempo_name <- "sequence_alignment_with_gaps"
+    # 1. Find the maximum sequence length
+    # obs[[tempo_name]] <- sapply(X = obs[[tempo_name]], FUN = function(x){gsub(x = x, pattern = "-", replacement = "")}) # do not remove the hyphens already here because alignments are not good anymore
+    max_len <- max(nchar(obs[[tempo_name]]))
+    # 2. Pad each sequence with hyphens at the end
+    obs[[tempo_name]] <- sapply(X = obs[[tempo_name]], FUN = function(x){paste0(x, paste(rep("-", max_len - nchar(x)), collapse = ""))})
+    for(i1 in 1:nrow(obs)) {
+        tempo_cat <- paste0(">", obs[i1, Name], "\n", obs[i1, tempo_name], "\n")
+        cat(tempo_cat, file = file.path(paste0(tempo_name, "_imgt.fasta")), append = TRUE)
+    }
+}
+# end print the sequence_alignment_with_gaps sequences as aligned fasta
+
+
 count = 0
 multiple_v_genes <- FALSE
 multiple_j_genes <- FALSE
-
 for(i0 in align_seq2){
     count = count + 1
     tempo.log <- is.na(obs[ , i0]) | obs[ , i0] == ""
