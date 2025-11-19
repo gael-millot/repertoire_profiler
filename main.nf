@@ -203,43 +203,8 @@ process parseDb_filtering {
 }
 
 
-// Trim the 5' end of the sequence if required (to remove the leader peptide) and Translate the nucleotidic sequences into amino acid sequences
-process TrimTranslate {
-    label 'seqkit'
-    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_nuc/trimmed/*.fasta", overwrite: false
-    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_nuc/removed/*.fasta", overwrite: false
-    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_nuc/query/*.fasta", overwrite: false
-    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_nuc/align/*.fasta", overwrite: false
-    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_nuc/align_with_gaps/*.fasta", overwrite: false
-    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_aa/trimmed/*.fasta", overwrite: false
-    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_aa/igblast/*.fasta", overwrite: false
-    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_aa/query/*.fasta", overwrite: false
-    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "productive_aa/align/*.fasta", overwrite: false
-    cache 'true'
 
-    input:
-    path select_ch // parallelization expected
 
-    output:
-    path "trimtranslate.tsv", emit: trimtranslate_ch // productive file with column sequence_alignment_aa added
-    path "productive_nuc/trimmed/*.*"
-    path "productive_nuc/removed/*.*"
-    path "productive_nuc/query/*.*"
-    path "productive_nuc/align/*.*"
-    path "productive_nuc/align_with_gaps/*.*"
-    path "productive_aa/trimmed/*.*"
-    path "productive_aa/igblast/*.*"
-    path "productive_aa/query/*.*"
-    path "productive_aa/align/*.*"
-    path "trimtranslate.log", emit: trimtranslate_log_ch
-
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    trimtranslate.sh ${select_ch} # |& tee -a trimtranslate.log not used because in trimtranslate.sh
-    """
-}
 
 // Rename the sequence names in the data file
 // The sequence names are replaced by the values of the column meta_name_replacement (specified in .config) of the metadata file
@@ -848,132 +813,6 @@ process TranslateGermline {
 
 }
 
-
-process Mutation_load_germ_genes {
-    label 'immcantation'
-    //publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
-    //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
-    cache 'true'
-
-    input:
-    path translate_germ_ch // parallelization expected (by clonal groups)
-    path meta_file
-    val meta_legend
-    val clone_mut_obs_seq
-    val clone_mut_germ_seq
-    val clone_mut_regionDefinition
-
-
-    output:
-    path "*_shm-pass.tsv", emit: mutation_load_ch
-    path "*.log", emit: mutation_load_log_ch
-
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    FILENAME=\$(basename -- ${translate_germ_ch}) # recover a file name without path
-    cp -Lr ${translate_germ_ch} "./TEMPO.tsv" # to have the hard file, not the symlink, because modifications will be performed inside
-    chmod 777 TEMPO.tsv
-    rm \$FILENAME # remove the initial file to avoid to send it into the channel
-    cp -rp TEMPO.tsv "\$FILENAME" # -p for preserve permissions
-    rm TEMPO.tsv
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a Mutation_load_germ_genes.log
-    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a Mutation_load_germ_genes.log
-    Rscript -e '
-        options(warning.length = 8170)
-        args <- commandArgs(trailingOnly = TRUE)  # recover arguments written after the call of the Rscript
-        tempo.arg.names <- c("file_name") # objects names exactly in the same order as in the bash code and recovered in args
-        if(length(args) != length(tempo.arg.names)){
-          tempo.cat <- paste0("\\n\\n========\\n\\nINTERNAL ERROR IN THE NEXTFLOW EXECUTION OF THE Mutation_load_germ_genes PROCESS\\n THE NUMBER OF ELEMENTS IN args (", length(args),") IS DIFFERENT FROM THE NUMBER OF ELEMENTS IN tempo.arg.names (", length(tempo.arg.names),")\\nargs:", paste0(args, collapse = ","), "\\ntempo.arg.names:", paste0(tempo.arg.names, collapse = ","), "\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n")
-          stop(tempo.cat)
-        }
-        for(i2 in 1:length(tempo.arg.names)){
-          assign(tempo.arg.names[i2], args[i2])
-        }
-        VDJ_db <- read.table(file_name, sep = "\\t", header = TRUE)
-        if( ! "${clone_mut_obs_seq}" %in% names(VDJ_db)){
-            stop(paste0("\\n\\n============\\n\\nERROR IN THE Mutation_load_germ_genes PROCESS OF NEXTFLOW\\nTHE clone_mut_obs_seq PARAMETER OF THE nextflow.config FILE MUST BE A COLUMN NAME OF THE clone_assigned_seq.tsv FILE.\\nPLEASE, CHOOSE AMONG: ", paste0(names(VDJ_db), collapse = " "), "\\n\\n============\\n\\n"), call. = FALSE)
-        }
-        if( ! "${clone_mut_germ_seq}" %in% names(VDJ_db)){
-            stop(paste0("\\n\\n============\\n\\nERROR IN THE Mutation_load_germ_genes PROCESS OF NEXTFLOW\\nTHE clone_mut_germ_seq PARAMETER OF THE nextflow.config FILE MUST BE A COLUMN NAME OF THE clone_assigned_seq.tsv FILE.\\nPLEASE, CHOOSE AMONG: ", paste0(names(VDJ_db), collapse = " "), "\\n\\n============\\n\\n"), call. = FALSE)
-        }
-        # Calculate R and S mutation counts
-        regionDefinition <- if("${clone_mut_regionDefinition}" == "NULL"){NULL}else{eval(parse(text = "shazam::${clone_mut_regionDefinition}"))}
-        if( ! (( ! is.null(regionDefinition)) & grepl(x = "${clone_mut_obs_seq}", pattern = "alignment") & grepl(x = "${clone_mut_germ_seq}", pattern = "alignment"))){
-            stop(paste0("\\n\\n============\\n\\nERROR IN THE Mutation_load_germ_genes PROCESS OF NEXTFLOW\\nTHE clone_mut_obs_seq AND clone_mut_germ_seq PARAMETERS OF THE nextflow.config FILE MUST BE ALIGNMENT SEQUENCES (COLUMN NAMES OF THE clone_assigned_seq.tsv FILE CONTAINING \\"alignment\\")\\nIF THE clone_mut_regionDefinition PARAMETER IS NOT \\"NULL\\".\\n\\n============\\n\\n"), call. = FALSE)
-        }
-        VDJ_db <- shazam::observedMutations(VDJ_db, sequenceColumn="${clone_mut_obs_seq}",
-                                    germlineColumn="${clone_mut_germ_seq}",
-                                    regionDefinition=regionDefinition,
-                                    frequency=FALSE, 
-                                    nproc=1)
-        # Calculate combined R and S mutation counts
-        VDJ_db <- shazam::observedMutations(VDJ_db, sequenceColumn="${clone_mut_obs_seq}",
-                                    germlineColumn="${clone_mut_germ_seq}",
-                                    regionDefinition=regionDefinition,
-                                    frequency=FALSE, 
-                                    combine=TRUE,
-                                    nproc=1)
-
-        # Calculate R and S mutation frequencies
-        VDJ_db <- shazam::observedMutations(VDJ_db, sequenceColumn="${clone_mut_obs_seq}",
-                                    germlineColumn="${clone_mut_germ_seq}",
-                                    regionDefinition=regionDefinition,
-                                    frequency=TRUE, 
-                                    nproc=1)
-
-        # Calculate combined R and S mutation frequencies
-        VDJ_db <- shazam::observedMutations(VDJ_db, sequenceColumn="${clone_mut_obs_seq}",
-                                    germlineColumn="${clone_mut_germ_seq}",
-                                    regionDefinition=regionDefinition,
-                                    frequency=TRUE, 
-                                    combine=TRUE,
-                                    nproc=1)
-
-        VDJ_db <- dplyr::arrange(VDJ_db, clone_id)
-        # write.table(VDJ_db, file = paste0("./", tools::file_path_sans_ext(file_name), "_shm-pass.tsv"), row.names = FALSE, quote = FALSE, sep = "\\t")
-        # Reposition the column starting with "initial_" to the second position
-        initial_col <- grep("^initial_", names(VDJ_db), value = TRUE)
-        if (length(initial_col) > 0) {
-            tempo <- VDJ_db[[initial_col]]
-            VDJ_db <- VDJ_db[ , !(names(VDJ_db) %in% initial_col)]
-            VDJ_db <- data.frame(VDJ_db[1], tempo, VDJ_db[2:length(VDJ_db)])
-            names(VDJ_db)[2] <- initial_col
-        }
-        # Check if a column equal to meta_legend in lowercase exists in 'data' 
-        if("${meta_file}" != "NULL" & "${meta_legend}" != "NULL" ){
-            tempo_log <- names(VDJ_db) == tolower("${meta_legend}")
-            if(any(tempo_log, na.rm = TRUE)){
-                names(VDJ_db)[tempo_log] <- "${meta_legend}"
-            }
-        }
-        # end Check if a column equal to meta_legend in lowercase exists in 'data'
-        # add germline vdj genes
-        required_inputs <- c("germline_v_call", "germline_d_call", "germline_j_call")
-        if( !all(required_inputs %in% names(VDJ_db)) ){
-            stop(paste0("\\n\\n========\\n\\nERROR IN THE NEXTFLOW EXECUTION OF THE germline_genes PROCESS\\nMISSING germline_v_call, germline_d_call OR germline_j_call FOLLOWING THE GermlineGenes PROCESS (OUTPUT germ_tree_ch)\\n\\n========\\n\\n"), call. = FALSE)
-        }
-        tempo_v <- strsplit(VDJ_db\$germline_v_call, ",")
-        sub_v <- sapply(X = tempo_v, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; paste0(unique(y), collapse = ",")})
-        sub_d <- sapply(VDJ_db\$germline_d_call, function(x) {
-            if (is.na(x) || x == "") { # The germline_d_call column can have only empty values if the sequences are light chain
-                return(NA)
-            } else {
-                y <- sub(pattern = "\\\\*.*", replacement = "", x = unlist(strsplit(x, ",")))
-                return(paste0(unique(y), collapse = ","))
-            }
-        })
-        tempo_j <- strsplit(VDJ_db\$germline_j_call, ",")
-        sub_j <- sapply(X = tempo_j, FUN = function(x){y <- sub(pattern = "\\\\*.*", replacement = "", x = x) ; paste0(unique(y), collapse = ",")})
-        VDJ_db <- data.frame(VDJ_db, clonal_germline_v_gene = sub_v, clonal_germline_d_gene = sub_d, clonal_germline_j_gene = sub_j)
-        # end add germline vdj genes
-        write.table(VDJ_db, file = paste0("./", tools::file_path_sans_ext(file_name), "_shm-pass.tsv"), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
-    ' "\${FILENAME}" |& tee -a Mutation_load_germ_genes.log
-    # cp ./tempo_shm-pass.tsv \${FILENAME}_shm-pass.tsv
-    # rm tempo_shm-pass.tsv
-    """
-}
 
 
 process Clone_id_count {
@@ -1651,13 +1490,17 @@ process backup {
 
 //////// Modules
 
-include { Igblast_query as Igblast_query } from './modules/igblast_query'
-include { Igblast_germline_coords as Igblast_germline_coords  } from './modules/igblast_germline'
-include { Closest_germline as Closest_germline  } from './modules/closest_germline'
+include { reportEmptyProcess; copyLogFile } from './modules/subscribe_helpers.nf'
+include { Igblast_query } from './modules/igblast_query'
+include { TrimTranslate } from './modules/trim_translate'
+include { Add_dotted_coord } from './modules/add_dotted_coord'
+include { Mutation_load_germ_genes } from './modules/mutation_load_germ_genes'
+include { Igblast_germline_coords } from './modules/igblast_germline'
+include { Closest_germline } from './modules/closest_germline'
 include { Gff as GffNuc } from './modules/gff'
-include { Gff as GffAa  } from './modules/gff'
+include { Gff as GffAa } from './modules/gff'
 include { PrintAlignment as PrintAlignmentNuc } from './modules/print_alignment'
-include { PrintAlignment as PrintAlignmentAa  } from './modules/print_alignment'
+include { PrintAlignment as PrintAlignmentAa } from './modules/print_alignment'
 
 //////// end Modules
 
@@ -2115,8 +1958,7 @@ workflow {
     //nb1.view()
     //fs_ch.count().view()
     fs_ch.count().combine(nb1).combine(nb2).subscribe{n,n1,n2 -> if(n != n1 + n2){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE igblast_aligned_seq.tsv (${n1}) AND igblast_unaligned_seq_name.tsv (${n2}) IS NOT EQUAL TO THE NUMBER OF SUBMITTED FASTA FILES (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
-    Igblast_query.out.log_ch.collectFile(name: "Igblast_query_report.log").subscribe{it -> it.copyTo("${out_path}/reports")}
-
+    copyLogFile('Igblast_query.log', Igblast_query.out.log_ch, out_path)
 
     parseDb_filtering(
         Igblast_query.out.db_pass_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Igblast_query PROCESS\n\n========\n\n"}
@@ -2134,15 +1976,15 @@ workflow {
     // nb2_b.map { "Nombre de lignes dans unselect_ch2 (failed_productive_seq.tsv): $it (en comptant le header)" }.view()
     // tsv_ch2.countLines().map { "Nombre de lignes dans tsv_ch2 (igblast_seq.tsv): $it (en comptant le header)" }.view()
     tsv_ch2.countLines().combine(nb1_b).combine(nb2_b).subscribe{n,n1,n2 -> if(n != n1 + n2 - 1){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE productive_seq.tsv (${n1}) AND failed_productive_seq.tsv (${n2} - 1) IS NOT EQUAL TO THE NUMBER OF FILES IN igblast_seq.tsv (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // n1 + n2 - 1 because header counted in both n1 and n2 while only one header in n
-    parseDb_filtering.out.parseDb_filtering_log_ch.collectFile(name: "ParseDb_filtering.log").subscribe{it -> it.copyTo("${out_path}/reports")}
-
+    copyLogFile('ParseDb_filtering.log', parseDb_filtering.out.parseDb_filtering_log_ch, out_path)
 
     TrimTranslate(
         parseDb_filtering.out.select_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE parseDb_filtering PROCESS\n\n========\n\n"}
     )
     TrimTranslate.out.trimtranslate_ch.count().subscribe { n -> if ( n == 1 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FILES FOLLOWING THE TrimTranslate PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
     trimtranslate_ch2 = TrimTranslate.out.trimtranslate_ch.collectFile(name: "trimtranslate.tsv", skip: 1, keepHeader: true) // productive file with column sequence_alignment_aa added  // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
-    TrimTranslate.out.trimtranslate_log_ch.collectFile(name: "trimtranslate.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+    copyLogFile('trimtranslate.log', TrimTranslate.out.trimtranslate_log_ch, out_path)
+
 
 
 
@@ -2170,9 +2012,18 @@ workflow {
     )
 
 
- 
+
+    Add_dotted_coord( // module
+        TrimTranslate.out.trimtranslate_ch
+    )
+    reportEmptyProcess('Add_dotted_coord', Add_dotted_coord.out.add_dotted_coord_ch)
+    copyLogFile('add_dotted_coord.log', Add_dotted_coord.out.add_dotted_coord_log_ch, out_path)
+
+
+
+
    seq_name_replacement(
-        TrimTranslate.out.trimtranslate_ch,
+        Add_dotted_coord.out.add_dotted_coord_ch,
         meta_file,
         meta_seq_names, 
         meta_name_replacement,
@@ -2182,7 +2033,8 @@ workflow {
     seq_name_replacement_ch2 = seq_name_replacement.out.seq_name_replacement_ch.collectFile(name: "replacement.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
     // seq_name_replacement_ch2.subscribe{it -> it.copyTo("${out_path}")}
     // tuple_seq_name_replacement = new Tuple("all", seq_name_replacement_ch2) # warning: this is not a channel but a variable now
-    seq_name_replacement.out.seq_name_replacement_log_ch.collectFile(name: "seq_name_replacement.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+    copyLogFile('seq_name_replacement.log', seq_name_replacement.out.seq_name_replacement_log_ch, out_path)
+
 
 
     data_assembly(
@@ -2236,7 +2088,8 @@ workflow {
     failed_clonal_germline_file.subscribe{it -> it.copyTo("${out_path}/tsv")} // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
     nb_failed_clone_2 = failed_clonal_germline_file.countLines() - 1
     nb_failed_clone = nb_failed_clone_2.combine(nb_failed_clone_1).map { new_count, old_count -> new_count + old_count }.view() // to add the two kind of failure
-    Closest_germline.out.closest_log_ch.collectFile(name: "Closest_germline.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+    copyLogFile('Closest_germline.log', Closest_germline.out.closest_log_ch, out_path)
+
 
 
     Igblast_germline_coords(
@@ -2246,7 +2099,9 @@ workflow {
     )
     //tsv_ch1 = Igblast_query.out.db_pass_ch.map { tuple -> tuple[1] } // Only the igblast_db-pass.tsv files (without _igblast.tsv)
     Igblast_germline_coords.out.germline_coords_ch.count().subscribe{ n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE Igblast_germline_coords PROCESS\n\nCHECK THAT THE igblast_organism, igblast_loci AND igblast_variable_ref_files ARE CORRECTLY SET IN THE nextflow.config FILE\n\n========\n\n"}}
-    Igblast_germline_coords.out.log_ch.collectFile(name: "Igblast_germline_coords_report.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+    copyLogFile('Igblast_germline_coords_report.log', Igblast_germline_coords.out.log_ch, out_path)
+
+
 
 
     AddGermlineSequences(
@@ -2254,16 +2109,13 @@ workflow {
         igblast_organism, 
         igblast_variable_ref_files
     )
-    AddGermlineSequences.out.add_germ_log_ch.collectFile(name: "AddGermlineSequences.log").subscribe{it -> it.copyTo("${out_path}/reports")}
-
+    copyLogFile('AddGermlineSequences.log', AddGermlineSequences.out.add_germ_log_ch, out_path)
 
 
     TranslateGermline(
         AddGermlineSequences.out.add_germ_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE AddGermlineSequences PROCESS\n\n========\n\n"}
     )
     TranslateGermline.out.translate_germ_log_ch.collectFile(name: "TranslateGermline.log").subscribe{it -> it.copyTo("${out_path}/reports")}
-
-
 
 
     Mutation_load_germ_genes(
@@ -2277,17 +2129,14 @@ workflow {
     clone_assigned_seq_ch = Mutation_load_germ_genes.out.mutation_load_ch.collectFile(name: "clone_assigned_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
     nb_clone_assigned = clone_assigned_seq_ch.countLines() - 1 // Minus 1 because 1st line = column names
     clone_assigned_seq_ch.subscribe{it -> it.copyTo("${out_path}/tsv")}
-    clone_assigned_seq_filtered_ch = Mutation_load_germ_genes.out.mutation_load_ch.filter{ file -> file.countLines() > align_clone_nb.toInteger() } // Only keep clonal groups that have a number of sequences superior to align_clone_nb (variable defined in nextflow.config)
-    Mutation_load_germ_genes.out.mutation_load_log_ch.collectFile(name: "Mutation_load_germ_genes.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
-
+    clone_assigned_seq_filtered_ch = Mutation_load_germ_genes.out.mutation_load_ch.filter{ file -> file.countLines() > align_clone_nb.toInteger() } // Only keep clonal groups that have a number of sequences superior to align_clone_nb (variable defined in nextflow.config) 
+    copyLogFile('Mutation_load_germ_genes.log', Mutation_load_germ_genes.out.mutation_load_log_ch, out_path)
 
 
 
     Clone_id_count(
         clone_assigned_seq_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Mutation_load_germ_genes PROCESS\n\n========\n\n"}
     )
-
-
 
 
 
@@ -2443,10 +2292,8 @@ workflow {
         align_clone_nb, 
         cute_path
     )
-    tsv2fasta_log_ch2 = Tsv2fasta.out.tsv2fasta_log_ch.collectFile(name: "Tsv2fasta.log")
-    tsv2fasta_log_ch2.subscribe{it -> it.copyTo("${out_path}/reports")}
+    copyLogFile('Tsv2fasta.log', Tsv2fasta.out.tsv2fasta_log_ch, out_path)
     fasta_align_warn = Tsv2fasta.out.warning_ch
-
     // Print warnings on the terminal:
     fasta_align_warn.filter { file(it). exists() }
                 .map {file -> 
@@ -2467,7 +2314,7 @@ workflow {
         align_aa_ch = Mafft_align.out.aligned_all_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Mafft_align PROCESS\n\n========\n\n"}.map{ x, y, z -> [y, z] }
         align_nuc_ch = Mafft_align.out.aligned_all_ch.map{ x, y, z -> [x, z] }
         aligned_all_ch2 = Mafft_align.out.aligned_all_ch.map{ x, y, z -> [x, y] }
-        Mafft_align.out.mafft_align_log_ch.collectFile(name: "Mafft_align.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+        copyLogFile('Mafft_align.log', Mafft_align.out.mafft_align_log_ch, out_path)
     }else if(align_soft == "abalign"){
         Abalign_align_aa(
             Tsv2fasta.out.fasta_align_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Tsv2fasta PROCESS\n\n========\n\n"},
@@ -2475,13 +2322,14 @@ workflow {
             igblast_heavy_chain,
             align_abalign_options
         )
-        Abalign_align_aa.out.abalign_align_aa_log_ch.collectFile(name: "Abalign_align_aa.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+        copyLogFile('Abalign_align_aa.log', Abalign_align_aa.out.abalign_align_aa_log_ch, out_path)
+
 
         Abalign_rename(
             Abalign_align_aa.out.aligned_aa_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Abalign_align_aa PROCESS\n\n========\n\n"}
         )
         Abalign_rename.out.failed_abalign_align_ch.collectFile(name: "failed_abalign_align.tsv", skip: 1, keepHeader: true).subscribe{it -> it.copyTo("${out_path}/tsv")}
-        Abalign_rename.out.abalign_rename_log_ch.collectFile(name: "Abalign_rename.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+        copyLogFile('Abalign_rename.log', Abalign_rename.out.abalign_rename_log_ch, out_path)
 
         // aligned_aa_only_ch = Abalign_align_aa.out.aligned_aa_ch.map { x, y, z -> y }
         Abalign_align_nuc(
@@ -2490,7 +2338,7 @@ workflow {
         align_nuc_ch = Abalign_align_nuc.out.aligned_all_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Abalign_align_nuc PROCESS\n\n========\n\n"}.map{ x, y, z -> [x, z] }
         align_aa_ch = Abalign_align_nuc.out.aligned_all_ch.map{ x, y, z -> [y, z] }
         aligned_all_ch2 = Abalign_align_nuc.out.aligned_all_ch.map{ x, y, z -> [x, y] }
-        Abalign_align_nuc.out.abalign_align_nuc_log_ch.collectFile(name: "Abalign_align_nuc.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+        copyLogFile('Abalign_align_nuc.log', Abalign_align_nuc.out.abalign_align_nuc_log_ch, out_path)
     }else{
         error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nINVALID align_soft PARAMETER IN nextflow.config FILE:\n${align_soft}\n\n========\n\n"
     }
@@ -2520,7 +2368,8 @@ workflow {
         cute_path
     )
     GffNuc.out.gff_ch.flatten().ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE GffNuc PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/nuc")} // flatten because several files. Otherwise, copyTo does not like it
-    GffNuc.out.gff_log_ch.collectFile(name: "GffNuc.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+    copyLogFile('GffNuc.log', GffNuc.out.gff_log_ch, out_path)
+
 
 
     //for_gff_aa_ch.view()
@@ -2531,7 +2380,7 @@ workflow {
         cute_path
     )
     GffAa.out.gff_ch.flatten().ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE GffAa PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/aa")}
-    GffAa.out.gff_log_ch.collectFile(name: "GffAa.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+    copyLogFile('GffAa.log', GffAa.out.gff_log_ch, out_path)
 //GffAa.out.gff_ch.flatten().view()
 
 
@@ -2551,7 +2400,7 @@ workflow {
     )
     tree_aa = Tree.out.tree_aa_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Tree PROCESS FOR NUC\n\n========\n\n"}
     tree_nuc = Tree.out.tree_nuc_ch
-    Tree.out.tree_log_ch.collectFile(name: "tree.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+    copyLogFile('tree.log', Tree.out.tree_log_ch, out_path)
 
     Meta2ITOL (
         meta_file,

@@ -2,7 +2,7 @@
 
 #########################################################################
 ##                                                                     ##
-##     TrimTranslate.sh                                                  ##
+##     TrimTranslate.sh                                                ##
 ##                                                                     ##
 ##     Gael A. Millot                                                  ##
 ##     Bioinformatics and Biostatistics Hub                            ##
@@ -15,6 +15,7 @@
 
 select_ch=${1}
 
+set -o pipefail
 
 mkdir -p productive_nuc/trimmed
 mkdir -p productive_nuc/removed
