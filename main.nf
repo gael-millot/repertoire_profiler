@@ -884,17 +884,24 @@ def translate_with_gaps(nuc_seq):
     protein_seq = []
     seq_len = len(nuc_seq)
     valid_bases = set("ATGCatgc")
-
-    # iterate in steps of 3 nucleotides (codon column)
+    
     for i in range(0, seq_len, 3):
         codon = nuc_seq[i:i+3]
-
-        # if codon not full (alignment length not divisible by 3)
         if len(codon) < 3:
+            # incomplete codon at end → gap placeholder
+            protein_seq.append('-')
+            continue
+        
+        # all dots
+        if all(b == '.' for b in codon):
+            protein_seq.append('.')
+            continue
+        # all hyphens
+        if all(b == '-' for b in codon):
             protein_seq.append('-')
             continue
 
-        # if any gap or invalid base in codon -> gap
+        # if any invalid base, dot, or hyphen inside codon → treat as hyphen
         if any(b not in valid_bases for b in codon):
             protein_seq.append('-')
         else:
@@ -903,17 +910,12 @@ def translate_with_gaps(nuc_seq):
             except Exception:
                 aa = 'X'
             protein_seq.append(aa)
-
     return ''.join(protein_seq)
 
-
-out_file = open("sequence_alignment_with_gaps_imgt_aa.fasta", "w")
-
-for record in SeqIO.parse("${align_nuc}", "fasta"):
-    aa_seq = translate_with_gaps(str(record.seq))
-    out_file.write(f">{record.id}\\n{aa_seq}\\n")
-
-out_file.close()
+with open("sequence_alignment_with_gaps_imgt_aa.fasta", "w") as out_f:
+    for record in SeqIO.parse("${align_nuc}", "fasta"):
+        aa_seq = translate_with_gaps(str(record.seq))
+        out_f.write(f">{record.id}\\n{aa_seq}\\n")
 EOF
     """
 }
