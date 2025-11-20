@@ -2,7 +2,7 @@ process PrintAlignment{
     label 'goalign'
 
     input:
-    tuple path(align_ch), val(seq_kind)  // parallelization expected (by clonal groups over clone_nb_seq sequences)
+    tuple path(align_ch), path(other), val(tag)  // parallelization expected (by clonal groups over clone_nb_seq sequences)
 
 
     output:

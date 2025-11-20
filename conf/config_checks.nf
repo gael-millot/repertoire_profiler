@@ -103,9 +103,6 @@ if( ! (igblast_kappa_chain in String) ){
     error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_kappa_chain PARAMETER IN nextflow.config FILE:\n${igblast_kappa_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\" (OR \"true\" OR \"false\") \n\n========\n\n"
 }
 // Checking of studied chain coherence
-heavy = igblast_heavy_chain == "TRUE" || igblast_heavy_chain == "true"
-lambda = igblast_lambda_chain == "TRUE" || igblast_lambda_chain == "true"
-kappa  = igblast_kappa_chain == "TRUE" || igblast_kappa_chain == "true"
 if (heavy && (lambda || kappa)) {
     error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID PARAMETERS IN nextflow.config FILE:\nHEAVY (igblast_heavy_chain) AND LIGHT (igblast_lambda_chain, igblast_kappa_chain) CHAIN LOCI CANNOT BOTH BE TRUE.\nHERE ARE THEIR CURRENT VALUES: \nigblast_heavy_chain: ${igblast_heavy_chain}\nigblast_lambda_chain: ${igblast_lambda_chain}\nigblast_kappa_chain: ${igblast_kappa_chain}\n\n========\n\n"
 }

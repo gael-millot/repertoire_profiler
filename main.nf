@@ -694,9 +694,10 @@ process Clone_id_count {
 process Tsv2fasta {
     label 'r_ig_clustering'
     cache 'true'
-    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{*_nuc/*.fasta}", overwrite: false
-    publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{*_aa/*.fasta}", overwrite: false
-    publishDir path: "${out_path}/alignments/nuc", mode: 'copy', pattern: "{*_imgt.fasta}", overwrite: false // already aligned fasta file
+    // publishDir{if(seq_kind != 'IMGT'){return [ path: "${out_path}/fasta", mode: 'copy', pattern: "{*_nuc/*.fasta}", overwrite: false ]}}
+    // publishDir{if(seq_kind != 'IMGT'){return [ path: "${out_path}/fasta", mode: 'copy', pattern: "{*_aa/*.fasta}", overwrite: false ]}}
+    // publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{for_alignment_nuc/*.fasta}", overwrite: false
+    // publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{for_alignment_aa/*.fasta}", overwrite: false
 
     input:
     tuple path(all_files_ch), val(seq_kind) // parallelization expected (by clonal groups over align_clone_nb sequences)
@@ -706,8 +707,8 @@ process Tsv2fasta {
     path cute_file
 
     output:
-    tuple path("*_nuc/*.fasta"), path("*_aa/*.fasta"), val(seq_kind), emit: fasta_align_ch
-    tuple path("*_imgt.fasta"), val(seq_kind), emit: imgt_align_ch, optional: true
+    tuple path("for_alignment_nuc/*.fasta"), path("for_alignment_aa/*.fasta"), val(seq_kind), emit: fasta_align_ch, optional: true // // already aligned fasta file with seq_kind == "IMGT"
+    tuple path("sequence_alignment_with_gaps_imgt_nuc.fasta"), path("sequence_alignment_aa_for_comp.fasta"), val(seq_kind), emit: fasta_align_imgt_ch, optional: true // // already aligned fasta file with seq_kind == "IMGT"
     path "Tsv2fasta.log", emit: tsv2fasta_log_ch
     path "warning.txt", emit: warning_ch, optional: true
 
@@ -862,6 +863,62 @@ process Abalign_align_nuc {
     awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta > ${fasta_nuc.baseName}_aligned_nuc.fasta # remove \\n in seq
     """
 }
+
+process Translate_with_IMGT_gaps {
+    label 'immcantation'
+    publishDir path: "${out_path}/alignments/aa/imgt", mode: 'copy', pattern: "{sequence_alignment_with_gaps_imgt_aa.fasta}", overwrite: false
+
+    input:
+    tuple path(align_nuc), path(aa), val(tag)  // no parallelization 
+
+    output:
+    tuple path("sequence_alignment_with_gaps_imgt_aa.fasta"), path(align_nuc), val(tag), emit: imgt_align_aa_ch // switch of aa and nuc for correct printing
+
+    script:
+    """
+python3 - <<'EOF'
+from Bio import SeqIO
+from Bio.Seq import Seq
+
+def translate_with_gaps(nuc_seq):
+    protein_seq = []
+    seq_len = len(nuc_seq)
+    valid_bases = set("ATGCatgc")
+
+    # iterate in steps of 3 nucleotides (codon column)
+    for i in range(0, seq_len, 3):
+        codon = nuc_seq[i:i+3]
+
+        # if codon not full (alignment length not divisible by 3)
+        if len(codon) < 3:
+            protein_seq.append('-')
+            continue
+
+        # if any gap or invalid base in codon -> gap
+        if any(b not in valid_bases for b in codon):
+            protein_seq.append('-')
+        else:
+            try:
+                aa = str(Seq(codon.upper()).translate(to_stop=False))
+            except Exception:
+                aa = 'X'
+            protein_seq.append(aa)
+
+    return ''.join(protein_seq)
+
+
+out_file = open("sequence_alignment_with_gaps_imgt_aa.fasta", "w")
+
+for record in SeqIO.parse("${align_nuc}", "fasta"):
+    aa_seq = translate_with_gaps(str(record.seq))
+    out_file.write(f">{record.id}\\n{aa_seq}\\n")
+
+out_file.close()
+EOF
+    """
+}
+
+
 
 process  Mafft_align {
     label 'mafft'
@@ -1359,7 +1416,8 @@ include { Closest_germline } from './modules/closest_germline'
 include { Gff_imgt } from './modules/gff_imgt'
 include { Gff as GffNuc } from './modules/gff'
 include { Gff as GffAa } from './modules/gff'
-include { PrintAlignment as PrintAlignmentIMGT } from './modules/print_alignment'
+include { PrintAlignment as PrintAlignmentIMGTnuc } from './modules/print_alignment'
+include { PrintAlignment as PrintAlignmentIMGTaa } from './modules/print_alignment'
 include { PrintAlignment as PrintAlignmentNuc } from './modules/print_alignment'
 include { PrintAlignment as PrintAlignmentAa } from './modules/print_alignment'
 
@@ -1423,7 +1481,11 @@ workflow {
     //////// Variable modification
 
     // CONSTRUCTION OF THE igblast REFERENCE FILES PATHS
-    // heavy, lambda and kappa were defined earlier in the "Checking of chain coherence section"
+    // heavy, lambda and kappa are also used in the checking section
+    heavy = igblast_heavy_chain == "TRUE" || igblast_heavy_chain == "true"
+    lambda = igblast_lambda_chain == "TRUE" || igblast_lambda_chain == "true"
+    kappa  = igblast_kappa_chain == "TRUE" || igblast_kappa_chain == "true"
+
 
     igblast_variable_ref_files = ""
     igblast_constant_ref_files = ""
@@ -1851,7 +1913,8 @@ workflow {
 
     clone_labeled_ch = clone_assigned_seq_filtered_ch.map { file -> tuple(file, 'CLONE') }
     productive_labeled_ch = data_assembly.out.productive_ch.map { file -> tuple(file, 'ALL') }
-    all_files_ch = clone_labeled_ch.mix(productive_labeled_ch)
+    imgt_labeled_ch = data_assembly.out.productive_ch.map { file -> tuple(file, 'IMGT') }
+    all_files_ch = clone_labeled_ch.mix(productive_labeled_ch, imgt_labeled_ch)
     Tsv2fasta(
         all_files_ch,
         align_seq, 
@@ -1859,14 +1922,13 @@ workflow {
         align_clone_nb, 
         cute_path
     )
+    // fasta_align_imgt_ch = Tsv2fasta.out.fasta_align_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Tsv2fasta PROCESS\n\n========\n\n"}.filter {nuc, aa, kind -> nuc.name.endsWith("_imgt_nuc.fasta")}
+    Tsv2fasta.out.fasta_align_ch.filter{ nuc, aa, kind -> nuc.exists() && aa.exists() }.subscribe{nuc, aa, kind -> nuc.copyTo("${out_path}/fasta/for_alignment_nuc/${nuc.getName()}") ; aa.copyTo("${out_path}/fasta/for_alignment_aa/${aa.getName()}")} // copy the folder and content for_alignment_nuc/* into {out_path}/fasta
+    Tsv2fasta.out.fasta_align_imgt_ch.filter{ nuc, aa, kind -> nuc.exists() }.subscribe{nuc, aa, kind -> nuc.copyTo("${out_path}/alignments/nuc/imgt/${nuc.getName()}")} // aa.copyTo("${out_path}/alignments/aa/${aa.getName()}") not used because no gaps in this aa sequences
+    // fasta_align_ch2 = Tsv2fasta.out.fasta_align_ch.filter {nuc, aa, kind -> !nuc.name.endsWith("_imgt_nuc.fasta")}
     copyLogFile('Tsv2fasta.log', Tsv2fasta.out.tsv2fasta_log_ch, out_path)
-    fasta_align_warn = Tsv2fasta.out.warning_ch
     // Print warnings on the terminal:
-    fasta_align_warn.filter { file(it). exists() }
-                .map {file -> 
-                    file.text  // contenu du fichier
-                }
-                .view()
+    Tsv2fasta.out.warning_ch.filter{file(it).exists()}.map{file -> file.text}.view() //  file.text = contenu du fichier
 
     if(align_soft == "abalign" && (align_seq == "query" || align_seq == "igblast_full" || align_seq == "trimmed" || align_seq == "fwr1" || align_seq == "fwr2" || align_seq == "fwr3" || align_seq == "fwr4" || align_seq == "cdr1" || align_seq == "cdr2" || align_seq == "cdr3" || align_seq == "junction" || align_seq == "d_sequence_alignment" || align_seq == "j_sequence_alignment" || align_seq == "c_sequence_alignment" || align_seq == "d_germline_alignment" || align_seq == "j_germline_alignment" || align_seq == "c_germline_alignment")){
         align_soft = "mafft"
@@ -1874,7 +1936,7 @@ workflow {
     }
     if(align_soft == "mafft"){
         Mafft_align(
-            Tsv2fasta.out.fasta_align_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Tsv2fasta PROCESS\n\n========\n\n"},
+            Tsv2fasta.out.fasta_align_ch,
             align_mafft_all_options,
             align_mafft_clonal_options
         )
@@ -1884,7 +1946,7 @@ workflow {
         copyLogFile('Mafft_align.log', Mafft_align.out.mafft_align_log_ch, out_path)
     }else if(align_soft == "abalign"){
         Abalign_align_aa(
-            Tsv2fasta.out.fasta_align_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Tsv2fasta PROCESS\n\n========\n\n"},
+            Tsv2fasta.out.fasta_align_ch,
             igblast_organism,
             igblast_heavy_chain,
             align_abalign_options
@@ -1928,8 +1990,13 @@ workflow {
     for_gff_aa_ch = clone_for_gff_aa_ch.mix(all_for_gff_aa_ch)
 
 
+    Translate_with_IMGT_gaps(
+        Tsv2fasta.out.fasta_align_imgt_ch
+    )
+
+
     Gff_imgt( // module gff_imgt.nf
-        Tsv2fasta.out.imgt_align_ch,
+        Tsv2fasta.out.fasta_align_imgt_ch,
         data_assembly.out.productive_ch,
         cute_path
     )
@@ -1962,22 +2029,27 @@ workflow {
 
 
 
-    PrintAlignmentIMGT( // module print_alignment.nf
-        Tsv2fasta.out.imgt_align_ch
+    PrintAlignmentIMGTnuc( // module print_alignment.nf
+        Tsv2fasta.out.fasta_align_imgt_ch
     )
-    PrintAlignmentIMGT.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentIMGT PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/nuc")}
+    PrintAlignmentIMGTnuc.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentIMGTnuc PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/nuc/imgt")}
+
+    PrintAlignmentIMGTaa( // module print_alignment.nf
+        Translate_with_IMGT_gaps.out.imgt_align_aa_ch.view()
+    )
+    PrintAlignmentIMGTaa.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentIMGTaa PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/aa/imgt")}
 
 
 
     PrintAlignmentNuc( // module print_alignment.nf
-        align_nuc_ch
+        Mafft_align.out.aligned_all_ch
     )
     PrintAlignmentNuc.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentNuc PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/nuc")}
 
 
 
     PrintAlignmentAa( // module print_alignment.nf
-        align_aa_ch
+        Mafft_align.out.aligned_all_ch.map{ x, y, z -> [y, x, z] } // inversion to have aa at fisrt position
     )
     PrintAlignmentAa.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentAa PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/aa")}
 
