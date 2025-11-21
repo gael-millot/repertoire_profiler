@@ -200,6 +200,31 @@ fun_source_test <- function(path, script){ # do not write script = script: can p
 }
 
 
+map_ungapped_to_gapped <- function(seq_aligned, ungapped_pos) {
+# AIM
+# shift vdjc or fwr/cdr position provided in the .tsv file, according to the hyphens (--) inserted in the aligned sequences, to have the correct positions of the features in the aligned sequneces in the html file.
+# ARGUMENTS
+# seq_aligned: aligned sequence (with hyphens)
+# ungapped_pos: initial positions in the unaligned sequence (without hyphens)
+# RETURN
+# shifted position
+# EXAMPLES
+# map_ungapped_to_gapped("atg--t---g", c(3,4,5)) # initial sequence is atgtg, input coords are third g, fourth t and fifth g
+# DEBUGGING
+# seq_aligned = "atg--t---g" ; ungapped_pos = c(3,4,5)
+    # Remove gaps but keep index positions of non-gaps
+    aligned_chars <- strsplit(seq_aligned, "")[[1]]
+    non_gap_indices <- which(aligned_chars != "-")
+    hyphens_nb <- sum(aligned_chars == "-", na.rm = TRUE)
+    # Return the gapped index corresponding to the ungapped position
+    if(length(non_gap_indices) < ungapped_pos){
+        return(ungapped_pos + hyphens_nb)
+    }else{
+        return(non_gap_indices[ungapped_pos])
+    }
+}
+
+
 ################ import functions from cute little functions toolbox
 
 fun_source_test(path = cute, script = script)
@@ -435,14 +460,20 @@ selected_index <- match(seq_names_for_tsv, df$sequence_id) # line number in df. 
 # get coordinates
 for(i2 in c("vdjc", "fwr_cdr")){
     gff_rows <- list()
+    gff_aa_rows <- list()
     for(i3 in 1:length(selected_index)){
         for(i4 in 1:length(get(paste0(i2, "_features")))){
             if( ! is.null(get(paste0(i2, "_column_start")))){
                 # nuc coordinates
                 start_coord <- df[selected_index[i3], get(paste0(i2, "_column_start"))[i4]]
                 end_coord <- df[selected_index[i3], get(paste0(i2, "_column_end"))[i4]]
-                # end shifed coordinates due to hyphens in the aligned seq
-                # end aa coordinates
+                # I have to do this because coordinates provided by imgt are with dots (imgt spacers) but not with hyphens. But sometimes some hyphens in the sequences
+                # if( ! is.na(start_coord)){
+                #     start_coord <- map_ungapped_to_gapped(seq_aligned = seq_aligned[i3], ungapped_pos = start_coord)
+                # }
+                # if( ! is.na(end_coord)){
+                #     end_coord <- map_ungapped_to_gapped(seq_aligned = seq_aligned[i3], ungapped_pos = end_coord)
+                #}
                 gff_rows[[length(gff_rows) + 1]] <- c(
                     df[selected_index[i3], Name],
                     ".",
@@ -454,9 +485,37 @@ for(i2 in c("vdjc", "fwr_cdr")){
                     ".",
                     paste0("Name=", get(paste0(i2, "_features"))[i4], ";Color=", get(paste0(i2, "_features_colors"))[i4])
                 )
+                # end nuc coordinates
+                # aa coordinates
+                if(is.na(start_coord)){
+                    start_coord_aa <- NA
+                }else{
+                    start_coord_aa <- as.integer(trunc(start_coord / 3) + 1)
+                    if((as.integer(start_coord) - 1) %% 3 != 0){ # == 0 means start_coord is at starting nuc codon 1, 4, 7, 10, etc., != 0 means start_coord is not at starting nuc codon -> shift to the next codon
+                        start_coord_aa <- start_coord_aa + 1
+                    }
+                }
+                if(is.na(end_coord)){
+                    end_coord_aa <- NA
+                }else{
+                    end_coord_aa <- as.integer(trunc(end_coord / 3)) # if(as.integer(end_coord) %% 3 != 0) not required here because 1) == 0 means end_coord is at ending nuc codon 3, 6, 9, etc., 2) != 0 means end_coord is not at ending nuc codon -> translation put a hyphen for this codon. But 8 (middle of 3rd codon) -> 8/3 -> 2nd aa: if the 3rd codon is hyphen, then still ok to end at aa 2. So nothing to change
+                }
+                gff_aa_rows[[length(gff_aa_rows) + 1]] <- c(
+                    df[selected_index[i3], Name],
+                    ".",
+                    "gene",
+                    start_coord_aa, 
+                    end_coord_aa, 
+                    ".",
+                    ".",
+                    ".",
+                    paste0("Name=", get(paste0(i2, "_features"))[i4], ";Color=", get(paste0(i2, "_features_colors"))[i4])
+                )
+                # end aa coordinates
             }
         }
     }
+    # nuc coordinates
     gff_table <- do.call(rbind, gff_rows)
     if(length(gff_table) > 0){
         gff_lines <- apply(gff_table, 1, function(x) paste(x, collapse="\t"))
@@ -466,6 +525,18 @@ for(i2 in c("vdjc", "fwr_cdr")){
     gff_lines <- c("##gff-version 3", gff_lines)
     output_gff <- paste0(i2, "_", sub(x = basename(fasta_path), pattern = ".fasta$", replacement = ""), ".gff")
     writeLines(gff_lines, con = output_gff)
+    # end nuc coordinates
+    # aa coordinates
+    gff_aa_table <- do.call(rbind, gff_aa_rows)
+    if(length(gff_aa_table) > 0){
+        gff_aa_lines <- apply(gff_aa_table, 1, function(x) paste(x, collapse="\t"))
+    }else{
+        gff_aa_lines <- character()
+    }
+    gff_aa_lines <- c("##gff_aa-version 3", gff_aa_lines)
+    output_gff_aa <- paste0(i2, "_", sub(x = basename(fasta_path), pattern = "nuc.fasta$", replacement = ""), "aa.gff")
+    writeLines(gff_aa_lines, con = output_gff_aa)
+    # end aa coordinates
 }
 # end Create the gff file
 

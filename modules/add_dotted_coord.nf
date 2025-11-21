@@ -33,8 +33,8 @@ process Add_dotted_coord {
         # seq = "atg..t...g" ; ungapped_pos = c(3,4,5)
             # Remove gaps but keep index positions of non-gaps
             aligned_chars <- strsplit(seq, "")[[1]]
-            non_gap_indices <- which(aligned_chars != ".")
-            dots_nb <- sum(aligned_chars == ".", na.rm = TRUE)
+            non_gap_indices <- which( ! (aligned_chars == "." | aligned_chars == "-"))
+            dots_nb <- sum(aligned_chars == "." | aligned_chars == "-", na.rm = TRUE)
             # Return the gapped index corresponding to the ungapped position
             if(length(non_gap_indices) < ungapped_pos){
                 return(ungapped_pos + dots_nb)
@@ -47,13 +47,14 @@ process Add_dotted_coord {
             start_coord <- df[ , paste0(i2, "_alignment_start")]
             end_coord <- df[ , paste0(i2, "_alignment_end")]
             # shifed coordinates due to hyphens in the aligned seq
+             tempo_seq <- sub(pattern = "-+\$", replacement = "", x = df\$sequence_alignment_with_gaps) # removal of hyphens at the end of the seq only
             if( ! is.na(start_coord)){
-                start_coord <- map_gapped(seq = df\$sequence_alignment_with_gaps, ungapped_pos = start_coord)
+                start_coord <- map_gapped(seq = tempo_seq, ungapped_pos = start_coord)
             }else{
                 start_coord <- NA
             }
             if( ! is.na(end_coord)){
-                end_coord <- map_gapped(seq = df\$sequence_alignment_with_gaps, ungapped_pos = end_coord)
+                end_coord <- map_gapped(seq = tempo_seq, ungapped_pos = end_coord)
             }else{
                 end_coord <- NA
             }

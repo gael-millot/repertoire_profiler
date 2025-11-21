@@ -1,7 +1,8 @@
 // Makes a gff file from the coordinates info contained inside the tsv and pairs it with the fastas
 process Gff_imgt {
     label 'r_ig_clustering'
-    publishDir path: "${out_path}/alignments/nuc/imgt", mode: 'copy', pattern: "{*_imgt_nuc.gff}", overwrite: false // already aligned fasta file
+    publishDir path: "${out_path}/alignments/nuc/imgt", mode: 'copy', pattern: "{*_imgt_nuc.gff}", overwrite: false
+    publishDir path: "${out_path}/alignments/aa/imgt", mode: 'copy', pattern: "{*_imgt_aa.gff}", overwrite: false 
     cache 'true'
 
     input:
@@ -10,7 +11,8 @@ process Gff_imgt {
     path cute_file
 
     output:
-    path "*.gff", emit: gff_ch
+    path "*_imgt_nuc.gff"
+    path "*_imgt_aa.gff"
     path "Gff_imgt.log", emit: gff_log_ch
 
     script:
