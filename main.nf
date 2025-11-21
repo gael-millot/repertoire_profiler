@@ -788,7 +788,7 @@ process Abalign_align_aa {
 // Abalign puts fasta headers in all caps. next script is meant to put those headers back to how they originally were
 process Abalign_rename {
     label 'r_ext'
-    publishDir path: "${out_path}/alignments/aa", mode: 'copy', pattern: "{*_aligned_aa.fasta}", overwrite: false
+    //publishDir path: "${out_path}/alignments/aa", mode: 'copy', pattern: "{*_aligned_aa.fasta}", overwrite: false
     
     input:
     tuple path(fasta_nuc), path(fasta_aa), path(fasta_aa_align), val(seq_kind) // parallelization expected (by clonal groups over align_clone_nb sequences)
@@ -843,7 +843,7 @@ process Abalign_rename {
 // This process aligns the nucleotidic fasta files by transfering amino-acidic alignments onto the nucleotidic ones
 process Abalign_align_nuc {
     label 'goalign'
-    publishDir path: "${out_path}/alignments/nuc", mode: 'copy', pattern: "{*_aligned_nuc.fasta}", overwrite: false
+    //publishDir path: "${out_path}/alignments/nuc", mode: 'copy', pattern: "{*_aligned_nuc.fasta}", overwrite: false
 
     input:
     tuple path(fasta_nuc), path(aligned_aa), val(seq_kind) // parallelization expected (by clonal groups over align_clone_nb sequences)
@@ -924,8 +924,8 @@ EOF
 
 process  Mafft_align {
     label 'mafft'
-    publishDir path: "${out_path}/alignments/aa", mode: 'copy', pattern: "{*_aligned_aa.fasta}", overwrite: false
-    publishDir path: "${out_path}/alignments/nuc", mode: 'copy', pattern: "{*_aligned_nuc.fasta}", overwrite: false
+    //publishDir path: "${out_path}/alignments/aa", mode: 'copy', pattern: "{*_aligned_aa.fasta}", overwrite: false
+    //publishDir path: "${out_path}/alignments/nuc", mode: 'copy', pattern: "{*_aligned_nuc.fasta}", overwrite: false
 
     input:
     tuple path(fasta_nuc), path(fasta_aa), val(seq_kind) // parallelization expected (by clonal groups over align_clone_nb sequences)
@@ -1977,6 +1977,9 @@ CheckVariables()
     }else{
         error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nINVALID align_soft PARAMETER IN nextflow.config FILE:\n${align_soft}\n\n========\n\n"
     }
+    align_nuc_ch.subscribe{fasta, tag -> if(tag == "CLONE"){fasta.copyTo("${out_path}/alignments/nuc/clonal/${fasta.getName()}")}else if(tag == "ALL"){fasta.copyTo("${out_path}/alignments/nuc/all/${fasta.getName()}")}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
+    align_aa_ch.subscribe{fasta, tag -> if(tag == "CLONE"){fasta.copyTo("${out_path}/alignments/aa/clonal/${fasta.getName()}")}else if(tag == "ALL"){fasta.copyTo("${out_path}/alignments/aa/all/${fasta.getName()}")}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
+
 
     //Abalign_align_nuc.out.aligned_all_ch.map{ x, y, z -> [y, z] }.view()
     //Mutation_load_germ_genes.out.mutation_load_ch.view()
@@ -2017,7 +2020,7 @@ CheckVariables()
         align_clone_nb, 
         cute_path
     )
-    GffNuc.out.gff_ch.flatten().ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE GffNuc PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/nuc")} // flatten because several files. Otherwise, copyTo does not like it
+    GffNuc.out.gff_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE GffNuc PROCESS\n\n========\n\n"}.subscribe{gff_list, tag -> if(tag == "CLONE"){gff_list.each{gff -> gff.copyTo("${out_path}/alignments/nuc/clonal/${gff.getName()}")}}else if(tag == "ALL"){gff_list.each{gff -> gff.copyTo("${out_path}/alignments/nuc/all/${gff.getName()}")}}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}} // .flatten() because gff several files. Otherwise, copyTo does not like it. Finally, .each() also solve the problem
     copyLogFile('gffNuc.log', GffNuc.out.gff_log_ch, out_path)
 
 
@@ -2029,7 +2032,7 @@ CheckVariables()
         align_clone_nb, 
         cute_path
     )
-    GffAa.out.gff_ch.flatten().ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE GffAa PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/aa")}
+    GffAa.out.gff_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE GffAa PROCESS\n\n========\n\n"}.subscribe{gff_list, tag -> if(tag == "CLONE"){gff_list.each{gff -> gff.copyTo("${out_path}/alignments/aa/clonal/${gff.getName()}")}}else if(tag == "ALL"){gff_list.each{gff -> gff.copyTo("${out_path}/alignments/aa/all/${gff.getName()}")}}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
     copyLogFile('gffAa.log', GffAa.out.gff_log_ch, out_path)
 //GffAa.out.gff_ch.flatten().view()
 
@@ -2038,26 +2041,28 @@ CheckVariables()
     PrintAlignmentIMGTnuc( // module print_alignment.nf
         Tsv2fasta.out.fasta_align_imgt_ch
     )
-    PrintAlignmentIMGTnuc.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentIMGTnuc PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/nuc/imgt")}
+    PrintAlignmentIMGTnuc.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentIMGTnuc PROCESS\n\n========\n\n"}.subscribe{html, tag -> html.copyTo("${out_path}/alignments/nuc/imgt")}
 
     PrintAlignmentIMGTaa( // module print_alignment.nf
         Translate_with_IMGT_gaps.out.imgt_align_aa_ch
     )
-    PrintAlignmentIMGTaa.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentIMGTaa PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/aa/imgt")}
+    PrintAlignmentIMGTaa.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentIMGTaa PROCESS\n\n========\n\n"}.subscribe{html, tag -> html.copyTo("${out_path}/alignments/aa/imgt")}
 
 
 
     PrintAlignmentNuc( // module print_alignment.nf
         Mafft_align.out.aligned_all_ch
     )
-    PrintAlignmentNuc.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentNuc PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/nuc")}
+    PrintAlignmentNuc.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentNuc PROCESS\n\n========\n\n"}.subscribe{html, tag -> if(tag == "CLONE"){html.copyTo("${out_path}/alignments/nuc/clonal/${html.getName()}")}else if(tag == "ALL"){html.copyTo("${out_path}/alignments/nuc/all/${html.getName()}")}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
+    
+    //.subscribe{it -> it.copyTo("${out_path}/alignments/nuc")}
 
 
 
     PrintAlignmentAa( // module print_alignment.nf
         Mafft_align.out.aligned_all_ch.map{ x, y, z -> [y, x, z] } // inversion to have aa at fisrt position
     )
-    PrintAlignmentAa.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentAa PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/aa")}
+    PrintAlignmentAa.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentAa PROCESS\n\n========\n\n"}.subscribe{html, tag -> if(tag == "CLONE"){html.copyTo("${out_path}/alignments/aa/clonal/${html.getName()}")}else if(tag == "ALL"){html.copyTo("${out_path}/alignments/aa/all/${html.getName()}")}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
 
 
 

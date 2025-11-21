@@ -10,7 +10,7 @@ process Gff {
     path cute_file
 
     output:
-    path "*.gff", emit: gff_ch, optional: true
+    tuple path("*.gff"), val(tag), emit: gff_ch
     path "Gff.log", emit: gff_log_ch
 
     script:
