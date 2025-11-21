@@ -1,4 +1,4 @@
-nextflow.enable.dsl=2
+workflow CheckVariables {
 
 //////// Checks
 //// check of the bin folder
@@ -327,4 +327,4 @@ if( ! (igphylm_exe_path in String) ){
     error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igphylm_exe_path PARAMETER IN nextflow.config FILE:\n${igphylm_exe_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
 }
 //// end check of config file parameters
-
+}

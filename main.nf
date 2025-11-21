@@ -1406,6 +1406,7 @@ process backup {
 
 //////// Modules
 
+include { CheckVariables } from './conf/checks.nf'
 include { reportEmptyProcess; copyLogFile } from './modules/subscribe_helpers.nf'
 include { Igblast_query } from './modules/igblast_query'
 include { TrimTranslate } from './modules/trim_translate'
@@ -1544,6 +1545,9 @@ workflow {
 
 
     //////// Main
+
+
+CheckVariables()
 
     if(sample_path =~ /.*\.zip$/){
         Unzip( // warning: it is a process defined above
@@ -2037,7 +2041,7 @@ workflow {
     PrintAlignmentIMGTnuc.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentIMGTnuc PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/nuc/imgt")}
 
     PrintAlignmentIMGTaa( // module print_alignment.nf
-        Translate_with_IMGT_gaps.out.imgt_align_aa_ch.view()
+        Translate_with_IMGT_gaps.out.imgt_align_aa_ch
     )
     PrintAlignmentIMGTaa.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentIMGTaa PROCESS\n\n========\n\n"}.subscribe{it -> it.copyTo("${out_path}/alignments/aa/imgt")}
 
