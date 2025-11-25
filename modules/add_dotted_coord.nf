@@ -42,12 +42,12 @@ process Add_dotted_coord {
                 return(non_gap_indices[ungapped_pos])
             }
         }
-        features <- c("v", "d", "j", "c", "fwr1", "cdr1", "fwr2", "cdr2", "fwr3", "cdr3", "fwr4") 
+        features <- c("v", "d", "j", "c", "fwr1", "cdr1", "fwr2", "cdr2", "fwr3", "cdr3", "fwr4")
+        tempo_seq <- sub(pattern = "-+\$", replacement = "", x = df\$sequence_alignment_with_gaps) # removal of hyphens at the end of the seq only
         for(i2 in features){
             start_coord <- df[ , paste0(i2, "_alignment_start")]
             end_coord <- df[ , paste0(i2, "_alignment_end")]
             # shifed coordinates due to hyphens in the aligned seq
-             tempo_seq <- sub(pattern = "-+\$", replacement = "", x = df\$sequence_alignment_with_gaps) # removal of hyphens at the end of the seq only
             if( ! is.na(start_coord)){
                 start_coord <- map_gapped(seq = tempo_seq, ungapped_pos = start_coord)
             }else{

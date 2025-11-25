@@ -51,7 +51,7 @@ if(erase.objects == TRUE){
     erase.objects = TRUE
 }
 erase.graphs = TRUE # write TRUE to erase all the graphic windows in R before starting the algorithm and FALSE otherwise
-script <- "Tsv2fastaGff"
+script <- "Tsv2fasta"
 #cute <- "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v11.4.0/cute_little_R_functions.R" # single character string indicating the path of the cute_little_R_functions.R file required for this script. Example: cute <- "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v11.4.0/cute_little_R_functions.R"
 #log <- "xlsx2fasta.log" # single character string indicating the name of the log file. Example: log <- "xlsx2fasta.log"
 
@@ -349,7 +349,6 @@ fun_source_test(path = path, script = script)
 ################ Ignition
 
 
-fun_report(data = paste0("\n\n################################################################ ", script, ".R SCRIPT\n\n"), output = log, path = "./", overwrite = FALSE)
 fun_report(data = paste0("\n\n################################ RUNNING DATE AND STARTING TIME"), output = log, path = "./", overwrite = FALSE)
 fun_report(data = paste0(ini.date, "\n\n"), output = log, path = "./", overwrite = FALSE)
 fun_report(data = paste0("\n\n################################ RUNNING"), output = log, path = "./", overwrite = FALSE)

@@ -391,7 +391,7 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
                 print $0"\t"var2"\t"var3"\t"var4"\t"REMOVED_SEQ_LENGTH"\t"var5"\t"var6"\t"IDENT_SEQ_ALIGN"\t"IDENTICAL"\t"SEQ_AA_STOP"\t"SEQ_ALIGN_AA_STOP"\t"GERM_ALIGN_AA_STOP"\t"TRIM_AA_SEQ_STOP"\t"INI_AA_SEQ_STOP"\t"fwr1_start2"\t"fwr1_end2"\t"cdr1_start2"\t"cdr1_end2"\t"fwr2_start2"\t"fwr2_end2"\t"cdr2_start2"\t"cdr2_end2"\t"fwr3_start2"\t"fwr3_end2"\t"cdr3_start2"\t"cdr3_end2"\t"fwr4_start2"\t"fwr4_end2"\n" > "trimtranslate.tsv"
             }
         }
-    ' ${select_ch} |& tee -a trimtranslate.log
+    ' ${select_ch} 
     # end add the aa seq into the trimtranslate.tsv
 fi
 

@@ -717,7 +717,7 @@ process Tsv2fasta {
     #!/bin/bash -ue
     set -o pipefail
     FILENAME=\$(basename -- ${all_files_ch}) # recover a file name without path
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a Tsv2fasta.log
+    echo -e "\\n\\n################################\\n\\nFILE \${FILENAME}\\n\\nKIND OF SEQ  ${seq_kind}\\n\\n################################\\n\\n" |& tee -a Tsv2fasta.log
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a Tsv2fasta.log
     Tsv2fasta.R \
     "${all_files_ch}" \
@@ -1606,7 +1606,7 @@ CheckVariables()
     unselect_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
     nb1_b = select_ch2.countLines()
     nb2_b = unselect_ch2.countLines()
-    nb1_b.subscribe { n -> if ( n == 1 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FOLLOWING THE parseDb_filtering PROCESS\nSEE THE EMPTY productive_seq.tsv FILE AND THE failed_productive_seq.tsv FILE IN THE OUTPUT FOLDER\n\n========\n\n"}}
+    nb1_b.subscribe { n -> if ( n == 1 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FOLLOWING THE parseDb_filtering PROCESS\nSEE THE EMPTY productive_seq.tsv FILE AND THE failed_productive_seq.tsv FILE IN THE OUTPUT FOLDER\n\n========\n\n"}} // n is the value of nb1_b
     // nb1_b.map { "Nombre de lignes dans select_ch2 (productive_seq_init.tsv): $it (en comptant le header)" }.view()
     // nb2_b.map { "Nombre de lignes dans unselect_ch2 (failed_productive_seq.tsv): $it (en comptant le header)" }.view()
     // tsv_ch2.countLines().map { "Nombre de lignes dans tsv_ch2 (igblast_seq.tsv): $it (en comptant le header)" }.view()
@@ -1616,7 +1616,7 @@ CheckVariables()
     TrimTranslate(
         parseDb_filtering.out.select_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE parseDb_filtering PROCESS\n\n========\n\n"}
     )
-    TrimTranslate.out.trimtranslate_ch.count().subscribe { n -> if ( n == 1 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FILES FOLLOWING THE TrimTranslate PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
+    TrimTranslate.out.trimtranslate_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FILES FOLLOWING THE TrimTranslate PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // n is number of items in channel because of .count()
     trimtranslate_ch2 = TrimTranslate.out.trimtranslate_ch.collectFile(name: "trimtranslate.tsv", skip: 1, keepHeader: true) // productive file with column sequence_alignment_aa added  // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
     copyLogFile('trimtranslate.log', TrimTranslate.out.trimtranslate_log_ch, out_path)
 
