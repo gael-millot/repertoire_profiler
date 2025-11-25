@@ -411,20 +411,25 @@ for(i0 in names(obs)){ # NA in xlsx file become "NA". Thus, has to be replaced b
 # print the sequence_alignment_with_gaps sequences as aligned fasta
 if(seq_kind == "IMGT"){
     tempo_name <- "sequence_alignment_with_gaps"
-    tempo_name_aa <- "sequence_alignment_aa"
+    tempo_name_aa <- "sequence_alignment_with_gaps_aa"
     if( ! tempo_name %in% names(obs)){
         stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nsequence_alignment_with_gaps MUST BE COLUMN A COLUMN NAME OF THE IMPORTED FILE:\n", path, "\n\nCOLUMN NAMES:\n", paste(names(obs), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
+    }
+    if( ! tempo_name_aa %in% names(obs)){
+        stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nsequence_alignment_with_gaps_aa MUST BE COLUMN A COLUMN NAME OF THE IMPORTED FILE:\n", path, "\n\nCOLUMN NAMES:\n", paste(names(obs), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
     }
     # 1. Find the maximum sequence length
     # obs[[tempo_name]] <- sapply(X = obs[[tempo_name]], FUN = function(x){gsub(x = x, pattern = "-", replacement = "")}) # do not remove the hyphens already here because alignments are not good anymore
     max_len <- max(nchar(obs[[tempo_name]]))
+    max_len_aa <- max(nchar(obs[[tempo_name_aa]]))
     # 2. Pad each sequence with hyphens at the end
     obs[[tempo_name]] <- sapply(X = obs[[tempo_name]], FUN = function(x){paste0(x, paste(rep("-", max_len - nchar(x)), collapse = ""))})
+    obs[[tempo_name_aa]] <- sapply(X = obs[[tempo_name_aa]], FUN = function(x){paste0(x, paste(rep("-", max_len_aa - nchar(x)), collapse = ""))})
     for(i1 in 1:nrow(obs)){
         tempo_cat <- paste0(">", obs[i1, Name], "\n", obs[i1, tempo_name], "\n")
         cat(tempo_cat, file = file.path(paste0(tempo_name, "_imgt_nuc.fasta")), append = TRUE)
         tempo_cat <- paste0(">", obs[i1, Name], "\n", obs[i1, tempo_name_aa], "\n")
-        cat(tempo_cat, file = file.path(paste0(tempo_name_aa, "_for_comp.fasta")), append = TRUE)
+        cat(tempo_cat, file = file.path(paste0(tempo_name, "_imgt_aa.fasta")), append = TRUE) # tempo_name because name of nuc kept
     }
 }else{
 # end print the sequence_alignment_with_gaps sequences as aligned fasta

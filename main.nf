@@ -165,7 +165,7 @@ process seq_name_replacement {
     cache 'true'
 
     input:
-    path trimtranslate_ch // parallelization expected
+    path add_aa_imgt_ch // parallelization expected
     path meta_file
     val meta_seq_names
     val meta_name_replacement
@@ -179,7 +179,7 @@ process seq_name_replacement {
     """
     #!/bin/bash -ue
     set -o pipefail
-    FILENAME=\$(basename -- ${trimtranslate_ch}) # recover a file name without path
+    FILENAME=\$(basename -- ${add_aa_imgt_ch}) # recover a file name without path
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a seq_name_replacement.log
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a seq_name_replacement.log
     # check first that the data file does not have the second column name starting by "initial_". Otherwise, with create unproper behavior in donut
@@ -188,18 +188,18 @@ process seq_name_replacement {
         echo -n "" > NULL # new hard file that can be sent into the channel
         chmod 777 NULL
         Rscript -e '
-            seq <- read.table("./${trimtranslate_ch}", sep = "\\t", header = TRUE)
+            seq <- read.table("./${add_aa_imgt_ch}", sep = "\\t", header = TRUE)
             if(grepl(x = names(seq)[2], pattern = "^initial_")){
                 stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_replacement PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS \\"NULL\\", THEN THE SECOND COLUMN OF THE DATA IN THE sample_path PARAMETER CANNOT HAVE THE NAME OF THE SECOND COLUNM STARTING BY \\"initial_\\"\\n\\n============\\n\\n"), call. = FALSE)
             }
         ' |& tee -a seq_name_replacement.log
         IFS='_' read -r -a TEMPO <<< "\${FILENAME}" # string split into array
-        cat ${trimtranslate_ch} > ./\${TEMPO[0]}_renamed_seq.tsv |& tee -a seq_name_replacement.log
+        cat ${add_aa_imgt_ch} > ./\${TEMPO[0]}_renamed_seq.tsv |& tee -a seq_name_replacement.log
     else
         # if [[ "${meta_file}" != "NULL" && "${meta_name_replacement}" != "NULL" ]] ; then # or [[ "${meta_file}" -ne "NULL" && "${meta_name_replacement}" -ne "NULL" ]], but not !=
         Rscript -e '
             meta <- read.table("./${meta_file}", sep = "\\t", header = TRUE)
-            seq <- read.table("./${trimtranslate_ch}", sep = "\\t", header = TRUE)
+            seq <- read.table("./${add_aa_imgt_ch}", sep = "\\t", header = TRUE)
             id <- seq[1, 1] # Extract the name of the colum one of seq
             if( ! "${meta_seq_names}" %in% names(meta)){
                 stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_replacement PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\", THEN THE meta_seq_names PARAMETER MUST BE A COLUMN NAME OF THE METADATA FILE.\\n\\n============\\n\\n"), call. = FALSE)
@@ -708,7 +708,7 @@ process Tsv2fasta {
 
     output:
     tuple path("for_alignment_nuc/*.fasta"), path("for_alignment_aa/*.fasta"), val(seq_kind), emit: fasta_align_ch, optional: true // // already aligned fasta file with seq_kind == "IMGT"
-    tuple path("sequence_alignment_with_gaps_imgt_nuc.fasta"), path("sequence_alignment_aa_for_comp.fasta"), val(seq_kind), emit: fasta_align_imgt_ch, optional: true // // already aligned fasta file with seq_kind == "IMGT"
+    tuple path("sequence_alignment_with_gaps_imgt_nuc.fasta"), path("sequence_alignment_with_gaps_imgt_aa.fasta"), val(seq_kind), emit: fasta_align_imgt_ch, optional: true // // already aligned fasta file with seq_kind == "IMGT"
     path "Tsv2fasta.log", emit: tsv2fasta_log_ch
     path "warning.txt", emit: warning_ch, optional: true
 
@@ -861,62 +861,6 @@ process Abalign_align_nuc {
 
     goalign codonalign -i ${aligned_aa} -f ${fasta_nuc} -o ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta |& tee -a Abalign_align_nuc.log
     awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta > ${fasta_nuc.baseName}_aligned_nuc.fasta # remove \\n in seq
-    """
-}
-
-process Translate_with_IMGT_gaps {
-    label 'immcantation'
-    publishDir path: "${out_path}/alignments/aa/imgt", mode: 'copy', pattern: "{sequence_alignment_with_gaps_imgt_aa.fasta}", overwrite: false
-
-    input:
-    tuple path(align_nuc), path(aa), val(tag)  // no parallelization 
-
-    output:
-    tuple path("sequence_alignment_with_gaps_imgt_aa.fasta"), path(align_nuc), val(tag), emit: imgt_align_aa_ch // switch of aa and nuc for correct printing
-
-    script:
-    """
-python3 - <<'EOF'
-from Bio import SeqIO
-from Bio.Seq import Seq
-
-def translate_with_gaps(nuc_seq):
-    protein_seq = []
-    seq_len = len(nuc_seq)
-    valid_bases = set("ATGCatgc")
-    
-    for i in range(0, seq_len, 3):
-        codon = nuc_seq[i:i+3]
-        if len(codon) < 3:
-            # incomplete codon at end → gap placeholder
-            protein_seq.append('-')
-            continue
-        
-        # all dots
-        if all(b == '.' for b in codon):
-            protein_seq.append('.')
-            continue
-        # all hyphens
-        if all(b == '-' for b in codon):
-            protein_seq.append('-')
-            continue
-
-        # if any invalid base, dot, or hyphen inside codon → treat as hyphen
-        if any(b not in valid_bases for b in codon):
-            protein_seq.append('-')
-        else:
-            try:
-                aa = str(Seq(codon.upper()).translate(to_stop=False))
-            except Exception:
-                aa = 'X'
-            protein_seq.append(aa)
-    return ''.join(protein_seq)
-
-with open("sequence_alignment_with_gaps_imgt_aa.fasta", "w") as out_f:
-    for record in SeqIO.parse("${align_nuc}", "fasta"):
-        aa_seq = translate_with_gaps(str(record.seq))
-        out_f.write(f">{record.id}\\n{aa_seq}\\n")
-EOF
     """
 }
 
@@ -1412,6 +1356,7 @@ include { Igblast_query } from './modules/igblast_query'
 include { TrimTranslate } from './modules/trim_translate'
 include { parseDb_filtering } from './modules/parseDb_filtering'
 include { Add_dotted_coord } from './modules/add_dotted_coord'
+include { Translate_with_IMGT_gaps } from './modules/translate_with_imgt_gaps'
 include { data_assembly } from './modules/data_assembly'
 include { Mutation_load_germ_genes } from './modules/mutation_load_germ_genes'
 include { Igblast_germline_coords } from './modules/igblast_germline'
@@ -1655,10 +1600,15 @@ CheckVariables()
     copyLogFile('add_dotted_coord.log', Add_dotted_coord.out.add_dotted_coord_log_ch, out_path)
 
 
+    Translate_with_IMGT_gaps( // module
+        Add_dotted_coord.out.add_dotted_coord_ch
+    )
+    reportEmptyProcess('Translate_with_IMGT_gaps', Translate_with_IMGT_gaps.out.add_aa_imgt_ch)
+    copyLogFile('Translate_with_IMGT_gaps.log', Translate_with_IMGT_gaps.out.translate_with_IMGT_gaps_ch_log, out_path)
 
 
    seq_name_replacement(
-        Add_dotted_coord.out.add_dotted_coord_ch,
+        Translate_with_IMGT_gaps.out.add_aa_imgt_ch,
         meta_file,
         meta_seq_names, 
         meta_name_replacement,
@@ -1930,7 +1880,9 @@ CheckVariables()
     )
     // fasta_align_imgt_ch = Tsv2fasta.out.fasta_align_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Tsv2fasta PROCESS\n\n========\n\n"}.filter {nuc, aa, kind -> nuc.name.endsWith("_imgt_nuc.fasta")}
     Tsv2fasta.out.fasta_align_ch.filter{ nuc, aa, kind -> nuc.exists() && aa.exists() }.subscribe{nuc, aa, kind -> nuc.copyTo("${out_path}/fasta/for_alignment_nuc/${nuc.getName()}") ; aa.copyTo("${out_path}/fasta/for_alignment_aa/${aa.getName()}")} // copy the folder and content for_alignment_nuc/* into {out_path}/fasta
-    Tsv2fasta.out.fasta_align_imgt_ch.filter{ nuc, aa, kind -> nuc.exists() }.subscribe{nuc, aa, kind -> nuc.copyTo("${out_path}/alignments/nuc/imgt/${nuc.getName()}")} // aa.copyTo("${out_path}/alignments/aa/${aa.getName()}") not used because no gaps in this aa sequences
+    Tsv2fasta.out.fasta_align_imgt_ch.filter{ nuc, aa, kind -> nuc.exists() && aa.exists() }.subscribe{nuc, aa, kind -> nuc.copyTo("${out_path}/alignments/nuc/imgt/${nuc.getName()}") ; aa.copyTo("${out_path}/alignments/aa/imgt/${nuc.getName()}")}
+    fasta_align_imgt_aa_ch = Tsv2fasta.out.fasta_align_imgt_ch.map{ nuc, aa, kind  -> [aa, nuc, kind] } // for aa printing into html
+    // Tsv2fasta.out.fasta_align_imgt_ch.filter{ nuc, aa, kind -> nuc.exists() }.subscribe{nuc, aa, kind -> nuc.copyTo("${out_path}/alignments/nuc/imgt/${nuc.getName()}")} // aa.copyTo("${out_path}/alignments/aa/${aa.getName()}") not used because no gaps in this aa sequences
     // fasta_align_ch2 = Tsv2fasta.out.fasta_align_ch.filter {nuc, aa, kind -> !nuc.name.endsWith("_imgt_nuc.fasta")}
     copyLogFile('Tsv2fasta.log', Tsv2fasta.out.tsv2fasta_log_ch, out_path)
     // Print warnings on the terminal:
@@ -1999,10 +1951,6 @@ CheckVariables()
     for_gff_aa_ch = clone_for_gff_aa_ch.mix(all_for_gff_aa_ch)
 
 
-    Translate_with_IMGT_gaps(
-        Tsv2fasta.out.fasta_align_imgt_ch
-    )
-
 
     Gff_imgt( // module gff_imgt.nf
         Tsv2fasta.out.fasta_align_imgt_ch,
@@ -2044,7 +1992,7 @@ CheckVariables()
     PrintAlignmentIMGTnuc.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentIMGTnuc PROCESS\n\n========\n\n"}.subscribe{html, tag -> html.copyTo("${out_path}/alignments/nuc/imgt")}
 
     PrintAlignmentIMGTaa( // module print_alignment.nf
-        Translate_with_IMGT_gaps.out.imgt_align_aa_ch
+        fasta_align_imgt_aa_ch
     )
     PrintAlignmentIMGTaa.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentIMGTaa PROCESS\n\n========\n\n"}.subscribe{html, tag -> html.copyTo("${out_path}/alignments/aa/imgt")}
 

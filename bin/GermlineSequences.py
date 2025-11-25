@@ -78,6 +78,9 @@ def addGermlineSequences(tsv_file, references, gaps, nogaps):
     root, ext = os.path.splitext(base_name)
     out_file = os.path.join(dir_name, root + "_germ-seq" + ext)
 
+    # --- save with all logical values in uppercase ---
+    df = df.replace({True: "TRUE", False: "FALSE"})
+
     df.to_csv(out_file, sep='\t', index=False)
     return out_file
 
@@ -161,5 +164,6 @@ if __name__ == '__main__':
 
     if not os.path.exists(args.tsv_input_file):
         parser.error('Tsv file %s does not exist.' % tsv_file)
+
 
     addGermlineSequences(args.tsv_input_file, args.references, gaps, nogaps)
