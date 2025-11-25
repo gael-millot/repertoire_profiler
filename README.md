@@ -304,7 +304,7 @@ If the text is cut in the table, reload the page or change the width of the wind
     max-width:100%;">
                 <li>all: alignments using the .fasta file of all sequences, either in the fasta/for_alignment_nuc or fasta/for_alignment_aa folder (see below).
                 </li><li>clonal: alignments using the .fasta files of all the clonal groups, either in the fasta/for_alignment_nuc or fasta/for_alignment_aa folder (see below).
-                </li><li>imgt: alignments using directly the <i>sequence_alignment_with_gaps_imgt_nuc.fasta</i> or <i>sequence_alignment_with_gaps_imgt_aa.fasta</i> file present in this folder, as sequences are already aligned. Indeed, the fasta file is made of the IMGT spacer (dots) aligned sequences in the <i>clonal_germline_sequence_no_gaps</i> or <i>clonal_germline_sequence_aa</i> of the <i>productive_seq.tsv</i> file.<br>
+                </li><li>imgt: alignments using directly the <i>sequence_alignment_with_gaps_imgt_nuc.fasta</i> or <i>sequence_alignment_with_gaps_imgt_aa.fasta</i> file present in this folder, as sequences are already aligned. Indeed, the fasta file is made of the IMGT spacer (dots) aligned sequences in the <i>clonal_germline_sequence_no_gaps</i> or <i>clonal_germline_sequence_aa</i> of the <i>productive_seq.tsv</i> file.<br><br>
             Each of the all, clonal and imgt containing the following files:
             <ul style="padding-left:1.2em; margin:0;word-break:break-word;
     max-width:100%;">
