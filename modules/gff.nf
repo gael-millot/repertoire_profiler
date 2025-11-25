@@ -11,6 +11,7 @@ process Gff {
 
     output:
     tuple path("*.gff"), val(tag), emit: gff_ch
+    path "*_sequence_alignment_with_gaps_imgt_*.tempo", emit: imgt_gff_ch, optional: true
     path "Gff.log", emit: gff_log_ch
 
     script:

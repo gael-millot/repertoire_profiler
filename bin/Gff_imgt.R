@@ -523,7 +523,7 @@ for(i2 in c("vdjc", "fwr_cdr")){
         gff_lines <- character()
     }
     gff_lines <- c("##gff-version 3", gff_lines)
-    output_gff <- paste0(i2, "_", sub(x = basename(fasta_path), pattern = ".fasta$", replacement = ""), ".gff")
+    output_gff <- paste0(i2, "_", sub(x = basename(fasta_path), pattern = ".fasta$", replacement = ""), "_biojs.gff")
     writeLines(gff_lines, con = output_gff)
     # end nuc coordinates
     # aa coordinates
@@ -534,7 +534,7 @@ for(i2 in c("vdjc", "fwr_cdr")){
         gff_aa_lines <- character()
     }
     gff_aa_lines <- c("##gff_aa-version 3", gff_aa_lines)
-    output_gff_aa <- paste0(i2, "_", sub(x = basename(fasta_path), pattern = "nuc.fasta$", replacement = ""), "aa.gff")
+    output_gff_aa <- paste0(i2, "_", sub(x = basename(fasta_path), pattern = "nuc.fasta$", replacement = ""), "aa_biojs.gff")
     writeLines(gff_aa_lines, con = output_gff_aa)
     # end aa coordinates
 }

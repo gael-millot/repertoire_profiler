@@ -505,8 +505,8 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
     # define the column names of the coordinates in the tsv file
     vdjc_features <- c("v", "d", "j", "c")
     fwr_cdr_features <- c("fwr1", "cdr1", "fwr2", "cdr2", "fwr3", "cdr3", "fwr4") 
-    vdjc_features_colors <- c("#FFB6C1", "#90EE90", "#a5e4f9ff", "#FFC878")
-    fwr_cdr_features_colors <- c("#FFB6C1", "#90EE90", "#a5e4f9ff", "#FFC878", "#f17cf1ff", "#aefafaff", "#f9f971ff")
+    vdjc_features_colors <- c("#ffb6C1", "#90ee90", "#a5e4f9", "#ffc878")
+    fwr_cdr_features_colors <- c("#ffb6C1", "#90ee90", "#a5e4f9", "#ffc878", "#f17cf1", "#aefafa", "#f9f971")
     if(tag == "CLONE"){ # means that the column taken are coordinates of the germline sequence only. All the columns in the clone_assign_seq.tsv start by "clonal_germline_"
         vdjc_column_start <- paste0("clonal_germline_", vdjc_features, "_start")
         vdjc_column_end <- paste0("clonal_germline_", vdjc_features, "_end")
@@ -567,6 +567,7 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
     # get coordinates
     for(i2 in c("vdjc", "fwr_cdr")){
         gff_rows <- list()
+        gff_rows_jalv <- list()
         for(i3 in 1:length(selected_index)){
             for(i4 in 1:length(get(paste0(i2, "_features")))){
                 if( ! is.null(get(paste0(i2, "_column_start")))){
@@ -597,8 +598,11 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
                             }
                         }
                     }
+                    start_coord_jalv <- start_coord
+                    end_coord_jalv <- end_coord
                     # shifed coordinates due to hyphens in the aligned seq
                     if( ! is.na(start_coord)){
+                        start_coord_jalv <- start_coord
                         start_coord <- map_ungapped_to_gapped(seq_aligned = seq_aligned[i3], ungapped_pos = start_coord)
                     }
                     if( ! is.na(end_coord)){
@@ -621,6 +625,22 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
                         ".",
                         paste0("Name=", get(paste0(i2, "_features"))[i4], ";Color=", get(paste0(i2, "_features_colors"))[i4])
                     )
+
+                    gff_rows_jalv[[length(gff_rows_jalv) + 1]] <- c(
+                        if(tag == "ALL"){
+                            df[selected_index[i3], Name]
+                        }else{
+                            seq_names_for_tsv
+                        },
+                        ".",
+                        get(paste0(i2, "_features"))[i4],
+                        start_coord_jalv, 
+                        end_coord_jalv, 
+                        ".",
+                        ".",
+                        ".",
+                        "."
+                    )
                 }
             }
         }
@@ -631,8 +651,28 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
             gff_lines <- character()
         }
         gff_lines <- c("##gff-version 3", gff_lines)
-        output_gff <- paste0(i2, "_", sub(x = basename(fasta_path), pattern = ".fasta$", replacement = ""), ".gff")
+        output_gff <- paste0(i2, "_", sub(x = basename(fasta_path), pattern = ".fasta$", replacement = ""), "_biojs.gff")
         writeLines(gff_lines, con = output_gff)
+
+        gff_table_jalv <- do.call(rbind, gff_rows_jalv)
+        if(length(gff_rows_jalv) > 0){
+            gff_lines_jalv <- apply(gff_table_jalv, 1, function(x) paste(x, collapse="\t"))
+        }else{
+            gff_lines_jalv <- character()
+        }
+        tempo_text <- paste0(get(paste0(i2, "_features")), "\t", sub(x = get(paste0(i2, "_features_colors")), pattern = "#", replacement = ""))
+        gff_lines_jalv <- c(tempo_text, "\n", "GFF", gff_lines_jalv)
+        output_gff_jalv <- paste0(i2, "_", sub(x = basename(fasta_path), pattern = ".fasta$", replacement = ""), "_jalview.gff")
+        writeLines(gff_lines_jalv, con = output_gff_jalv)
+        if(tag == "ALL"){
+            if(grepl(x = basename(fasta_path), pattern = "aa.fasta$")){
+                imgt_gff_jalv <- paste0(i2, "_sequence_alignment_with_gaps_imgt_aa_jalview.tempo")
+            }
+            if(grepl(x = basename(fasta_path), pattern = "nuc.fasta$")){
+                imgt_gff_jalv <- paste0(i2, "_sequence_alignment_with_gaps_imgt_nuc_jalview.tempo")
+            }
+            writeLines(gff_lines_jalv, con = imgt_gff_jalv)
+        }
     }
     # end Create the gff file
 } else {
