@@ -1898,9 +1898,9 @@ CheckVariables()
             align_mafft_all_options,
             align_mafft_clonal_options
         )
-        align_aa_ch = Mafft_align.out.aligned_all_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Mafft_align PROCESS\n\n========\n\n"}.map{ x, y, z -> [y, z] }
-        align_nuc_ch = Mafft_align.out.aligned_all_ch.map{ x, y, z -> [x, z] }
-        aligned_all_ch2 = Mafft_align.out.aligned_all_ch.map{ x, y, z -> [x, y] }
+        align_aa_ch = Mafft_align.out.aligned_all_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Mafft_align PROCESS\n\n========\n\n"}.map{ (nuc, aa, tag) -> [aa, nuc, tag] }
+        align_nuc_ch = Mafft_align.out.aligned_all_ch.map{ (nuc, aa, tag) -> [nuc, aa, tag] }
+        aligned_all_ch2 = Mafft_align.out.aligned_all_ch.map{ (nuc, aa, tag) -> [nuc, aa] }
         copyLogFile('Mafft_align.log', Mafft_align.out.mafft_align_log_ch, out_path)
     }else if(align_soft == "abalign"){
         Abalign_align_aa(
@@ -1922,18 +1922,18 @@ CheckVariables()
         Abalign_align_nuc(
             Abalign_rename.out.renamed_aligned_aa_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Abalign_align_aa PROCESS\n\n========\n\n"}
         )
-        align_nuc_ch = Abalign_align_nuc.out.aligned_all_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Abalign_align_nuc PROCESS\n\n========\n\n"}.map{ x, y, z -> [x, z] }
-        align_aa_ch = Abalign_align_nuc.out.aligned_all_ch.map{ x, y, z -> [y, z] }
-        aligned_all_ch2 = Abalign_align_nuc.out.aligned_all_ch.map{ x, y, z -> [x, y] }
+        align_nuc_ch = Abalign_align_nuc.out.aligned_all_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Abalign_align_nuc PROCESS\n\n========\n\n"}.map{ nuc, aa, tag -> [nuc, aa, tag] }
+        align_aa_ch = Abalign_align_nuc.out.aligned_all_ch.map{ nuc, aa, tag -> [aa, nuc, tag] }
+        aligned_all_ch2 = Abalign_align_nuc.out.aligned_all_ch.map{ nuc, aa, tag -> [nuc, aa] }
         copyLogFile('Abalign_align_nuc.log', Abalign_align_nuc.out.abalign_align_nuc_log_ch, out_path)
     }else{
         error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nINVALID align_soft PARAMETER IN nextflow.config FILE:\n${align_soft}\n\n========\n\n"
     }
-    align_nuc_ch.subscribe{fasta, tag -> if(tag == "CLONE"){fasta.copyTo("${out_path}/alignments/nuc/clonal/${fasta.getName()}")}else if(tag == "ALL"){fasta.copyTo("${out_path}/alignments/nuc/all/${fasta.getName()}")}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
-    align_aa_ch.subscribe{fasta, tag -> if(tag == "CLONE"){fasta.copyTo("${out_path}/alignments/aa/clonal/${fasta.getName()}")}else if(tag == "ALL"){fasta.copyTo("${out_path}/alignments/aa/all/${fasta.getName()}")}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
+    align_nuc_ch.subscribe{nuc, aa, tag -> if(tag == "CLONE"){nuc.copyTo("${out_path}/alignments/nuc/clonal/${nuc.getName()}")}else if(tag == "ALL"){nuc.copyTo("${out_path}/alignments/nuc/all/${nuc.getName()}")}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
+    align_aa_ch.subscribe{aa, nuc, tag -> if(tag == "CLONE"){aa.copyTo("${out_path}/alignments/aa/clonal/${aa.getName()}")}else if(tag == "ALL"){aa.copyTo("${out_path}/alignments/aa/all/${aa.getName()}")}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
 
 
-    //Abalign_align_nuc.out.aligned_all_ch.map{ x, y, z -> [y, z] }.view()
+    //Abalign_align_nuc.out.aligned_all_ch.map{ nuc, aa, tag -> [y, z] }.view()
     //Mutation_load_germ_genes.out.mutation_load_ch.view()
     branches_nuc = align_nuc_ch.branch {
         CLONE: it[1] == 'CLONE'
@@ -2001,7 +2001,7 @@ CheckVariables()
 
 
     PrintAlignmentNuc( // module print_alignment.nf
-        Mafft_align.out.aligned_all_ch
+        align_nuc_ch
     )
     PrintAlignmentNuc.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentNuc PROCESS\n\n========\n\n"}.subscribe{html, tag -> if(tag == "CLONE"){html.copyTo("${out_path}/alignments/nuc/clonal/${html.getName()}")}else if(tag == "ALL"){html.copyTo("${out_path}/alignments/nuc/all/${html.getName()}")}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
     
@@ -2010,7 +2010,7 @@ CheckVariables()
 
 
     PrintAlignmentAa( // module print_alignment.nf
-        Mafft_align.out.aligned_all_ch.map{ x, y, z -> [y, x, z] } // inversion to have aa at fisrt position
+        align_aa_ch
     )
     PrintAlignmentAa.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentAa PROCESS\n\n========\n\n"}.subscribe{html, tag -> if(tag == "CLONE"){html.copyTo("${out_path}/alignments/aa/clonal/${html.getName()}")}else if(tag == "ALL"){html.copyTo("${out_path}/alignments/aa/all/${html.getName()}")}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
 
