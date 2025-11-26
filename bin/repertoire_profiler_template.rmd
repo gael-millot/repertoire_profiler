@@ -167,6 +167,24 @@ Compilation of the [productive_seq.tsv](./tsv) file (and also of the [clone_assi
 
 <br>
 
+#### Heatmaps
+
+<br>
+Click on a figure to enlarge. Reclick to go back to the report.
+<br>
+Only genes are displayed here. See the [gene_repertoire.pdf](./pdf/gene_repertoire.pdf) and [allele_repertoire.pdf](./pdf/allele_repertoire.pdf) files in the [pdf](./pdf) folder for the complete results, including the alleles (different copies of a same gene) counts.
+<br>
+Warning: only the first annotation is considered if several are presents in the v_call, j_call or c_call column of the productive_seq.tsv file.
+
+<br>
+
+<div class="image-container"> 
+  <img src="`r params$constant_rep`" onclick="toggleFullscreen(this)" style="border: 2px solid black; width: 25%;"/> 
+  <img src="`r params$vj_rep`" onclick="toggleFullscreen(this)" style="border: 2px solid black; width: 25%"/> 
+</div>
+
+<br><br><br>
+
 #### Donut plots
 
 <br>
@@ -191,25 +209,7 @@ Warning: only the first annotation is considered if several are presents in the 
 
 <br><br><br>
 
-#### Heatmaps
-
-<br>
-Click on a figure to enlarge. Reclick to go back to the report.
-<br>
-Only genes are displayed here. See the [gene_repertoire.pdf](./pdf/gene_repertoire.pdf) and [allele_repertoire.pdf](./pdf/allele_repertoire.pdf) files in the [pdf](./pdf) folder for the complete results, including the alleles (different copies of a same gene) counts.
-<br>
-Warning: only the first annotation is considered if several are presents in the v_call, j_call or c_call column of the productive_seq.tsv file.
-
-<br>
-
-<div class="image-container"> 
-  <img src="`r params$constant_rep`" onclick="toggleFullscreen(this)" style="border: 2px solid black; width: 25%;"/> 
-  <img src="`r params$vj_rep`" onclick="toggleFullscreen(this)" style="border: 2px solid black; width: 25%"/> 
-</div>
-
-<br><br><br>
-
-###  Clonal prediction 
+###  Clonal prediction
 
 <br>
 

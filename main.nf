@@ -1229,6 +1229,7 @@ process print_report{
     input:
     file template_rmd
     file alignments_viz_rmd
+    file alignments_viz_html
     val nb_input
     val nb_seq_aligned
     val nb_seq_not_aligned
@@ -1256,6 +1257,7 @@ process print_report{
     set -o pipefail
     cp ${template_rmd} report_file.rmd
     cp ${alignments_viz_rmd} alignments_vizu.rmd
+    cp ${alignments_viz_html} alignments_viz.html
     cp -r "${out_path}/tsv" .
     cp -r "${out_path}/pdf" .
     cp -r "${projectDir}/bin/doc_images" .
@@ -1303,14 +1305,11 @@ process print_report{
         clean = TRUE
         )
 
-        # dir.create("reports", showWarnings = FALSE, recursive = TRUE)
-        rmarkdown::render(
-        input = "alignments_vizu.rmd",
-        output_file = "alignments_viz.html", 
-        run_pandoc = TRUE,
-        quiet = TRUE,
-        clean = TRUE
-        )
+        html_here_ok <- TRUE # set to FALSE to rerun the creation of the alignments_viz_html file
+        if(html_here_ok == FALSE){
+            # dir.create("reports", showWarnings = FALSE, recursive = TRUE)
+            rmarkdown::render(input = "alignments_vizu.rmd", output_file = "alignments_viz.html", run_pandoc = TRUE, quiet = TRUE, clean = TRUE)
+        }
     ' |& tee -a print_report.log
     """
 }
@@ -1485,6 +1484,7 @@ workflow {
     phylo_tree_model_file  = file(phylo_tree_model_path)
     template_rmd = file(template_rmd_path)
     alignments_viz_rmd = file(alignments_viz_path)
+    alignments_viz_html = file(alignments_viz_html_path)
 
     //////// end files import
 
@@ -2069,20 +2069,21 @@ CheckVariables()
     print_report(
         template_rmd,
         alignments_viz_rmd, 
-        nb_input,
-        nb1,
-        nb2,
+        alignments_viz_html, 
+        nb_input, 
+        nb1, 
+        nb2, 
         nb1_b - 1, // Minus 1 because the 1st line = the column names
         nb2_b - 1, // Minus 1 because the 1st line = the column names
-        nb_clone_assigned,
-        nb_failed_clone,
+        nb_clone_assigned, 
+        nb_failed_clone, 
         distance_hist.out.distance_hist_ch, 
-        donut.out.donuts_png.collect(),
-        repertoire.out.repertoire_png_ch.collect(),
-        repertoire_constant_ch,
-        repertoire_vj_ch,
-        clone_distance, 
-        align_soft,
+        donut.out.donuts_png.collect(), 
+        repertoire.out.repertoire_png_ch.collect(), 
+        repertoire_constant_ch, 
+        repertoire_vj_ch, 
+        clone_distance,  
+        align_soft, 
         phylo_tree_itol_subscription
     )
 
