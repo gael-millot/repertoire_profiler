@@ -1898,9 +1898,9 @@ CheckVariables()
             align_mafft_all_options,
             align_mafft_clonal_options
         )
-        align_aa_ch = Mafft_align.out.aligned_all_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Mafft_align PROCESS\n\n========\n\n"}.map{ (nuc, aa, tag) -> [aa, nuc, tag] }
-        align_nuc_ch = Mafft_align.out.aligned_all_ch.map{ (nuc, aa, tag) -> [nuc, aa, tag] }
-        aligned_all_ch2 = Mafft_align.out.aligned_all_ch.map{ (nuc, aa, tag) -> [nuc, aa] }
+        align_aa_ch = Mafft_align.out.aligned_all_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Mafft_align PROCESS\n\n========\n\n"}.map{ nuc, aa, tag -> [aa, nuc, tag] }
+        align_nuc_ch = Mafft_align.out.aligned_all_ch.map{ nuc, aa, tag -> [nuc, aa, tag] }
+        aligned_all_ch2 = Mafft_align.out.aligned_all_ch.map{ nuc, aa, tag -> [nuc, aa] }
         copyLogFile('Mafft_align.log', Mafft_align.out.mafft_align_log_ch, out_path)
     }else if(align_soft == "abalign"){
         Abalign_align_aa(
