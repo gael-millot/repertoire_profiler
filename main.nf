@@ -1492,7 +1492,7 @@ workflow {
     //////// Main
 
 
-CheckVariables()
+    CheckVariables()
 
     if(sample_path =~ /.*\.zip$/){
         Unzip( // warning: it is a process defined above
@@ -1936,15 +1936,15 @@ CheckVariables()
     //Abalign_align_nuc.out.aligned_all_ch.map{ nuc, aa, tag -> [y, z] }.view()
     //Mutation_load_germ_genes.out.mutation_load_ch.view()
     branches_nuc = align_nuc_ch.branch {
-        CLONE: it[1] == 'CLONE'
-        ALL  : it[1] == 'ALL'
+        CLONE: it[2] == 'CLONE'
+        ALL  : it[2] == 'ALL'
     }
     clone_for_gff_nuc_ch = branches_nuc.CLONE.combine(clone_assigned_seq_filtered_ch.first())
     all_for_gff_nuc_ch  = branches_nuc.ALL.combine(data_assembly.out.productive_ch.first())
     for_gff_nuc_ch = clone_for_gff_nuc_ch.mix(all_for_gff_nuc_ch)
     branches_aa = align_aa_ch.branch {
-        CLONE: it[1] == 'CLONE'
-        ALL  : it[1] == 'ALL'
+        CLONE: it[2] == 'CLONE'
+        ALL  : it[2] == 'ALL'
     }
     clone_for_gff_aa_ch = branches_aa.CLONE.combine(clone_assigned_seq_filtered_ch.first())
     all_for_gff_aa_ch  = branches_aa.ALL.combine(data_assembly.out.productive_ch.first())

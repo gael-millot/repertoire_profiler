@@ -4,7 +4,7 @@ process Gff {
     cache 'true'
 
     input:
-    tuple path(fasta), val(tag), path(tsv) // parallelization expected (by clonal groups over align_clone_nb sequences)
+    tuple path(fasta), path (other), val(tag), path(tsv) // parallelization expected (by clonal groups over align_clone_nb sequences)
     val align_seq
     val align_clone_nb
     path cute_file
