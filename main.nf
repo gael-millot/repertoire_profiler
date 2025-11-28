@@ -891,12 +891,12 @@ process  Mafft_align {
     # --localpair --maxiterate N	Use accurate local iterative refinement.
     if [[ "${seq_kind}" == "ALL" ]] ; then
         mafft ${align_mafft_all_options} ${fasta_nuc} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta
-        awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta > ${fasta_nuc.baseName}_aligned_nuc.fasta # remove \\n in seq
+        awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print toupper(\$0) ; next}}END{print "\\n"}' ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta > ${fasta_nuc.baseName}_aligned_nuc.fasta # remove \\n in seq
         mafft ${align_mafft_all_options} ${fasta_aa} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_aa.baseName}_aligned_aa_tempo.fasta
         awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' ${fasta_aa.baseName}_aligned_aa_tempo.fasta > ${fasta_aa.baseName}_aligned_aa.fasta # remove \\n in seq
     elif [[ "${seq_kind}" == "CLONE" ]] ; then
         mafft ${align_mafft_clonal_options} ${fasta_nuc} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta
-        awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta > ${fasta_nuc.baseName}_aligned_nuc.fasta # remove \\n in seq
+        awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print toupper(\$0) ; next}}END{print "\\n"}' ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta > ${fasta_nuc.baseName}_aligned_nuc.fasta # remove \\n in seq
         mafft ${align_mafft_clonal_options} ${fasta_aa} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_aa.baseName}_aligned_aa_tempo.fasta
         awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' ${fasta_aa.baseName}_aligned_aa_tempo.fasta > ${fasta_aa.baseName}_aligned_aa.fasta # remove \\n in seq
     fi
@@ -1951,15 +1951,12 @@ workflow {
     for_gff_aa_ch = clone_for_gff_aa_ch.mix(all_for_gff_aa_ch)
 
 
-
     Gff_imgt( // module gff_imgt.nf
         Tsv2fasta.out.fasta_align_imgt_ch,
         data_assembly.out.productive_ch,
         cute_path
     )
     copyLogFile('gff_imgt.log', Gff_imgt.out.gff_log_ch, out_path)
-
-
 
 
     GffNuc( // module gff.nf
