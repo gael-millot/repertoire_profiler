@@ -200,28 +200,34 @@ fun_source_test <- function(path, script){ # do not write script = script: can p
 }
 
 
-map_ungapped_to_gapped <- function(seq_aligned, ungapped_pos) {
+map_gapped_to_ungapped <- function(seq_aligned, gapped_pos) {
 # AIM
-# shift vdjc or fwr/cdr position provided in the .tsv file, according to the hyphens (--) inserted in the aligned sequences, to have the correct positions of the features in the aligned sequneces in the html file.
+# shift vdjc or fwr/cdr position provided in the .tsv file, according to the removal of hyphens (--) and dots (...) inserted in the aligned sequences, to have the correct positions of the features in the aligned sequneces in jalview.
 # ARGUMENTS
 # seq_aligned: aligned sequence (with hyphens)
-# ungapped_pos: initial positions in the unaligned sequence (without hyphens)
+# ungapped_pos: initial positions in the aligned sequence (hyphens and dots)
 # RETURN
 # shifted position
 # EXAMPLES
-# map_ungapped_to_gapped("atg--t---g", c(3,4,5)) # initial sequence is atgtg, input coords are third g, fourth t and fifth g
+# map_gapped_to_ungapped("atg-.t---g", c(3,4,5)) # initial sequence is atgtg, input coords are third g, fourth t and fifth g
 # DEBUGGING
 # seq_aligned = "atg--t---g" ; ungapped_pos = c(3,4,5)
-    # Remove gaps but keep index positions of non-gaps
-    aligned_chars <- strsplit(seq_aligned, "")[[1]]
-    non_gap_indices <- which(aligned_chars != "-")
-    hyphens_nb <- sum(aligned_chars == "-", na.rm = TRUE)
-    # Return the gapped index corresponding to the ungapped position
-    if(length(non_gap_indices) < ungapped_pos){
-        return(ungapped_pos + hyphens_nb)
-    }else{
-        return(non_gap_indices[ungapped_pos])
+    # Split sequence into characters
+    seq_chars <- unlist(strsplit(seq_aligned, ""))
+    # Check if any coordinate points to '.' or '-'
+    if(any(seq_chars[gapped_pos] %in% c(".", "-"))) {
+        bad <- gapped_pos[seq_chars[gapped_pos] %in% c(".", "-")]
+        tempo.cat <- paste0("ERROR IN ", script, ".R\nThe following coordinates point to '.' or '-' in the original sequence:\n", paste0(bad, collapse = "\n"))
+        stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between ==
     }
+    # Create a map from original positions to cleaned sequence positions
+    valid_idx <- which(!seq_chars %in% c(".", "-"))
+    mapping <- seq_along(valid_idx)
+    names(mapping) <- valid_idx
+    # Convert original coordinates to coordinates in cleaned sequence
+    new_coords <- as.integer(mapping[as.character(gapped_pos)])
+    # Return the gapped index corresponding to the ungapped position
+    return(new_coords)
 }
 
 
@@ -461,19 +467,24 @@ selected_index <- match(seq_names_for_tsv, df$sequence_id) # line number in df. 
 for(i2 in c("vdjc", "fwr_cdr")){
     gff_rows <- list()
     gff_aa_rows <- list()
+    gff_rows_jalv <- list()
+    gff_aa_rows_jalv <- list()
     for(i3 in 1:length(selected_index)){
         for(i4 in 1:length(get(paste0(i2, "_features")))){
             if( ! is.null(get(paste0(i2, "_column_start")))){
                 # nuc coordinates
                 start_coord <- df[selected_index[i3], get(paste0(i2, "_column_start"))[i4]]
                 end_coord <- df[selected_index[i3], get(paste0(i2, "_column_end"))[i4]]
-                # I have to do this because coordinates provided by imgt are with dots (imgt spacers) but not with hyphens. But sometimes some hyphens in the sequences
-                # if( ! is.na(start_coord)){
-                #     start_coord <- map_ungapped_to_gapped(seq_aligned = seq_aligned[i3], ungapped_pos = start_coord)
-                # }
-                # if( ! is.na(end_coord)){
-                #     end_coord <- map_ungapped_to_gapped(seq_aligned = seq_aligned[i3], ungapped_pos = end_coord)
-                #}
+                if( ! is.na(start_coord)){
+                    start_coord_jalv <- map_ungapped_to_gapped(seq_aligned = seq_aligned[i3], ungapped_pos = start_coord)
+                }else{
+                    start_coord_jalv <- start_coord
+                }
+                if( ! is.na(end_coord)){
+                    end_coord_jalv <- map_ungapped_to_gapped(seq_aligned = seq_aligned[i3], ungapped_pos = end_coord)
+                }else{
+                    end_coord_jalv <- end_coord
+                }
                 gff_rows[[length(gff_rows) + 1]] <- c(
                     df[selected_index[i3], Name],
                     ".",
@@ -484,6 +495,17 @@ for(i2 in c("vdjc", "fwr_cdr")){
                     ".",
                     ".",
                     paste0("Name=", get(paste0(i2, "_features"))[i4], ";Color=", get(paste0(i2, "_features_colors"))[i4])
+                )
+                gff_rows_jalv[[length(gff_rows_jalv) + 1]] <- c(
+                    df[selected_index[i3], Name],
+                    ".",
+                    get(paste0(i2, "_features"))[i4],
+                    start_coord_jalv, 
+                    end_coord_jalv, 
+                    ".",
+                    ".",
+                    ".",
+                    "."
                 )
                 # end nuc coordinates
                 # aa coordinates
@@ -506,6 +528,30 @@ for(i2 in c("vdjc", "fwr_cdr")){
                     "gene",
                     start_coord_aa, 
                     end_coord_aa, 
+                    ".",
+                    ".",
+                    ".",
+                    paste0("Name=", get(paste0(i2, "_features"))[i4], ";Color=", get(paste0(i2, "_features_colors"))[i4])
+                )
+                if(is.na(start_coord_jalv)){
+                    start_coord_jalv_aa <- NA
+                }else{
+                    start_coord_jalv_aa <- as.integer(trunc(start_coord_jalv / 3) + 1)
+                    if((as.integer(start_coord_jalv) - 1) %% 3 != 0){ # == 0 means start_coord_jalv is at starting nuc codon 1, 4, 7, 10, etc., != 0 means start_coord_jalv is not at starting nuc codon -> shift to the next codon
+                        start_coord_jalv_aa <- start_coord_jalv_aa + 1
+                    }
+                }
+                if(is.na(end_coord_jalv)){
+                    end_coord_jalv_aa <- NA
+                }else{
+                    end_coord_jalv_aa <- as.integer(trunc(end_coord_jalv / 3)) # if(as.integer(end_coord_jalv) %% 3 != 0) not required here because 1) == 0 means end_coord_jalv is at ending nuc codon 3, 6, 9, etc., 2) != 0 means end_coord_jalv is not at ending nuc codon -> translation put a hyphen for this codon. But 8 (middle of 3rd codon) -> 8/3 -> 2nd aa: if the 3rd codon is hyphen, then still ok to end at aa 2. So nothing to change
+                }
+                gff_aa_rows_jalv[[length(gff_aa_rows_jalv) + 1]] <- c(
+                    df[selected_index[i3], Name],
+                    ".",
+                    "gene",
+                    start_coord_jalv_aa, 
+                    end_coord_jalv_aa, 
                     ".",
                     ".",
                     ".",
@@ -536,6 +582,30 @@ for(i2 in c("vdjc", "fwr_cdr")){
     gff_aa_lines <- c("##gff_aa-version 3", gff_aa_lines)
     output_gff_aa <- paste0(i2, "_", sub(x = basename(fasta_path), pattern = "nuc.fasta$", replacement = ""), "aa_biojs.gff")
     writeLines(gff_aa_lines, con = output_gff_aa)
+
+
+    gff_table_jalv <- do.call(rbind, gff_rows_jalv)
+    if(length(gff_rows_jalv) > 0){
+        gff_lines_jalv <- apply(gff_table_jalv, 1, function(x) paste(x, collapse="\t"))
+    }else{
+        gff_lines_jalv <- character()
+    }
+    tempo_text <- paste0(get(paste0(i2, "_features")), "\t", sub(x = get(paste0(i2, "_features_colors")), pattern = "#", replacement = ""))
+    gff_lines_jalv <- c(tempo_text, "\n", "GFF", gff_lines_jalv)
+    output_gff_jalv <- paste0(i2, "_sequence_alignment_with_gaps_imgt_nuc_jalview2.gff")
+    writeLines(gff_lines_jalv, con = output_gff_jalv)
+
+    gff_aa_table_jalv <- do.call(rbind, gff_aa_rows_jalv)
+    if(length(gff_aa_rows_jalv) > 0){
+        gff_aa_lines_jalv <- apply(gff_aa_table_jalv, 1, function(x) paste(x, collapse="\t"))
+    }else{
+        gff_aa_lines_jalv <- character()
+    }
+    tempo_text <- paste0(get(paste0(i2, "_features")), "\t", sub(x = get(paste0(i2, "_features_colors")), pattern = "#", replacement = ""))
+    gff_aa_lines_jalv <- c(tempo_text, "\n", "GFF", gff_aa_lines_jalv)
+    output_gff_aa_jalv <- paste0(i2, "_sequence_alignment_with_gaps_imgt_aa_jalview2.gff")
+    writeLines(gff_aa_lines_jalv, con = output_gff_aa_jalv)
+
     # end aa coordinates
 }
 # end Create the gff file

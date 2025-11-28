@@ -653,26 +653,6 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
         gff_lines <- c("##gff-version 3", gff_lines)
         output_gff <- paste0(i2, "_", sub(x = basename(fasta_path), pattern = ".fasta$", replacement = ""), "_biojs.gff")
         writeLines(gff_lines, con = output_gff)
-
-        gff_table_jalv <- do.call(rbind, gff_rows_jalv)
-        if(length(gff_rows_jalv) > 0){
-            gff_lines_jalv <- apply(gff_table_jalv, 1, function(x) paste(x, collapse="\t"))
-        }else{
-            gff_lines_jalv <- character()
-        }
-        tempo_text <- paste0(get(paste0(i2, "_features")), "\t", sub(x = get(paste0(i2, "_features_colors")), pattern = "#", replacement = ""))
-        gff_lines_jalv <- c(tempo_text, "\n", "GFF", gff_lines_jalv)
-        output_gff_jalv <- paste0(i2, "_", sub(x = basename(fasta_path), pattern = ".fasta$", replacement = ""), "_jalview.gff")
-        writeLines(gff_lines_jalv, con = output_gff_jalv)
-        if(tag == "ALL"){
-            if(grepl(x = basename(fasta_path), pattern = "aa.fasta$")){
-                imgt_gff_jalv <- paste0(i2, "_sequence_alignment_with_gaps_imgt_aa_jalview.tempo")
-            }
-            if(grepl(x = basename(fasta_path), pattern = "nuc.fasta$")){
-                imgt_gff_jalv <- paste0(i2, "_sequence_alignment_with_gaps_imgt_nuc_jalview.tempo")
-            }
-            writeLines(gff_lines_jalv, con = imgt_gff_jalv)
-        }
     }
     # end Create the gff file
 } else {

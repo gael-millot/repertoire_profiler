@@ -3,6 +3,8 @@ process Gff_imgt {
     label 'r_ig_clustering'
     publishDir path: "${out_path}/alignments/nuc/imgt", mode: 'copy', pattern: "{*_imgt_nuc_biojs.gff}", overwrite: false
     publishDir path: "${out_path}/alignments/aa/imgt", mode: 'copy', pattern: "{*_imgt_aa_biojs.gff}", overwrite: false 
+    publishDir path: "${out_path}/alignments/nuc/imgt", mode: 'copy', pattern: "{*_imgt_nuc_jalview2.gff}", overwrite: false
+    publishDir path: "${out_path}/alignments/aa/imgt", mode: 'copy', pattern: "{*_imgt_aa_jalview2.gff}", overwrite: false 
     cache 'true'
 
     input:
@@ -13,6 +15,8 @@ process Gff_imgt {
     output:
     path "*_imgt_nuc_biojs.gff"
     path "*_imgt_aa_biojs.gff"
+    path "*_imgt_nuc_jalview2.gff"
+    path "*_imgt_aa_jalview2.gff"
     path "Gff_imgt.log", emit: gff_log_ch
 
     script:
