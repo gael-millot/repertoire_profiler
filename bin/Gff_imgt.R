@@ -218,7 +218,7 @@ map_gapped_to_ungapped <- function(seq_aligned, gapped_pos) {
     if(any(seq_chars[gapped_pos] %in% c(".", "-"))) {
         bad <- gapped_pos[seq_chars[gapped_pos] %in% c(".", "-")]
         tempo.cat <- paste0("ERROR IN ", script, ".R\nThe following coordinates point to '.' or '-' in the original sequence:\n", paste0(bad, collapse = "\n"))
-        stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between ==
+        # stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between ==
     }
     # Create a map from original positions to cleaned sequence positions
     valid_idx <- which(!seq_chars %in% c(".", "-"))
@@ -429,8 +429,8 @@ if( ! "sequence_alignment_with_gaps" %in% names(df)){
 # define the column names of the coordinates in the tsv file
 vdjc_features <- c("v", "d", "j", "c")
 fwr_cdr_features <- c("fwr1", "cdr1", "fwr2", "cdr2", "fwr3", "cdr3", "fwr4") 
-vdjc_features_colors <- c("#FFB6C1", "#90EE90", "#a5e4f9ff", "#FFC878")
-fwr_cdr_features_colors <- c("#FFB6C1", "#90EE90", "#a5e4f9ff", "#FFC878", "#f17cf1ff", "#aefafaff", "#f9f971ff")
+vdjc_features_colors <- c("#ffb6C1", "#90ee90", "#a5e4f9", "#ffc878")
+fwr_cdr_features_colors <- c("#ffb6C1", "#90ee90", "#a5e4f9", "#ffc878", "#f17cf1", "#aefafa", "#f9f971")
 
 vdjc_column_start <- paste0(vdjc_features, "_alignment_with_gaps_start") 
 vdjc_column_end <- paste0(vdjc_features, "_alignment_with_gaps_end") 
@@ -476,12 +476,12 @@ for(i2 in c("vdjc", "fwr_cdr")){
                 start_coord <- df[selected_index[i3], get(paste0(i2, "_column_start"))[i4]]
                 end_coord <- df[selected_index[i3], get(paste0(i2, "_column_end"))[i4]]
                 if( ! is.na(start_coord)){
-                    start_coord_jalv <- map_ungapped_to_gapped(seq_aligned = seq_aligned[i3], ungapped_pos = start_coord)
+                    start_coord_jalv <- map_gapped_to_ungapped(seq_aligned = seq_aligned[i3], gapped_pos = start_coord)
                 }else{
                     start_coord_jalv <- start_coord
                 }
                 if( ! is.na(end_coord)){
-                    end_coord_jalv <- map_ungapped_to_gapped(seq_aligned = seq_aligned[i3], ungapped_pos = end_coord)
+                    end_coord_jalv <- map_gapped_to_ungapped(seq_aligned = seq_aligned[i3], gapped_pos = end_coord)
                 }else{
                     end_coord_jalv <- end_coord
                 }
@@ -549,13 +549,13 @@ for(i2 in c("vdjc", "fwr_cdr")){
                 gff_aa_rows_jalv[[length(gff_aa_rows_jalv) + 1]] <- c(
                     df[selected_index[i3], Name],
                     ".",
-                    "gene",
+                    get(paste0(i2, "_features"))[i4],
                     start_coord_jalv_aa, 
                     end_coord_jalv_aa, 
                     ".",
                     ".",
                     ".",
-                    paste0("Name=", get(paste0(i2, "_features"))[i4], ";Color=", get(paste0(i2, "_features_colors"))[i4])
+                    "."
                 )
                 # end aa coordinates
             }
@@ -601,7 +601,6 @@ for(i2 in c("vdjc", "fwr_cdr")){
     }else{
         gff_aa_lines_jalv <- character()
     }
-    tempo_text <- paste0(get(paste0(i2, "_features")), "\t", sub(x = get(paste0(i2, "_features_colors")), pattern = "#", replacement = ""))
     gff_aa_lines_jalv <- c(tempo_text, "\n", "GFF", gff_aa_lines_jalv)
     output_gff_aa_jalv <- paste0(i2, "_sequence_alignment_with_gaps_imgt_aa_jalview2.gff")
     writeLines(gff_aa_lines_jalv, con = output_gff_aa_jalv)
