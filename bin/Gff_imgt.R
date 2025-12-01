@@ -429,8 +429,8 @@ if( ! "sequence_alignment_with_gaps" %in% names(df)){
 # define the column names of the coordinates in the tsv file
 vdjc_features <- c("v", "d", "j", "c")
 fwr_cdr_features <- c("fwr1", "cdr1", "fwr2", "cdr2", "fwr3", "cdr3", "fwr4") 
-vdjc_features_colors <- c("#ffb6C1", "#90ee90", "#a5e4f9", "#ffc878")
-fwr_cdr_features_colors <- c("#ffb6C1", "#90ee90", "#a5e4f9", "#ffc878", "#f17cf1", "#aefafa", "#f9f971")
+    vdjc_features_colors <- c("#ffb6C1", "#90ee90", "#ffc878", "#0395c5")
+    fwr_cdr_features_colors <- c("#ffb6C1", "#90ee90", "#ffc878", "#0395c5", "#f17cf1", "#02e6e6", "#d1d104")
 
 vdjc_column_start <- paste0(vdjc_features, "_alignment_with_gaps_start") 
 vdjc_column_end <- paste0(vdjc_features, "_alignment_with_gaps_end") 

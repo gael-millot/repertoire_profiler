@@ -505,8 +505,8 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
     # define the column names of the coordinates in the tsv file
     vdjc_features <- c("v", "d", "j", "c")
     fwr_cdr_features <- c("fwr1", "cdr1", "fwr2", "cdr2", "fwr3", "cdr3", "fwr4") 
-    vdjc_features_colors <- c("#ffb6C1", "#90ee90", "#a5e4f9", "#ffc878")
-    fwr_cdr_features_colors <- c("#ffb6C1", "#90ee90", "#a5e4f9", "#ffc878", "#f17cf1", "#aefafa", "#f9f971")
+    vdjc_features_colors <- c("#ffb6C1", "#90ee90", "#ffc878", "#0395c5")
+    fwr_cdr_features_colors <- c("#ffb6C1", "#90ee90", "#ffc878", "#0395c5", "#f17cf1", "#02e6e6", "#d1d104")
     if(tag == "CLONE"){ # means that the column taken are coordinates of the germline sequence only. All the columns in the clone_assign_seq.tsv start by "clonal_germline_"
         vdjc_column_start <- paste0("clonal_germline_", vdjc_features, "_start")
         vdjc_column_end <- paste0("clonal_germline_", vdjc_features, "_end")
@@ -583,7 +583,7 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
                                 assign(tempo_coord_name, NA)
                             }else{
                                 if(i7 == "start"){
-                                    coord <- as.integer(get(tempo_coord_name)) - 1
+                                    coord <- as.integer(get(tempo_coord_name)) - 1 # - 1 beacause when first nuc pos is 1 -> (1-1)/3 + 1 = 1
                                     assign(tempo_coord_name, as.integer(trunc(coord / 3) + 1))
                                 }else{
                                     coord <- as.integer(get(tempo_coord_name))
