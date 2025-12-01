@@ -593,7 +593,7 @@ for(i2 in c("vdjc", "fwr_cdr")){
     tempo_text <- paste0(get(paste0(i2, "_features")), "\t", sub(x = get(paste0(i2, "_features_colors")), pattern = "#", replacement = ""))
     gff_lines_jalv <- c(tempo_text, "\n", "GFF", gff_lines_jalv)
     output_gff_jalv <- paste0(i2, "_sequence_alignment_with_gaps_imgt_nuc_jalview2.gff")
-    writeLines(gff_lines_jalv, con = output_gff_jalv)
+    # writeLines(gff_lines_jalv, con = output_gff_jalv)
 
     gff_aa_table_jalv <- do.call(rbind, gff_aa_rows_jalv)
     if(length(gff_aa_rows_jalv) > 0){
@@ -603,7 +603,7 @@ for(i2 in c("vdjc", "fwr_cdr")){
     }
     gff_aa_lines_jalv <- c(tempo_text, "\n", "GFF", gff_aa_lines_jalv)
     output_gff_aa_jalv <- paste0(i2, "_sequence_alignment_with_gaps_imgt_aa_jalview2.gff")
-    writeLines(gff_aa_lines_jalv, con = output_gff_aa_jalv)
+    # writeLines(gff_aa_lines_jalv, con = output_gff_aa_jalv)
 
     # end aa coordinates
 }

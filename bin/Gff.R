@@ -78,7 +78,6 @@ script <- "Gff"
 
 
 
-
 ################################# End test
 
 
@@ -569,6 +568,7 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
         gff_rows <- list()
         gff_rows_jalv <- list()
         for(i3 in 1:length(selected_index)){
+            mixed_colon_correction <- 0
             for(i4 in 1:length(get(paste0(i2, "_features")))){
                 if( ! is.null(get(paste0(i2, "_column_start")))){
                     # nuc coordinates
@@ -598,15 +598,28 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
                             }
                         }
                     }
-                    start_coord_jalv <- start_coord
-                    end_coord_jalv <- end_coord
+                    if(nuc_or_aa == "aa"){
+                        start_coord_jalv <- start_coord - mixed_colon_correction
+                        end_coord_jalv <- end_coord - mixed_colon_correction
+                    }else{
+                        start_coord_jalv <- start_coord
+                        end_coord_jalv <- end_coord
+                    }
                     # shifed coordinates due to hyphens in the aligned seq
                     if( ! is.na(start_coord)){
-                        start_coord_jalv <- start_coord
                         start_coord <- map_ungapped_to_gapped(seq_aligned = seq_aligned[i3], ungapped_pos = start_coord)
                     }
                     if( ! is.na(end_coord)){
                         end_coord <- map_ungapped_to_gapped(seq_aligned = seq_aligned[i3], ungapped_pos = end_coord)
+                        if(nuc_or_aa == "aa"){
+                            if(( ! is.na(df[selected_index[i3], "mixed_codon_positions"])) & ( ! is.na(start_coord))){
+                                tempo_pos <- as.integer(unlist(strsplit(as.character(df[selected_index[i3], "mixed_codon_positions"]), ";")))
+                                if(any(tempo_pos <= end_coord & tempo_pos > start_coord)){
+                                    mixed_colon_correction <- mixed_colon_correction + 1
+                                    end_coord_jalv <- end_coord_jalv - mixed_colon_correction
+                                }
+                            }
+                        }
                     }
                     # end shifed coordinates due to hyphens in the aligned seq
                     # end aa coordinates
@@ -625,7 +638,6 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
                         ".",
                         paste0("Name=", get(paste0(i2, "_features"))[i4], ";Color=", get(paste0(i2, "_features_colors"))[i4])
                     )
-
                     gff_rows_jalv[[length(gff_rows_jalv) + 1]] <- c(
                         if(tag == "ALL"){
                             df[selected_index[i3], Name]
