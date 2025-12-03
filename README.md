@@ -111,7 +111,7 @@ Launching `main.nf` [loving_morse] - revision: d5aabe528b
 - Run the following command from where the *main.nf* and *nextflow.config* files are (example: \\wsl$\Ubuntu-20.04\home\gael):
 
 <pre>
-nextflow run main.nf -c nextflow.config
+nextflow run main.nf -c nextflow.config # or nextflow run main.nf
 </pre>
 
 with -c to specify the name of the config file used.
@@ -218,6 +218,26 @@ chmod 755 bin/*.*
 #### Message 4
 
 ```
+ERROR ~ Error executing process > 'print_report (1)'
+
+Caused by:
+  Process `print_report (1)` terminated with an error exit status (1)
+
+...
+
+Command error:
+  Quitting from lines 280-301 (report_file.rmd)
+  Error in if (file.info(file_path)$size == 0) { :
+    missing value where TRUE/FALSE needed
+  Calls: <Anonymous> ... eval_with_user_handlers -> eval -> eval -> read_tsv_with_dummy
+  Execution halted
+```
+
+If obtained using `nextflow run main.nf -resume`, then rerun the same command once. Sometimes, nextflow shows difficulties to build the report.html file with `-resume`. If the problem persists, try `nextflow run main.nf`. If the problem still occurs, please send an issue [here](https://github.com/gael-millot/repertoire_profiler/issues).
+
+#### Message 5
+
+```
 ERROR ~ Error executing process > 'ITOL (2)'
 
 Caused by:
@@ -227,6 +247,9 @@ INFO:    underlay of /etc/localtime required more than 50 (83) bind mounts
 ```
 
 Register at Itol as explained in the [Prerequisite](#1-prerequisite) section above, or set the `phylo_tree_itol_subscription` parameter of the *nextflow.config* file to `FALSE` and rerun.
+
+
+
 
 <br><br>
 ## OUTPUT
@@ -535,8 +558,7 @@ If the text is cut in the table, reload the page or change the width of the wind
             <br></li><li><b>trimmed_sequence_aa</b>: Translation in aa of the <i>trimmed_sequence</i> column using <code>seqkit translate</code>. Sequences are made of single letter aa with X (unknown) and * (stop) added.
             <br></li><li><b>query_sequence_aa</b>: Translation in aa of the <i>sequence</i> column (i.e., query nucleotide sequence) using <code>seqkit translate</code>. If <i>is_sequence_trimmed</i> column is TRUE, then some * are expected to be present in the sequence (stop codons), since the query sequence does not necessarily start with a start codon (primer sequence addition for instance). Sequences are made of single letter aa with X (unknown) and * (stop) added.
             <br></li><li><b>sequence_alignment_with_gaps_aa</b>: Translation in aa of the <i>sequence_alignment_with_gaps</i> column, keeping the IMGT spacers, using a python code with the following rules: 1) Process the aligned nucleotide sequence in codons (3 nucleotides each), 2) If all three positions in a codon window are . → output . (codon stays “dotted”), 3) If all three are - → output -, 4) If there’s any mixture (some bases, some gaps/dots) → output a gap marker, e.g. -, 5) Otherwise (full valid codon) → translate to amino acid.
-
-            <br></li><li><b>mixed_codon_positions</b>: integers separated by semi-colons indicating the codon position of the right boundary codon with mixed valid nucleotide bases and hyphens or dots, at the end of a dot/hyphen gap that has both boundaries made of mixed codons. In other words, when a codon made of three valid nucleotide bases is broken by a stretch of hyphens or dots, this generates two mixed codons encompassing a stretch of dots/hyphens.
+            <br></li><li><b>mixed_codon_positions</b>: integers separated by semi-colons indicating the position of the right boundary codon with mixed valid nucleotide bases and hyphens or dots, at the end of a dot/hyphen gap that has both boundaries made of mixed codons. In other words, when a codon made of three valid nucleotide bases is broken by a stretch of hyphens or dots, this generates two mixed codons encompassing a stretch of dots/hyphens. Example: ATG C.. .-- --. .TT -> the CTT codon is split by dots and hyphens and value 5 is returned (position of codon .TT).
             <br></li><li><b>align_seq_identical</b>: if TRUE, it means that both the sequences in the <i>sequence_alignment</i> (coming from <code>AssignGenes.py igblast --format airr</code>) and <i>sequence_alignment_with_gaps</i> (coming from <code>AssignGenes.py igblast --format blast</code> and <code>MakeDb.py igblast</code>) columns are identical, gaps (dots) excluded. If FALSE, it raises concerns that about .
             <br></li><li><b>aa_identical</b>: if TRUE, it means that both the sequences in the <i>sequence_aa</i> and <i>trimmed_sequence_aa</i> columns are identical. If FALSE, it can be because of an extra aa at the end of the <i>sequence_aa</i> sequence, due to incomplete last codon but with aa inferred by <code>AssignGenes.py igblast --format airr</code>. Otherwise, it raises problems in the output of <code>AssignGenes.py igblast --format airr</code>, notably the correspondance between: 1) <i>sequence_alignment_aa</i> and <i>sequence_alignment</i> columns, 2) <i>germline_alignment_aa</i> and <i>germline_alignment</i> columns. In other words, translation of <i>sequence_alignment</i> and <i>germline_alignment</i> might not result in the expected aa sequences in the corresponding aa columns.
             <br></li><li><b>sequence_alignment_aa_identical</b>: if TRUE, it means that both the sequences in the <i>sequence_alignment_aa</i> and <i>sequence_alignment_with_gaps_aa</i> columns are identical. If FALSE, it is probably because of the method indicated in the <i>sequence_alignment_with_gaps_aa</i> field above to generate the aa sequence .
