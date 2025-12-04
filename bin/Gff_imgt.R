@@ -437,6 +437,11 @@ vdjc_column_end <- paste0(vdjc_features, "_alignment_with_gaps_end")
 fwr_cdr_column_start <- paste0(fwr_cdr_features, "_alignment_with_gaps_start") 
 fwr_cdr_column_end <- paste0(fwr_cdr_features, "_alignment_with_gaps_end") 
 
+vdjc_column_start_jalv <- paste0(vdjc_features, "_alignment_start") 
+vdjc_column_end_jalv <- paste0(vdjc_features, "_alignment_end") 
+fwr_cdr_column_start_jalv <- paste0(fwr_cdr_features, "_alignment_start") 
+fwr_cdr_column_end_jalv <- paste0(fwr_cdr_features, "_alignment_end") 
+
 # end define the column names of the coordinates in the tsv file
 # Check that all expected columns exist
 not_exist <- NULL
@@ -475,16 +480,8 @@ for(i2 in c("vdjc", "fwr_cdr")){
                 # nuc coordinates
                 start_coord <- df[selected_index[i3], get(paste0(i2, "_column_start"))[i4]]
                 end_coord <- df[selected_index[i3], get(paste0(i2, "_column_end"))[i4]]
-                if( ! is.na(start_coord)){
-                    start_coord_jalv <- map_gapped_to_ungapped(seq_aligned = seq_aligned[i3], gapped_pos = start_coord)
-                }else{
-                    start_coord_jalv <- start_coord
-                }
-                if( ! is.na(end_coord)){
-                    end_coord_jalv <- map_gapped_to_ungapped(seq_aligned = seq_aligned[i3], gapped_pos = end_coord)
-                }else{
-                    end_coord_jalv <- end_coord
-                }
+                start_coord_jalv <- df[selected_index[i3], get(paste0(i2, "_column_start_jalv"))[i4]]
+                end_coord_jalv <- df[selected_index[i3], get(paste0(i2, "_column_end_jalv"))[i4]]
                 gff_rows[[length(gff_rows) + 1]] <- c(
                     df[selected_index[i3], Name],
                     ".",
