@@ -406,10 +406,30 @@ for(i0 in names(obs)){ # NA in xlsx file become "NA". Thus, has to be replaced b
 
 ############ main
 
-
+if(align_seq == "query"){align_seq2 <- c("sequence", "query_sequence_aa")}
+if(align_seq == "igblast_full"){align_seq2 <- c("sequence", "sequence_aa")}
+if(align_seq == "trimmed"){align_seq2 <- c("trimmed_sequence", "trimmed_sequence_aa")}
+if(align_seq == "fwr1"){align_seq2 <- c("fwr1", "fwr1_aa")}
+if(align_seq == "fwr2"){align_seq2 <- c("fwr2", "fwr2_aa")}
+if(align_seq == "fwr3"){align_seq2 <- c("fwr3", "fwr3_aa")}
+if(align_seq == "fwr4"){align_seq2 <- c("fwr4", "fwr4_aa")}
+if(align_seq == "cdr1"){align_seq2 <- c("cdr1", "cdr1_aa")}
+if(align_seq == "cdr2"){align_seq2 <- c("cdr2", "cdr2_aa")}
+if(align_seq == "cdr3"){align_seq2 <- c("cdr3", "cdr3_aa")}
+if(align_seq == "junction"){align_seq2 <- c("junction", "junction_aa")}
+if(align_seq == "sequence_alignment"){align_seq2 <- c("sequence_alignment", "sequence_alignment_aa")}
+if(align_seq == "v_sequence_alignment"){align_seq2 <- c("v_sequence_alignment", "v_sequence_alignment_aa")}
+if(align_seq == "d_sequence_alignment"){align_seq2 <- c("d_sequence_alignment", "d_sequence_alignment_aa")}
+if(align_seq == "j_sequence_alignment"){align_seq2 <- c("j_sequence_alignment", "j_sequence_alignment_aa")}
+if(align_seq == "c_sequence_alignment"){align_seq2 <- c("c_sequence_alignment", "c_sequence_alignment_aa")}
+if(align_seq == "germline_alignment"){align_seq2 <- c("germline_alignment", "germline_alignment_aa")}
+if(align_seq == "v_germline_alignment"){align_seq2 <- c("v_germline_alignment", "v_germline_alignment_aa")}
+if(align_seq == "d_germline_alignment"){align_seq2 <- c("d_germline_alignment", "d_germline_alignment_aa")}
+if(align_seq == "j_germline_alignment"){align_seq2 <- c("j_germline_alignment", "j_germline_alignment_aa")}
+if(align_seq == "c_germline_alignment"){align_seq2 <- c("c_germline_alignment", "c_germline_alignment_aa")}
 
 # print the sequence_alignment_with_gaps sequences as aligned fasta
-if(seq_kind == "IMGT"){
+if(seq_kind == "IMGT" & align_seq %in% c("query", "igblast_full", "trimmed", "sequence_alignment")){
     tempo_name <- "sequence_alignment_with_gaps"
     tempo_name_aa <- "sequence_alignment_with_gaps_aa"
     if( ! tempo_name %in% names(obs)){
@@ -431,30 +451,13 @@ if(seq_kind == "IMGT"){
         tempo_cat <- paste0(">", obs[i1, Name], "\n", obs[i1, tempo_name_aa], "\n")
         cat(tempo_cat, file = file.path(paste0(tempo_name, "_imgt_aa.fasta")), append = TRUE) # tempo_name because name of nuc kept
     }
+}else if(seq_kind == "IMGT"){
+    tempo.warn <- paste0("NO SEQUENCE WITH IMGT GAPS PROVIDED AS ALIGNMENTS WITH align_seq PARAMETER OF THE nextflow.config FILE SET AS:\n", align_seq)
+    cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
+    fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+    warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
 }else{
 # end print the sequence_alignment_with_gaps sequences as aligned fasta
-    if(align_seq == "query"){align_seq2 <- c("sequence", "query_sequence_aa")}
-    if(align_seq == "igblast_full"){align_seq2 <- c("sequence", "sequence_aa")}
-    if(align_seq == "trimmed"){align_seq2 <- c("trimmed_sequence", "trimmed_sequence_aa")}
-    if(align_seq == "fwr1"){align_seq2 <- c("fwr1", "fwr1_aa")}
-    if(align_seq == "fwr2"){align_seq2 <- c("fwr2", "fwr2_aa")}
-    if(align_seq == "fwr3"){align_seq2 <- c("fwr3", "fwr3_aa")}
-    if(align_seq == "fwr4"){align_seq2 <- c("fwr4", "fwr4_aa")}
-    if(align_seq == "cdr1"){align_seq2 <- c("cdr1", "cdr1_aa")}
-    if(align_seq == "cdr2"){align_seq2 <- c("cdr2", "cdr2_aa")}
-    if(align_seq == "cdr3"){align_seq2 <- c("cdr3", "cdr3_aa")}
-    if(align_seq == "junction"){align_seq2 <- c("junction", "junction_aa")}
-    if(align_seq == "sequence_alignment"){align_seq2 <- c("sequence_alignment", "sequence_alignment_aa")}
-    if(align_seq == "v_sequence_alignment"){align_seq2 <- c("v_sequence_alignment", "v_sequence_alignment_aa")}
-    if(align_seq == "d_sequence_alignment"){align_seq2 <- c("d_sequence_alignment", "d_sequence_alignment_aa")}
-    if(align_seq == "j_sequence_alignment"){align_seq2 <- c("j_sequence_alignment", "j_sequence_alignment_aa")}
-    if(align_seq == "c_sequence_alignment"){align_seq2 <- c("c_sequence_alignment", "c_sequence_alignment_aa")}
-    if(align_seq == "germline_alignment"){align_seq2 <- c("germline_alignment", "germline_alignment_aa")}
-    if(align_seq == "v_germline_alignment"){align_seq2 <- c("v_germline_alignment", "v_germline_alignment_aa")}
-    if(align_seq == "d_germline_alignment"){align_seq2 <- c("d_germline_alignment", "d_germline_alignment_aa")}
-    if(align_seq == "j_germline_alignment"){align_seq2 <- c("j_germline_alignment", "j_germline_alignment_aa")}
-    if(align_seq == "c_germline_alignment"){align_seq2 <- c("c_germline_alignment", "c_germline_alignment_aa")}
-
     if( ! all(align_seq2 %in% names(obs))){
         stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nTHE align_seq2 PARAMETER MUST BE COLUMN NAMES OF THE IMPORTED FILE:\n", path, "\n\nHERE IT IS align_seq2:\n", paste(align_seq2, collapse = "\n"), "\n\nCOLUMN NAMES:\n", paste(names(obs), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
     }

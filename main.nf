@@ -1951,13 +1951,6 @@ workflow {
     for_gff_aa_ch = clone_for_gff_aa_ch.mix(all_for_gff_aa_ch)
 
 
-    Gff_imgt( // module gff_imgt.nf
-        Tsv2fasta.out.fasta_align_imgt_ch,
-        data_assembly.out.productive_ch,
-        cute_path
-    )
-    copyLogFile('gff_imgt.log', Gff_imgt.out.gff_log_ch, out_path)
-
 
     GffNuc( // module gff.nf
         for_gff_nuc_ch,
@@ -1966,7 +1959,6 @@ workflow {
         cute_path
     )
     GffNuc.out.gff_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE GffNuc PROCESS\n\n========\n\n"}.subscribe{gff_list, tag -> if(tag == "CLONE"){gff_list.each{gff -> gff.copyTo("${out_path}/alignments/nuc/clonal/${gff.getName()}")}}else if(tag == "ALL"){gff_list.each{gff -> gff.copyTo("${out_path}/alignments/nuc/all/${gff.getName()}")}}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}} // .flatten() because gff several files. Otherwise, copyTo does not like it. Finally, .each() also solve the problem
-    GffNuc.out.imgt_gff_ch.flatten().subscribe{gff -> new_name = gff.getName().replaceAll(/\.tempo$/, '.gff') ; gff.copyTo("${out_path}/alignments/nuc/imgt/${new_name}")} // .flatten() because gff several files. Otherwise, copyTo does not like it. 
     copyLogFile('gffNuc.log', GffNuc.out.gff_log_ch, out_path)
 
 
@@ -1979,21 +1971,8 @@ workflow {
         cute_path
     )
     GffAa.out.gff_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE GffAa PROCESS\n\n========\n\n"}.subscribe{gff_list, tag -> if(tag == "CLONE"){gff_list.each{gff -> gff.copyTo("${out_path}/alignments/aa/clonal/${gff.getName()}")}}else if(tag == "ALL"){gff_list.each{gff -> gff.copyTo("${out_path}/alignments/aa/all/${gff.getName()}")}}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
-    GffAa.out.imgt_gff_ch.flatten().subscribe{gff -> new_name = gff.getName().replaceAll(/\.tempo$/, '.gff') ; gff.copyTo("${out_path}/alignments/aa/imgt/${new_name}")}
     copyLogFile('gffAa.log', GffAa.out.gff_log_ch, out_path)
 //GffAa.out.gff_ch.flatten().view()
-
-
-
-    PrintAlignmentIMGTnuc( // module print_alignment.nf
-        Tsv2fasta.out.fasta_align_imgt_ch
-    )
-    PrintAlignmentIMGTnuc.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentIMGTnuc PROCESS\n\n========\n\n"}.subscribe{html, tag -> html.copyTo("${out_path}/alignments/nuc/imgt")}
-
-    PrintAlignmentIMGTaa( // module print_alignment.nf
-        fasta_align_imgt_aa_ch
-    )
-    PrintAlignmentIMGTaa.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentIMGTaa PROCESS\n\n========\n\n"}.subscribe{html, tag -> html.copyTo("${out_path}/alignments/aa/imgt")}
 
 
 
@@ -2011,6 +1990,31 @@ workflow {
     )
     PrintAlignmentAa.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentAa PROCESS\n\n========\n\n"}.subscribe{html, tag -> if(tag == "CLONE"){html.copyTo("${out_path}/alignments/aa/clonal/${html.getName()}")}else if(tag == "ALL"){html.copyTo("${out_path}/alignments/aa/all/${html.getName()}")}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
 
+
+    has_fasta_align_imgt = Tsv2fasta.out.fasta_align_imgt_ch.map{ true }.ifEmpty { [false] }.first() // has_fasta_align_imgt is false if Tsv2fasta.out.fasta_align_imgt_ch is empty
+    if(has_fasta_align_imgt && (align_seq == "query" || align_seq == "igblast_full" || align_seq == "trimmed" || align_seq == "sequence_alignment")){
+        Gff_imgt( // module gff_imgt.nf
+            Tsv2fasta.out.fasta_align_imgt_ch,
+            data_assembly.out.productive_ch,
+            cute_path
+        )
+        copyLogFile('gff_imgt.log', Gff_imgt.out.gff_log_ch, out_path)
+
+        PrintAlignmentIMGTnuc( // module print_alignment.nf
+            Tsv2fasta.out.fasta_align_imgt_ch
+        )
+        PrintAlignmentIMGTnuc.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentIMGTnuc PROCESS\n\n========\n\n"}.subscribe{html, tag -> html.copyTo("${out_path}/alignments/nuc/imgt")}
+
+        PrintAlignmentIMGTaa( // module print_alignment.nf
+            fasta_align_imgt_aa_ch
+        )
+        PrintAlignmentIMGTaa.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentIMGTaa PROCESS\n\n========\n\n"}.subscribe{html, tag -> html.copyTo("${out_path}/alignments/aa/imgt")}
+
+        // printing of coordinates for jalview
+        GffNuc.out.imgt_gff_ch.flatten().subscribe{gff -> new_name = gff.getName().replaceAll(/\.tempo$/, '.gff') ; gff.copyTo("${out_path}/alignments/nuc/imgt/${new_name}")} // .flatten() because gff several files. Otherwise, copyTo does not like it. 
+        GffAa.out.imgt_gff_ch.flatten().subscribe{gff -> new_name = gff.getName().replaceAll(/\.tempo$/, '.gff') ; gff.copyTo("${out_path}/alignments/aa/imgt/${new_name}")}
+        // end printing of coordinates for jalview
+    }
 
 
     Tree(
