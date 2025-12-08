@@ -1994,8 +1994,9 @@ workflow {
     has_fasta_align_imgt = Tsv2fasta.out.fasta_align_imgt_ch.map{ true }.ifEmpty { [false] }.first() // has_fasta_align_imgt is false if Tsv2fasta.out.fasta_align_imgt_ch is empty
     if(has_fasta_align_imgt && (align_seq == "query" || align_seq == "igblast_full" || align_seq == "trimmed" || align_seq == "sequence_alignment")){
         Gff_imgt( // module gff_imgt.nf
-            Tsv2fasta.out.fasta_align_imgt_ch,
-            data_assembly.out.productive_ch,
+            Tsv2fasta.out.fasta_align_imgt_ch, 
+            align_seq, 
+            data_assembly.out.productive_ch, 
             cute_path
         )
         copyLogFile('gff_imgt.log', Gff_imgt.out.gff_log_ch, out_path)
@@ -2011,8 +2012,13 @@ workflow {
         PrintAlignmentIMGTaa.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentIMGTaa PROCESS\n\n========\n\n"}.subscribe{html, tag -> html.copyTo("${out_path}/alignments/aa/imgt")}
 
         // printing of coordinates for jalview
-        GffNuc.out.imgt_gff_ch.flatten().subscribe{gff -> new_name = gff.getName().replaceAll(/\.tempo$/, '.gff') ; gff.copyTo("${out_path}/alignments/nuc/imgt/${new_name}")} // .flatten() because gff several files. Otherwise, copyTo does not like it. 
-        GffAa.out.imgt_gff_ch.flatten().subscribe{gff -> new_name = gff.getName().replaceAll(/\.tempo$/, '.gff') ; gff.copyTo("${out_path}/alignments/aa/imgt/${new_name}")}
+        if(align_seq == "query" || align_seq == "igblast_full"){
+            Gff_imgt.out.nuc_imgt_gff_ch.flatten().ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Gff_imgt PROCESS\n\n========\n\n"}.subscribe{gff -> gff.copyTo("${out_path}/alignments/nuc/imgt")}
+            Gff_imgt.out.aa_imgt_gff_ch.flatten().ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Gff_imgt PROCESS\n\n========\n\n"}.subscribe{gff -> gff.copyTo("${out_path}/alignments/aa/imgt")}
+        }else{
+            GffNuc.out.imgt_gff_ch.flatten().subscribe{gff -> new_name = gff.getName().replaceAll(/\.tempo$/, '.gff') ; gff.copyTo("${out_path}/alignments/nuc/imgt/${new_name}")} // .flatten() because gff several files. Otherwise, copyTo does not like it. 
+            GffAa.out.imgt_gff_ch.flatten().subscribe{gff -> new_name = gff.getName().replaceAll(/\.tempo$/, '.gff') ; gff.copyTo("${out_path}/alignments/aa/imgt/${new_name}")}
+        }
         // end printing of coordinates for jalview
     }
 

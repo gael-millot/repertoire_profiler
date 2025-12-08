@@ -8,15 +8,16 @@ process Gff_imgt {
     cache 'true'
 
     input:
-    tuple path(fasta), path(aa), val(tag) // tag not required here 
+    tuple path(fasta), path(aa), val(tag) // even if tag not required here 
+    val align_seq
     path tsv  // no parallelization
     path cute_file
 
     output:
     path "*_imgt_nuc_biojs.gff"
     path "*_imgt_aa_biojs.gff"
-    //path "*_imgt_nuc_jalview2.gff"
-    //path "*_imgt_aa_jalview2.gff"
+    path "*_imgt_nuc_jalview.gff", emit: nuc_imgt_gff_ch, optional: true
+    path "*_imgt_aa_jalview.gff", emit: aa_imgt_gff_ch, optional: true
     path "Gff_imgt.log", emit: gff_log_ch
 
     script:
@@ -30,6 +31,7 @@ process Gff_imgt {
     "${fasta}" \
     "${tsv}" \
     "sequence_id" \
+    "${align_seq}" \
     "${cute_file}" \
     "Gff_imgt.log"
     """

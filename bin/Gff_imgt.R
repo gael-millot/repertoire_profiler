@@ -61,13 +61,19 @@ script <- "Gff_imgt"
 
 ### Arguments : 
 
-# fasta_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/example_of_results/repertoire_profiler_1762527194/alignments/aa/sequence_alignment_aa_clone_id_10_IGHV4-34_IGHJ6_aligned_aa.fasta"
-# tsv_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/example_of_results/repertoire_profiler_1762527194/tsv/clone_assigned_seq.tsv"
+# fasta_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1765195115/alignments/nuc/imgt/sequence_alignment_with_gaps_imgt_nuc.fasta"
+# tsv_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1765195115/tsv/productive_seq.tsv"
 # Name <- "sequence_id"                # name of the column containing the sequence ids
+# align_seq <- "query"                # kind of seq
 # cute <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/bin/cute_little_R_functions_v12.8.R"
 # log <- "Gff_imgt.log"
 
-
+fasta_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1765195115/alignments/nuc/imgt/sequence_alignment_with_gaps_imgt_nuc.fasta"
+tsv_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1765195115/tsv/productive_seq.tsv"
+Name <- "sequence_id"                # name of the column containing the sequence ids
+align_seq <- "query"                # kind of seq
+cute <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/bin/cute_little_R_functions_v12.8.R"
+log <- "Gff_imgt.log"
 
 
 ################################# End test
@@ -91,6 +97,7 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
         "fasta_path", 
         "tsv_path", 
         "Name", # sequence_id column
+        "align_seq", 
         "cute", 
         "log"
     ) # objects names exactly in the same order as in the bash code and recovered in args. Here only one, because only the fasta_path of the config file to indicate after the xlsx2fasta.R script execution
@@ -131,6 +138,7 @@ param.list <- c(
     "fasta_path", 
     "tsv_path", 
     "Name", 
+    "align_seq", 
     "cute", 
     "log"
 )
@@ -200,24 +208,24 @@ fun_source_test <- function(path, script){ # do not write script = script: can p
 }
 
 
-map_gapped_to_ungapped <- function(seq_aligned, gapped_pos) {
+map_gapped_to_ungapped <- function(seq_aligned, gapped_pos, script) {
 # AIM
-# shift vdjc or fwr/cdr position provided in the .tsv file, according to the removal of hyphens (--) and dots (...) inserted in the aligned sequences, to have the correct positions of the features in the aligned sequneces in jalview.
+# shift vdjc or fwr/cdr position provided in the .tsv file, according to the removal of hyphens (--) and dots (...) inserted in the aligned sequences, to have the correct positions of the features in the aligned sequences in jalview.
 # ARGUMENTS
 # seq_aligned: aligned sequence (with hyphens)
 # ungapped_pos: initial positions in the aligned sequence (hyphens and dots)
 # RETURN
 # shifted position
 # EXAMPLES
-# map_gapped_to_ungapped("atg-.t---g", c(3,4,5)) # initial sequence is atgtg, input coords are third g, fourth t and fifth g
+# map_gapped_to_ungapped("atg-.t---g", c(3, 6, 7), "test") # initial sequence is atgtg, input coords are third g, fourth t and a hyphen
 # DEBUGGING
-# seq_aligned = "atg--t---g" ; ungapped_pos = c(3,4,5)
+# seq_aligned = "atg--t---g" ; gapped_pos = c(3, 6, 7) ; script = "test"
     # Split sequence into characters
     seq_chars <- unlist(strsplit(seq_aligned, ""))
     # Check if any coordinate points to '.' or '-'
     if(any(seq_chars[gapped_pos] %in% c(".", "-"))) {
         bad <- gapped_pos[seq_chars[gapped_pos] %in% c(".", "-")]
-        tempo.cat <- paste0("ERROR IN ", script, ".R\nThe following coordinates point to '.' or '-' in the original sequence:\n", paste0(bad, collapse = "\n"))
+        # tempo.cat <- paste0("ERROR IN ", script, ".R\nThe following coordinates point to '.' or '-' in the original sequence:\n", paste0(bad, collapse = "\n"))
         # stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between ==
     }
     # Create a map from original positions to cleaned sequence positions
@@ -284,6 +292,7 @@ ee <- expression(arg.check <- c(arg.check, tempo$problem) , text.check <- c(text
 tempo <- fun_check(data = fasta_path, class = "vector", typeof = "character", length = 1) ; eval(ee)
 tempo <- fun_check(data = Name, class = "vector", typeof = "character", length = 1) ; eval(ee)
 # cute already tested above
+tempo <- fun_check(data = align_seq, options = c("query", "igblast_full", "trimmed", "fwr1", "fwr2", "fwr3", "fwr4", "cdr1", "cdr2", "cdr3", "junction", "sequence_alignment", "v_sequence_alignment", "d_sequence_alignment", "j_sequence_alignment", "c_sequence_alignment", "germline_alignment", "v_germline_alignment", "d_germline_alignment", "j_germline_alignment", "c_germline_alignment")) ; eval(ee)
 tempo <- fun_check(data = log, class = "vector", typeof = "character", length = 1) ; eval(ee)
 if(any(arg.check) == TRUE){ # normally no NA
     stop(paste0("\n\n================\n\n", paste(text.check[arg.check], collapse = "\n"), "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between == #
@@ -298,6 +307,7 @@ tempo.arg <-c(
     "fasta_path", 
     "tsv_path", 
     "Name", 
+    "align_seq", 
     "cute", 
     "log"
 )
@@ -311,6 +321,8 @@ if(any(tempo_log) == TRUE){# normally no NA with is.null()
 tempo.arg <-c(
     "fasta_path", 
     "tsv_path", 
+    "Name", 
+    "align_seq", 
     "cute", 
     "log"
 )
@@ -589,8 +601,8 @@ for(i2 in c("vdjc", "fwr_cdr")){
     }
     tempo_text <- paste0(get(paste0(i2, "_features")), "\t", sub(x = get(paste0(i2, "_features_colors")), pattern = "#", replacement = ""))
     gff_lines_jalv <- c(tempo_text, "\n", "GFF", gff_lines_jalv)
-    output_gff_jalv <- paste0(i2, "_sequence_alignment_with_gaps_imgt_nuc_jalview2.gff")
-    # writeLines(gff_lines_jalv, con = output_gff_jalv)
+    output_gff_jalv <- paste0(i2, "_sequence_alignment_with_gaps_imgt_nuc_jalview.gff")
+    writeLines(gff_lines_jalv, con = output_gff_jalv)
 
     gff_aa_table_jalv <- do.call(rbind, gff_aa_rows_jalv)
     if(length(gff_aa_rows_jalv) > 0){
@@ -599,8 +611,8 @@ for(i2 in c("vdjc", "fwr_cdr")){
         gff_aa_lines_jalv <- character()
     }
     gff_aa_lines_jalv <- c(tempo_text, "\n", "GFF", gff_aa_lines_jalv)
-    output_gff_aa_jalv <- paste0(i2, "_sequence_alignment_with_gaps_imgt_aa_jalview2.gff")
-    # writeLines(gff_aa_lines_jalv, con = output_gff_aa_jalv)
+    output_gff_aa_jalv <- paste0(i2, "_sequence_alignment_with_gaps_imgt_aa_jalview.gff")
+    writeLines(gff_aa_lines_jalv, con = output_gff_aa_jalv)
 
     # end aa coordinates
 }
