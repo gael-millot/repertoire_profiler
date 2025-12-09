@@ -61,12 +61,15 @@ script <- "Gff_imgt"
 
 ### Arguments : 
 
-# fasta_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1765195115/alignments/nuc/imgt/sequence_alignment_with_gaps_imgt_nuc.fasta"
-# tsv_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1765195115/tsv/productive_seq.tsv"
+
+# fasta_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1765303294/alignments/nuc/imgt/sequence_alignment_with_gaps_imgt_nuc.fasta"
+# fasta_aa_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1765303294/alignments/aa/imgt/sequence_alignment_with_gaps_imgt_aa.fasta"
+# tsv_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1765303294/tsv/productive_seq.tsv"
 # Name <- "sequence_id"                # name of the column containing the sequence ids
-# align_seq <- "query"                # kind of seq
+# align_seq <- "sequence_alignment"                # kind of seq
 # cute <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/bin/cute_little_R_functions_v12.8.R"
 # log <- "Gff_imgt.log"
+
 
 
 ################################# End test
