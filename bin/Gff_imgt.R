@@ -68,13 +68,6 @@ script <- "Gff_imgt"
 # cute <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/bin/cute_little_R_functions_v12.8.R"
 # log <- "Gff_imgt.log"
 
-fasta_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1765195115/alignments/nuc/imgt/sequence_alignment_with_gaps_imgt_nuc.fasta"
-tsv_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1765195115/tsv/productive_seq.tsv"
-Name <- "sequence_id"                # name of the column containing the sequence ids
-align_seq <- "query"                # kind of seq
-cute <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/bin/cute_little_R_functions_v12.8.R"
-log <- "Gff_imgt.log"
-
 
 ################################# End test
 
@@ -95,6 +88,7 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
     }
     tempo.arg.names <- c(
         "fasta_path", 
+        "fasta_aa_path", 
         "tsv_path", 
         "Name", # sequence_id column
         "align_seq", 
@@ -136,6 +130,7 @@ param.list <- c(
     "run.way",
     if(run.way == "SCRIPT"){"command"}, 
     "fasta_path", 
+    "fasta_aa_path", 
     "tsv_path", 
     "Name", 
     "align_seq", 
@@ -171,35 +166,35 @@ for(i in 1:length(param.list)){
 
 fun_source_test <- function(path, script){ # do not write script = script: can produce recursive error if script argument is not specified thenafter
 # AIM
-# Test if one fasta_path exists (url or local)
+# Test if one path exists (url or local)
 # ARGUMENTS
-# fasta_path: single character string of the fasta_path to test
+# path: single character string of the path to test
 # script: single character string of the current script file
 # RETURN
-# An error message if the fasta_path does not exists, nothing otherwise
+# An error message if the path does not exists, nothing otherwise
 # EXAMPLES
 # fun_source_test(path = "caca", script = "test")
 # DEBUGGING
-# fasta_path = "https://zenodo.org/records/10814482/files/ig_sequences.xlsx" ; script = "test"
-    name <- deparse(substitute(fasta_path))
-    if(length(fasta_path) != 1){
-        stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n", name, " PARAMETER MUST BE LENGTH 1: ", paste(fasta_path, collapse = " "), "\n\n============\n\n"), call. = FALSE)
-    }else if(grepl(x = fasta_path, pattern = "^http")){
+# path = "https://zenodo.org/records/10814482/files/ig_sequences.xlsx" ; script = "test"
+    name <- deparse(substitute(path))
+    if(length(path) != 1){
+        stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n", name, " PARAMETER MUST BE LENGTH 1: ", paste(path, collapse = " "), "\n\n============\n\n"), call. = FALSE)
+    }else if(grepl(x = path, pattern = "^http")){
         tempo.name <- paste0("tmp_xlsx2fasta.R_", as.integer(Sys.time()))
         if(file.exists(tempo.name)){
             stop(paste0("\n\n============\n\nERROR IN ", script, ".R\nTHE TEMPORARY FILE USED BY THE ", script, " SCRIPT ALREADY EXISTS:\n", file.path(tempo.name), "\n\n. PLEASE, RERUN.\n\n============\n\n"), call. = FALSE)
         }else{
-            tempo.try <- try(suppressWarnings(suppressMessages(download.file(fasta_path, tempo.name, method="auto", quiet=TRUE))), silent = TRUE)
+            tempo.try <- try(suppressWarnings(suppressMessages(download.file(path, tempo.name, method="auto", quiet=TRUE))), silent = TRUE)
             if(file.exists(tempo.name)){
                 file.remove(tempo.name)
             }
             if(any(grepl(x = tempo.try, pattern = "^[Ee]rror"))){
-                stop(paste0("\n\n============\n\nERROR IN ", script, ".R\nHTTP INDICATED IN THE ", name, " PARAMETER DOES NOT EXISTS: ", fasta_path, "\n\n============\n\n"), call. = FALSE)
+                stop(paste0("\n\n============\n\nERROR IN ", script, ".R\nHTTP INDICATED IN THE ", name, " PARAMETER DOES NOT EXISTS: ", path, "\n\n============\n\n"), call. = FALSE)
             }
         }
-    }else if( ! grepl(x = fasta_path, pattern = "^http")){
-        if( ! file.exists(fasta_path)){
-            stop(paste0("\n\n============\n\nERROR IN ", script, ".R\nFILE INDICATED IN THE ", name, " PARAMETER DOES NOT EXISTS: ", fasta_path, "\n\n============\n\n"), call. = FALSE)
+    }else if( ! grepl(x = path, pattern = "^http")){
+        if( ! file.exists(path)){
+            stop(paste0("\n\n============\n\nERROR IN ", script, ".R\nFILE INDICATED IN THE ", name, " PARAMETER DOES NOT EXISTS: ", path, "\n\n============\n\n"), call. = FALSE)
         }
     }else{
         tempo.cat <- paste0("\n\n================\n\nINTERNAL CODE ERROR 3 IN ", script, ".R: CODE HAS TO BE MODIFIED\n\n============\n\n")
@@ -290,6 +285,7 @@ text.check <- NULL #
 checked.arg.names <- NULL # for function debbuging: used by r_debugging_tools
 ee <- expression(arg.check <- c(arg.check, tempo$problem) , text.check <- c(text.check, tempo$text) , checked.arg.names <- c(checked.arg.names, tempo$object.name))
 tempo <- fun_check(data = fasta_path, class = "vector", typeof = "character", length = 1) ; eval(ee)
+tempo <- fun_check(data = fasta_aa_path, class = "vector", typeof = "character", length = 1) ; eval(ee)
 tempo <- fun_check(data = Name, class = "vector", typeof = "character", length = 1) ; eval(ee)
 # cute already tested above
 tempo <- fun_check(data = align_seq, options = c("query", "igblast_full", "trimmed", "fwr1", "fwr2", "fwr3", "fwr4", "cdr1", "cdr2", "cdr3", "junction", "sequence_alignment", "v_sequence_alignment", "d_sequence_alignment", "j_sequence_alignment", "c_sequence_alignment", "germline_alignment", "v_germline_alignment", "d_germline_alignment", "j_germline_alignment", "c_germline_alignment")) ; eval(ee)
@@ -305,6 +301,7 @@ if(any(arg.check) == TRUE){ # normally no NA
 # management of NULL arguments
 tempo.arg <-c(
     "fasta_path", 
+    "fasta_aa_path", 
     "tsv_path", 
     "Name", 
     "align_seq", 
@@ -320,6 +317,7 @@ if(any(tempo_log) == TRUE){# normally no NA with is.null()
 # management of ""
 tempo.arg <-c(
     "fasta_path", 
+    "fasta_aa_path", 
     "tsv_path", 
     "Name", 
     "align_seq", 
@@ -342,6 +340,7 @@ warn <- NULL
 # end warning initiation
 # other checkings
 fun_source_test(path = fasta_path, script = script)
+fun_source_test(path = fasta_aa_path, script = script)
 fun_source_test(path = tsv_path, script = script)
 
 # end other checkings
@@ -380,6 +379,7 @@ fun_report(data = paste0("\n\n#########\n\n", fasta_path, "\n\n#########\n\n"), 
 
 df <- read.table(tsv_path, header = TRUE, sep = "\t")
 fasta <- readLines(fasta_path)
+fasta_aa <- readLines(fasta_aa_path)
 
 ################ end Data import
 
@@ -480,6 +480,13 @@ seq_aligned <- fasta[ ! grepl(x = fasta, pattern = "^>")]
 seq_names_for_tsv <- sub(x = seq_names, pattern = "^>", replacement = "")
 selected_index <- match(seq_names_for_tsv, df$sequence_id) # line number in df. Warning: only use this in df
 # end get the names of sequences
+# get the aa sequences
+seq_names_aa <- fasta_aa[grepl(x = fasta_aa, pattern = "^>")]
+seq_aligned_aa <- fasta_aa[ ! grepl(x = fasta_aa, pattern = "^>")]
+if( ! all(seq_names == seq_names_aa)){
+    stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nNAMES OF SEQUENCES IN THE NUC AND AA ALIGNMENT FASTA FILES SHOULD BE IDENTICAL AND IN THE SAME ORDER.\n\nHERE NUC ARE:", paste0(seq_names, collapse = "\n"), "\n\nAA ARE:", paste0(seq_names_aa, collapse = "\n"), "\n\n================\n\n"), call. = FALSE)
+}
+# end get the aa sequences
 # get coordinates
 for(i2 in c("vdjc", "fwr_cdr")){
     gff_rows <- list()
@@ -542,18 +549,15 @@ for(i2 in c("vdjc", "fwr_cdr")){
                     ".",
                     paste0("Name=", get(paste0(i2, "_features"))[i4], ";Color=", get(paste0(i2, "_features_colors"))[i4])
                 )
-                if(is.na(start_coord_jalv)){
+                if(is.na(start_coord_aa)){
                     start_coord_jalv_aa <- NA
                 }else{
-                    start_coord_jalv_aa <- as.integer(trunc(start_coord_jalv / 3) + 1)
-                    if((as.integer(start_coord_jalv) - 1) %% 3 != 0){ # == 0 means start_coord_jalv is at starting nuc codon 1, 4, 7, 10, etc., != 0 means start_coord_jalv is not at starting nuc codon -> shift to the next codon
-                        start_coord_jalv_aa <- start_coord_jalv_aa + 1
-                    }
+                    start_coord_jalv_aa <- map_gapped_to_ungapped(seq_aligned = seq_aligned_aa[i3], gapped_pos = start_coord_aa, script = script)
                 }
-                if(is.na(end_coord_jalv)){
+                if(is.na(end_coord_aa)){
                     end_coord_jalv_aa <- NA
                 }else{
-                    end_coord_jalv_aa <- as.integer(trunc(end_coord_jalv / 3)) # if(as.integer(end_coord_jalv) %% 3 != 0) not required here because 1) == 0 means end_coord_jalv is at ending nuc codon 3, 6, 9, etc., 2) != 0 means end_coord_jalv is not at ending nuc codon -> translation put a hyphen for this codon. But 8 (middle of 3rd codon) -> 8/3 -> 2nd aa: if the 3rd codon is hyphen, then still ok to end at aa 2. So nothing to change
+                    end_coord_jalv_aa <- map_gapped_to_ungapped(seq_aligned = seq_aligned_aa[i3], gapped_pos = end_coord_aa, script = script)
                 }
                 gff_aa_rows_jalv[[length(gff_aa_rows_jalv) + 1]] <- c(
                     df[selected_index[i3], Name],

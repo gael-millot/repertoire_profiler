@@ -8,7 +8,7 @@ process Gff_imgt {
     cache 'true'
 
     input:
-    tuple path(fasta), path(aa), val(tag) // even if tag not required here 
+    tuple path(fasta), path(fasta_aa), val(tag) // even if tag not required here 
     val align_seq
     path tsv  // no parallelization
     path cute_file
@@ -29,6 +29,7 @@ process Gff_imgt {
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a Gff.log
     Gff_imgt.R \
     "${fasta}" \
+    "${fasta_aa}" \
     "${tsv}" \
     "sequence_id" \
     "${align_seq}" \
