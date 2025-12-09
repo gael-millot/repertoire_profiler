@@ -24,9 +24,14 @@
 <br><br>
 ## AIM
 
-- Annotation of mRNA sequencing of the Immunoglobuline Heavy or Light variable region (fasta file sequences).
+- IgBlast annotation of mRNA sequencing of the Immunoglobuline Heavy or Light variable region.
+- Incorporation of sequence metadata.
+- Repertoire heatmaps, donuts and summary statistics.
+- Mutation loads.
+- Sequence alignments with FWR/CDR and V/D/J/C annotations.
 - Clustering of the annotated sequences into clonal groups (same germline origin).
-- Tree visualization of the clonal groups.
+- Tree visualization of all sequences and the clonal groups.
+- Html report and complete outputs in files, as described below.
 
 <br><br>
 ## WARNINGS

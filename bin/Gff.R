@@ -239,6 +239,36 @@ map_ungapped_to_gapped <- function(seq_aligned, ungapped_pos) {
     }
 }
 
+map_gapped_to_ungapped <- function(seq_aligned, gapped_pos, script) {
+# AIM
+# shift vdjc or fwr/cdr position provided in the .tsv file, according to the removal of hyphens (--) and dots (...) inserted in the aligned sequences, to have the correct positions of the features in the aligned sequences in jalview.
+# ARGUMENTS
+# seq_aligned: aligned sequence (with hyphens)
+# ungapped_pos: initial positions in the aligned sequence (hyphens and dots)
+# RETURN
+# shifted position
+# EXAMPLES
+# map_gapped_to_ungapped("atg-.t---g", c(3, 6, 7), "test") # initial sequence is atgtg, input coords are third g, fourth t and a hyphen
+# DEBUGGING
+# seq_aligned = "atg--t---g" ; gapped_pos = c(3, 6, 7) ; script = "test"
+    # Split sequence into characters
+    seq_chars <- unlist(strsplit(seq_aligned, ""))
+    # Check if any coordinate points to '.' or '-'
+    if(any(seq_chars[gapped_pos] %in% c(".", "-"))) {
+        bad <- gapped_pos[seq_chars[gapped_pos] %in% c(".", "-")]
+        # tempo.cat <- paste0("ERROR IN ", script, ".R\nThe following coordinates point to '.' or '-' in the original sequence:\n", paste0(bad, collapse = "\n"))
+        # stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between ==
+    }
+    # Create a map from original positions to cleaned sequence positions
+    valid_idx <- which(!seq_chars %in% c(".", "-"))
+    mapping <- seq_along(valid_idx)
+    names(mapping) <- valid_idx
+    # Convert original coordinates to coordinates in cleaned sequence
+    new_coords <- as.integer(mapping[as.character(gapped_pos)])
+    # Return the gapped index corresponding to the ungapped position
+    return(new_coords)
+}
+
 ################ import functions from cute little functions toolbox
 
 fun_source_test(path = cute, script = script)
@@ -568,7 +598,6 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
         gff_rows <- list()
         gff_rows_jalv <- list()
         for(i3 in 1:length(selected_index)){
-            mixed_colon_correction <- 0
             for(i4 in 1:length(get(paste0(i2, "_features")))){
                 if( ! is.null(get(paste0(i2, "_column_start")))){
                     # nuc coordinates
@@ -598,28 +627,20 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
                             }
                         }
                     }
-                    if(nuc_or_aa == "aa"){
-                        start_coord_jalv <- start_coord - mixed_colon_correction
-                        end_coord_jalv <- end_coord - mixed_colon_correction
-                    }else{
-                        start_coord_jalv <- start_coord
-                        end_coord_jalv <- end_coord
-                    }
                     # shifed coordinates due to hyphens in the aligned seq
                     if( ! is.na(start_coord)){
+                        # I have to use shifted coordinates to gapped seq then shifted coordinates to ungapped seq, to solve problems of coordinates, notably mixed codons (nuc and hyphens or dots)
                         start_coord <- map_ungapped_to_gapped(seq_aligned = seq_aligned[i3], ungapped_pos = start_coord)
+                        start_coord_jalv <- map_gapped_to_ungapped(seq_aligned = seq_aligned[i3], gapped_pos = start_coord, script = script)
+                    }else{
+                        start_coord_jalv <- start_coord
                     }
                     if( ! is.na(end_coord)){
+                        # I have to use shifted coordinates to gapped seq then shifted coordinates to ungapped seq, to solve problems of coordinates, notably mixed codons (nuc and hyphens or dots)
                         end_coord <- map_ungapped_to_gapped(seq_aligned = seq_aligned[i3], ungapped_pos = end_coord)
-                        if(nuc_or_aa == "aa"){
-                            if(( ! is.na(df[selected_index[i3], "mixed_codon_positions"])) & ( ! is.na(start_coord))){
-                                tempo_pos <- as.integer(unlist(strsplit(as.character(df[selected_index[i3], "mixed_codon_positions"]), ";")))
-                                if(any(tempo_pos <= end_coord & tempo_pos > start_coord)){
-                                    mixed_colon_correction <- mixed_colon_correction + 1
-                                    end_coord_jalv <- end_coord_jalv - mixed_colon_correction
-                                }
-                            }
-                        }
+                        end_coord_jalv <- map_gapped_to_ungapped(seq_aligned = seq_aligned[i3], gapped_pos = end_coord, script = script)
+                    }else{
+                        end_coord_jalv <- end_coord
                     }
                     # end shifed coordinates due to hyphens in the aligned seq
                     # end aa coordinates
