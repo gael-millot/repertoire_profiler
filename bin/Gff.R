@@ -67,8 +67,8 @@ script <- "Gff"
 
 ### Arguments : 
 
-# fasta_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/example_of_results/repertoire_profiler_1762527194/alignments/aa/sequence_alignment_aa_clone_id_10_IGHV4-34_IGHJ6_aligned_aa.fasta"
-# tsv_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/example_of_results/repertoire_profiler_1762527194/tsv/clone_assigned_seq.tsv"
+# fasta_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1765310139/alignments/nuc/sequence_alignment_aligned_nuc.fasta"
+# tsv_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1765310139/tsv/productive_seq.tsv"
 # Name <- "sequence_id"                # name of the column containing the sequence ids
 # align_seq <- "sequence_alignment"        # name of the columns containing the sequences to put in the fasta file (can be a single string or several strings seperated by "," if several columns are needed. the fastas will then be created in different folders)
 # align_clone_nb <- 3                    # Minimum number of rows in the tsv file. The program expects this to be respected, otherwise raises an error.
@@ -76,6 +76,14 @@ script <- "Gff"
 # tag <- "CLONE"
 # log <- "Tsv2fastaGff.log"
 
+# fasta_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1765310139/alignments/nuc/all/sequence_alignment_aligned_nuc.fasta"
+# tsv_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1765310139/tsv/productive_seq.tsv"
+# Name <- "sequence_id"                # name of the column containing the sequence ids
+# align_seq <- "sequence_alignment"        # name of the columns containing the sequences to put in the fasta file (can be a single string or several strings seperated by "," if several columns are needed. the fastas will then be created in different folders)
+# align_clone_nb <- 3                    # Minimum number of rows in the tsv file. The program expects this to be respected, otherwise raises an error.
+# cute <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/bin/cute_little_R_functions_v12.8.R"
+# tag <- "ALL"
+# log <- "Tsv2fastaGff.log"
 
 
 ################################# End test
@@ -239,7 +247,7 @@ map_ungapped_to_gapped <- function(seq_aligned, ungapped_pos) {
     }
 }
 
-map_gapped_to_ungapped <- function(seq_aligned, gapped_pos, script) {
+map_gapped_to_ungapped <- function(seq_aligned, gapped_pos, script){
 # AIM
 # shift vdjc or fwr/cdr position provided in the .tsv file, according to the removal of hyphens (--) and dots (...) inserted in the aligned sequences, to have the correct positions of the features in the aligned sequences in jalview.
 # ARGUMENTS
@@ -261,9 +269,10 @@ map_gapped_to_ungapped <- function(seq_aligned, gapped_pos, script) {
     }
     # Create a map from original positions to cleaned sequence positions
     valid_idx <- which(!seq_chars %in% c(".", "-"))
-    mapping <- seq_along(valid_idx)
+    mapping <- seq_along(valid_idx) # index of valid_idx, i.e., 1....n
     names(mapping) <- valid_idx
     # Convert original coordinates to coordinates in cleaned sequence
+    if(gapped_pos > max(valid_idx)){gapped_pos <- max(valid_idx)} # this if ever the fasta seq is truncated compared to the feature gapped_pos coordinate
     new_coords <- as.integer(mapping[as.character(gapped_pos)])
     # Return the gapped index corresponding to the ungapped position
     return(new_coords)

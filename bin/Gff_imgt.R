@@ -206,7 +206,7 @@ fun_source_test <- function(path, script){ # do not write script = script: can p
 }
 
 
-map_gapped_to_ungapped <- function(seq_aligned, gapped_pos, script) {
+map_gapped_to_ungapped <- function(seq_aligned, gapped_pos, script){
 # AIM
 # shift vdjc or fwr/cdr position provided in the .tsv file, according to the removal of hyphens (--) and dots (...) inserted in the aligned sequences, to have the correct positions of the features in the aligned sequences in jalview.
 # ARGUMENTS
@@ -228,9 +228,10 @@ map_gapped_to_ungapped <- function(seq_aligned, gapped_pos, script) {
     }
     # Create a map from original positions to cleaned sequence positions
     valid_idx <- which(!seq_chars %in% c(".", "-"))
-    mapping <- seq_along(valid_idx)
+    mapping <- seq_along(valid_idx) # index of valid_idx, i.e., 1....n
     names(mapping) <- valid_idx
     # Convert original coordinates to coordinates in cleaned sequence
+    if(gapped_pos > max(valid_idx)){gapped_pos <- max(valid_idx)} # this if ever the fasta seq is truncated compared to the feature gapped_pos coordinate
     new_coords <- as.integer(mapping[as.character(gapped_pos)])
     # Return the gapped index corresponding to the ungapped position
     return(new_coords)

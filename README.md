@@ -802,6 +802,13 @@ Special acknowledgement to:
 <br><br>
 ## WHAT'S NEW IN
 
+#### v22.0
+
+- Strong improvement in result display.
+- Features of alignments now clean in many configurations.
+- README file strongly updated for all the explanations.
+- tsv files with many columns added.
+
 #### v21.5
 
 - Apptainer image pulling with time limit increased.

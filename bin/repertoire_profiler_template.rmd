@@ -299,6 +299,8 @@ Such alignments were obtain using [Mafft](https://mafft.cbrc.jp/alignment/server
     ')
 }
 ```
+Warning in clonal group alignments ([alignments/nuc/clonal](./alignments/nuc/clonal) and [alignments/aa/clonal](./alignments/aa/clonal) folders):<br><ul><li>Short sequences sometimes hardly align with the full length germline clonal sequence.<br></li><li>FWR/CDR feature highlighting (.gff files) is not correct at the FWR3 / CDR3 junction, due to the stretch of hyphens and N/X in that region, but coordinates reported in the <i>clonal_germline_fwr3_end</i> and <i>clonal_germline_cdr3_start</i> columns of the <i>clone_assigned_seq.tsv</i> should correctly indicate the TGT (cys) boundary.
+
 <br>
 
 ###  Phylogeny
@@ -316,7 +318,7 @@ Tree scale is the number of mutations per position. Multiply by the length of th
 ###  Backup
 
 
-See the [reports](./reports) folder for all the details of the analysis, including:<br><ul><li>**nextflow.config** Parameter settings.<br></li><li>**Run_info.txt** Variables.<br></li><li>**trace.txt** and **timeline.html** Date of execution, CPU% and Memory requirement for each steps.<br></ul>
+See the [reports](./reports) folder for all the details of the analysis, including:<br><ul><li>**nextflow.config** Parameter settings.<br></li><li>**Run_info.txt** Variables.<br></li><li>**trace.txt** and **timeline.html** Date of execution, CPU% and Memory requirement for each step.<br></ul>
 
 ```{r include = FALSE}
 #remove work directory from current directory
