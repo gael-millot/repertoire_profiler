@@ -283,7 +283,7 @@ If the text is cut in the table, reload the page or change the width of the wind
             report.html
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            HTML report presenting the main results of the data processing. Its content will be gradually expanded to provide a more comprehensive analysis. 
+            HTML report presenting the main results of the data processing. 
         </td>
     </tr>
     <tr>
@@ -740,7 +740,10 @@ If the text is cut in the table, reload the page or change the width of the wind
 ## VERSIONS
 
 
-The different releases are tagged [here](https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/tags).
+The different releases are [here](https://github.com/gael-millot/repertoire_profiler/releases).
+
+The different tagged versions are [here](https://github.com/gael-millot/repertoire_profiler/tags).
+
 
 <br><br>
 ## LICENCE
