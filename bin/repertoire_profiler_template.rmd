@@ -161,8 +161,6 @@ See the productive_seq.tsv and the failed_productive_seq.tsv files in the [tsv](
 
 ### Repertoire summary
 
-<br>
-
 Compilation of the [productive_seq.tsv](./tsv) file (and also of the [clone_assigned_seq.tsv](./tsv) file for the donut plots).
 
 <br>
@@ -211,8 +209,6 @@ Warning: only the first annotation is considered if several are presents in the 
 
 ###  Clonal prediction
 
-<br>
-
 **Clone-assigned sequences** are productive sequences with additionnal features:<br><ul><li>germline clustering (clone ID).<br></li><li>inference of clonal germline sequence (different from the sequence germline inference).<br></li><li>mutation load.<br></ul> 
 
 Number of clone-assigned sequences: ```r params$nb_clone_assigned```&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
@@ -254,7 +250,7 @@ Threshold value set in the `clone_distance` parameter of the *nextflow.config* f
 
 This value is used to assemble sequences into clonal groups.
 
-On the graphs below, the vertical bar (threshold value) must separate the two bumps of the bimodal distributions.
+On the graphs below, the vertical dotted red line (threshold value) must separate the two bumps of the bimodal distributions.
 
 If it is not the case, please adapt the value of the `clone_distance` parameter and rerun.
 
@@ -271,8 +267,6 @@ If no bimodal distribution is observed, it means that the number of sequences an
 <br><br><br>
 
 ### Sequence alignments
-
-<br>
 
 Sequence Alignments are available in the [alignments/nuc](./alignments/nuc) folder for nucleotide alignments and in the [alignments/aa](./alignments/aa) folder for amino acids alignments. Click on the desired html files to see the alignments.<br><br>See [here](reports/alignments_viz.html) the ways to deal with alignment visualization and saving.
 
@@ -299,12 +293,11 @@ Such alignments were obtain using [Mafft](https://mafft.cbrc.jp/alignment/server
     ')
 }
 ```
-Warning in clonal group alignments ([alignments/nuc/clonal](./alignments/nuc/clonal) and [alignments/aa/clonal](./alignments/aa/clonal) folders):<br><ul><li>Short sequences sometimes hardly align with the full length germline clonal sequence.<br></li><li>FWR/CDR feature highlighting (.gff files) is not correct at the FWR3 / CDR3 junction, due to the stretch of hyphens and N/X in that region, but coordinates reported in the <i>clonal_germline_fwr3_end</i> and <i>clonal_germline_cdr3_start</i> columns of the <i>clone_assigned_seq.tsv</i> should correctly indicate the TGT (cys) boundary.
+Warning in clonal group alignments ([alignments/nuc/clonal](./alignments/nuc/clonal) and [alignments/aa/clonal](./alignments/aa/clonal) folders):<br><ul><li>short sequences sometimes hardly align with the full length germline clonal sequence.<br></li><li>FWR/CDR feature highlighting (.gff files) is not correct at the FWR3 / CDR3 junction, due to the stretch of hyphens and N/X in that region, but coordinates reported in the <i>clonal_germline_fwr3_end</i> and <i>clonal_germline_cdr3_start</i> columns of the <i>clone_assigned_seq.tsv</i> should correctly indicate the TGT (cys) boundary.
 
 <br>
 
 ###  Phylogeny
-<br>
 
 `r  if(params$itol_subscription == "TRUE"){"Open the different **sequences_\\<SEQ_NAME\\>_align.fasta_itol_url.txt** files in the [phylo/aa](./phylo/aa) folder and click on the link to see the trees."}`
 `r  if(params$itol_subscription == "FALSE"){"To see the trees, follow the link: https://itol.embl.de/upload.cgi. Choose a name for your tree (optional) and upload a '*.treefile' file from the [phylo/aa](./phylo/aa) folder. The trees will then be displayed by iTOL."}`
@@ -316,7 +309,6 @@ Tree scale is the number of mutations per position. Multiply by the length of th
 <br><br>
 
 ###  Backup
-
 
 See the [reports](./reports) folder for all the details of the analysis, including:<br><ul><li>**nextflow.config** Parameter settings.<br></li><li>**Run_info.txt** Variables.<br></li><li>**trace.txt** and **timeline.html** Date of execution, CPU% and Memory requirement for each step.<br></ul>
 
