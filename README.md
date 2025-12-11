@@ -1,3 +1,6 @@
+
+<img src="images/repertoire_profiler.gif" align="right" width="300" alt="Demo GIF">
+
 | Usage | Requirement |
 | :--- | :--- |
 | [![Nextflow](https://img.shields.io/badge/code-Nextflow-blue?style=plastic)](https://www.nextflow.io/) | [![Dependencies: Nextflow Version](https://img.shields.io/badge/Nextflow-v24.10.4-blue?style=plastic)](https://github.com/nextflow-io/nextflow) |
