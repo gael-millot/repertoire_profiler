@@ -89,29 +89,29 @@ if( ! (igblast_loci in String) ){
 }
 if( ! (igblast_heavy_chain in String) ){
     error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_heavy_chain PARAMETER IN nextflow.config FILE:\n${igblast_heavy_chain}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-}else if( ! (igblast_heavy_chain == "TRUE" || igblast_heavy_chain == "FALSE" || igblast_heavy_chain == "true" ||igblast_heavy_chain == "false") ){
-    error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_heavy_chain PARAMETER IN nextflow.config FILE:\n${igblast_heavy_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\" (OR \"true\" OR \"false\") \n\n========\n\n"
+}else if( ! (igblast_heavy_chain == "TRUE" || igblast_heavy_chain == "FALSE") ){
+    error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_heavy_chain PARAMETER IN nextflow.config FILE:\n${igblast_heavy_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\".\n\n========\n\n"
 }
 if( ! (igblast_lambda_chain in String) ){
     error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_lambda_chain PARAMETER IN nextflow.config FILE:\n${igblast_lambda_chain}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-}else if( ! (igblast_lambda_chain == "TRUE" || igblast_lambda_chain == "FALSE" || igblast_lambda_chain == "true" ||igblast_lambda_chain == "false") ){
-    error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_lambda_chain PARAMETER IN nextflow.config FILE:\n${igblast_lambda_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\" (OR \"true\" OR \"false\") \n\n========\n\n"
+}else if( ! (igblast_lambda_chain == "TRUE" || igblast_lambda_chain == "FALSE") ){
+    error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_lambda_chain PARAMETER IN nextflow.config FILE:\n${igblast_lambda_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\".\n\n========\n\n"
 }
 if( ! (igblast_kappa_chain in String) ){
     error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_kappa_chain PARAMETER IN nextflow.config FILE:\n${igblast_kappa_chain}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-}else if( ! (igblast_kappa_chain == "TRUE" || igblast_kappa_chain == "FALSE" || igblast_kappa_chain == "true" ||igblast_kappa_chain == "false") ){
-    error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_kappa_chain PARAMETER IN nextflow.config FILE:\n${igblast_kappa_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\" (OR \"true\" OR \"false\") \n\n========\n\n"
+}else if( ! (igblast_kappa_chain == "TRUE" || igblast_kappa_chain == "FALSE") ){
+    error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID igblast_kappa_chain PARAMETER IN nextflow.config FILE:\n${igblast_kappa_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\".\n\n========\n\n"
 }
 // Checking of studied chain coherence
-if (heavy && (lambda || kappa)) {
-    error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID PARAMETERS IN nextflow.config FILE:\nHEAVY (igblast_heavy_chain) AND LIGHT (igblast_lambda_chain, igblast_kappa_chain) CHAIN LOCI CANNOT BOTH BE TRUE.\nHERE ARE THEIR CURRENT VALUES: \nigblast_heavy_chain: ${igblast_heavy_chain}\nigblast_lambda_chain: ${igblast_lambda_chain}\nigblast_kappa_chain: ${igblast_kappa_chain}\n\n========\n\n"
+if (igblast_heavy_chain == "TRUE"  && (igblast_lambda_chain == "TRUE" || igblast_kappa_chain == "TRUE" )) {
+    error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID PARAMETERS IN nextflow.config FILE:\nFOR THE MOMENT, HEAVY (igblast_heavy_chain) AND LIGHT (igblast_lambda_chain, igblast_kappa_chain) CHAIN LOCI CANNOT BOTH BE TRUE.\nHERE ARE THEIR CURRENT VALUES: \nigblast_heavy_chain: ${igblast_heavy_chain}\nigblast_lambda_chain: ${igblast_lambda_chain}\nigblast_kappa_chain: ${igblast_kappa_chain}\n\n========\n\n"
 }
-if (!heavy && !lambda && !kappa) {
+if (!igblast_heavy_chain && !igblast_lambda_chain && !igblast_kappa_chain) {
     error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID PARAMETERS IN nextflow.config FILE:\nAT LEAST ONE OF igblast_heavy_chain, igblast_lambda_chain OR igblast_kappa_chain MUST BE TRUE\nHERE ARE THEIR CURRENT VALUES: \nigblast_heavy_chain: ${igblast_heavy_chain}\nigblast_lambda_chain: ${igblast_lambda_chain}\nigblast_kappa_chain: ${igblast_kappa_chain}\n\n========\n\n"
 }
-if ([heavy, lambda, kappa].count { it } > 2) {
-    error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID PARAMETERS IN nextflow.config FILE:\nONLY ONE OF igblast_heavy_chain AND LIGHT CHAINS (igblast_lambda_chain, igblast_kappa_chain) CAN BE TRUE AT A TIME\nHERE ARE THEIR CURRENT VALUES: \nigblast_heavy_chain: ${igblast_heavy_chain}\nigblast_lambda_chain: ${igblast_lambda_chain}\nigblast_kappa_chain: ${igblast_kappa_chain}\n\n========\n\n"
-}
+//if ([heavy, lambda, kappa].count { it } > 2) {
+    //error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID PARAMETERS IN nextflow.config FILE:\nONLY ONE OF igblast_heavy_chain AND LIGHT CHAINS (igblast_lambda_chain, igblast_kappa_chain) CAN BE TRUE AT A TIME\nHERE ARE THEIR CURRENT VALUES: \nigblast_heavy_chain: ${igblast_heavy_chain}\nigblast_lambda_chain: ${igblast_lambda_chain}\nigblast_kappa_chain: ${igblast_kappa_chain}\n\n========\n\n"
+//}
 
 // Clonal groups (clustering) and mutation load
 if( ! (clone_strategy in String) ){

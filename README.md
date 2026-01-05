@@ -161,8 +161,9 @@ export NEXTFLOW_CONF_AFTER=bin/nextflow # on maestro
 
 MODULES="${CONF_BEFORE}/${JAVA_CONF}/${JAVA_CONF_AFTER},${CONF_BEFORE}/${APP_CONF}/${APP_CONF_AFTER},${CONF_BEFORE}/${GIT_CONF}/${GIT_CONF_AFTER},${CONF_BEFORE}/${GRAPHVIZ_CONF}/${GRAPHVIZ_CONF_AFTER},${CONF_BEFORE}/${GRAALVM_CONF}/${GRAALVM_CONF_AFTER},${CONF_BEFORE}/${NEXTFLOW_CONF}/${NEXTFLOW_CONF_AFTER}"
 cd ${EXEC_PATH}
-chmod 755 ${EXEC_PATH}/bin/*.* # not required if no bin folder
-module load ${JAVA_CONF} ${APP_CONF} ${GIT_CONF} ${GRAPHVIZ_CONF} ${GRAALVM_CONF} ${NEXTFLOW_CONF}
+chmod -R 755 ${EXEC_PATH}/bin/*.* # nextflow needs x authorization for all files and subfolder files
+module load ${JAVA_CONF} ${APP_CONF} ${GIT_CONF} ${GRAPHVIZ_CONF} ${GRAALVM_CONF}
+module load ${NEXTFLOW_CONF}
 </pre>
 
 <br><br>
@@ -784,7 +785,7 @@ The developers & maintainers of the mentioned softwares and packages, including:
 
 - [R](https://www.r-project.org/)
 - [ggplot2](https://ggplot2.tidyverse.org/)
-- [immacantation](https://immcantation.readthedocs.io/en/stable/)
+- [immcantation](https://immcantation.readthedocs.io/en/stable/)
 - [ggtree](https://yulab-smu.top/treedata-book/)
 - [Python](https://www.python.org/)
 - [Abalign](http://cao.labshare.cn/abalign/)

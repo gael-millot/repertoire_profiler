@@ -28,6 +28,7 @@ process Igblast_query {
     #!/bin/bash -ue
 
     # variables
+    # REPO_PATH: single character string of the path of the database provided by igblast indicating a folder of fasta files, WITHOUT the last /. Normally, only the organism name should be changed in the path, to be the same as in the igblast_organism parameter. Example: igblast_database_path="germlines/imgt/human/vdj". Example: igblast_database_path="germlines/imgt/mouse/vdj". Warnings (for developers only): (1) see \\wsl\$\\Ubuntu-20.04\\home\\gmillot\\share for the different possibilities of paths and (2) change this code in the .nf file " MakeDb.py igblast -i \${FILE}_igblast.fmt7 -s ${fs_ch} -r \${REPO_PATH}/imgt_human_IGHV.fasta \${REPO_PATH}/imgt_human_IGHD.fasta \${REPO_PATH}/imgt_human_IGHJ.fasta --extended" if the present path is modified.
     REPO_PATH="/usr/local/share/germlines/imgt/${igblast_organism}/vdj" # path where the imgt_human_IGHV.fasta, imgt_human_IGHD.fasta and imgt_human_IGHJ.fasta files are in the docker container
     VDJ_FILES=\$(awk -v var1="${igblast_variable_ref_files}" -v var2="\${REPO_PATH}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}')
     FILENAME=\$(basename -- "${fs_ch}") # recover a file name without path

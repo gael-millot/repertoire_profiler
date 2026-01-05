@@ -74,18 +74,28 @@ def translate_with_gaps_and_mixed(nuc_seq):
 
     protein = ''.join(protein_seq)
     mixed_str = ';'.join(mixed_positions)
-    return protein, mixed_str
+    # return the aa seq and the mixed codon positions
+    return protein, mixed_str 
 
 # --- 1) import TSV file (header + single line) ---
 df = pd.read_csv("${add_dotted_coord_ch}", sep="\\t")
 
 # --- 2) get nucleotide sequence and 3) translate keeping dots and hyphens ---
-translated = df["sequence_alignment_with_gaps"].apply(translate_with_gaps_and_mixed)
-df["sequence_alignment_with_gaps_aa"] = translated.apply(lambda x: x[0])
-df["mixed_codon_positions"] = translated.apply(lambda x: x[1])
+def safe_translate(nuc_seq):
+    # treat NA/None as missing: return missing outputs
+    if pd.isna(nuc_seq):
+        return (pd.NA, pd.NA)
+    return translate_with_gaps_and_mixed(nuc_seq)
+
+translated = df["sequence_alignment_with_gaps"].apply(safe_translate)
+df["sequence_alignment_with_gaps_aa"] = translated.apply(lambda x: x[0]) # taken the first element
+df["mixed_codon_positions"] = translated.apply(lambda x: x[1]) # taken the second element
 
 # --- 5) compare AA sequences (ignore dots/hyphens) ---
 def compare_ignore_gaps(seq1, seq2):
+    if pd.isna(seq1) or pd.isna(seq2):
+        return pd.NA
+
     s1 = seq1.replace('.', '').replace('-', '')
     s2 = seq2.replace('.', '').replace('-', '')
     return s1 == s2
