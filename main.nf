@@ -106,11 +106,17 @@ process igblast_data_check { // cannot be igblast_data_check outside of process 
 
     input:
     val igblast_organism
-    val igblast_variable_ref_files
+    val igblast_v_ref_files
+    val igblast_d_ref_files
+    val igblast_j_ref_files
     val igblast_constant_ref_files
 
     output:
-    path "*.tsv", emit: igblast_data_check_ch
+    path "*.tsv.v", emit: allele_names_tsv_v_ch // v tsv files with allele names
+    path "*.tsv.d", emit: allele_names_tsv_d_ch // d tsv files with allele names
+    path "*.tsv.j", emit: allele_names_tsv_j_ch // j tsv files with allele names
+    path "*.tsv.c", emit: allele_names_tsv_c_ch // c tsv files with allele names
+    path "*.tsv", emit: allele_names_tsv_all_ch // all tsv files with allele names
 
     script:
     """
@@ -118,9 +124,11 @@ process igblast_data_check { // cannot be igblast_data_check outside of process 
     set -o pipefail
     REPO_PATH_VAR="/usr/local/share/germlines/imgt/${igblast_organism}/vdj" # path where the imgt .fasta reference seq files are in the docker container
     REPO_PATH_CONST="/usr/local/share/germlines/imgt/${igblast_organism}/constant" # path where the imgt .fasta reference seq files are in the docker container
-    VDJ_FILES=\$(awk -v var1="${igblast_variable_ref_files}" -v var2="\${REPO_PATH_VAR}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}') # assemble files with their path
+    V_FILES=\$(awk -v var1="${igblast_v_ref_files}" -v var2="\${REPO_PATH_VAR}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}') # assemble files with their path
+    D_FILES=\$(awk -v var1="${igblast_d_ref_files}" -v var2="\${REPO_PATH_VAR}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}') # assemble files with their path
+    J_FILES=\$(awk -v var1="${igblast_j_ref_files}" -v var2="\${REPO_PATH_VAR}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}') # assemble files with their path
     CONST_FILES=\$(awk -v var1="${igblast_constant_ref_files}" -v var2="\${REPO_PATH_CONST}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}') # assemble files with their path
-    for i1 in \$VDJ_FILES ; do
+    for i1 in \$V_FILES ; do
         if [[ ! -e \${i1} ]] ; then
             echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nFILE DOES NOT EXISTS:\\n\${i1}\\n\\nINDICATED PATH:\\n\${REPO_PATH_VAR}\\n\\nCONTAINS:\\n"
             ls -la -w 1 \${REPO_PATH_VAR}
@@ -129,7 +137,34 @@ process igblast_data_check { // cannot be igblast_data_check outside of process 
         else
             FILENAME=\$(basename -- "\${i1}") # recover a file name without path
             FILENAME="\${FILENAME%.*}" # remove extension
-            grep -E '^>.*\$' \${i1} | cut -f2 -d'|' > \${FILENAME}.tsv # detect line starting by > and extract the 2nd field after cutting by |
+            grep -E '^>.*\$' \${i1} | cut -f2 -d'|' > \${FILENAME}.tsv.v # detect line starting by > and extract the 2nd field after cutting by |
+            cp \${FILENAME}.tsv.v \${FILENAME}.tsv
+        fi
+    done
+    for i1 in \$D_FILES ; do
+        if [[ ! -e \${i1} ]] ; then
+            echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nFILE DOES NOT EXISTS:\\n\${i1}\\n\\nINDICATED PATH:\\n\${REPO_PATH_VAR}\\n\\nCONTAINS:\\n"
+            ls -la -w 1 \${REPO_PATH_VAR}
+            echo -e "\\n\\n========\\n\\n"
+            exit 1
+        else
+            FILENAME=\$(basename -- "\${i1}") # recover a file name without path
+            FILENAME="\${FILENAME%.*}" # remove extension
+            grep -E '^>.*\$' \${i1} | cut -f2 -d'|' > \${FILENAME}.tsv.d # detect line starting by > and extract the 2nd field after cutting by |
+            cp \${FILENAME}.tsv.d \${FILENAME}.tsv
+        fi
+    done
+    for i1 in \$J_FILES ; do
+        if [[ ! -e \${i1} ]] ; then
+            echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nFILE DOES NOT EXISTS:\\n\${i1}\\n\\nINDICATED PATH:\\n\${REPO_PATH_VAR}\\n\\nCONTAINS:\\n"
+            ls -la -w 1 \${REPO_PATH_VAR}
+            echo -e "\\n\\n========\\n\\n"
+            exit 1
+        else
+            FILENAME=\$(basename -- "\${i1}") # recover a file name without path
+            FILENAME="\${FILENAME%.*}" # remove extension
+            grep -E '^>.*\$' \${i1} | cut -f2 -d'|' > \${FILENAME}.tsv.j # detect line starting by > and extract the 2nd field after cutting by |
+            cp \${FILENAME}.tsv.j \${FILENAME}.tsv
         fi
     done
     for i1 in \$CONST_FILES ; do
@@ -141,7 +176,8 @@ process igblast_data_check { // cannot be igblast_data_check outside of process 
         else
             FILENAME=\$(basename -- "\${i1}") # recover a file name without path
             FILENAME="\${FILENAME%.*}" # remove extension
-            grep -E '^>.*\$' \${i1} | cut -f2 -d'|' > \${FILENAME}.tsv # detect line starting by > and extract the 2nd field after cutting by |
+            grep -E '^>.*\$' \${i1} | cut -f2 -d'|' > \${FILENAME}.tsv.c # detect line starting by > and extract the 2nd field after cutting by |
+            cp \${FILENAME}.tsv.c \${FILENAME}.tsv
         fi
     done
     """
@@ -318,7 +354,7 @@ process repertoire {
 
     input:
     path seq_name_replacement_ch2 // no parallelization
-    path igblast_data_check_ch
+    path allele_names_tsv_all_ch
     path cute_file
 
     output:
@@ -334,7 +370,7 @@ process repertoire {
     set -o pipefail
     repertoire.R \
 "${seq_name_replacement_ch2}" \
-"${igblast_data_check_ch}" \
+"${allele_names_tsv_all_ch}" \
 "${cute_file}" \
 "repertoire.log"
     """
@@ -363,7 +399,7 @@ process distToNearest {
     #!/bin/bash -ue
     set -o pipefail
     Rscript -e '
-         # WEIRD stuf: if db alone is returned, and if distToNearest_ch is used for the clone_assignment process and followings, everything is fine. But if db3 is returned with db3 <- data.frame(db, dist_nearest = db2\$dist_nearest) or db3 <- data.frame(db, caca = db2\$dist_nearest) or data.frame(db, caca = db\$sequence_id) or db3 <- data.frame(db, caca = as.numeric(db2\$dist_nearest)) or db3 <- data.frame(db[1:3], caca = db\$sequence_id, db[4:length(db)]), the get_germ_tree process cannot make trees, while the productive.tsv seem identical at the end, between the use of db or db3, except that the clone_id order is not the same
+         # WEIRD stuf: if db alone is returned, and if distToNearest_ch is used for the clone_assignment process and followings, everything is fine. But if db3 is returned with db3 <- data.frame(db, dist_nearest = db2\$dist_nearest) or db3 <- data.frame(db, d = db2\$dist_nearest) or data.frame(db, d = db\$sequence_id) or db3 <- data.frame(db, d = as.numeric(db2\$dist_nearest)) or db3 <- data.frame(db[1:3], d = db\$sequence_id, db[4:length(db)]), the get_germ_tree process cannot make trees, while the productive.tsv seem identical at the end, between the use of db or db3, except that the clone_id order is not the same
         db <- read.table("${trimtranslate_ch2}", header = TRUE, sep = "\\t")
         db2 <- shazam::distToNearest(db, sequenceColumn = "junction", locusColumn = "locus", model = "${clone_model}", normalize = "${clone_normalize}", nproc = 1)
         write.table(db2, file = paste0("./nearest_distance.tsv"), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
@@ -568,7 +604,7 @@ process split_by_clones { // split the file into multiple files according to the
 // Inputs:
 //      - closest_ch: tsv file containing at least germline_(v|d|j)_call column (otherwise error), sequences already regrouped in clonal groups
 //      - igblast_organism: value specified in nextflow.config
-//      - igblast_variable_ref_files: also specified in nextflow.config, contains germline ref sequences of IMGT database
+//  contains germline ref sequences of IMGT database
 //                                     allele names already contained in the tsv will be used to search in thos files for the corresponding sequence
 // Outputs:
 //      - add_germ_ch: same tsv file as closest_ch, with the addition of the new germline_._seq columns
@@ -737,7 +773,7 @@ process Abalign_align_aa {
     input:
     tuple path(fasta_nuc), path(fasta_aa), val(seq_kind) // parallelization expected (by clonal groups over align_clone_nb sequences)
     val igblast_organism
-    val igblast_heavy_chain
+    val igblast_B_heavy_chain
     val align_abalign_options
     
     output:
@@ -745,11 +781,11 @@ process Abalign_align_aa {
     path "Abalign_align_aa.log", emit: abalign_align_aa_log_ch
     
     script:
-    if( ! (igblast_heavy_chain == "TRUE" || igblast_heavy_chain == "FALSE") ){
+    if( ! (igblast_B_heavy_chain == "TRUE" || igblast_B_heavy_chain == "FALSE") ){
         error "\n\n========\n\nERROR IN Abalign_align_aa PROCESS\n\nINVALID heavy_chain PARAMETER:\n${heavy_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
     }
     parms="-al"
-    if(igblast_heavy_chain == "TRUE"){parms="-ah"}
+    if(igblast_B_heavy_chain == "TRUE"){parms="-ah"}
     // Choose the species parameter for abalign
     switch (igblast_organism) {
         case "mouse":
@@ -1018,7 +1054,7 @@ process donut {
     val donut_legend_box_space
     val donut_legend_limit
     path cute_file
-    path igblast_data_check_ch
+    path allele_names_tsv_all_ch
 
     output:
     path "*.tsv", emit: donut_tsv_ch, optional: true
@@ -1054,7 +1090,7 @@ process donut {
 "${donut_legend_box_space}" \
 "${donut_legend_limit}" \
 "${cute_file}" \
-"${igblast_data_check_ch}" \
+"${allele_names_tsv_all_ch}" \
 "${kind}_donut.log"
     """
 }
@@ -1350,12 +1386,12 @@ process backup {
 include { CheckVariables } from './conf/checks.nf'
 include { reportEmptyProcess; copyLogFile } from './modules/subscribe_helpers.nf'
 include { Igblast_query } from './modules/igblast_query'
+include { Igblast_chain_check } from './modules/igblast_chain_check'
 include { TrimTranslate } from './modules/trim_translate'
 include { parseDb_filtering } from './modules/parseDb_filtering'
 include { Add_dotted_coord } from './modules/add_dotted_coord'
 include { Translate_with_IMGT_gaps } from './modules/translate_with_imgt_gaps'
 include { data_assembly } from './modules/data_assembly'
-include { Igblast_chain_check } from './modules/igblast_chain_check'
 include { Mutation_load_germ_genes } from './modules/mutation_load_germ_genes'
 include { Igblast_germline_coords } from './modules/igblast_germline'
 include { Closest_germline } from './modules/closest_germline'
@@ -1428,7 +1464,6 @@ workflow {
 
     // CONSTRUCTION OF THE igblast REFERENCE FILES PATHS
 
-    igblast_variable_ref_files = ""
     igblast_v_ref_files = ""
     igblast_d_ref_files = ""
     igblast_j_ref_files = ""
@@ -1440,12 +1475,7 @@ workflow {
     def j_files = []
     def const_files = []
 
-    if (igblast_heavy_chain == "TRUE") {
-        var_files += [
-            "imgt_${igblast_organism}_IGHV.fasta",
-            "imgt_${igblast_organism}_IGHD.fasta",
-            "imgt_${igblast_organism}_IGHJ.fasta"
-        ]
+    if (igblast_loci == "ig" && igblast_B_heavy_chain == "TRUE") {
         v_files += [
             "imgt_${igblast_organism}_IGHV.fasta"
         ]
@@ -1457,11 +1487,7 @@ workflow {
         ]
         const_files += "imgt_${igblast_organism}_IGHC.fasta"
     }
-    if (igblast_lambda_chain == "TRUE") {
-        var_files += [
-            "imgt_${igblast_organism}_IGLV.fasta",
-            "imgt_${igblast_organism}_IGLJ.fasta"
-        ]
+    if (igblast_loci == "ig" && igblast_B_lambda_chain == "TRUE") {
         v_files += [
             "imgt_${igblast_organism}_IGLV.fasta"
         ]
@@ -1470,11 +1496,7 @@ workflow {
         ]
         const_files += "imgt_${igblast_organism}_IGLC.fasta"
     }
-    if (igblast_kappa_chain == "TRUE") {
-        var_files += [
-            "imgt_${igblast_organism}_IGKV.fasta",
-            "imgt_${igblast_organism}_IGKJ.fasta"
-        ]
+    if (igblast_loci == "ig" && igblast_B_kappa_chain == "TRUE") {
         v_files += [
             "imgt_${igblast_organism}_IGKV.fasta"
         ]
@@ -1483,13 +1505,56 @@ workflow {
         ]
         const_files += "imgt_${igblast_organism}_IGKC.fasta"
     }
+    if (igblast_loci == "tr" && igblast_T_alpha_chain == "TRUE") {
+        v_files += [
+            "imgt_${igblast_organism}_TRAV.fasta"
+        ]
+        j_files += [
+            "imgt_${igblast_organism}_TRAJ.fasta"
+        ]
+        const_files += "imgt_${igblast_organism}_TRAC.fasta"
+    }
+    if (igblast_loci == "tr" && igblast_T_beta_chain == "TRUE") {
+        v_files += [
+            "imgt_${igblast_organism}_TRBV.fasta"
+        ]
+        d_files += [
+            "imgt_${igblast_organism}_TRBD.fasta"
+        ]
+        j_files += [
+            "imgt_${igblast_organism}_TRBJ.fasta"
+        ]
+        const_files += "imgt_${igblast_organism}_TRBC.fasta"
+    }
+    if (igblast_loci == "tr" && igblast_T_gamma_chain == "TRUE") {
+        v_files += [
+            "imgt_${igblast_organism}_TRGV.fasta"
+        ]
+        j_files += [
+            "imgt_${igblast_organism}_TRGJ.fasta"
+        ]
+        const_files += "imgt_${igblast_organism}_TRGC.fasta"
+    }
+    if (igblast_loci == "tr" && igblast_T_delta_chain == "TRUE") {
+        v_files += [
+            "imgt_${igblast_organism}_TRDV.fasta"
+        ]
+        d_files += [
+            "imgt_${igblast_organism}_TRDD.fasta"
+        ]
+        j_files += [
+            "imgt_${igblast_organism}_TRDJ.fasta"
+        ]
+        const_files += "imgt_${igblast_organism}_TRDC.fasta"
+    }
 
-    igblast_variable_ref_files = var_files.join(' ').toString()
+    // names of the ref files without path
     igblast_v_ref_files = v_files.join(' ').toString()
     igblast_d_ref_files = d_files.join(' ').toString()
     igblast_j_ref_files = j_files.join(' ').toString()
     igblast_constant_ref_files = const_files.join(' ').toString()
-
+    igblast_variable_ref_files = "${igblast_v_ref_files} ${igblast_d_ref_files} ${igblast_j_ref_files}"
+    // end names of the ref files without path
 
     //////// end Variable modification
 
@@ -1539,7 +1604,9 @@ workflow {
 
     igblast_data_check(
         igblast_organism, 
-        igblast_variable_ref_files,
+        igblast_v_ref_files, 
+        igblast_d_ref_files, 
+        igblast_j_ref_files, 
         igblast_constant_ref_files
     )
 
@@ -1551,7 +1618,7 @@ workflow {
     )
     //tsv_ch1 = Igblast_query.out.db_pass_ch.map { tuple -> tuple[1] } // Only the igblast_db-pass.tsv files (without _igblast.tsv)
     tsv_ch1 = Igblast_query.out.db_pass_ch
-    tsv_ch1.count().subscribe{ n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE Igblast_query PROCESS\n\nCHECK THAT THE igblast_organism, igblast_loci, igblast_heavy_chain, igblast_lambda_chain AND igblast_kappa_chain ARE CORRECTLY SET IN THE nextflow.config FILE\n\n========\n\n"}}
+    tsv_ch1.count().subscribe{ n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE Igblast_query PROCESS\n\nCHECK THAT THE\nigblast_organism\nigblast_loci\nigblast_B_heavy_chain\nigblast_B_lambda_chain\nigblast_B_kappa_chain\nigblast_T_alpha_chain\nigblast_T_beta_chain\nigblast_T_gamma_chain\nigblast_T_delta_chain\nARE CORRECTLY SET IN THE nextflow.config FILE\n\n========\n\n"}}
     tsv_ch2 = tsv_ch1.collectFile(name: "igblast_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
     tsv_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
     db_unpass = Igblast_query.out.db_unpass_ch.collectFile(name: "failed_igblast_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
@@ -1582,8 +1649,37 @@ workflow {
     tsv_ch2.countLines().combine(nb1_b).combine(nb2_b).subscribe{n,n1,n2 -> if(n != n1 + n2 - 1){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE productive_seq.tsv (${n1}) AND failed_productive_seq.tsv (${n2} - 1) IS NOT EQUAL TO THE NUMBER OF FILES IN igblast_seq.tsv (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // n1 + n2 - 1 because header counted in both n1 and n2 while only one header in n
     copyLogFile('ParseDb_filtering.log', parseDb_filtering.out.parseDb_filtering_log_ch, out_path)
 
+
+
+    Igblast_chain_check( // module Igblast_chain_check.nf
+        parseDb_filtering.out.select_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE data_assembly PROCESS\n\n========\n\n"}, 
+        igblast_data_check.out.allele_names_tsv_all_ch, 
+        igblast_v_ref_files, 
+        igblast_d_ref_files, 
+        igblast_j_ref_files, 
+        igblast_constant_ref_files, 
+        cute_file
+    )
+     Igblast_chain_check.out.checked_tsv_ch.count().view()
+    Igblast_chain_check.out.checked_tsv_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FILES FOLLOWING THE Igblast_chain_check PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
+    checked_tsv_ch2 = Igblast_chain_check.out.checked_tsv_ch.collectFile(name: "productive_seq_chain_check.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
+    Igblast_chain_check.out.not_checked_tsv_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nO UNPRODUCTIVE SEQUENCE FILES FOLLOWING THE Igblast_chain_check PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // because an empty file must be present
+    not_checked_tsv_ch2 = Igblast_chain_check.out.not_checked_tsv_ch.collectFile(name: "unwanted_chains.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
+    not_checked_tsv_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
+    nb1_b = checked_tsv_ch2.countLines()
+    nb2_b = not_checked_tsv_ch2.countLines()
+    nb1_b.subscribe { n -> if ( n == 1 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FOLLOWING THE Igblast_chain_check PROCESS\nSEE THE unwanted_chains.tsv FILE IN THE OUTPUT FOLDER\n\n========\n\n"}} // n is the value of nb1_b
+    // nb1_b.map { "Nombre de lignes dans select_ch2 (productive_seq_init.tsv): $it (en comptant le header)" }.view()
+    // nb2_b.map { "Nombre de lignes dans unselect_ch2 (failed_productive_seq.tsv): $it (en comptant le header)" }.view()
+    // tsv_ch2.countLines().map { "Nombre de lignes dans tsv_ch2 (igblast_seq.tsv): $it (en comptant le header)" }.view()
+    select_ch2.countLines().combine(nb1_b).combine(nb2_b).subscribe{n,n1,n2 -> if(n != n1 + n2 - 1){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE productive_seq_chain_check.tsv (${n1}) AND unwanted_chains.tsv (${n2} - 1) IS NOT EQUAL TO THE NUMBER OF FILES IN productive_seq_init.tsv (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // n1 + n2 - 1 because header counted in both n1 and n2 while only one header in n
+    copyLogFile('igblast_chain_check.log', Igblast_chain_check.out.igblast_chain_check_log, out_path)
+
+
+
+
     TrimTranslate(
-        parseDb_filtering.out.select_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE parseDb_filtering PROCESS\n\n========\n\n"}
+        Igblast_chain_check.out.checked_tsv_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE parseDb_filtering PROCESS\n\n========\n\n"}
     )
     TrimTranslate.out.trimtranslate_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FILES FOLLOWING THE TrimTranslate PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // n is number of items in channel because of .count()
     trimtranslate_ch2 = TrimTranslate.out.trimtranslate_ch.collectFile(name: "trimtranslate.tsv", skip: 1, keepHeader: true) // productive file with column sequence_alignment_aa added  // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
@@ -1652,14 +1748,10 @@ workflow {
     )
     data_assembly.out.productive_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE data_assembly PROCESS\n\n========\n\n"}}
 
-    Igblast_chain_check( // module Igblast_chain_check.nf
-        data_assembly.out.productive_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE data_assembly PROCESS\n\n========\n\n"}, 
-        igblast_data_check.out.igblast_data_check_ch, 
-        cute_file
-    )
+
 
     metadata_check(
-        Igblast_chain_check.out.igblast_chain_check_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE data_assembly PROCESS\n\n========\n\n"},
+        data_assembly.out.productive_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE data_assembly PROCESS\n\n========\n\n"},
         meta_file, 
         meta_seq_names, 
         meta_name_replacement,
@@ -1667,13 +1759,13 @@ workflow {
     )
 
     repertoire(
-        Igblast_chain_check.out.igblast_chain_check_ch,
-        igblast_data_check.out.igblast_data_check_ch,
+        data_assembly.out.productive_ch,
+        igblast_data_check.out.allele_names_tsv_all_ch,
         cute_file
     )
 
     clone_assignment(
-        Igblast_chain_check.out.igblast_chain_check_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE data_assembly PROCESS\n\n========\n\n"}, 
+        data_assembly.out.productive_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE data_assembly PROCESS\n\n========\n\n"}, 
         clone_model,
         clone_normalize,
         clone_distance,
@@ -1713,7 +1805,7 @@ workflow {
         igblast_loci
     )
     //tsv_ch1 = Igblast_query.out.db_pass_ch.map { tuple -> tuple[1] } // Only the igblast_db-pass.tsv files (without _igblast.tsv)
-    Igblast_germline_coords.out.germline_coords_ch.count().subscribe{ n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE Igblast_germline_coords PROCESS\n\nCHECK THAT THE igblast_organism, igblast_loci, igblast_heavy_chain, igblast_lambda_chain AND igblast_kappa_chain ARE CORRECTLY SET IN THE nextflow.config FILE\n\n========\n\n"}}
+    Igblast_germline_coords.out.germline_coords_ch.count().subscribe{ n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE Igblast_germline_coords PROCESS\n\nCHECK THAT THE\nigblast_organism\nigblast_loci\nigblast_B_heavy_chain\nigblast_B_lambda_chain\nigblast_B_kappa_chain\nigblast_T_alpha_chain\nigblast_T_beta_chain\nigblast_T_gamma_chain\nigblast_T_delta_chain\nARE CORRECTLY SET IN THE nextflow.config FILE\n\n========\n\n"}}
     copyLogFile('Igblast_germline_coords_report.log', Igblast_germline_coords.out.log_ch, out_path)
 
 
@@ -1836,7 +1928,7 @@ workflow {
 
 
     tempo1_ch = Channel.of("all", "annotated", "tree") // 1 channel with 3 values (not list)
-    tempo2_ch = Igblast_chain_check.out.igblast_chain_check_ch.mix(Igblast_chain_check.out.igblast_chain_check_ch.mix(clone_assigned_seq_ch)) // 1 channel with 3 paths (do not use flatten() -> not list)
+    tempo2_ch = data_assembly.out.productive_ch.mix(data_assembly.out.productive_ch.mix(clone_assigned_seq_ch)) // 1 channel with 3 paths (do not use flatten() -> not list)
     tempo3_ch = tempo1_ch.merge(tempo2_ch) // 3 lists
     tempo4_ch = Channel.of("vj_allele", "c_allele", "vj_gene", "c_gene")
     tempo5_ch = tempo3_ch.combine(tempo4_ch) // 12 tuples
@@ -1859,7 +1951,7 @@ workflow {
         donut_legend_box_space,
         donut_legend_limit,
         cute_file,
-        igblast_data_check.out.igblast_data_check_ch
+        igblast_data_check.out.allele_names_tsv_all_ch
     )
     donut.out.donut_pdf_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut PROCESS\n\n========\n\n"}
     donut.out.donut_pdf_ch.count().subscribe { n -> if ( n == 0 ){
@@ -1883,7 +1975,7 @@ workflow {
 /*
     Reformat(
         aa_tsv_ch2,
-        igblast_data_check.out.igblast_data_check_ch.collect() // To make sure the igblast_ref files are in the right format before executing following processes
+        igblast_data_check.out.allele_names_ch.collect() // To make sure the igblast_ref files are in the right format before executing following processes
     )
     fasta = Reformat.out.aa_fasta_ch
 
@@ -1898,8 +1990,8 @@ workflow {
 
 
     clone_labeled_ch = clone_assigned_seq_filtered_ch.map { file -> tuple(file, 'CLONE') }
-    productive_labeled_ch = Igblast_chain_check.out.igblast_chain_check_ch.map { file -> tuple(file, 'ALL') }
-    imgt_labeled_ch = Igblast_chain_check.out.igblast_chain_check_ch.map { file -> tuple(file, 'IMGT') }
+    productive_labeled_ch = data_assembly.out.productive_ch.map { file -> tuple(file, 'ALL') }
+    imgt_labeled_ch = data_assembly.out.productive_ch.map { file -> tuple(file, 'IMGT') }
     all_files_ch = clone_labeled_ch.mix(productive_labeled_ch, imgt_labeled_ch)
     Tsv2fasta(
         all_files_ch,
@@ -1936,7 +2028,7 @@ workflow {
         Abalign_align_aa(
             Tsv2fasta.out.fasta_align_ch,
             igblast_organism,
-            igblast_heavy_chain,
+            igblast_B_heavy_chain,
             align_abalign_options
         )
         copyLogFile('Abalign_align_aa.log', Abalign_align_aa.out.abalign_align_aa_log_ch, out_path)
@@ -1970,14 +2062,14 @@ workflow {
         ALL  : it[2] == 'ALL'
     }
     clone_for_gff_nuc_ch = branches_nuc.CLONE.combine(clone_assigned_seq_filtered_ch.first())
-    all_for_gff_nuc_ch  = branches_nuc.ALL.combine(Igblast_chain_check.out.igblast_chain_check_ch.first())
+    all_for_gff_nuc_ch  = branches_nuc.ALL.combine(data_assembly.out.productive_ch.first())
     for_gff_nuc_ch = clone_for_gff_nuc_ch.mix(all_for_gff_nuc_ch)
     branches_aa = align_aa_ch.branch {
         CLONE: it[2] == 'CLONE'
         ALL  : it[2] == 'ALL'
     }
     clone_for_gff_aa_ch = branches_aa.CLONE.combine(clone_assigned_seq_filtered_ch.first())
-    all_for_gff_aa_ch  = branches_aa.ALL.combine(Igblast_chain_check.out.igblast_chain_check_ch.first())
+    all_for_gff_aa_ch  = branches_aa.ALL.combine(data_assembly.out.productive_ch.first())
     for_gff_aa_ch = clone_for_gff_aa_ch.mix(all_for_gff_aa_ch)
 
 
@@ -2026,7 +2118,7 @@ workflow {
         Gff_imgt( // module gff_imgt.nf
             Tsv2fasta.out.fasta_align_imgt_ch, 
             align_seq, 
-            Igblast_chain_check.out.igblast_chain_check_ch, 
+            data_assembly.out.productive_ch, 
             cute_path
         )
         copyLogFile('gff_imgt.log', Gff_imgt.out.gff_log_ch, out_path)

@@ -629,6 +629,14 @@ If the text is cut in the table, reload the page or change the width of the wind
     </tr>
     <tr>
         <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            - unwanted_chains.tsv
+        </th>
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            Productive sequences but with sequences that are not those defined by the parameters  <code>igblast_B_heavy_chain</code>, <code>igblast_B_lambda_chain</code>, <code>igblast_B_kappa_chain</code>, <code>igblast_T_alpha_chain</code>, <code>igblast_T_beta_chain</code>, <code>igblast_T_gamma_chain</code> and <code>igblast_T_delta_chain</code> parameters of the <i>nextflow.config</i> file. 
+        </td>
+    </tr>
+    <tr>
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             - failed_productive_seq.tsv
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">

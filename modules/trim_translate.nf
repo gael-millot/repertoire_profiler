@@ -13,7 +13,7 @@ process TrimTranslate {
     cache 'true'
 
     input:
-    path select_ch // parallelization expected
+    path checked_tsv_ch // parallelization expected
 
     output:
     path "trimtranslate.tsv", emit: trimtranslate_ch // productive file with column sequence_alignment_aa added
@@ -32,6 +32,6 @@ process TrimTranslate {
     """
     #!/bin/bash -ue
     set -o pipefail
-    trimtranslate.sh ${select_ch} # |& tee -a trimtranslate.log not used because in trimtranslate.sh
+    trimtranslate.sh ${checked_tsv_ch} # |& tee -a trimtranslate.log not used because in trimtranslate.sh
     """
 }
