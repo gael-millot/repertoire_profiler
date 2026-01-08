@@ -360,7 +360,13 @@ if( ! all(col_names %in% names(df))){
 
 not_good_line_nb <- NULL
 for(i0 in length(col_names)){
-    tempo_list <- lapply(X = df[ , col_names[i0]], FUN = function(x){strsplit(x, split = ",")[[1]]}) # if several alleles
+    tempo_list <- lapply(X = df[ , col_names[i0]], FUN = function(x){
+        if(is.na(x)){
+            NA
+        }else{
+            strsplit(x, split = ",")[[1]]
+        }
+    }) # if several alleles
     tempo_log <- sapply(X = tempo_list, FUN = function(x){
         if(any(is.na(x))){
             FALSE

@@ -1660,7 +1660,7 @@ workflow {
         igblast_constant_ref_files, 
         cute_file
     )
-     Igblast_chain_check.out.checked_tsv_ch.count().view()
+     Igblast_chain_check.out.checked_tsv_ch.count()
     Igblast_chain_check.out.checked_tsv_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FILES FOLLOWING THE Igblast_chain_check PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
     checked_tsv_ch2 = Igblast_chain_check.out.checked_tsv_ch.collectFile(name: "productive_seq_chain_check.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
     Igblast_chain_check.out.not_checked_tsv_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nO UNPRODUCTIVE SEQUENCE FILES FOLLOWING THE Igblast_chain_check PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // because an empty file must be present
@@ -2008,7 +2008,7 @@ workflow {
     // fasta_align_ch2 = Tsv2fasta.out.fasta_align_ch.filter {nuc, aa, kind -> !nuc.name.endsWith("_imgt_nuc.fasta")}
     copyLogFile('Tsv2fasta.log', Tsv2fasta.out.tsv2fasta_log_ch, out_path)
     // Print warnings on the terminal:
-    Tsv2fasta.out.warning_ch.filter{file(it).exists()}.map{file -> file.text}.view() //  file.text = contenu du fichier
+    Tsv2fasta.out.warning_ch.filter{file(it).exists()}.map{file -> file.text} //  file.text = contenu du fichier
 
     if(align_soft == "abalign" && (align_seq == "query" || align_seq == "igblast_full" || align_seq == "trimmed" || align_seq == "fwr1" || align_seq == "fwr2" || align_seq == "fwr3" || align_seq == "fwr4" || align_seq == "cdr1" || align_seq == "cdr2" || align_seq == "cdr3" || align_seq == "junction" || align_seq == "d_sequence_alignment" || align_seq == "j_sequence_alignment" || align_seq == "c_sequence_alignment" || align_seq == "d_germline_alignment" || align_seq == "j_germline_alignment" || align_seq == "c_germline_alignment")){
         align_soft = "mafft"
