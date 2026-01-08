@@ -66,15 +66,6 @@ script <- "Tsv2fasta"
 
 ### Arguments : 
 
-# path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/b6/fe498b4e1e2a9cbdaa89cb9685d6cc/10_productive_seq_clone-pass_germ-pass_germ-seq-trans_germ-pass_shm-pass.tsv"      # tsv file containing data. needs to have all columns in Name, align_seq and Germline
-# Name <- "sequence_id"                # name of the column containing the sequence ids
-# align_seq <- "sequence_alignment"        # name of the columns containing the sequences to put in the fasta file (can be a single string or several strings seperated by "," if several columns are needed. the fastas will then be created in different folders)
-# clone_germline_kind <- "dmask"
-# align_clone_nb <- 3                    # Minimum number of rows in the tsv file. The program expects this to be respected, otherwise raises an error.
-# cute <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/bin/cute_little_R_functions_v12.8.R"
-# seq_kind <- "CLONE"
-# log <- "Tsv2fastaGff.log"
-
 
 
 ################################# End test
@@ -443,8 +434,20 @@ if(seq_kind == "IMGT" & align_seq %in% c("query", "igblast_full", "trimmed", "se
     max_len <- max(nchar(obs[[tempo_name]]))
     max_len_aa <- max(nchar(obs[[tempo_name_aa]]))
     # 2. Pad each sequence with hyphens at the end
-    obs[[tempo_name]] <- sapply(X = obs[[tempo_name]], FUN = function(x){paste0(x, paste(rep("-", max_len - nchar(x)), collapse = ""))})
-    obs[[tempo_name_aa]] <- sapply(X = obs[[tempo_name_aa]], FUN = function(x){paste0(x, paste(rep("-", max_len_aa - nchar(x)), collapse = ""))})
+    obs[[tempo_name]] <- sapply(X = obs[[tempo_name]], FUN = function(x){
+        if(is.na(max_len)){
+            NA
+        }else{
+            paste0(x, paste(x = rep("-", times = max_len - nchar(x)), collapse = ""))
+        }
+    })
+    obs[[tempo_name_aa]] <- sapply(X = obs[[tempo_name_aa]], FUN = function(x){
+        if(is.na(max_len_aa)){
+            NA
+        }else{
+            paste0(x, paste(x = rep("-", times = max_len_aa - nchar(x)), collapse = ""))
+        }
+    })
     for(i1 in 1:nrow(obs)){
         tempo_cat <- paste0(">", obs[i1, Name], "\n", obs[i1, tempo_name], "\n")
         cat(tempo_cat, file = file.path(paste0(tempo_name, "_imgt_nuc.fasta")), append = TRUE)

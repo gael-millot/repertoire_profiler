@@ -381,7 +381,7 @@ process repertoire {
 // NA means cdr3 sequences are exactly the same for the group
 process distToNearest {
     label 'immcantation'
-    //publishDir path: "${out_path}", mode: 'copy', pattern: "{nearest_distance.tsv}", overwrite: false
+    publishDir path: "${out_path}/tsv", mode: 'copy', pattern: "{dist_ignored.tsv}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{distToNearest.log}", overwrite: false
     cache 'true'
 
@@ -392,6 +392,7 @@ process distToNearest {
 
     output:
     path "nearest_distance.tsv", emit: distToNearest_ch
+    path "dist_ignored.tsv", emit: dist_ignored_ch
     path "distToNearest.log"
 
     script:
@@ -402,6 +403,21 @@ process distToNearest {
          # WEIRD stuf: if db alone is returned, and if distToNearest_ch is used for the clone_assignment process and followings, everything is fine. But if db3 is returned with db3 <- data.frame(db, dist_nearest = db2\$dist_nearest) or db3 <- data.frame(db, d = db2\$dist_nearest) or data.frame(db, d = db\$sequence_id) or db3 <- data.frame(db, d = as.numeric(db2\$dist_nearest)) or db3 <- data.frame(db[1:3], d = db\$sequence_id, db[4:length(db)]), the get_germ_tree process cannot make trees, while the productive.tsv seem identical at the end, between the use of db or db3, except that the clone_id order is not the same
         db <- read.table("${trimtranslate_ch2}", header = TRUE, sep = "\\t")
         db2 <- shazam::distToNearest(db, sequenceColumn = "junction", locusColumn = "locus", model = "${clone_model}", normalize = "${clone_normalize}", nproc = 1)
+        missing_line_nb <- NULL
+        tempo_log <- is.na(match(db\$sequence_id, db2\$sequence_id))
+        if(any(tempo_log)){
+            missing_line_nb <- which(tempo_log)
+        }
+        if(is.null(missing_line_nb)){
+            not_selected_df <- db[ -(1:nrow(db)), ]
+        }else{
+            not_selected_df <- db[missing_line_nb, ]
+            tempo_db <- as.data.frame(matrix(data = NA, nrow = nrow(not_selected_df), ncol = ncol(db2)))
+            names(tempo_db) <- names(db2)
+            tempo_db\$sequence_id <- db\$sequence_id[missing_line_nb]
+            db2 <- rbind(db2, tempo_db)
+        }
+        write.table(not_selected_df, file = paste0("./dist_ignored.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
         write.table(db2, file = paste0("./nearest_distance.tsv"), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
     ' |& tee -a distToNearest.log
     """
@@ -1241,8 +1257,8 @@ process germ_tree_vizu {
 // Inputs:
 //      template_rmd: rmardown template file used to create the html (file path is defined in config.nextflow)
 //      nb_input: number of fasta sequences in initial input
-//      nb_seq_aligned: number of sequences that igblast could analyse
-//      nb_seq_not_aligned: number of sequences that igblast could not alayse
+//      nb_igblast: number of sequences that igblast could analyse
+//      nb_igblast_fail: number of sequences that igblast could not alayse
 //      donuts_png: provide links to the donut images needed in the rmd inside the work folder
 //      repertoire_png: provide links to the repertoire images needed in the rmd inside the work folder
 //      repertoire_constant_ch: names of the constant gene repertoire files to be displayed
@@ -1265,12 +1281,17 @@ process print_report{
     file alignments_viz_rmd
     file alignments_viz_html
     val nb_input
-    val nb_seq_aligned
-    val nb_seq_not_aligned
+    val nb_igblast
+    val nb_igblast_fail
     val nb_productive
     val nb_unproductive
+    val nb_wanted
+    val nb_unwanted
+    val nb_dist_ignored
     val nb_clone_assigned
     val nb_failed_clone
+    val nb_failed_clone_assignment
+    val nb_failed_clone_germline
     path distance_hist_ch
     path donuts_png
     path repertoire_png
@@ -1319,12 +1340,17 @@ process print_report{
         # list of the variables waiting to be replaced in the rmd file:
         params = list(
             nb_input = ${nb_input},
-            nb_seq_aligned = ${nb_seq_aligned}, 
-            nb_seq_not_aligned = ${nb_seq_not_aligned},
+            nb_igblast = ${nb_igblast}, 
+            nb_igblast_fail = ${nb_igblast_fail},
             nb_productive = ${nb_productive},
             nb_unproductive = ${nb_unproductive},
+            nb_wanted =  ${nb_wanted},
+            nb_unwanted =  ${nb_unwanted},
+            nb_dist_ignored = ${nb_dist_ignored},
             nb_clone_assigned = ${nb_clone_assigned},
             nb_failed_clone = ${nb_failed_clone},
+            nb_failed_clone_assignment = ${nb_failed_clone_assignment}, 
+            nb_failed_clone_germline = ${nb_failed_clone_germline}, 
             clone_distance = ${clone_distance},
             constant_rep = constant_rep,
             vj_rep = vj_rep,
@@ -1623,12 +1649,10 @@ workflow {
     tsv_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
     db_unpass = Igblast_query.out.db_unpass_ch.collectFile(name: "failed_igblast_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
     db_unpass.subscribe{it -> it.copyTo("${out_path}/tsv")}
-    nb1 = tsv_ch2.countLines(keepHeader: true) 
-    nb2 =  db_unpass.countLines(keepHeader: true)
-    // nb1.view()
-    //nb1.view()
-    //fs_ch.count().view()
-    fs_ch.count().combine(nb1).combine(nb2).subscribe{n,n1,n2 -> if(n != n1 + n2){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE igblast_aligned_seq.tsv (${n1}) AND igblast_unaligned_seq_name.tsv (${n2}) IS NOT EQUAL TO THE NUMBER OF SUBMITTED FASTA FILES (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
+    nb_igblast = tsv_ch2.countLines(keepHeader: true) 
+    nb_igblast_fail =  db_unpass.countLines(keepHeader: true)
+    // nb_igblast.view()
+    fs_ch.count().combine(nb_igblast).combine(nb_igblast_fail).subscribe{n,n1,n2 -> if(n != n1 + n2){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE igblast_aligned_seq.tsv (${n1}) AND igblast_unaligned_seq_name.tsv (${n2}) IS NOT EQUAL TO THE NUMBER OF SUBMITTED FASTA FILES (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
     copyLogFile('Igblast_query.log', Igblast_query.out.log_ch, out_path)
 
     parseDb_filtering(
@@ -1640,13 +1664,13 @@ workflow {
     parseDb_filtering.out.unselect_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nO UNPRODUCTIVE SEQUENCE FILES FOLLOWING THE parseDb_filtering PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // because an empty file must be present
     unselect_ch2 = parseDb_filtering.out.unselect_ch.collectFile(name: "failed_productive_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
     unselect_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
-    nb1_b = select_ch2.countLines()
-    nb2_b = unselect_ch2.countLines()
-    nb1_b.subscribe { n -> if ( n == 1 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FOLLOWING THE parseDb_filtering PROCESS\nSEE THE EMPTY productive_seq.tsv FILE AND THE failed_productive_seq.tsv FILE IN THE OUTPUT FOLDER\n\n========\n\n"}} // n is the value of nb1_b
-    // nb1_b.map { "Nombre de lignes dans select_ch2 (productive_seq_init.tsv): $it (en comptant le header)" }.view()
-    // nb2_b.map { "Nombre de lignes dans unselect_ch2 (failed_productive_seq.tsv): $it (en comptant le header)" }.view()
+    nb_productive = select_ch2.countLines()
+    nb_unproductive = unselect_ch2.countLines()
+    nb_productive.subscribe { n -> if ( n == 1 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FOLLOWING THE parseDb_filtering PROCESS\nSEE THE EMPTY productive_seq.tsv FILE AND THE failed_productive_seq.tsv FILE IN THE OUTPUT FOLDER\n\n========\n\n"}} // n is the value of nb_productive
+    // nb_productive.map { "Nombre de lignes dans select_ch2 (productive_seq_init.tsv): $it (en comptant le header)" }.view()
+    // nb_unproductive.map { "Nombre de lignes dans unselect_ch2 (failed_productive_seq.tsv): $it (en comptant le header)" }.view()
     // tsv_ch2.countLines().map { "Nombre de lignes dans tsv_ch2 (igblast_seq.tsv): $it (en comptant le header)" }.view()
-    tsv_ch2.countLines().combine(nb1_b).combine(nb2_b).subscribe{n,n1,n2 -> if(n != n1 + n2 - 1){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE productive_seq.tsv (${n1}) AND failed_productive_seq.tsv (${n2} - 1) IS NOT EQUAL TO THE NUMBER OF FILES IN igblast_seq.tsv (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // n1 + n2 - 1 because header counted in both n1 and n2 while only one header in n
+    tsv_ch2.countLines().combine(nb_productive).combine(nb_unproductive).subscribe{n,n1,n2 -> if(n != n1 + n2 - 1){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE productive_seq.tsv (${n1}) AND failed_productive_seq.tsv (${n2} - 1) IS NOT EQUAL TO THE NUMBER OF FILES IN igblast_seq.tsv (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // n1 + n2 - 1 because header counted in both n1 and n2 while only one header in n
     copyLogFile('ParseDb_filtering.log', parseDb_filtering.out.parseDb_filtering_log_ch, out_path)
 
 
@@ -1660,19 +1684,15 @@ workflow {
         igblast_constant_ref_files, 
         cute_file
     )
-     Igblast_chain_check.out.checked_tsv_ch.count()
     Igblast_chain_check.out.checked_tsv_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FILES FOLLOWING THE Igblast_chain_check PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
     checked_tsv_ch2 = Igblast_chain_check.out.checked_tsv_ch.collectFile(name: "productive_seq_chain_check.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
     Igblast_chain_check.out.not_checked_tsv_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nO UNPRODUCTIVE SEQUENCE FILES FOLLOWING THE Igblast_chain_check PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // because an empty file must be present
     not_checked_tsv_ch2 = Igblast_chain_check.out.not_checked_tsv_ch.collectFile(name: "unwanted_chains.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
     not_checked_tsv_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
-    nb1_b = checked_tsv_ch2.countLines()
-    nb2_b = not_checked_tsv_ch2.countLines()
-    nb1_b.subscribe { n -> if ( n == 1 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FOLLOWING THE Igblast_chain_check PROCESS\nSEE THE unwanted_chains.tsv FILE IN THE OUTPUT FOLDER\n\n========\n\n"}} // n is the value of nb1_b
-    // nb1_b.map { "Nombre de lignes dans select_ch2 (productive_seq_init.tsv): $it (en comptant le header)" }.view()
-    // nb2_b.map { "Nombre de lignes dans unselect_ch2 (failed_productive_seq.tsv): $it (en comptant le header)" }.view()
-    // tsv_ch2.countLines().map { "Nombre de lignes dans tsv_ch2 (igblast_seq.tsv): $it (en comptant le header)" }.view()
-    select_ch2.countLines().combine(nb1_b).combine(nb2_b).subscribe{n,n1,n2 -> if(n != n1 + n2 - 1){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE productive_seq_chain_check.tsv (${n1}) AND unwanted_chains.tsv (${n2} - 1) IS NOT EQUAL TO THE NUMBER OF FILES IN productive_seq_init.tsv (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // n1 + n2 - 1 because header counted in both n1 and n2 while only one header in n
+    nb_wanted = checked_tsv_ch2.countLines()
+    nb_unwanted = not_checked_tsv_ch2.countLines()
+    nb_wanted.subscribe { n -> if ( n == 1 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FOLLOWING THE Igblast_chain_check PROCESS\nSEE THE unwanted_chains.tsv FILE IN THE OUTPUT FOLDER\n\n========\n\n"}} // n is the value of nb_wanted
+    select_ch2.countLines().combine(nb_wanted).combine(nb_unwanted).subscribe{n,n1,n2 -> if(n != n1 + n2 - 1){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF FILES IN THE productive_seq_chain_check.tsv (${n1}) AND unwanted_chains.tsv (${n2} - 1) IS NOT EQUAL TO THE NUMBER OF FILES IN productive_seq_init.tsv (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // n1 + n2 - 1 because header counted in both n1 and n2 while only one header in n
     copyLogFile('igblast_chain_check.log', Igblast_chain_check.out.igblast_chain_check_log, out_path)
 
 
@@ -1693,7 +1713,8 @@ workflow {
         clone_model,
         clone_normalize
     )
-    //distToNearest.out.distToNearest_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE distToNearest PROCESS\n\n========\n\n"}}
+    nb_dist_ignored = distToNearest.out.dist_ignored_ch.countLines() - 1 // Minus 1 because 1st line = column names // either .tsv is empty (header alone) or has a header to remove to count the lines
+
 
 
     distance_hist(
@@ -1703,7 +1724,7 @@ workflow {
         clone_normalize,
         clone_distance
     )
-    //distance_hist.out.distance_hist_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE distance_hist PROCESS\n\n========\n\n"}}
+
 
 
 
@@ -1775,7 +1796,7 @@ workflow {
     )
     // clone_assignment.out.clone_ch.view()
     // nb_failed_clone = clone_assignment.out.failed_clone_ch.map { file -> file.countLines() == 0 ? 0: file.countLines() - 1} // either failed_clone_assigned_seq.tsv is empty (no lines) or has a header to remove to count the lines
-    nb_failed_clone_1 = clone_assignment.out.failed_clone_ch.countLines() - 1 // Minus 1 because 1st line = column names // either failed_clone_assigned_seq.tsv is empty (no lines) or has a header to remove to count the lines
+    nb_failed_clone_assignment = clone_assignment.out.failed_clone_ch.countLines() - 1 // Minus 1 because 1st line = column names // either failed_clone_assigned_seq.tsv is empty (no lines) or has a header to remove to count the lines
 
     split_by_clones(
         clone_assignment.out.clone_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE clone_assignment PROCESS\n\n========\n\n"}
@@ -1793,8 +1814,8 @@ workflow {
     )
     failed_clonal_germline_file = Closest_germline.out.failed_clonal_germline_ch.collectFile(name: "failed_clonal_germline.tsv", skip: 1, keepHeader: true)
     failed_clonal_germline_file.subscribe{it -> it.copyTo("${out_path}/tsv")} // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
-    nb_failed_clone_2 = failed_clonal_germline_file.countLines() - 1
-    nb_failed_clone = nb_failed_clone_2.combine(nb_failed_clone_1).map { new_count, old_count -> new_count + old_count } // to add the two kind of failure
+    nb_failed_clone_germline = failed_clonal_germline_file.countLines() - 1
+    nb_failed_clone = nb_failed_clone_germline.combine(nb_failed_clone_assignment).map { new_count, old_count -> new_count + old_count } // to add the two kind of failure
     copyLogFile('Closest_germline.log', Closest_germline.out.closest_log_ch, out_path)
 
 
@@ -2194,12 +2215,17 @@ workflow {
         alignments_viz_rmd, 
         alignments_viz_html, 
         nb_input, 
-        nb1, 
-        nb2, 
-        nb1_b - 1, // Minus 1 because the 1st line = the column names
-        nb2_b - 1, // Minus 1 because the 1st line = the column names
+        nb_igblast, 
+        nb_igblast_fail, 
+        nb_productive - 1, // Minus 1 because the 1st line = the column names
+        nb_unproductive - 1, // Minus 1 because the 1st line = the column names
+        nb_wanted - 1, // Minus 1 because the 1st line = the column names
+        nb_unwanted - 1, // Minus 1 because the 1st line = the column names
+        nb_dist_ignored, 
         nb_clone_assigned, 
         nb_failed_clone, 
+        nb_failed_clone_assignment, 
+        nb_failed_clone_germline, 
         distance_hist.out.distance_hist_ch, 
         donut.out.donuts_png.collect(), 
         repertoire.out.repertoire_png_ch.collect(), 

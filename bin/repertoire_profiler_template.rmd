@@ -7,12 +7,17 @@ output:
     toc_float: TRUE
 params:
   nb_input: -1
-  nb_seq_aligned: -1
-  nb_seq_not_aligned: -1
+  nb_igblast: -1
+  nb_igblast_fail: -1
   nb_productive: -1
   nb_unproductive: -1
+  nb_wanted: -1
+  nb_unwanted: -1
+  nb_dist_ignored: -1
   nb_clone_assigned: -1
   nb_failed_clone: -1
+  nb_failed_clone_assignment: -1
+  nb_failed_clone_germline: -1
   clone_distance: -1
   constant_rep: ""
   vj_rep: ""
@@ -113,13 +118,13 @@ Number of initial input sequences: ```r params$nb_input```
 ### Igblast sequence annotation
 
 
-Succes number of sequences: ```r params$nb_seq_aligned```
+Succes number of sequences: ```r params$nb_igblast```
+<br>
+Failed number of sequences: ```r params$nb_igblast_fail```
+<br>
+Total: ```r params$nb_igblast + params$nb_igblast_fail```
 
-Failed number of sequences: ```r params$nb_seq_not_aligned```
-
-Total: ```r params$nb_seq_aligned + params$nb_seq_not_aligned```
-
-Success ratio: ```r base::round(params$nb_seq_aligned / (params$nb_seq_aligned + params$nb_seq_not_aligned), 2)```
+Success ratio: ```r base::round(params$nb_igblast / (params$nb_igblast + params$nb_igblast_fail), 2)```
 
 See the igblast_seq.tsv and the failed_igblast_seq.tsv files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output). 
 
@@ -151,10 +156,21 @@ kable(df, format = "markdown", row.names = FALSE)
 ```
 </details>
 <br>
+Number of unwanted sequences: ```r params$nb_unwanted``` &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
+<span style="color:green">*unwanted_chains.tsv file in the [tsv](./tsv) folder*</span>
+```{r, echo=FALSE, results='asis'}
+df <- read_tsv_with_dummy("tsv/unwanted_chains.tsv")
+if (is.data.frame(df) && attr(df, "truncated")) {
+  cat("\n**(Note: Table truncated to 10 rows. Full file available in the unwanted_chains.tsv file.)**\n\n")
+}
+kable(df, format = "markdown", row.names = FALSE)
+```
+</details>
+Total: ```r params$nb_productive + params$nb_unproductive + params$nb_unwanted```
 
-Productiveness ratio: ```r base::round(params$nb_productive / (params$nb_productive + params$nb_unproductive), 2)```
+Productiveness ratio: ```r base::round(params$nb_productive / (params$nb_productive + params$nb_unproductive + params$nb_unwanted), 2)```
 
-See the productive_seq.tsv and the failed_productive_seq.tsv files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output).
+See the productive_seq.tsv, failed_productive_seq.tsv and unwanted_chains.tsv files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output).
 
 <br>
 
@@ -208,7 +224,12 @@ Warning: only the first annotation is considered if several are presents in the 
 <br><br><br>
 
 ###  Clonal prediction
-
+```{r include = FALSE}
+nb_failed_clone <- ifelse(params$nb_failed_clone > 0, params$nb_failed_clone, 0)
+nb_failed_clone_assignment <- ifelse(params$nb_failed_clone_assignment > 0, params$nb_failed_clone_assignment, 0)
+nb_failed_clone_germline <- ifelse(params$nb_failed_clone_germline > 0, params$nb_failed_clone_germline, 0)
+nb_dist_ignored <- ifelse(params$nb_dist_ignored > 0, params$nb_dist_ignored, 0)
+```
 **Clone-assigned sequences** are productive sequences with additionnal features:<br><ul><li>germline clustering (clone ID).<br></li><li>inference of clonal germline sequence (different from the sequence germline inference).<br></li><li>mutation load.<br></ul> 
 
 Number of clone-assigned sequences: ```r params$nb_clone_assigned```&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
@@ -221,14 +242,10 @@ if (is.data.frame(df) && attr(df, "truncated")) {
 kable(df, format = "markdown", row.names = FALSE)
 ```
 </details>
-```{r include = FALSE}
-nb_failed_clone <- ifelse(params$nb_failed_clone > 0, params$nb_failed_clone, 0)
-```
+Number of failed clone-assigned or germline sequences: ```r nb_failed_clone``` (```r nb_failed_clone_assignment``` non assigned to any clonal group and ```r nb_failed_clone_germline``` without germline sequence defined)
 <br>
+Total: ```r params$nb_clone_assigned + nb_failed_clone```
 
-Number of failed clone-assigned or germline sequences: ```r nb_failed_clone```
-
-<br>
 Passing ratio: ```r base::round(params$nb_clone_assigned / (params$nb_clone_assigned + nb_failed_clone), 2)```
 
 See the clone_assigned_seq.tsv, as well as both the failed_clone_assigned_seq.tsv and the failed_clonal_germline.tsv (sequences from the productive file that fail to be clone-assigned by `DefineClones.py` and `CreateGermlines.py`) files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output).
@@ -255,6 +272,14 @@ On the graphs below, the vertical dotted red line (threshold value) must separat
 If it is not the case, please adapt the value of the `clone_distance` parameter and rerun.
 
 If no bimodal distribution is observed, it means that the number of sequences analyzed is too low for correct clonal group attribution.
+
+Of note: 
+
+Number of sequences used in the distance matrix (from productive_seq.tsv): ```r params$nb_productive```
+<br>
+Number of sequences that could not be used in the distance matrix: ```r nb_dist_ignored```
+
+Sequence ratio: ```r base::round((params$nb_productive - nb_dist_ignored)/ params$nb_productive, 2)```
 
 <br>
 

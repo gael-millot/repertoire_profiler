@@ -70,9 +70,13 @@ process Closest_germline {
             productive <- read.table(args[2], sep = "\\t", header = TRUE)
             # put back meta_legend column name as in productive_seq.tsv, beacause in lowercase
             if("${meta_file}" != "NULL" & "${meta_legend}" != "NULL" ){
-                tempo_log <- names(db) == tolower("${meta_legend}")
-                if(any(tempo_log, na.rm = TRUE)){
-                    names(db)[tempo_log] <- "${meta_legend}"
+                tempo_log1 <- names(db) == tolower("${meta_legend}")
+                if(any(tempo_log1, na.rm = TRUE)){
+                    names(db)[tempo_log1] <- "${meta_legend}"
+                }
+                tempo_log2 <- names(productive) == tolower("${meta_legend}")
+                if(any(tempo_log2, na.rm = TRUE)){
+                    names(productive)[tempo_log2] <- "${meta_legend}"
                 }
             }
             # end put back meta_legend column names as in productive_seq.tsv, beacause in lowercase
@@ -127,9 +131,13 @@ process Closest_germline {
             productive <- read.table(args[2], sep = "\\t", header = TRUE)
             # put back meta_legend column name as in productive_seq.tsv, beacause in lowercase
             if("${meta_file}" != "NULL" & "${meta_legend}" != "NULL" ){
-                tempo_log <- names(db) == tolower("${meta_legend}")
-                if(any(tempo_log, na.rm = TRUE)){
-                    names(db)[tempo_log] <- "${meta_legend}"
+                tempo_log1 <- names(db) == tolower("${meta_legend}")
+                if(any(tempo_log1, na.rm = TRUE)){
+                    names(db)[tempo_log1] <- "${meta_legend}"
+                }
+                tempo_log2 <- names(productive) == tolower("${meta_legend}")
+                if(any(tempo_log2, na.rm = TRUE)){
+                    names(productive)[tempo_log2] <- "${meta_legend}"
                 }
             }
             # end put back meta_legend column names as in productive_seq.tsv, beacause in lowercase

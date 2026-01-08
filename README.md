@@ -632,7 +632,7 @@ If the text is cut in the table, reload the page or change the width of the wind
             - unwanted_chains.tsv
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            Productive sequences but with sequences that are not those defined by the parameters  <code>igblast_B_heavy_chain</code>, <code>igblast_B_lambda_chain</code>, <code>igblast_B_kappa_chain</code>, <code>igblast_T_alpha_chain</code>, <code>igblast_T_beta_chain</code>, <code>igblast_T_gamma_chain</code> and <code>igblast_T_delta_chain</code> parameters of the <i>nextflow.config</i> file. 
+            Lines of the <i>igblast_seq.tsv</i> file removed in the <i>productive_seq.tsv</i>, because, even if productive, are sequences that are not those defined by the parameters  <code>igblast_B_heavy_chain</code>, <code>igblast_B_lambda_chain</code>, <code>igblast_B_kappa_chain</code>, <code>igblast_T_alpha_chain</code>, <code>igblast_T_beta_chain</code>, <code>igblast_T_gamma_chain</code> and <code>igblast_T_delta_chain</code> parameters of the <i>nextflow.config</i> file. Header only if no lines removed.
         </td>
     </tr>
     <tr>
@@ -640,7 +640,7 @@ If the text is cut in the table, reload the page or change the width of the wind
             - failed_productive_seq.tsv
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            Sequences that failed in productive annotations by igblast (header only if all the sequences are productively annotated). 
+            Lines of the <i>igblast_seq.tsv</i> file removed in the <i>productive_seq.tsv</i>, because of sequences that failed in productive annotations by igblast. Header only if no lines removed. 
         </td>
     </tr>
     <tr>
@@ -707,7 +707,7 @@ If the text is cut in the table, reload the page or change the width of the wind
             - failed_clone_assigned_seq.tsv
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            Productive sequences that failed to be assigned to a clone ID by <code>DefineClones.py</code> (header only if all the sequences are assigned). See details  <a href="https://changeo.readthedocs.io/en/latest/methods/clustering.html">here</a> but failure reasons are not explained. 
+            Lines of the <i>productive_seq.tsv</i> file removed in the <i>clone_assigned_seq.tsv</i>, because of sequences that failed to be assigned to a clone ID by <code>DefineClones.py</code>. See details  <a href="https://changeo.readthedocs.io/en/latest/methods/clustering.html">here</a> but failure reasons are not explained. Header only if no lines removed. 
         </td>
     </tr>
     <tr>
@@ -715,7 +715,7 @@ If the text is cut in the table, reload the page or change the width of the wind
             - failed_clonal_germline_seq.tsv
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            Productive sequences with clone ID but that failed to get the closest clonal germline sequence by <code>CreateGermlines.py</code> (header only if all the sequences get a clonal germline sequence). See details  <a href="https://changeo.readthedocs.io/en/latest/examples/germlines.html">here</a>Failure could come from alleles called by the aligner that are missing from the reference set. 
+            Lines of the <i>productive_seq.tsv</i> file removed in the <i>clone_assigned_seq.tsv</i>, because of sequences with clone ID but that failed to get the closest clonal germline sequence by <code>CreateGermlines.py</code>. See details  <a href="https://changeo.readthedocs.io/en/latest/examples/germlines.html">here</a>Failure could come from alleles called by the aligner that are missing from the reference set. Header only if no lines removed. 
         </td>
     </tr>
     <tr>
@@ -723,7 +723,7 @@ If the text is cut in the table, reload the page or change the width of the wind
             - failed_abalign_align.tsv
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            Optional. indicate if some sequences of the fasta file used as input (see the <i>fasta/for_alignment_aa</i> folder in the <i>result</i> forder) failed to be processed by Abalign. Only present if the <code>align_soft</code> parameter of the <i>nextflow.config</i> file is set to <code>abalign</code> (header only if all the sequences succeeded).
+            Optional. indicate if some sequences of the fasta file used as input (see the <i>fasta/for_alignment_aa</i> folder in the <i>result</i> forder) failed to be processed by Abalign. Only present if the <code>align_soft</code> parameter of the <i>nextflow.config</i> file is set to <code>abalign</code>. Header only if no lines removed.
         </td>
     </tr>
     <tr>
