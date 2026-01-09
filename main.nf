@@ -511,13 +511,14 @@ process clone_assignment {
     FILE=\${FILENAME%.*} # file name without extension
     DefineClones.py -d ${wanted_ch} --act ${clone_strategy} --model ${clone_model} --norm ${clone_normalize} --dist ${clone_distance} --fail |& tee -a clone_assignment.log
     shopt -s nullglob
-    files=(\${FILE}_clone-{pass,fail}.tsv) # expend the two possibilities but assign only the existing ones
-    cp -Lr "\${files[0]}" "tempo.tsv" # copy whatever failed or succeeded
-    Rscript -e '
+    # files=(\${FILE}_clone-{pass,fail}.tsv) # expend the two possibilities but assign only the existing ones
+    # cp -Lr "\${files[0]}" "tempo.tsv" # copy whatever failed or succeeded
+    cat > run.R <<'RSCRIPT'
         options(warning.length = 8170)
         args = commandArgs(trailingOnly=TRUE)
         db <- read.table(args[1], sep = "\\t", header = TRUE)
         wanted <- read.table(args[2], sep = "\\t", header = TRUE)
+        output_name <- args[3]
         # put back meta_legend column name as in wanted_seq.tsv, beacause in lowercase
         if("${meta_file}" != "NULL" & "${meta_legend}" != "NULL" ){
             tempo_log <- names(db) == tolower("${meta_legend}")
@@ -535,21 +536,25 @@ process clone_assignment {
             tempo_db2 <- db[ ! tempo_log]
             tempo_db1 <- tempo_db1[ , match(names(wanted), names(tempo_db1))] # reorder as in wanted_seq.tsv
             db2 <- data.frame(tempo_db1, tempo_db2)
-            write.table(db2, file = "tempo2.tsv", row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
+            write.table(db2, file = output_name, row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
         }
         # end reorder as in wanted_seq.tsv
-    ' tempo.tsv ${wanted_ch}
+RSCRIPT
+# must be at the start of the line (no spaces/tabs) and with no trailing spaces.
     if [ -s \${FILE}_clone-fail.tsv ]; then # see above for -s
-        cp tempo2.tsv failed_clone_assigned_seq.tsv |& tee -a clone_assignment.log
-    elif [ -s \${FILE}_clone-pass.tsv ] ; then # see above for -s
-        cp -f tempo2.tsv \${FILE}_clone-pass.tsv |& tee -a clone_assignment.log # force overwriting
-        set -o pipefail
+        Rscript run.R \${FILE}_clone-fail.tsv ${wanted_ch} "failed_clone_assigned_seq.tsv" |& tee -a clone_assignment.log
+    else
         echo -e "\\n\\nNOTE: EMPTY failed_clone_assigned_seq.tsv FILE RETURNED FOLLOWING THE clone_assignment PROCESS\\n\\n" |& tee -a clone_assignment.log
         head -1 \${FILE}_clone-pass.tsv | cat > failed_clone_assigned_seq.tsv # header kept
+    fi
+    if [ -s \${FILE}_clone-pass.tsv ] ; then # see above for -s
+        Rscript run.R \${FILE}_clone-pass.tsv ${wanted_ch} "\${FILE}_clone-pass.tsv" |& tee -a clone_assignment.log
     else
-        set -o pipefail
-        echo -e "\\n\\n========\\n\\nINTERNAL ERROR IN NEXTFLOW EXECUTION\\n\\nOUTPUT FILE OF DefineClones.py IN THE clone_assignment PROCESS SHOULT BE EITHER *_clone-pass.tsv OR *_clone-fail.tsv.\\nCHECK THE clone_assignment.log IN THE report FOLDER INSIDE THE OUTPUT FOLDER\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n"
-        exit 1
+        echo -e "\\n\\nNOTE: EMPTY *_clone-pass.tsv FILE RETURNED FOLLOWING THE clone_assignment PROCESS\\n\\n" |& tee -a clone_assignment.log
+        head -1 failed_clone_assigned_seq | cat > \${FILE}_clone-pass.tsv # header kept
+        # set -o pipefail
+        # echo -e "\\n\\n========\\n\\nINTERNAL ERROR IN NEXTFLOW EXECUTION\\n\\nOUTPUT FILE OF DefineClones.py IN THE clone_assignment PROCESS SHOULD RETURN *_clone-pass.tsv.\\nCHECK THE clone_assignment.log IN THE report FOLDER INSIDE THE OUTPUT FOLDER\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n"
+        # exit 1
     fi
     """
 }
