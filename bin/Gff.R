@@ -68,7 +68,7 @@ script <- "Gff"
 ### Arguments : 
 
 # fasta_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1765310139/alignments/nuc/sequence_alignment_aligned_nuc.fasta"
-# tsv_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1765310139/tsv/productive_seq.tsv"
+# tsv_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1765310139/tsv/wanted_seq.tsv"
 # Name <- "sequence_id"                # name of the column containing the sequence ids
 # align_seq <- "sequence_alignment"        # name of the columns containing the sequences to put in the fasta file (can be a single string or several strings seperated by "," if several columns are needed. the fastas will then be created in different folders)
 # align_clone_nb <- 3                    # Minimum number of rows in the tsv file. The program expects this to be respected, otherwise raises an error.
@@ -77,7 +77,7 @@ script <- "Gff"
 # log <- "Tsv2fastaGff.log"
 
 # fasta_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1765310139/alignments/nuc/all/sequence_alignment_aligned_nuc.fasta"
-# tsv_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1765310139/tsv/productive_seq.tsv"
+# tsv_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1765310139/tsv/wanted_seq.tsv"
 # Name <- "sequence_id"                # name of the column containing the sequence ids
 # align_seq <- "sequence_alignment"        # name of the columns containing the sequences to put in the fasta file (can be a single string or several strings seperated by "," if several columns are needed. the fastas will then be created in different folders)
 # align_clone_nb <- 3                    # Minimum number of rows in the tsv file. The program expects this to be respected, otherwise raises an error.
@@ -387,8 +387,8 @@ warn <- NULL
 # other checkings
 fun_source_test(path = fasta_path, script = script)
 fun_source_test(path = tsv_path, script = script)
-if(grepl(x = tsv_path, pattern = ".*productive_seq.tsv$") & tag == "CLONE"){
-    stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nTag CANNOT BE \"CLONE\" IF tsv_path POINTS TO productive_seq.tsv FILE\n\n============\n\n"), call. = FALSE)
+if(grepl(x = tsv_path, pattern = ".*wanted_seq.tsv$") & tag == "CLONE"){
+    stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nTag CANNOT BE \"CLONE\" IF tsv_path POINTS TO wanted_seq.tsv FILE\n\n============\n\n"), call. = FALSE)
 }
 if(grepl(x = tsv_path, pattern = ".*clone_assigned_seq.tsv$") & tag == "ALL"){
     stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nTag CANNOT BE \"CLONE\" IF tsv_path POINTS TO clone_assigned_seq.tsv FILE\n\n============\n\n"), call. = FALSE)

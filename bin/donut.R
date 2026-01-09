@@ -445,7 +445,7 @@ tempo.title <- paste0(
     ifelse(
         kind == "all", 
         paste0(
-            "Donut plot of the productive sequences (see the corresponding productive_seq.tsv) grouped by same ", type_text, "\n\n",
+            "Donut plot of the wanted sequences (see the corresponding wanted_seq.tsv) grouped by same ", type_text, "\n\n",
             "Kind of sequences: ",
             kind
         ), 
@@ -459,7 +459,7 @@ tempo.title <- paste0(
             ifelse(
                 kind == "annotated", 
                 paste0(
-                    "Donut plot of the productive sequences (see the corresponding productive_seq.tsv) grouped by same ", type_text, ",\nfor which at least one name replacement is present (according to the meta_name_replacement parameter of the nextflow.config file)\n\n",
+                    "Donut plot of the wanted sequences (see the corresponding wanted_seq.tsv) grouped by same ", type_text, ",\nfor which at least one name replacement is present (according to the meta_name_replacement parameter of the nextflow.config file)\n\n",
                     "Kind of sequences: ",
                     kind
                 ), 

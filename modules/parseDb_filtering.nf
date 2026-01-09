@@ -11,8 +11,8 @@ process parseDb_filtering {
     path db_pass_ch // parallelization expected
 
     output:
-    path "productive_seq_init.tsv", emit: select_ch, optional: true
-    path "failed_productive_seq.tsv", emit: unselect_ch
+    path "productive_seq_init.tsv", emit: productive_ch, optional: true
+    path "failed_productive_seq.tsv", emit: unproductive_ch
     path "ParseDb_filtering.log", emit: parseDb_filtering_log_ch
 
     script:

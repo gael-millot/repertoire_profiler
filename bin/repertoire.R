@@ -70,7 +70,7 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
         stop(paste0("\n\n================\n\nERROR IN repertoire.R\nTHE args OBJECT HAS NA\n\n================\n\n"), call. = FALSE)
     }
     tempo.arg.names <- c(
-        "productive_seq", 
+        "wanted_seq", 
         "repertoire_names_ch", 
         "cute", 
         "log"
@@ -98,7 +98,7 @@ rm(tempo.cat)
 
 
 # setwd("Z:/thomas_derenne/repertoire_profiler-master/work/6b/2d1f7c09424fd2b0ff522192dd3c9d")
-# all_passed_seq <- "productive_seq.tsv"
+# all_passed_seq <- "wanted_seq.tsv"
 # repertoire_names_ch <- "imgt_human_IGHD.tsv imgt_human_IGHJ.tsv imgt_human_IGHV.tsv imgt_human_IGHC.tsv"
 # cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.4.0/cute_little_R_functions.R"
 # log = "repertoire.log"
@@ -118,7 +118,7 @@ param.list <- c(
     "run.way",
     "tempo.arg.names", 
     if(run.way == "SCRIPT"){"command"},   
-    "productive_seq", 
+    "wanted_seq", 
     "repertoire_names_ch", 
     "cute", 
     "log"
@@ -461,7 +461,7 @@ if(any(arg.check) == TRUE){ # normally no NA
 # end management of NA arguments
 # management of NULL arguments, WARNING: only for repertoire.R because NULL is "NULL" in the nextflow.config file
 tempo.arg <-c( 
-    "productive_seq", 
+    "wanted_seq", 
     "repertoire_names_ch", 
     "log"
 )
@@ -551,7 +551,7 @@ fun_report(data = paste0("\n\n################################ RUNNING\n\n"), ou
 ################ Data import
 
 
-df <- read.table(productive_seq, header = TRUE, sep = "\t", stringsAsFactors = FALSE, comment.char = "")
+df <- read.table(wanted_seq, header = TRUE, sep = "\t", stringsAsFactors = FALSE, comment.char = "")
 
 # processing of the imgt database files
 tempo <- strsplit(rep_file_names, split = "[_.]")
@@ -627,10 +627,10 @@ if( ! all(gene_obs %in% c("v_gene", "j_gene", "c_gene"))){
 }
 
 if( ! all(allele_obs %in% names(df))){
-    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 7 IN repertoire.R:\nPROBLEM WITH THE NAMES OF productive_seq THAT MUST CONTAIN \"v_call\", \"j_call\", \"c_call\"\nHERE IT IS:\n", paste(names(df), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 7 IN repertoire.R:\nPROBLEM WITH THE NAMES OF wanted_seq THAT MUST CONTAIN \"v_call\", \"j_call\", \"c_call\"\nHERE IT IS:\n", paste(names(df), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
 }
 if( ! all(gene_obs %in% names(df))){
-    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 8 IN repertoire.R:\nPROBLEM WITH THE NAMES OF productive_seq THAT MUST CONTAIN \"v_gene\", \"j_gene\" OR \"c_gene\"\nHERE IT IS:\n", paste(names(df), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+    stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 8 IN repertoire.R:\nPROBLEM WITH THE NAMES OF wanted_seq THAT MUST CONTAIN \"v_gene\", \"j_gene\" OR \"c_gene\"\nHERE IT IS:\n", paste(names(df), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
 }
 if(is.null(names(allele))){
     stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 9 IN repertoire.R:\nNO NAMES OF allele CAN BE NULL:", paste(names(allele), collapse = "\n"), "\nSEE rep_file_names:\n", paste(rep_file_names, collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
@@ -657,7 +657,7 @@ if(all.annotation.log == FALSE){
 }
 
 # take the first annotation if several in the tempo column
-if(productive_seq == "productive_seq.tsv"){
+if(wanted_seq == "wanted_seq.tsv"){
     tempo.several.annot.log <- logical(length = nrow(df)) # only false
     tempo <- c(allele_obs, gene_obs)
     for(i1 in 1:length(tempo)){
@@ -668,9 +668,9 @@ if(productive_seq == "productive_seq.tsv"){
         tempo.several.annot.log[tempo.nb > 1] <- TRUE
     }
     if(any(tempo.several.annot.log)){
-        write.table(df[tempo.several.annot.log, ], file = paste0("./productive_seq_several_annot_igmt.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE) # separate repertoires
+        write.table(df[tempo.several.annot.log, ], file = paste0("./wanted_seq_several_annot_igmt.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE) # separate repertoires
     }else{
-        write.table("", file = paste0("./productive_seq_several_annot_igmt.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
+        write.table("", file = paste0("./wanted_seq_several_annot_igmt.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
     }
     for(i1 in 1:length(tempo)){
         col_data <- df[ , names(df) == tempo[i1]]

@@ -140,7 +140,7 @@ if __name__ == '__main__':
 
     # example for testing :
     
-    # tsv_file = '/home/ctaurel/python_scripts/1_productive_seq_clone-pass_germ-pass.tsv'
+    # tsv_file = '/home/ctaurel/python_scripts/1_wanted_seq_clone-pass_germ-pass.tsv'
     # references = ['/mnt/c/Users/ctaurel/Documents/imgt_ref_sequences_database/imgt/mouse/vdj/imgt_mouse_IGHJ.fasta', '/mnt/c/Users/ctaurel/Documents/imgt_ref_sequences_database/imgt/mouse/vdj/imgt_mouse_IGHV.fasta', '/mnt/c/Users/ctaurel/Documents/imgt_ref_sequences_database/imgt/mouse/vdj/imgt_mouse_IGHD.fasta']
 
 

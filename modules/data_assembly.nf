@@ -1,10 +1,10 @@
 
-// Add the dist_to_nearest values and gene columns in the seq_name_replacement file, thereby creating the productive_seq.tsv file
+// Add the dist_to_nearest values and gene columns in the seq_name_replacement file, thereby creating the wanted_seq.tsv file
 // The gene columns are created with the allele columns, minus the allele part
 // + isotype class (4 first characters of the c_gene column)
 process data_assembly {
     label 'immcantation'
-    publishDir path: "${out_path}/tsv", mode: 'copy', pattern: "{productive_seq.tsv}", overwrite: false
+    publishDir path: "${out_path}/tsv", mode: 'copy', pattern: "{wanted_seq.tsv}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{data_assembly.log}", overwrite: false
     cache 'true'
 
@@ -13,7 +13,7 @@ process data_assembly {
     path distToNearest_ch
 
     output:
-    path "productive_seq.tsv", emit: productive_ch
+    path "wanted_seq.tsv", emit: wanted_ch
     path "data_assembly.log"
 
     script:
@@ -101,7 +101,7 @@ process data_assembly {
 
         #### end remove allele info
 
-        write.table(db4, file = paste0("./productive_seq.tsv"), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
+        write.table(db4, file = paste0("./wanted_seq.tsv"), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
     ' |& tee -a data_assembly.log
     """
 }

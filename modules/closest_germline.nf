@@ -15,7 +15,7 @@ process Closest_germline {
 
     output:
     tuple path("*_germ-pass.tsv"), path("clonal_germline_seq.fasta"), emit: closest_ch, optional: true
-    path "failed_clonal_germline.tsv", emit: failed_clonal_germline_ch
+    path "failed_clonal_germline_seq.tsv", emit: failed_clonal_germline_ch
     path "*.log", emit: closest_log_ch
 
     script:
@@ -121,10 +121,10 @@ process Closest_germline {
             # end move clone_id
             write.table(db, file = args[1], row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
         ' *_germ-pass.tsv \$FILENAME |& tee -a Closest_germline.log
-        echo -e "\\n\\nNOTE: EMPTY failed_clonal_germline.tsv FILE RETURNED FOLLOWING THE Closest_germline PROCESS\\n\\n" |& tee -a Closest_germline.log
-        head -1 \${FILE}_germ-pass.tsv | cat > failed_clonal_germline.tsv # keep the header
+        echo -e "\\n\\nNOTE: EMPTY failed_clonal_germline_seq.tsv FILE RETURNED FOLLOWING THE Closest_germline PROCESS\\n\\n" |& tee -a Closest_germline.log
+        head -1 \${FILE}_germ-pass.tsv | cat > failed_clonal_germline_seq.tsv # keep the header
     else
-        cp \$FILENAME failed_clonal_germline.tsv
+        cp \$FILENAME failed_clonal_germline_seq.tsv
         Rscript -e '
             args = commandArgs(trailingOnly=TRUE)
             db <- read.table(args[1], sep = "\\t", header = TRUE)
@@ -153,7 +153,7 @@ process Closest_germline {
             }
             # end reorder as in productive_seq.tsv
             write.table(db, file = args[1], row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
-        ' failed_clonal_germline.tsv \$FILENAME |& tee -a Closest_germline.log
+        ' failed_clonal_germline_seq.tsv \$FILENAME |& tee -a Closest_germline.log
     fi
     """
 }
