@@ -823,6 +823,11 @@ Special acknowledgement to:
 <br><br>
 ## WHAT'S NEW IN
 
+#### v23.0
+
+- Deals with all kinds of Ig or TR sequences.
+- NA count in donuts and heatmaps.
+
 #### v22.0
 
 - Strong improvement in result display.

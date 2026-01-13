@@ -474,7 +474,6 @@ loci <- sapply(repertoire_names_ch, extract_chain)
 chain <- unique(loci[!is.na(loci)]) # extract the IGH or IGK name (ignoring NA values)
 
 if(nrow(obs) > 0){
-    
     if(kind == "tree"){
         if (col == "vj_allele") {
             tempo.primary <- obs$germline_v_call
@@ -512,6 +511,24 @@ if(nrow(obs) > 0){
     tempo.secondary <- unlist(lapply(tempo.secondary, function(x) {
         if (is.na(x)) return(NA) else return(strsplit(x, ",")[[1]][1])
     }))
+
+
+    # # warning: I can use all.annotation.log because I have duplicated the first column of the dataset in the second column, in order to change the name in the first column with metadata. If all(obs[ , 1] == obs[ , 2]) == TRUE, it means no annotation added
+    if(grepl(x = names(obs)[2], pattern = "^initial_")){ # means that fonctional annotations are present
+        annotation.log <- obs[ , 1] == obs[ , 2]
+        all.annotation.log <- all(annotation.log) # if one difference between obs[ , 1] == obs[ , 2], then all.annotation.log is FALSE
+    }else{
+        all.annotation.log <- TRUE
+    }
+    if(all.annotation.log == FALSE){
+        tempo.labels <- obs[ , 1]
+        tempo.labels[annotation.log] <- NA
+    }
+
+
+
+
+
     
     #inactivated because now chain can be both IGL and IGK
     # if(length(chain) != 1){
@@ -543,8 +560,29 @@ if(nrow(obs) > 0){
     } else {
         clone.name <- tempo.primary
     }
-    
-    
+
+    # nb of na
+    tempo_primary_na <- is.na(tempo.primary)
+    if(is.null(tempo.secondary)){
+        nb_na_log <- tempo_primary_na
+    }else{
+        tempo_secondary_na <- is.na(tempo.secondary)
+        nb_na_log <- tempo_primary_na | tempo_secondary_na
+    }
+    if(kind == "annotated" & all.annotation.log != TRUE){
+        tempo_log <- clone.name %in% clone.name[ ! is.na(tempo.labels)]
+        nb_na <- sum(nb_na_log[tempo_log])
+        nb_total <- sum(tempo_log, na.rm = TRUE)
+    }else{
+        nb_na <- sum(nb_na_log)
+        nb_total <- length(tempo.primary)
+    }
+    # end nb of na
+
+
+
+
+
     obs2 <- data.frame(table(clone.name))
     if (nrow(obs2) > 0) {
         names(obs2)[1] <- col
@@ -562,21 +600,21 @@ if(nrow(obs) > 0){
         names(obs2)[1] <- col
         obs2[[col]] <- factor(obs2[[col]], levels = character(0))  # nécessaire pour éviter erreur au reorder
     }
-    # # warning: I can use all.annotation.log because I have duplicated the first column of the dataset in the second column, in order to change the name in the first column with metadata. If all(obs[ , 1] == obs[ , 2]) == TRUE, it means no annotation added
-    if(grepl(x = names(obs)[2], pattern = "^initial_")){ # means that fonctional annotations are present
-        annotation.log <- obs[ , 1] == obs[ , 2]
-        all.annotation.log <- all(annotation.log) # if one difference between obs[ , 1] == obs[ , 2], then all.annotation.log is FALSE
-    }else{
-        all.annotation.log <- TRUE
-    }
+
     if(all.annotation.log == FALSE){
-        tempo.labels <- obs[ , 1]
-        tempo.labels[annotation.log] <- NA
         tempo.data1 <- aggregate(tempo.labels ~ clone.name, FUN = function(x){paste(x, collapse = ",")})
         obs2 <- data.frame(obs2, labels = tempo.data1$tempo.labels[match(obs2[[col]], tempo.data1$clone.name)])
     }
     
-    
+    if(kind == "annotated" & all.annotation.log != TRUE){
+        obs3 <- obs2[ ! is.na(obs2$labels) ,]
+    }else{
+        obs3 <- obs2
+    }
+
+
+
+
     ################ End data modification
     
     ################ Plotting
@@ -585,18 +623,18 @@ if(nrow(obs) > 0){
         tempo.title,
         "\nChain: ", paste(chain, collapse = " "), "\n",
         "Proportions of sequences with the indicated ", type_text, " are indicated in the legend, after the labels.\n", 
-        "The total number of sequences of the donut is indicated in the center.\nSee the donut_stats.tsv file for the complete stats."
+        "The total number of non NA ", type_text, " detected is indicated in the center of the donut.\n",
+        "See the donut_stats.tsv file for the complete stats.\n", 
+        "Number of sequences selected (depending on \"all\", \"annotated\" or \"tree\"): ",
+        nb_total,
+        ".\nNumber of NA removed from the ", type_text, " among the selected number of sequences: ",
+        nb_na,
+        "."
     )
     if( ! is.null(donut_legend_limit)){
         if(sum(obs2$Prop >= donut_legend_limit) < length(obs2$Prop)){
             tempo.title <- paste0(tempo.title, "\nSome classes have been removed from the legend (donut_legend_limit = ", round(donut_legend_limit, 2), "). See the donut_stats.tsv file")
         }
-    }
-    
-    if(kind == "annotated" & all.annotation.log != TRUE){
-        obs3 <- obs2[ ! is.na(obs2$labels) ,]
-    }else{
-        obs3 <- obs2
     }
     
     if(length(obs3$Freq) != 0){

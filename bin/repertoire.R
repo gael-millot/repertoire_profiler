@@ -294,7 +294,7 @@ fun_gg_heatmap2 <- function(
         y = grid::unit(0, "lines"),
         hjust = 0,
         vjust = 0,
-        gp = grid::gpar(fontsize = 12)
+        gp = grid::gpar(fontsize = title.size)
     )
     # end title
     pdf(NULL)
@@ -743,18 +743,22 @@ for(i0 in type){
     # simple repertoires
     for(i1 in 1:length(get(paste0(i0, "_obs_trunk")))){
         tempo.df <- get(paste0(i0, "_obs_trunk"))[[i1]]
-        tempo.df <- tempo.df[ ! is.na(tempo.df)]
-        tempo.df <- factor(tempo.df, levels = unique(get(paste0(i0, "_trunk"))[[i1]]))
+        tempo_df2 <- tempo.df[ ! is.na(tempo.df)]
+        tempo_df2 <- factor(tempo_df2, levels = unique(get(paste0(i0, "_trunk"))[[i1]]))
         # plot
         for(i2 in kind){
+            nb_na <- sum(is.na(tempo.df)) # nb of NA removed in the initial sequences
+            nb_total <- length(tempo.df) # nb of initial sequences
             if(i2 == "non-zero"){
-                tempo.table <- table(tempo.df)
+                tempo.table <- table(tempo_df2)
                 tempo.table.gg <- tempo.table[tempo.table > 0]
             }else if(i2 == "annotated"){
-                tempo.table <- table(tempo.df[ ! annotation.log])
+                nb_na <- sum(is.na(tempo.df[ ! annotation.log])) # nb of NA removed in the initial annotated sequences
+                nb_total <- length(tempo.df[ ! annotation.log]) # nb of initial annotated sequences
+                tempo.table <- table(tempo_df2[ ! annotation.log])
                 tempo.table.gg <- tempo.table[tempo.table > 0]
             }else{
-                tempo.table <- table(tempo.df)
+                tempo.table <- table(tempo_df2)
                 write.table(tempo.table, file = paste0("./rep_", i0, "_", names(get(paste0(i0, "_trunk")))[i1], ".tsv"), row.names = FALSE, col.names = FALSE, sep = "\t", quote = FALSE) # separate repertoires
                 tempo.table.gg <- tempo.table
             }
@@ -773,6 +777,8 @@ for(i0 in type){
                     "Kind: ", i2, "\n",
                     "Type: ", i0, "\n",
                     "Chain: ", paste(chain, collapse = " "), "\n",
+                    "Nb of sequences selected (depending on \"all\"/\"non-zero\" or \"annotated\"): ", nb_total, "\n", 
+                    "Nb of NA removed among the selected number of sequences: ", nb_na, "\n", 
                     "Total count: ", sum(tempo.table.gg$Count, na.rm = TRUE)
                 )
                 # label.size <- 25 / log2(nrow(tempo.table.gg) + 1) # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
@@ -789,11 +795,20 @@ for(i0 in type){
                     cell.value = TRUE,
                     cell.value.size = ifelse(label.size <= 0, 1, label.size) / 3,
                     title = tempo.title,
-                    title.size = 12
+                    title.size = 7
                 )
             }else{
                 # no need to use pdf(NULL) with fun_gg_empty_graph()
-                final.plot <- fun_gg_empty_graph(text = paste0("NO GRAPH PLOTTED FOR ", names(get(paste0(i0, "_trunk")))[i1], "\nNO ALLELE/GENE DETECTED"), text.size = 3)
+                tempo.title <- paste0(
+                    "Locus: ", names(check_concordance_imgt)[i1], "\n",
+                    "Kind: ", i2, "\n",
+                    "Type: ", i0, "\n",
+                    "Chain: ", paste(chain, collapse = " "), "\n",
+                    "Nb of sequences selected (depending on \"all\"/\"non-zero\" or \"annotated\"): ", nb_total, "\n", 
+                    "Nb of NA removed among the selected number of sequences: ", nb_na, "\n", 
+                    "Total count: 0"
+                )
+                final.plot <- fun_gg_empty_graph(text = paste0("NO GRAPH PLOTTED FOR ", names(get(paste0(i0, "_trunk")))[i1], "\nNO ALLELE/GENE DETECTED"), text.size = 3, title = tempo.title)
             }
             ggplot2::ggsave(filename = paste0(names(get(paste0(i0, "_trunk")))[i1], "_", i0, "_", i2, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white") # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
             ggplot2::ggsave(filename = paste0(names(get(paste0(i0, "_trunk")))[i1], "_", i0, "_", i2, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white")
@@ -804,27 +819,40 @@ for(i0 in type){
     # end simple repertoires
     # combined repertoires
     # V x J
-    tempo.df <- get(paste0(i0 , "_obs_trunk"))[get(paste0("var_", i0, "_obs"))]
-    tempo.df[[1]] <- factor(tempo.df[[1]], levels = unique(get(paste0(i0, "_trunk"))[[1]]))
-    tempo.df[[2]] <- factor(tempo.df[[2]], levels = unique(get(paste0(i0, "_trunk"))[[2]]))
+    tempo_df_comb <- get(paste0(i0 , "_obs_trunk"))[get(paste0("var_", i0, "_obs"))]
+    tempo_df_comb[[1]] <- factor(tempo_df_comb[[1]], levels = unique(get(paste0(i0, "_trunk"))[[1]]))
+    tempo_df_comb[[2]] <- factor(tempo_df_comb[[2]], levels = unique(get(paste0(i0, "_trunk"))[[2]]))
     # plot
     for(i1 in kind){
         # here the work is using data frames because it keeps the structure even if one cell
+        # nb of na
+        tempo_primary_na <- is.na(tempo_df_comb[[1]])
+        tempo_secondary_na <- is.na(tempo_df_comb[[2]])
+        nb_na_log <- tempo_primary_na | tempo_secondary_na
+        nb_na <- sum(nb_na_log)
+        nb_total <- length(tempo_df_comb[[1]])
+        # end nb of na
         if(i1 == "non-zero"){
-            tempo.table2 <- as.data.frame.matrix(table(tempo.df))
+            tempo.table2 <- as.data.frame.matrix(table(tempo_df_comb))
             tempo.log <- apply(tempo.table2, 1, sum, na.rm = TRUE) > 0
             tempo.table3 <- tempo.table2[tempo.log, ]
             tempo.log <- apply(tempo.table3, 2, sum, na.rm = TRUE) > 0
             tempo.table3 <- tempo.table3[tempo.log]
         }else if(i1 == "annotated"){
-            tempo <- lapply(X = tempo.df, FUN = function(x){x[ ! annotation.log]})
+            tempo.labels <- df[ , 1]
+            tempo.labels[annotation.log] <- NA
+            clone.name <- paste0(tempo_df_comb[[1]], "_", tempo_df_comb[[2]])
+            tempo_log <- clone.name %in% clone.name[ ! is.na(tempo.labels)]
+            nb_na <- sum(nb_na_log[tempo_log])
+            nb_total <- sum(tempo_log, na.rm = TRUE)
+            tempo <- lapply(X = tempo_df_comb, FUN = function(x){x[tempo_log]})
             tempo.table2 <- as.data.frame.matrix(table(tempo))
             tempo.log <- apply(tempo.table2, 1, sum, na.rm = TRUE) > 0
             tempo.table3 <- tempo.table2[tempo.log, ]
             tempo.log <- apply(tempo.table3, 2, sum, na.rm = TRUE) > 0
             tempo.table3 <- tempo.table3[tempo.log]
         }else{
-            tempo.table2 <- as.data.frame.matrix(table(tempo.df))
+            tempo.table2 <- as.data.frame.matrix(table(tempo_df_comb))
             write.table(tempo.table2, file = paste0("./rep_", i0, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], ".tsv"), row.names = TRUE, col.names = NA, sep = "\t", quote = FALSE) # separate repertoires
             tempo.table3 <- tempo.table2
         }
@@ -843,7 +871,9 @@ for(i0 in type){
                 "Locus: ", names(check_concordance_imgt)[1], "x", names(check_concordance_imgt)[2], "\n",
                 "Kind: ", i1, "\n",
                 "Type: ", i0, "\n",
-                "Chain: ", paste(chain, collapse = " "), "\n",
+                "Chain: ", paste(chain, collapse = " "), "\n", 
+                "Nb of sequences selected (depending on \"all\"/\"non-zero\" or \"annotated\"): ", nb_total, "\n", 
+                "Nb of NA removed among the selected number of sequences: ", nb_na, "\n", 
                 "Total count: ", sum(tempo.table.gg$Count, na.rm = TRUE)
             )
             #label.size <- -5/132 * nrow(tempo.table.gg) + 1081/66 # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
@@ -860,11 +890,20 @@ for(i0 in type){
                 cell.value = TRUE,
                 cell.value.size = ifelse(label.size <= 0, 1, label.size) / 3,
                 title = tempo.title,
-                title.size = 12
+                title.size = 7
             )
         }else{
             # no need to use pdf(NULL) with fun_gg_empty_graph()
-            final.plot <- fun_gg_empty_graph(text = paste0("NO GRAPH PLOTTED FOR ", names( get(paste0(i0, "_trunk")))[i1], "\nNO ALLELE/GENE DETECTED"), text.size = 3)
+            tempo.title <- paste0(
+                "Locus: ", names(check_concordance_imgt)[1], "x", names(check_concordance_imgt)[2], "\n",
+                "Kind: ", i1, "\n",
+                "Type: ", i0, "\n",
+                "Chain: ", paste(chain, collapse = " "), "\n", 
+                "Nb of sequences selected (depending on \"all\"/\"non-zero\" or \"annotated\"): ", nb_total, "\n", 
+                "Nb of NA removed among the selected number of sequences: ", nb_na, "\n", 
+                "Total count: 0"
+                )
+            final.plot <- fun_gg_empty_graph(text = paste0("NO GRAPH PLOTTED FOR ", names( get(paste0(i0, "_trunk")))[i1], "\nNO ALLELE/GENE DETECTED"), text.size = 3, title = tempo.title)
         }
         ggplot2::ggsave(filename = paste0("./rep_", i0, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i1, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white") # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
         ggplot2::ggsave(filename = paste0("./rep_", i0, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i1, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white")
@@ -873,79 +912,115 @@ for(i0 in type){
     # end plot
     # end V x J
     # for each C
-    isotype_subclass_obs <- sort(unique(gene_obs_trunk[[3]]))
-    for(i1 in isotype_subclass_obs){
-        tempo.df <- lapply(X = get(paste0(i0 , "_obs_trunk"))[get(paste0("var_", i0, "_obs"))], 
-                           FUN = function(x) {
-                               c_values <- get(paste0(i0, "_obs_trunk"))[[get(paste0("const_", i0, "_obs"))]]
-                               c_genes <- lapply(strsplit(c_values, "\\*"), function(x) x[[1]])
-                               x[c_genes == i1]
-                           })
-        
-        tempo.df[[1]] <- factor(tempo.df[[1]], levels = unique(get(paste0(i0, "_trunk"))[[1]]))
-        tempo.df[[2]] <- factor(tempo.df[[2]], levels = unique(get(paste0(i0, "_trunk"))[[2]]))
-        # plot
-        for(i2 in kind){
-            # here the work is using data frames because it keeps the structure even if one cell
-            if(i2 == "non-zero"){
-                tempo.table2 <- as.data.frame.matrix(table(tempo.df))
-                tempo.log <- apply(tempo.table2, 1, sum, na.rm = TRUE) > 0
-                tempo.table3 <- tempo.table2[tempo.log, ]
-                tempo.log <- apply(tempo.table3, 2, sum, na.rm = TRUE) > 0
-                tempo.table3 <- tempo.table3[tempo.log]
-            }else if(i2 == "annotated"){
-                tempo <- lapply(X = tempo.df, FUN = function(x){x[ ! annotation.log]})
-                tempo.table2 <- as.data.frame.matrix(table(tempo))
-                tempo.log <- apply(tempo.table2, 1, sum, na.rm = TRUE) > 0
-                tempo.table3 <- tempo.table2[tempo.log, ]
-                tempo.log <- apply(tempo.table3, 2, sum, na.rm = TRUE) > 0
-                tempo.table3 <- tempo.table3[tempo.log]
-            }else{
-                tempo.table2 <- as.data.frame.matrix(table(tempo.df))
-                write.table(tempo.table2, file = paste0("./rep_", i0, "_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], ".tsv"), row.names = TRUE, col.names = NA, sep = "\t", quote = FALSE) # separate repertoires
-                tempo.table3 <- tempo.table2
-            }
-            # end here the work is using data frames because it keeps the structure even if one cell
-            if(sum(tempo.table3, na.rm = TRUE) > 0){
-                if(nrow(tempo.table3) > 1 & ncol(tempo.table3) > 1){
-                    tempo.table.gg <- as.data.frame(as.table(as.matrix(tempo.table3)))
-                    label.size <- (25 - nrow(tempo.table3) * 0.3) / max(1, 0.5 * ncol(tempo.table3))
-                }else{
-                    tempo.table.gg <- data.frame(Var1 = rownames(tempo.table3), Var2 = colnames(tempo.table3), Freq = tempo.table3, row.names = NULL)
-                    label.size <- 25 - nrow(tempo.table.gg)*0.3 
+    if( ! all(is.na(gene_obs_trunk[[3]]), na.rm = FALSE)){
+        isotype_subclass_obs <- sort(unique(gene_obs_trunk[[3]]))
+        for(i1 in isotype_subclass_obs){
+            tempo_df_const <- lapply(
+                X = get(paste0(i0 , "_obs_trunk"))[get(paste0("var_", i0, "_obs"))], 
+                FUN = function(x){
+                    c_values <- get(paste0(i0, "_obs_trunk"))[[get(paste0("const_", i0, "_obs"))]]
+                    c_genes <- lapply(strsplit(c_values, "\\*"), function(x) x[[1]])
+                    x[c_genes == i1]
                 }
-                names(tempo.table.gg) <- c(names(check_concordance_imgt)[1], names(check_concordance_imgt)[2], "Count")
-                tempo.table.gg$Count[tempo.table.gg$Count == 0] <- NA
-                tempo.title <- paste0(
-                    "Locus: ", names(check_concordance_imgt)[1], "x", names(check_concordance_imgt)[2], " for ", i1, "\n",
-                    "Kind: ", i2, "\n",
-                    "Type: ", i0, "\n",
-                    "Chain: ", paste(chain, collapse = " "), "\n",
-                    "Total count: ", sum(tempo.table.gg$Count, na.rm = TRUE)
-                )
-                # label.size <- -5/132 * nrow(tempo.table.gg) + 1081/66 # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
-                final.plot <- fun_gg_heatmap2(
-                    data1 = tempo.table.gg,
-                    x = names(check_concordance_imgt)[2],
-                    y = names(check_concordance_imgt)[1],
-                    z = "Count",
-                    label.size = ifelse(label.size <= 1, 1, label.size),
-                    color.low = "white",
-                    color.high = "blue",
-                    zero.color = grey(0.95),
-                    cell.value = TRUE,
-                    cell.value.size = ifelse(label.size <= 0, 1, label.size) / 3,
-                    title = tempo.title,
-                    title.size = 12
-                )
-            }else{
-                # no need to use pdf(NULL) with fun_gg_empty_graph()
-                final.plot <- fun_gg_empty_graph(title = tempo.title, title.size = 12, text = paste0("NO GRAPH PLOTTED FOR VxJ for ", i1, "\nNO ALLELE/GENE DETECTED"), text.size = 3)
+            )
+            tempo_df_const[[1]] <- factor(tempo_df_const[[1]], levels = unique(get(paste0(i0, "_trunk"))[[1]]))
+            tempo_df_const[[2]] <- factor(tempo_df_const[[2]], levels = unique(get(paste0(i0, "_trunk"))[[2]]))
+            # plot
+            for(i2 in kind){
+                # here the work is using data frames because it keeps the structure even if one cell
+                tempo_primary_na <- is.na(tempo_df_const[[1]])
+                tempo_secondary_na <- is.na(tempo_df_const[[2]])
+                nb_na_log <- tempo_primary_na | tempo_secondary_na
+                nb_na <- sum(nb_na_log)
+                nb_total <- length(tempo_df_const[[1]])
+                if(i2 == "non-zero"){
+                    tempo.table2 <- as.data.frame.matrix(table(tempo_df_const))
+                    tempo.log <- apply(tempo.table2, 1, sum, na.rm = TRUE) > 0
+                    tempo.table3 <- tempo.table2[tempo.log, ]
+                    tempo.log <- apply(tempo.table3, 2, sum, na.rm = TRUE) > 0
+                    tempo.table3 <- tempo.table3[tempo.log]
+                }else if(i2 == "annotated"){
+                    tempo.labels <- df[ , 1]
+                    tempo.labels[annotation.log] <- NA
+                    clone.name <- paste0(tempo_df_const[[1]], "_", tempo_df_const[[2]])
+                    tempo_log <- clone.name %in% clone.name[ ! is.na(tempo.labels)]
+                    nb_na <- sum(nb_na_log[tempo_log])
+                    nb_total <- sum(tempo_log, na.rm = TRUE)
+                    tempo <- lapply(X = tempo_df_const, FUN = function(x){x[tempo_log]})
+                    tempo.table2 <- as.data.frame.matrix(table(tempo))
+                    tempo.log <- apply(tempo.table2, 1, sum, na.rm = TRUE) > 0
+                    tempo.table3 <- tempo.table2[tempo.log, ]
+                    tempo.log <- apply(tempo.table3, 2, sum, na.rm = TRUE) > 0
+                    tempo.table3 <- tempo.table3[tempo.log]
+                }else{
+                    tempo.table2 <- as.data.frame.matrix(table(tempo_df_const))
+                    write.table(tempo.table2, file = paste0("./rep_", i0, "_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], ".tsv"), row.names = TRUE, col.names = NA, sep = "\t", quote = FALSE) # separate repertoires
+                    tempo.table3 <- tempo.table2
+                }
+                # end here the work is using data frames because it keeps the structure even if one cell
+                if(sum(tempo.table3, na.rm = TRUE) > 0){
+                    if(nrow(tempo.table3) > 1 & ncol(tempo.table3) > 1){
+                        tempo.table.gg <- as.data.frame(as.table(as.matrix(tempo.table3)))
+                        label.size <- (25 - nrow(tempo.table3) * 0.3) / max(1, 0.5 * ncol(tempo.table3))
+                    }else{
+                        tempo.table.gg <- data.frame(Var1 = rownames(tempo.table3), Var2 = colnames(tempo.table3), Freq = tempo.table3, row.names = NULL)
+                        label.size <- 25 - nrow(tempo.table.gg)*0.3 
+                    }
+                    names(tempo.table.gg) <- c(names(check_concordance_imgt)[1], names(check_concordance_imgt)[2], "Count")
+                    tempo.table.gg$Count[tempo.table.gg$Count == 0] <- NA
+                    tempo.title <- paste0(
+                        "Locus: ", names(check_concordance_imgt)[1], "x", names(check_concordance_imgt)[2], " for ", i1, "\n",
+                        "Kind: ", i2, "\n",
+                        "Type: ", i0, "\n",
+                        "Chain: ", paste(chain, collapse = " "), "\n", 
+                        "Nb of sequences selected (depending on \"all\"/\"non-zero\" or \"annotated\"): ", nb_total, "\n", 
+                        "Nb of NA removed among the selected number of sequences: ", nb_na, "\n", 
+                        "Total count: ", sum(tempo.table.gg$Count, na.rm = TRUE)
+                    )
+                    # label.size <- -5/132 * nrow(tempo.table.gg) + 1081/66 # use https://www.wolframalpha.com/widgets/view.jsp?id=f995c9aeb1565edd78adb37d2993d66
+                    final.plot <- fun_gg_heatmap2(
+                        data1 = tempo.table.gg,
+                        x = names(check_concordance_imgt)[2],
+                        y = names(check_concordance_imgt)[1],
+                        z = "Count",
+                        label.size = ifelse(label.size <= 1, 1, label.size),
+                        color.low = "white",
+                        color.high = "blue",
+                        zero.color = grey(0.95),
+                        cell.value = TRUE,
+                        cell.value.size = ifelse(label.size <= 0, 1, label.size) / 3,
+                        title = tempo.title,
+                        title.size = 7
+                    )
+                }else{
+                    # no need to use pdf(NULL) with fun_gg_empty_graph()
+                    tempo.title <- paste0(
+                        "Locus: ", names(check_concordance_imgt)[1], "x", names(check_concordance_imgt)[2], " for ", i1, "\n",
+                        "Kind: ", i2, "\n",
+                        "Type: ", i0, "\n",
+                        "Chain: ", paste(chain, collapse = " "), "\n", 
+                        "Nb of sequences selected (depending on \"all\"/\"non-zero\" or \"annotated\"): ", nb_total, "\n", 
+                        "Nb of NA removed among the selected number of sequences: ", nb_na, "\n", 
+                        "Total count: 0"
+                    )
+                    final.plot <- fun_gg_empty_graph(title = tempo.title, title.size = 7, text = paste0("NO GRAPH PLOTTED FOR VxJ for ", i1, "\nNO ALLELE/GENE DETECTED"), text.size = 3)
+                }
+                ggplot2::ggsave(filename = paste0("./rep_", i0, "_for_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white") # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
+                ggplot2::ggsave(filename = paste0("./rep_", i0, "_for_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white")
+                ggplot2::ggsave(filename = paste0("./rep_", i0, "_for_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white")
             }
-            ggplot2::ggsave(filename = paste0("./rep_", i0, "_for_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white") # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
-            ggplot2::ggsave(filename = paste0("./rep_", i0, "_for_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white")
-            ggplot2::ggsave(filename = paste0("./rep_", i0, "_for_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white")
         }
+    }else{
+        tempo.title <- paste0(
+            "Locus: No C detected for", names(check_concordance_imgt)[1], "x", names(check_concordance_imgt)[2], " analysis\n",
+            "Type: ", i0, "\n",
+            "Chain: ", paste(chain, collapse = " "), "\n",
+            "Total count: 0"
+        )
+        final.plot <- fun_gg_empty_graph(title = tempo.title, title.size = 7, text = paste0("NO GRAPH PLOTTED FOR VxJ for ", i1, "\nNO C ALLELE/GENE DETECTED"), text.size = 3, title = tempo.title)
+        ggplot2::ggsave(filename = paste0("./rep_", i0, "_no_C_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white") # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
+        ggplot2::ggsave(filename = paste0("./rep_", i0, "_no_C_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white")
+        ggplot2::ggsave(filename = paste0("./rep_", i0, "_no_C_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white")
     }
     # end plot
     # end for each C
