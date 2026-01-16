@@ -325,12 +325,19 @@ db <- read.table(file.name, header = TRUE, sep = "\t", comment.char = "")
 
 
 
-
 if(all(is.na(db$dist_nearest))){
     cat("\n\nNO DISTANCE HISTOGRAM PLOTTED: shazam::distToNearest() FUNCTION RETURNED ONLY NA (SEE THE dist_nearest COLUMN O THE nearest_distance.tsv FILE)")
     # no need to use pdf(NULL) with fun_gg_empty_graph()
     tempo.plot <- fun_gg_empty_graph(text = "NO DISTANCE HISTOGRAM PLOTTED\nshazam::distToNearest() FUNCTION RETURNED ONLY NA\nSEE THE dist_nearest COLUMN OF THE nearest_distance.tsv FILE", text.size = 3)
-    tempo.name <- "sequence_distance" # do not use "seq_distance" !! It creates a replacement of the seq_distance.pdf file
+    ggplot2::ggsave(filename = "seq_distance_manual.png", plot = tempo.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+    ggplot2::ggsave(filename = "seq_distance_manual.svg", plot = tempo.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+    ggplot2::ggsave(filename = "seq_distance_manual.pdf", plot = tempo.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+    ggplot2::ggsave(filename = "seq_distance_smoothed_auto.png", plot = tempo.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+    ggplot2::ggsave(filename = "seq_distance_smoothed_auto.svg", plot = tempo.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+    ggplot2::ggsave(filename = "seq_distance_smoothed_auto.pdf", plot = tempo.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+    ggplot2::ggsave(filename = "seq_distance_mixture_auto.png", plot = tempo.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+    ggplot2::ggsave(filename = "seq_distance_mixture_auto.svg", plot = tempo.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+    ggplot2::ggsave(filename = "seq_distance_mixture_auto.pdf", plot = tempo.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
 }else{
     tempo.gg.name <- "gg.indiv.plot."
     tempo.gg.count <- 0
@@ -362,9 +369,12 @@ if(all(is.na(db$dist_nearest))){
     pdf(NULL)
     tempo.plot <- suppressMessages(suppressWarnings(gridExtra::arrangeGrob(grobs = list(eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + ")))), ncol = 1, widths = 1, top = title.grob, left = " ", right = " "))) # , left = " ", right = " " : trick to add margins in the plot. padding =  unit(0.5, "inch") is for top margin above the title
     dev.off()
-    tempo.name <- "seq_distance_manual"
+    ggplot2::ggsave(filename = "seq_distance_manual.png", plot = tempo.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+    ggplot2::ggsave(filename = "seq_distance_manual.svg", plot = tempo.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+    ggplot2::ggsave(filename = "seq_distance_manual.pdf", plot = tempo.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
 
-# Plotting of ancillary histograms
+
+    # Plotting of ancillary histograms
     # Automated threshold detection via smoothed density
     tempo.get <- fun_get_message("shazam::findThreshold(db$dist_nearest, method='density')", kind = "error")
     if(is.null(tempo.get)){
@@ -426,9 +436,7 @@ if(all(is.na(db$dist_nearest))){
     }
     # end Plotting of ancillary histograms
 }
-ggplot2::ggsave(filename = paste0(tempo.name, ".png"), plot = tempo.plot, device = "png", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-ggplot2::ggsave(filename = paste0(tempo.name, ".svg"), plot = tempo.plot, device = "svg", path = ".", width = 5, height = 5, units = "in", dpi = 300)
-ggplot2::ggsave(filename = paste0(tempo.name, ".pdf"), plot = tempo.plot, device = "pdf", path = ".", width = 5, height = 5, units = "in", dpi = 300)
+
 
 
 

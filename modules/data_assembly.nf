@@ -39,8 +39,8 @@ process data_assembly {
         }
         if(all(c("sequence_id", "initial_sequence_id") %in% names(db))){
             if(all(db\$sequence_id == db\$initial_sequence_id)){
-                tempo.cat <- paste0("\\n\\n========\\n\\nERROR IN THE data_assembly PROCESS OF NEXTFLOW\\nTHE meta_path AND meta_name_replacement PARAMETERS ARE NOT \\"NULL\\" BUT NO SEQUENCE NAMES HAVE BEEN REPLACED WHEN USING THE meta_name_replacement COLUMN\\n\\n========\\n\\n")
-                stop(tempo.cat)
+                tempo.cat <- paste0("\\n\\n\\n\\nWARNING IN THE data_assembly PROCESS OF NEXTFLOW\\nTHE meta_path AND meta_name_replacement PARAMETERS ARE NOT \\"NULL\\" BUT NO SEQUENCE NAMES HAVE BEEN REPLACED WHEN USING THE meta_name_replacement COLUMN\\n\\n\\n\\n")
+                cat(tempo.cat)
             }
         }
         if(any(is.na(match(db[, tempo.col.name], dtn\$sequence_id)))){

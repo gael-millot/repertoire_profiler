@@ -112,10 +112,6 @@ process igblast_data_check { // cannot be igblast_data_check outside of process 
     val igblast_constant_ref_files
 
     output:
-    path "*.tsv.v", emit: allele_names_tsv_v_ch // v tsv files with allele names
-    path "*.tsv.d", emit: allele_names_tsv_d_ch // d tsv files with allele names
-    path "*.tsv.j", emit: allele_names_tsv_j_ch // j tsv files with allele names
-    path "*.tsv.c", emit: allele_names_tsv_c_ch // c tsv files with allele names
     path "*.tsv", emit: allele_names_tsv_all_ch // all tsv files with allele names
 
     script:
@@ -125,7 +121,9 @@ process igblast_data_check { // cannot be igblast_data_check outside of process 
     REPO_PATH_VAR="/usr/local/share/germlines/imgt/${igblast_organism}/vdj" # path where the imgt .fasta reference seq files are in the docker container
     REPO_PATH_CONST="/usr/local/share/germlines/imgt/${igblast_organism}/constant" # path where the imgt .fasta reference seq files are in the docker container
     V_FILES=\$(awk -v var1="${igblast_v_ref_files}" -v var2="\${REPO_PATH_VAR}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}') # assemble files with their path
-    D_FILES=\$(awk -v var1="${igblast_d_ref_files}" -v var2="\${REPO_PATH_VAR}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}') # assemble files with their path
+    if [[ "${igblast_d_ref_files}" != "NULL" ]] ; then
+        D_FILES=\$(awk -v var1="${igblast_d_ref_files}" -v var2="\${REPO_PATH_VAR}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}') # assemble files with their path
+    fi
     J_FILES=\$(awk -v var1="${igblast_j_ref_files}" -v var2="\${REPO_PATH_VAR}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}') # assemble files with their path
     CONST_FILES=\$(awk -v var1="${igblast_constant_ref_files}" -v var2="\${REPO_PATH_CONST}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}') # assemble files with their path
     for i1 in \$V_FILES ; do
@@ -141,19 +139,21 @@ process igblast_data_check { // cannot be igblast_data_check outside of process 
             cp \${FILENAME}.tsv.v \${FILENAME}.tsv
         fi
     done
-    for i1 in \$D_FILES ; do
-        if [[ ! -e \${i1} ]] ; then
-            echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nFILE DOES NOT EXISTS:\\n\${i1}\\n\\nINDICATED PATH:\\n\${REPO_PATH_VAR}\\n\\nCONTAINS:\\n"
-            ls -la -w 1 \${REPO_PATH_VAR}
-            echo -e "\\n\\n========\\n\\n"
-            exit 1
-        else
-            FILENAME=\$(basename -- "\${i1}") # recover a file name without path
-            FILENAME="\${FILENAME%.*}" # remove extension
-            grep -E '^>.*\$' \${i1} | cut -f2 -d'|' > \${FILENAME}.tsv.d # detect line starting by > and extract the 2nd field after cutting by |
-            cp \${FILENAME}.tsv.d \${FILENAME}.tsv
-        fi
-    done
+    if [[ "${igblast_d_ref_files}" != "NULL" ]] ; then
+        for i1 in \$D_FILES ; do
+            if [[ ! -e \${i1} ]] ; then
+                echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nFILE DOES NOT EXISTS:\\n\${i1}\\n\\nINDICATED PATH:\\n\${REPO_PATH_VAR}\\n\\nCONTAINS:\\n"
+                ls -la -w 1 \${REPO_PATH_VAR}
+                echo -e "\\n\\n========\\n\\n"
+                exit 1
+            else
+                FILENAME=\$(basename -- "\${i1}") # recover a file name without path
+                FILENAME="\${FILENAME%.*}" # remove extension
+                grep -E '^>.*\$' \${i1} | cut -f2 -d'|' > \${FILENAME}.tsv.d # detect line starting by > and extract the 2nd field after cutting by |
+                cp \${FILENAME}.tsv.d \${FILENAME}.tsv
+            fi
+        done
+    fi
     for i1 in \$J_FILES ; do
         if [[ ! -e \${i1} ]] ; then
             echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nFILE DOES NOT EXISTS:\\n\${i1}\\n\\nINDICATED PATH:\\n\${REPO_PATH_VAR}\\n\\nCONTAINS:\\n"
@@ -290,6 +290,7 @@ process seq_name_replacement {
 
 process metadata_check { // cannot be in germ_tree_vizu because I have to use the clone_assigned_seq.tsv file for the check
     label 'immcantation'
+    publishDir "${out_path}/reports", mode: 'copy', pattern: "{metadata_check.log}", overwrite: false
     cache 'true'
 
     input:
@@ -298,6 +299,9 @@ process metadata_check { // cannot be in germ_tree_vizu because I have to use th
     val meta_seq_names
     val meta_name_replacement
     val meta_legend
+
+    output:
+    path "metadata_check.log"
 
     script:
     """
@@ -327,7 +331,8 @@ process metadata_check { // cannot be in germ_tree_vizu because I have to use th
                     stop(paste0("\\n\\n============\\n\\nINTERNAL ERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\" AND IF THE meta_name_replacement PARAMETER IS NOT \\"NULL\\", THEN THE TABLE GENERATED USING THE sample_path PARAMETER MUST CONTAIN initial_sequence_id AS FIRST COLUMN NAME.\\n\\n============\\n\\n"), call. = FALSE)
                 }
                 if( ! any(meta[ , meta_name_replacement] %in% df[ , 1])){
-                   stop(paste0("\\n\\n============\\n\\nERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nTHE meta_file AND meta_name_replacement PARAMETERS OF THE nextflow.config FILE ARE NOT NULL BUT NO NAME REPLACEMENT PERFORMED\\nPROBABLY THAT THE ${meta_seq_names} COLUMN OF THE FILE INDICATED IN THE meta_path PARAMETER IS NOT MADE OF NAMES OF FASTA FILES INDICATED IN THE sample_path PARAMETER\\nFIRST ELEMENTS OF THE ${meta_seq_names} COLUMN (meta_seq_names PARAMETER) OF THE META DATA FILE ARE:\\n", paste(head(meta[ , meta_seq_names], 20), collapse = "\\n"), "\\nFIRST FASTA FILES NAMES ARE:\\n", paste(head(df[ , 1], 20), collapse = "\\n"), "\\n\\n\\n============\\n\\n"), call. = FALSE)
+                   tempo_warn <- paste0("\\n\\n\\n\\nWARNING IN THE metadata_check PROCESS OF NEXTFLOW\\nTHE meta_file AND meta_name_replacement PARAMETERS OF THE nextflow.config FILE ARE NOT NULL BUT NO NAME REPLACEMENT PERFORMED\\nPROBABLY THAT THE ${meta_seq_names} COLUMN OF THE FILE INDICATED IN THE meta_path PARAMETER IS NOT MADE OF NAMES OF FASTA FILES INDICATED IN THE sample_path PARAMETER\\nFIRST ELEMENTS OF THE ${meta_seq_names} COLUMN (meta_seq_names PARAMETER) OF THE META DATA FILE ARE:\\n", paste(head(meta[ , meta_seq_names], 20), collapse = "\\n"), "\\nFIRST FASTA FILES NAMES ARE:\\n", paste(head(df[ , 1], 20), collapse = "\\n"), "\\n\\n\\n\\n")
+                   cat(tempo_warn)
                 }
             }
             if(meta_legend != "NULL"){
@@ -338,7 +343,7 @@ process metadata_check { // cannot be in germ_tree_vizu because I have to use th
                     stop(paste0("\\n\\n============\\n\\nINTERNAL ERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\" AND IF THE meta_legend PARAMETER IS NOT \\"NULL\\", THEN meta_legend MUST BE A COLUMN NAME OF clone_assigned_seq.tsv.\\n\\n============\\n\\n"), call. = FALSE)
                 }
             }
-        '
+        ' |& tee -a metadata_check.log
     fi
     """
 }
@@ -1582,6 +1587,7 @@ workflow {
     // names of the ref files without path
     igblast_v_ref_files = v_files.join(' ').toString()
     igblast_d_ref_files = d_files.join(' ').toString()
+    if(igblast_d_ref_files == ""){igblast_d_ref_files = "NULL"} // NULL file created if no D (K and L for instance)
     igblast_j_ref_files = j_files.join(' ').toString()
     igblast_constant_ref_files = const_files.join(' ').toString()
     igblast_variable_ref_files = "${igblast_v_ref_files} ${igblast_d_ref_files} ${igblast_j_ref_files}"

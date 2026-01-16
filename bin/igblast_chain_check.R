@@ -325,10 +325,12 @@ for(i0 in 1:length(v_file_names)){
     tempo <- sub(x = v_file_names[i0], pattern = ".fasta$", replacement = ".tsv")
     v_vec <- c(v_vec, scan(file = tempo, what = character()))
 }
-d_vec <- NULL
-for(i0 in 1:length(d_file_names)){
-    tempo <- sub(x = d_file_names[i0], pattern = ".fasta$", replacement = ".tsv")
-    d_vec <- c(d_vec, scan(file = tempo, what = character()))
+if(d_file_names != "NULL"){
+    d_vec <- NULL
+    for(i0 in 1:length(d_file_names)){
+        tempo <- sub(x = d_file_names[i0], pattern = ".fasta$", replacement = ".tsv")
+        d_vec <- c(d_vec, scan(file = tempo, what = character()))
+    }
 }
 j_vec <- NULL
 for(i0 in 1:length(j_file_names)){
@@ -351,8 +353,13 @@ fun_report(data = paste0("\n\nSEQ NAME:\n", paste0(df[ , 1], collapse = "\n"), "
 
 
 # names of the columns of the .tsv to deal with
-col_names <- c("v_call", "d_call", "j_call", "c_call")
-file_names <- c("v_vec", "d_vec", "j_vec", "c_vec") # warning : same number and same order !
+if(d_file_names != "NULL"){
+    col_names <- c("v_call", "d_call", "j_call", "c_call")
+    file_names <- c("v_vec", "d_vec", "j_vec", "c_vec") # warning : same number and same order !
+}else{
+    col_names <- c("v_call", "j_call", "c_call")
+    file_names <- c("v_vec", "j_vec", "c_vec") # warning : same number and same order !
+}
 
 if( ! all(col_names %in% names(df))){
     stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 7 IN repertoire.R:\nPROBLEM WITH THE NAMES OF productive_seq THAT MUST CONTAIN \"v_call\", \"d_call\", \"j_call\", \"c_call\".\nHERE IT IS:\n", paste(names(df), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)

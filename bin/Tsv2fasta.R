@@ -614,7 +614,10 @@ if(seq_kind == "IMGT" & align_seq %in% c("query", "igblast_full", "trimmed", "se
                 }
             }
         }else{
-            stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nNO FASTA AND GFF FILES CREATED BECAUSE THE IMPORTED FILE:\n", path, "\nHAS LESS THAN ", align_clone_nb, " SEQUENCES (TOO MUCH NA OR \"\") IN THE ", i0, " COLUMN\n\n================\n\n"))
+            tempo.warn <- paste0("NO FASTA AND GFF FILES CREATED BECAUSE THE IMPORTED FILE:\n", path, "\nHAS LESS THAN ", align_clone_nb, " SEQUENCES (TOO MUCH NA OR \"\") IN THE ", i0, " COLUMN.")
+            cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
+            fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+            warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
         }
     }
 }

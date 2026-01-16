@@ -181,7 +181,9 @@ kable(df, format = "markdown", row.names = FALSE)
 </details>
 Total (wanted + unproductive + unwanted): ```r params$nb_wanted + params$nb_unproductive + params$nb_unwanted```
 
-Wanted ratio: ```r base::round(params$nb_wanted / (params$nb_wanted + params$nb_unproductive + params$nb_unwanted), 2)```
+Productive / Total ratio: ```r base::round(params$nb_productive / (params$nb_wanted + params$nb_unproductive + params$nb_unwanted), 2)```
+
+Wanted / Productive ratio: ```r base::round(params$nb_wanted / params$nb_productive, 2)```
 
 See the productive_seq.tsv, unproductive_seq.tsv, wanted_seq.tsv and unwanted_seq.tsv files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output).
 
