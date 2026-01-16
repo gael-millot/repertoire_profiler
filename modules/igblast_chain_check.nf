@@ -23,6 +23,8 @@ process Igblast_chain_check {
     #!/bin/bash -ue
     set -o pipefail
     # igblast_data_check_ch not required here
+    echo -e "\\n\\n\$PWD\\n" |& tee -a igblast_chain_check.log
+    echo -e "${data_assembly_ch}\\n\\n" |& tee -a igblast_chain_check.log
     igblast_chain_check.R \
 "${data_assembly_ch}" \
 "${igblast_v_ref_files}" \

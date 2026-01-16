@@ -98,7 +98,7 @@ rm(tempo.cat)
 
 ################################ Test
 
-# setwd("C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/97/1d79db74a67e4828be46b9c2064519")
+# setwd("C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/95/654c68e7d6a0d7fb5e5e56841741d7")
 # productive_seq <- "productive_seq_init.tss"
 # v_ref_files <- "imgt_human_IGHV.tss"
 # d_ref_files <- "imgt_human_IGHD.tss"
@@ -340,7 +340,7 @@ for(i0 in 1:length(c_file_names)){
     tempo <- sub(x = c_file_names[i0], pattern = ".fasta$", replacement = ".tsv")
     c_vec <- c(c_vec, scan(file = tempo, what = character()))
 }
-
+fun_report(data = paste0("\n\nSEQ NAME:\n", paste0(df[ , 1], collapse = "\n"), "\n\n"), output = log, path = "./", overwrite = FALSE)
 
 ################ End Data import
 
@@ -359,7 +359,7 @@ if( ! all(col_names %in% names(df))){
 }
 
 not_good_line_nb <- NULL
-for(i0 in length(col_names)){
+for(i0 in 1:length(col_names)){
     tempo_list <- lapply(X = df[ , col_names[i0]], FUN = function(x){
         if(is.na(x)){
             NA
@@ -379,10 +379,12 @@ for(i0 in length(col_names)){
     }
 }
 
+
 if(is.null(not_good_line_nb)){
     selected_df <- df
     not_selected_df <- df[ -(1:nrow(df)), ]
 }else{
+    not_good_line_nb <- unique(not_good_line_nb)
     selected_df <- df[ - not_good_line_nb, ]
     not_selected_df <- df[not_good_line_nb, ]
 }
