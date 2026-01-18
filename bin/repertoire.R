@@ -604,7 +604,7 @@ if(all(c("IGKV", "IGLV") %in% names(allele))){
             gene$IGKC <- NULL
             gene$IGLC <- NULL
         }else{
-            stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 4.6 IN repertoire.R:\nTHE ig_blast_constant_ref_files DO NOT CONTAIN LIGHT CHAIN FILES WHEREAS THE ignlast_variable_ref_files DO.\nIF THE variable_ref_files CONTAIN IGKV, IGLV IGKJ AND IGLJ, THEN THE constant_ref_files MUST CONTAIN IGKC AND IGLC\nHERE ARE ALL THE igblast_ref_files:\n:", paste(names(allele), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+            stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 4.6 IN repertoire.R:\nTHE ig_blast_constant_ref_files DO NOT CONTAIN LIGHT CHAIN FILES WHEREAS THE ignlast_variable_ref_files DO.\nIF THE variable_ref_files CONTAIN IGKV, IGLV IGKJ AND IGLJ, THEN THE constant_ref_files MUST CONTAIN IGKC AND IGLC\nHERE ARE ALL THE igblast_ref_files:\n", paste(names(allele), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
         }
     }else{
         stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 4.7 IN repertoire.R:\nIF THE variable_ref_files CONTAIN IGKV and IGLV THEN IT MUST CONTAIN IGKJ AND IGLJ\nHERE ARE ALL THE igblast_ref_files:\n:", paste(names(allele), collapse = "\n"), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)

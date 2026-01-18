@@ -81,7 +81,7 @@ process data_assembly {
         # The c_call column must be handled with more care because it can have empty values
         subclass <- sapply(db3\$c_call, function(x) {
             if (is.na(x) || x == "") { # The c_call column can have empty values if the sequences are too short
-                return(NA)  # Si NA ou "", on affecte NA
+                return("NA")  # Si NA ou "", on affecte NA
             } else {
                 # Traitement normal: suppression des suffixes après *
                 y <- sub(pattern = "\\\\*.*", replacement = "", x = unlist(strsplit(x, ",")))
@@ -90,14 +90,14 @@ process data_assembly {
         })
         class <- sapply(X = subclass, FUN = function(x) {
             if (is.na(x)) {
-                return(NA)  # Si x est NA, on garde NA
+                return("NA")  # Si x est NA, on garde NA
             } else {
                 y <- sub(pattern = "\\\\*.*", replacement = "", x = x) 
                 y <- substr(y, 1, 4)
                 return(paste0(unique(y), collapse = ","))
             }
         })
-        db4 <- data.frame(db3, v_gene = sub_v, j_gene = sub_j, isotype_class = class, c_gene = subclass)
+        db4 <- data.frame(db3, v_gene = sub_v, j_gene = sub_j, isotype_class = as.character(class), c_gene = as.character(subclass))
 
         #### end remove allele info
 

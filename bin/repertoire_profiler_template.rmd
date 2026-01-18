@@ -360,11 +360,28 @@ Warning in clonal group alignments ([alignments/nuc/clonal](./alignments/nuc/clo
 
 ###  Phylogeny
 
-`r  if(params$itol_subscription == "TRUE"){"Open the different **sequences_\\<SEQ_NAME\\>_align.fasta_itol_url.txt** files in the [phylo/aa](./phylo/aa) folder and click on the link to see the trees."}`
-`r  if(params$itol_subscription == "FALSE"){"To see the trees, follow the link: https://itol.embl.de/upload.cgi. Choose a name for your tree (optional) and upload a '*.treefile' file from the [phylo/aa](./phylo/aa) folder. The trees will then be displayed by iTOL."}`
+```{r, echo=FALSE, results='asis'}
+#remove work directory from current directory
+if(length(list.files("phylo/aa", all.files = TRUE, no.. = TRUE)) == 0 && length(list.files("phylo/aa", all.files = TRUE, no.. = TRUE)) == 0){
+    cat('
+No tree computed because of lack of sequences in clonal groups.
+    ')
+}else{
+    if(params$itol_subscription == "TRUE"){
+        cat('
+Open the different **sequences_\\<SEQ_NAME\\>_align.fasta_itol_url.txt** files in the [phylo/aa](./phylo/aa) folder and click on the link to see the trees.\n\n
+        ')
+    }else{
+        cat('
+To see the trees, follow the link: https://itol.embl.de/upload.cgi. Choose a name for your tree (optional) and upload a "*.treefile" file from the [phylo/aa](./phylo/aa) folder. The trees will then be displayed by iTOL.\n\n
+        ')
+    }
+    cat('
+Alignment visualization is available for each clonal group used in each tree, in the [phylo/aa](./phylo/aa) folder in html format.\nTree scale is the number of mutations per position. Multiply by the length of the sequence to have the number of mutations per sequence.
+    ')
+}
+```
 
-Alignment visualization is available for each clonal group used in each tree, in the [phylo/aa](./phylo/aa) folder in html format.
-Tree scale is the number of mutations per position. Multiply by the length of the sequence to have the number of mutations per sequence
 
 
 <br><br>

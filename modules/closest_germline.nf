@@ -34,7 +34,9 @@ process Closest_germline {
     # variables
 
     REPO_PATH="/usr/local/share/germlines/imgt/${igblast_organism}/vdj" # path where the imgt_human_IGHV.fasta, imgt_human_IGHD.fasta and imgt_human_IGHJ.fasta files are in the docker container
-    VDJ_FILES=\$(awk -v var1="${igblast_variable_ref_files}" -v var2="\${REPO_PATH}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}')
+    VDJ_FILES_INI="${igblast_variable_ref_files}"
+    VDJ_FILES_INI="\${VDJ_FILES_INI// NULL / }" # remove the string NULL if exists
+    VDJ_FILES=\$(awk -v var1="\${VDJ_FILES_INI}" -v var2="\${REPO_PATH}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}')
     # end variables
     if [[ "${clone_germline_kind}" == "full" ]] ; then
         Rscript -e '

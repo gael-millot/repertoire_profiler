@@ -656,7 +656,9 @@ process AddGermlineSequences{
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a AddGermlineSequences.log
 
     REPO_PATH="/usr/local/share/germlines/imgt/${igblast_organism}/vdj" # path where the imgt_human_IGHV.fasta, imgt_human_IGHD.fasta and imgt_human_IGHJ.fasta files are in the docker container
-    VDJ_FILES=\$(awk -v var1="${igblast_variable_ref_files}" -v var2="\${REPO_PATH}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}')
+    VDJ_FILES_INI="${igblast_variable_ref_files}"
+    VDJ_FILES_INI="\${VDJ_FILES_INI// NULL / }" # remove the string NULL if exists
+    VDJ_FILES=\$(awk -v var1="\${VDJ_FILES_INI}" -v var2="\${REPO_PATH}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}')
     GermlineSequences.py -i \$FILENAME -r \${VDJ_FILES} |& tee -a GermlineSequences.log
     """
 }
@@ -970,7 +972,7 @@ process  Mafft_align {
 process Tree {
     publishDir path: "${out_path}/phylo/aa", mode: 'copy', pattern: "{*_aligned_aa.fasta.treefile}", overwrite: false
     publishDir path: "${out_path}/phylo/nuc", mode: 'copy', pattern: "{*_aligned_nuc.fasta.treefile}", overwrite: false
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{tree.log}", overwrite: false
 
     label 'iqtree'
 
@@ -979,16 +981,24 @@ process Tree {
     path phylo_tree_model_file
 
     output:
-    path "*_aligned_aa.fasta.treefile", emit: tree_aa_ch
-    path "*_aligned_nuc.fasta.treefile", emit: tree_nuc_ch
-    path "*.log", emit: tree_log_ch
+    path "*_aligned_aa.fasta.treefile", emit: tree_aa_ch, optional: true
+    path "*_aligned_nuc.fasta.treefile", emit: tree_nuc_ch, optional: true
+    path "tree.log", emit: tree_log_ch
 
     script:
     """
     #!/bin/bash -ue
     set -o pipefail
-    iqtree -nt ${task.cpus} -s ${fasta_aa_alignments} -m ${phylo_tree_model_file}+I+R6 --seed 123456789
-    iqtree -nt ${task.cpus} -s ${fasta_nuc_alignments} -m ${phylo_tree_model_file}+GTR+I+R6 --seed 123456789
+    if (( \$(wc -l < ${fasta_aa_alignments}) / 2 >= 3 )) ; then
+        iqtree -nt ${task.cpus} -s ${fasta_aa_alignments} -m ${phylo_tree_model_file}+I+R6 --seed 123456789 |& tee -a tree.log
+    else
+        echo -e "\\n\\nNUMBER OF AA ALIGNED SEQUENCES < 3: NO TREE RETURNED.\\n\\n" |& tee -a tree.log
+    fi
+    if (( \$(wc -l < ${fasta_nuc_alignments}) / 2 >= 3 )) ; then
+        iqtree -nt ${task.cpus} -s ${fasta_nuc_alignments} -m ${phylo_tree_model_file}+GTR+I+R6 --seed 123456789 |& tee -a tree.log
+    else
+        echo -e "\\n\\nNUMBER OF NUC ALIGNED SEQUENCES < 3: NO TREE RETURNED.\\n\\n" |& tee -a tree.log
+    fi
     """
 }
 
@@ -1537,7 +1547,7 @@ workflow {
             "imgt_${igblast_organism}_IGKV.fasta"
         ]
         j_files += [
-            "imgt_${igblast_organism}_IGLJ.fasta"
+            "imgt_${igblast_organism}_IGKJ.fasta"
         ]
         const_files += "imgt_${igblast_organism}_IGKC.fasta"
     }
@@ -2176,26 +2186,23 @@ workflow {
         aligned_all_ch2,
         phylo_tree_model_file
     )
-    tree_aa = Tree.out.tree_aa_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Tree PROCESS FOR NUC\n\n========\n\n"}
-    tree_nuc = Tree.out.tree_nuc_ch
-    copyLogFile('tree.log', Tree.out.tree_log_ch, out_path)
 
 
+    if(phylo_tree_itol_subscription == "TRUE"){ // Warning: no run if tree does not exist (because tree_nuc_ch and tree_aa_ch are optional)
 
-    Meta2ITOL (
-        meta_file,
-        meta_seq_names
-    )
+        Meta2ITOL (
+            meta_file,
+            meta_seq_names
+        )
 
-    // The ITOL process can only be executed if user has paid the subsription for automated visualization
-
-    if(phylo_tree_itol_subscription == "TRUE"){
-
+        tree_aa = Tree.out.tree_aa_ch
+        tree_nuc = Tree.out.tree_nuc_ch
+        //copyLogFile('tree.log', Tree.out.tree_log_ch, out_path)
         tree = tree_aa.concat(tree_nuc)
-
+        // The ITOL process can only be executed if user has paid the subsription for automated visualization
         ITOL(
-            tree,
-            Meta2ITOL .out.itol_out_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Meta2ITOL  PROCESS\n\n========\n\n"},
+            tree, // Warning: no run if tree does not exist (because tree_nuc_ch and tree_aa_ch are optional)
+            Meta2ITOL.out.itol_out_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Meta2ITOL  PROCESS\n\n========\n\n"},
             phylo_tree_itolkey
         )
 
