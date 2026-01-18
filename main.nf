@@ -1333,6 +1333,7 @@ process print_report{
     cp ${template_rmd} report_file.rmd
     cp ${alignments_viz_rmd} alignments_vizu.rmd
     cp ${alignments_viz_html} alignments_viz.html
+    cp -r "${out_path}/phylo" .
     cp -r "${out_path}/tsv" .
     cp -r "${out_path}/pdf" .
     cp -r "${projectDir}/bin/doc_images" .

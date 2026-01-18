@@ -64,11 +64,11 @@
 
 <br>
 
-The dataset used in the *nextflow.config* file, as an example, is available at https://zenodo.org/records/17883625/files/human_IGH.zip.
+The dataset used in the *nextflow.config* file, as an example, is available at https://zenodo.org/records/18294088/files/human_IGH.zip.
 
 <br>
 
-The metadata file used in the *nextflow.config* file, as an example, is available at https://zenodo.org/records/17883625/files/human_IGH_metadata.tsv.
+The metadata file used in the *nextflow.config* file, as an example, is available at https://zenodo.org/records/18294088/files/human_IGH_metadata.tsv.
 
 <br>
 
@@ -265,7 +265,7 @@ Register at Itol as explained in the [Prerequisite](#1-prerequisite) section abo
 
 By default, all the results are returned in a *result* folder where the *main.nf* executed file is located (created if does not exist). This can be changed using the `out_path_ini` parameter of the *nextflow.config* file. By default, each execution produces a new folder named *repertoire_profiler_\<ID\>*, created inside the *result* folder and containing all the outputs of the execution. The name of the folder can be changed using the `result_folder_name` parameter of the *nextflow.config* file. The new name file will be followed by an \<ID\> in all cases.
 <br><br>
-An example of results obtained with the dataset is present at this address: https://zenodo.org/records/17900455/files/example_of_results.zip.
+An example of results obtained with the dataset is present at this address: https://zenodo.org/records/18294411/files/example_of_results.zip.
 <br><br>
 If the text is cut in the table, reload the page or change the width of the window.
 <br><br>
@@ -827,7 +827,8 @@ Special acknowledgement to:
 
 #### v23.0
 
-- Deals with all kinds of Ig or TR sequences.
+- Deals with all kinds of Ig sequences (H or L and/or K).
+- Deals with a single sequence.
 - NA count in donuts and heatmaps.
 
 #### v22.0
