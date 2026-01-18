@@ -361,6 +361,8 @@ If the text is cut in the table, reload the page or change the width of the wind
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Folder containing phylogenic tree files in amino-acid (aa folder) and nucleotide (nuc folder) sequences of each .fasta aligment file present in the <i>alignments</i> folder. Trees are obtained using <code>iqtree -m phylo_tree_model_file+GTR+I+R6</code> for nucleotide sequences and <code>iqtree -m phylo_tree_model_file+I+R6</code> for aa sequences, with <code>phylo_tree_model_file</code> a parameter of the <i>nextflow.config</i> file. By default, this parameter is a <a href="https://doi.org/10.1093/molbev/msu340">AB model</a> file dedicated to antibodies.
             <ul style="padding-left:1.2em; margin:0;"><li>*fasta.treefile: phylogenetic tree in Newick format for each sequence group in the phylo file (not constructed for groups with fewer than 4 sequences).</li><li>*fasta_itol_url.txt (if the <code>phylo_tree_itol_subscription</code> parameter of the <i>newtflow.config</i> file is <code>TRUE</code>): URL of the phylogenetic tree in iTOL.</li></ul>
+            <br><br>
+            Warning: aa or nuc folders can be empty if not enough sequences to build trees.
         </td>
     </tr>
     <tr>
