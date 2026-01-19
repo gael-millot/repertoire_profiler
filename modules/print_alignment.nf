@@ -6,7 +6,7 @@ process PrintAlignment{
 
 
     output:
-    tuple path("*.html"), val(tag), emit : alignment_html
+    tuple path("*.html"), val(tag), emit : alignment_html, optional: true
 
     script:
     """

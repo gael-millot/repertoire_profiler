@@ -51,6 +51,8 @@
 | **main.nf** | File that can be executed using a linux terminal, a MacOS terminal or Windows 10 WSL2. |
 | **nextflow.config** | Parameter settings for the *main.nf* file. Users have to open this file, set the desired settings and save these modifications before execution. Of note, this configuration file is systematically saved in the reports folder (see [below](#output)) during each execution, to save the parameter settings. |
 | **bin folder** | Contains files required by the *main.nf* file. |
+| **modules folder** | Contains files required by the *main.nf* file. |
+| **conf folder** | Contains files required by the *main.nf* file. |
 | **Licence.txt** | Licence of the release. |
 
 
@@ -436,7 +438,7 @@ If the text is cut in the table, reload the page or change the width of the wind
             - igblast_seq.tsv
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            Sequences annotated by igblast (more precisely by <code>AssignGenes.py igblast --format airr</code>). If empty, generate a subsequent nextflow failure. See <i>wanted_seq.tsv</i> below for the description of the columns. Of note, the number of lines in <i>failed_igblast_seq.tsv</i> and <i>igblast_seq.tsv</i> is equal to the number of submitted .fasta files (header excluded). 
+            Sequences annotated by igblast (more precisely by <code>AssignGenes.py igblast --format airr</code>). If empty, generate a subsequent nextflow failure. See <i>wanted_seq.tsv</i> below for the description of the columns. Of note, the number of lines in <i>failed_igblast_seq.tsv</i> and <i>igblast_seq.tsv</i> is equal to the number of submitted .fasta files (header excluded).<br><br>Warning: Immunoglogulin sequences can easily be annotated using T Receptor genes databases by igblast if mix Immunoglobulin and T Receptor fasta files are mixed in the input, and vice-versa. Thus, do not trust <i>igblast_seq.tsv<i> for the sequences annotations. Trust <i>wanted_seq.tsv<i>.
         </td>
     </tr>
     <tr>
@@ -452,7 +454,7 @@ If the text is cut in the table, reload the page or change the width of the wind
             - productive_seq.tsv
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            Productive sequences. Productive <a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#productive">means</a>: (1) coding region has an open reading frame, (2) no defect in the start codon, splicing sites or regulatory elements, (3) no internal stop codons, (4) an in-frame <a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#junction-versus-cdr3">junction</a> region. See the <i>unproductive_seq.tsv</i> file for sequences that failed to be productive. 
+            Productive sequences. Productive <a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#productive">means</a>: (1) coding region has an open reading frame, (2) no defect in the start codon, splicing sites or regulatory elements, (3) no internal stop codons, (4) an in-frame <a href="https://docs.airr-community.org/en/stable/datarep/rearrangements.html#junction-versus-cdr3">junction</a> region. See the <i>unproductive_seq.tsv</i> file for sequences that failed to be productive.<br><br>Warning: Immunoglogulin sequences can easily be annotated using T Receptor genes databases by igblast if mix Immunoglobulin and T Receptor fasta files are mixed in the input, and vice-versa. Thus, do not trust <i>productive_seq.tsv<i> for the sequences annotations. Trust <i>wanted_seq.tsv<i>.
         </td>
     <tr>
         <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">

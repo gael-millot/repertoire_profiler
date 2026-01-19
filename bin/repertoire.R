@@ -97,9 +97,9 @@ rm(tempo.cat)
 ################################ Test
 
 
-# setwd("Z:/19463_jose_fernando_garcia_rodrigo/repertoire_profiler-c781a6e/work/fe/9bd59a2f421283fdd555622a379bdf")
-# wanted_seq <- "wanted_seq2.tsv"
-# repertoire_names_ch <- "imgt_human_IGHC2.tsv imgt_human_IGHD2.tsv imgt_human_IGHJ2.tsv imgt_human_IGHV2.tsv"
+# setwd("C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/7a/aad70e0b08422d451c7ed1b6b3c7d9")
+# wanted_seq <- "wanted_seq.tsv"
+# repertoire_names_ch <- "imgt_human_TRAC.tsv2 imgt_human_TRAJ.tsv2 imgt_human_TRAV.tsv2"
 # cute = "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/bin/cute_little_R_functions_v12.8.R"
 # log = "repertoire.log"
 
@@ -271,10 +271,10 @@ fun_gg_heatmap2 <- function(
     assign(paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::theme(
         axis.text.x =  if(is.null(x)){ggplot2::element_blank()}else{ggplot2::element_text(size = label.size, angle = 90)},
         axis.title.x =  ggplot2::element_blank(),
-        axis.ticks.x = if(is.null(x)){ggplot2::element_line(size = NA)}else{ggplot2::element_line(size = 0.1)},
+        axis.ticks.x = if(is.null(x)){ggplot2::element_line(size = NULL)}else{ggplot2::element_line(size = 0.1)},
         axis.text.y = if(is.null(y)){ggplot2::element_blank()}else{ggplot2::element_text(size = label.size)},
         axis.title.y =  ggplot2::element_blank(),
-        axis.ticks.y = if(is.null(y)){ggplot2::element_line(size = NA)}else{ggplot2::element_line(size = 0.1)},
+        axis.ticks.y = if(is.null(y)){ggplot2::element_line(size = NULL)}else{ggplot2::element_line(size = 0.1)},
         panel.border = ggplot2::element_rect(linetype = "solid", fill = NA, size = 0.1),
         panel.background = ggplot2::element_rect(fill = "white", colour = "white"),
         legend.title = ggplot2::element_text(size = 12), 
@@ -767,7 +767,7 @@ for(i0 in type){
             }
             if(sum(tempo.table.gg, na.rm = TRUE) > 0){
                 if(length(tempo.table.gg) == 1){
-                    tempo.table.gg <- data.frame(Var1 = names(tempo.table.gg), Count = tempo.table.gg, row.names = NULL)
+                    tempo.table.gg <- data.frame(Var1 = names(tempo.table.gg), Count = tempo.table.gg[1], row.names = NULL)
                     names(tempo.table.gg)[1] <- i0
                 }else{
                     tempo.table.gg <- as.data.frame(tempo.table.gg)

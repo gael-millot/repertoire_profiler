@@ -329,8 +329,8 @@ fun_check <- function(
         }
     }
     if( ! is.null(typeof)){ # all the types are here: https://renenyffenegger.ch/notes/development/languages/R/functions/typeof
-        if( ! (all(typeof %in% c("logical", "integer", "double", "complex", "character", "list", "expression", "symbol", "closure", "special", "builtin", "environment", "S4", "language")) & base::length(typeof) == 1L)){ # "language" is the type of object of class "call" # all() without na.rm -> ok because typeof cannot be NA (tested above)
-            tempo.cat <- paste0("ERROR IN fun_check()", ifelse(is.null(fun.name), "", paste0(" INSIDE ", fun.name)), ": typeof ARGUMENT MUST BE ONE OF THESE VALUE:\n\"logical\", \"integer\", \"double\", \"complex\", \"character\", \"list\", \"expression\", \"name\", \"symbol\", \"closure\", \"special\", \"builtin\", \"environment\", \"S4\", \"language\"")
+        if( ! (all(typeof %in% c("logical", "integer", "double", "complex", "character", "list", "expression", "symbol", "closure", "special", "builtin", "environment", "S4", "language", "object")) & base::length(typeof) == 1L)){ # "language" is the type of object of class "call" # all() without na.rm -> ok because typeof cannot be NA (tested above)
+            tempo.cat <- paste0("ERROR IN fun_check()", ifelse(is.null(fun.name), "", paste0(" INSIDE ", fun.name)), ": typeof ARGUMENT MUST BE ONE OF THESE VALUE:\n\"logical\", \"integer\", \"double\", \"complex\", \"character\", \"list\", \"expression\", \"name\", \"symbol\", \"closure\", \"special\", \"builtin\", \"environment\", \"S4\", \"language\", \"object\"")
             stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between ==
         }
         if(neg.values == FALSE & ! typeof %in% c("double", "integer")){
@@ -343,8 +343,8 @@ fun_check <- function(
         }
     }
     if( ! is.null(mode)){ # all the types are here: https://renenyffenegger.ch/notes/development/languages/R/functions/typeof
-        if( ! (all(mode %in% c("logical", "numeric", "complex", "character", "list", "expression", "name", "symbol", "function", "environment", "S4", "call")) & base::length(mode) == 1L)){ # all() without na.rm -> ok because mode cannot be NA (tested above)
-            tempo.cat <- paste0("ERROR IN fun_check()", ifelse(is.null(fun.name), "", paste0(" INSIDE ", fun.name)), ": mode ARGUMENT MUST BE ONE OF THESE VALUE:\n\"logical\", \"numeric\", \"complex\", \"character\", \"list\", \"expression\", \"name\", \"symbol\", \"function\", \"environment\", \"S4\", \"call\"")
+        if( ! (all(mode %in% c("logical", "numeric", "complex", "character", "list", "expression", "name", "symbol", "function", "environment", "S4", "call", "object")) & base::length(mode) == 1L)){ # all() without na.rm -> ok because mode cannot be NA (tested above)
+            tempo.cat <- paste0("ERROR IN fun_check()", ifelse(is.null(fun.name), "", paste0(" INSIDE ", fun.name)), ": mode ARGUMENT MUST BE ONE OF THESE VALUE:\n\"logical\", \"numeric\", \"complex\", \"character\", \"list\", \"expression\", \"name\", \"symbol\", \"function\", \"environment\", \"S4\", \"call\", \"object\"")
             stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE) # == in stop() to be able to add several messages between ==
         }
         if(neg.values == FALSE & mode != "numeric"){
@@ -469,17 +469,17 @@ text <- paste0(text, " AND ") ;
 text <- paste0(text, toupper(arg.names[i2]), " ", if(all(get(arg.names[i2], env = sys.nframe(), inherit = FALSE) %in% c("matrix", "array"))){"matrix"}else if(all(get(arg.names[i2], env = sys.nframe(), inherit = FALSE) %in% c("factor", "ordered"))){"factor"}else{get(arg.names[i2], env = sys.nframe(), inherit = FALSE)})
 ' # no need of na.rm = TRUE for all() because %in% does not output NA
             # end script to execute
-            if(base::typeof(data) == "double" & double.as.integer.allowed == TRUE & ((arg.names[i2] == "class" & all(get(arg.names[i2], env = sys.nframe(), inherit = FALSE) == "integer")) | (arg.names[i2] == "typeof" & all(get(arg.names[i2], env = sys.nframe(), inherit = FALSE) == "integer")))){ # no need of na.rm = TRUE for all() because == does not output NA if no NA in left of ==, which is the case for arg.names # typeof(data) == "double" means no factor allowed
-                if( ! all(data %% 1 == 0L, na.rm = TRUE)){ # to check integers (use %%, meaning the remaining of a division): see the precedent line. isTRUE(all.equal(data%%1, rep(0, length(data)))) not used because we strictly need zero as a result. Warning: na.rm = TRUE required here for all()
+                if(base::typeof(data) == "double" & double.as.integer.allowed == TRUE & ((arg.names[i2] == "class" & all(get(arg.names[i2], env = sys.nframe(), inherit = FALSE) == "integer")) | (arg.names[i2] == "typeof" & all(get(arg.names[i2], env = sys.nframe(), inherit = FALSE) == "integer")))){ # no need of na.rm = TRUE for all() because == does not output NA if no NA in left of ==, which is the case for arg.names # typeof(data) == "double" means no factor allowed
+                    if( ! all(data %% 1 == 0L, na.rm = TRUE)){ # to check integers (use %%, meaning the remaining of a division): see the precedent line. isTRUE(all.equal(data%%1, rep(0, length(data)))) not used because we strictly need zero as a result. Warning: na.rm = TRUE required here for all()
+                        eval(parse(text = tempo.script)) # execute tempo.script
+                    }
+                }else if( ! any(all(get(arg.names[i2], env = sys.nframe(), inherit = FALSE) %in% c("vector", "ggplot2", "ggplot_built"))) & ! all(eval(parse(text = paste0(arg.names[i2], "(data)"))) %in% get(arg.names[i2], env = sys.nframe(), inherit = FALSE))){ # test the four c("class", "typeof", "mode", "length") arguments with their corresponding function. No need of na.rm = TRUE for all() because %in% does not output NA # no need of na.rm = TRUE for all() because %in% does not output NA # no need of na.rm = TRUE for any() because get get(arg.names) does not contain NA
                     eval(parse(text = tempo.script)) # execute tempo.script
+                }else if(arg.names[i2] == "class" & base::all(base::get(x = arg.names[i2], pos = -1L, envir = base::as.environment(-1), mode = "any", inherits = FALSE) == "ggplot2", na.rm = TRUE) & ! (base::all(base::class(x = data) %in% base::c("gg", "ggplot"), na.rm = TRUE) | base::all(base::class(x = data) %in% base::c("ggplot2::ggplot", "ggplot", "ggplot2::gg", "S7_object", "gg"), na.rm = TRUE))){ # test ggplot object (before and after Rv4.5.2) # no need of na.rm = TRUE for base::all() because == does not output NA if no NA in left of ==, which is the case for arg.names # no need of na.rm = TRUE for base::all() because %in% does not output NA
+                    base::eval(expr = base::parse(text = tempo.script, file = "", n = NULL, prompt = "?", keep.source = base::getOption(x = "keep.source", default = NULL), srcfile = NULL, encoding = "unknown"), envir = base::environment(fun = NULL), enclos = base::environment(fun = NULL)) # execute tempo.script
+                }else if(arg.names[i2] == "class" & base::all(base::get(x = arg.names[i2], pos = -1L, envir = base::as.environment(-1), mode = "any", inherits = FALSE) == "ggplot_built", na.rm = TRUE) & ! (base::all(base::class(x = data) %in% base::c("ggplot_built"), na.rm = TRUE) | base::all(base::class(x = data) %in% base::c("ggplot2::ggplot_built", "ggplot_built", "ggplot2::gg", "S7_object"), na.rm = TRUE))){ # test ggplot_built object (before and after Rv4.5.2) # no need of na.rm = TRUE for base::all() because == does not output NA if no NA in left of ==, which is the case for arg.names # no need of na.rm = TRUE for base::all() because %in% does not output NA
+                    base::eval(expr = base::parse(text = tempo.script, file = "", n = NULL, prompt = "?", keep.source = base::getOption(x = "keep.source", default = NULL), srcfile = NULL, encoding = "unknown"), envir = base::environment(fun = NULL), enclos = base::environment(fun = NULL)) # execute tempo.script
                 }
-            }else if( ! any(all(get(arg.names[i2], env = sys.nframe(), inherit = FALSE) %in% c("vector", "ggplot2"))) & ! all(eval(parse(text = paste0(arg.names[i2], "(data)"))) %in% get(arg.names[i2], env = sys.nframe(), inherit = FALSE))){ # test the four c("class", "typeof", "mode", "length") arguments with their corresponding function. No need of na.rm = TRUE for all() because %in% does not output NA # no need of na.rm = TRUE for all() because %in% does not output NA # no need of na.rm = TRUE for any() because get get(arg.names) does not contain NA
-                eval(parse(text = tempo.script)) # execute tempo.script
-            }else if(arg.names[i2] == "class" & all(get(arg.names[i2], env = sys.nframe(), inherit = FALSE) == "vector") & ! (all(base::class(data) %in% "numeric") | all(base::class(data) %in% "integer") | all(base::class(data) %in% "character") | all(base::class(data) %in% "logical"))){ # test class == "vector". No need of na.rm = TRUE for all() because %in% does not output NA # no need of na.rm = TRUE for all() because == does not output NA if no NA in left of ==, which is the case for arg.names
-                eval(parse(text = tempo.script)) # execute tempo.script
-            }else if(arg.names[i2] == "class" & all(get(arg.names[i2], env = sys.nframe(), inherit = FALSE) == "ggplot2") & ! all(base::class(data) %in% c("gg", "ggplot"))){ # test ggplot object # no need of na.rm = TRUE for all() because == does not output NA if no NA in left of ==, which is the case for arg.names # no need of na.rm = TRUE for all() because %in% does not output NA
-                eval(parse(text = tempo.script)) # execute tempo.script
-            }
             }
         }
     }
@@ -6383,7 +6383,7 @@ fun_gg_get_legend <- function(ggplot_built, fun.name = NULL, lib_path = NULL){
     text.check <- NULL #
     checked.arg.names <- NULL # for function debbuging: used by r_debugging_tools
     ee <- expression(arg.check <- c(arg.check, tempo$problem) , text.check <- c(text.check, tempo$text) , checked.arg.names <- c(checked.arg.names, tempo$object.name))
-    tempo <- fun_check(data = ggplot_built, class = "ggplot_built", mode = "list", fun.name = function.name) ; eval(ee)
+    tempo <- fun_check(data = ggplot_built, class = "ggplot_built", fun.name = function.name) ; eval(ee)
     if( ! is.null(fun.name)){
         tempo <- fun_check(data = fun.name, class = "vector", mode = "character", length = 1, fun.name = function.name) ; eval(ee)
     }
