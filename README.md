@@ -825,6 +825,10 @@ Special acknowledgement to:
 <br><br>
 ## WHAT'S NEW IN
 
+#### v23.1
+
+- Bug fixed when no metadata file
+
 #### v23.0
 
 - Deals with all kinds of Ig sequences (H or L and/or K).

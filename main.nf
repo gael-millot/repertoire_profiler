@@ -344,6 +344,8 @@ process metadata_check { // cannot be in germ_tree_vizu because I have to use th
                 }
             }
         ' |& tee -a metadata_check.log
+    else
+        echo "" |& tee -a metadata_check.log
     fi
     """
 }
@@ -1497,7 +1499,7 @@ workflow {
     // if(igblast_variable_ref_files =~ /^.*IG(K|L)V.*$/){
     //     print("\n\nWARNING:\nLIGHT CHAIN DETECTED IN THE igblast_variable_ref_files parameter.\nBUT CLONAL GROUPING IS GENERALLY RESTRICTED TO HEAVY CHAIN SEQUENCES, AS THE DIVERSITY OF LIGHT CHAINS IS NOT SUFFICIENT TO DISTINGUISH CLONES WITH REASONABLE CERTAINTY")
     // }
-    print("\n\nWARNING:\nTHE REPERTOIRE PROCESS CURRENTLY ONLY SUPPORTS ig REFERENCE FILES AND 'mouse' OR 'human' SPECIES")
+    //print("\n\nWARNING:\nTHE REPERTOIRE PROCESS CURRENTLY ONLY SUPPORTS ig REFERENCE FILES AND 'mouse' OR 'human' SPECIES")
     print("\n\nWARNING:\nTO MAKE THE REPERTOIRES AND DONUTS, THE SCRIPT CURRENTLY TAKES THE FIRST ANNOTATION OF THE IMGT ANNOTATION IF SEVERAL ARE PRESENTS IN THE v_call, j_call OR c_call COLUMN OF THE wanted_seq.tsv FILE")
     print("\n\n")
 
