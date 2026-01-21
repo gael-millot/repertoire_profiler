@@ -14,6 +14,10 @@ process TrimTranslate {
 
     input:
     path checked_tsv_ch // parallelization expected
+    val nb_wanted
+
+    when:
+    nb_wanted > 0
 
     output:
     path "trimtranslate.tsv", emit: trimtranslate_ch // productive file with column sequence_alignment_aa added

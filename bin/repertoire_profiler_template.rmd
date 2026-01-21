@@ -8,7 +8,7 @@ output:
 params:
   nb_input: -1
   nb_igblast: -1
-  nb_igblast_fail: -1
+  nb_unigblast: -1
   nb_productive: -1
   nb_unproductive: -1
   nb_wanted: -1
@@ -23,6 +23,7 @@ params:
   vj_rep: ""
   align_soft: ""
   itol_subscription: "TRUE"
+  warning: ""
 ---
 
 \n\n<br><br>\n\n
@@ -120,11 +121,11 @@ Number of initial input sequences: ```r params$nb_input```
 
 Succes number of sequences: ```r params$nb_igblast```
 <br>
-Failed number of sequences: ```r params$nb_igblast_fail```
+Failed number of sequences: ```r params$nb_unigblast```
 <br>
-Total: ```r params$nb_igblast + params$nb_igblast_fail```
+Total: ```r params$nb_igblast + params$nb_unigblast```
 
-Success ratio: ```r base::round(params$nb_igblast / (params$nb_igblast + params$nb_igblast_fail), 2)```
+Success ratio: ```r base::round(params$nb_igblast / (params$nb_igblast + params$nb_unigblast), 2)```
 
 See the igblast_seq.tsv and the failed_igblast_seq.tsv files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output). 
 
@@ -381,6 +382,21 @@ Alignment visualization is available for each clonal group used in each tree, in
     ')
 }
 ```
+
+
+<br><br>
+
+###  WARNINGS
+
+```{r, echo=FALSE, results='asis'}
+#remove work directory from current directory
+if(param$warning == ""){
+    cat('No warning message reported.')
+}else{
+    cat(param$warning)
+}
+```
+
 
 
 

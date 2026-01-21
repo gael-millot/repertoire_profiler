@@ -16,1153 +16,11 @@ nextflow.enable.dsl=2
 //////// Processes
 
 
-process workflowParam { // create a file with the workflow parameters in out_path
-    label 'bash'
-    publishDir "${out_path}/reports", mode: 'copy', overwrite: false
-    cache 'false'
+// see ./modules folder
 
-    input:
-    val modules
 
-    output:
-    path "Run_info.txt"
 
-    script:
-    """
-    echo "Project (empty means no .git folder where the main.nf file is present): " \$(git -C ${projectDir} remote -v | head -n 1) > Run_info.txt # works only if the main script run is located in a directory that has a .git folder, i.e., that is connected to a distant repo
-    echo "Git info (empty means no .git folder where the main.nf file is present): " \$(git -C ${projectDir} describe --abbrev=10 --dirty --always --tags) >> Run_info.txt # idem. Provide the small commit number of the script and nextflow.config used in the execution
-    echo "Cmd line: ${workflow.commandLine}" >> Run_info.txt
-    echo "execution mode": ${system_exec} >> Run_info.txt
-    modules=$modules # this is just to deal with variable interpretation during the creation of the .command.sh file by nextflow. See also \$modules below
-    if [[ ! -z \$modules ]] ; then
-        echo "loaded modules (according to specification by the user thanks to the --modules argument of main.nf): ${modules}" >> Run_info.txt
-    fi
-    echo "Manifest's pipeline version: ${workflow.manifest.version}" >> Run_info.txt
-    echo "result path: ${out_path}" >> Run_info.txt
-    echo "nextflow version: ${nextflow.version}" >> Run_info.txt
-    echo -e "\\n\\nIMPLICIT VARIABLES:\\n\\nlaunchDir (directory where the workflow is run): ${launchDir}\\nprojectDir (directory where the main.nf script is located): ${projectDir}\\nworkDir (directory where tasks temporary files are created): ${workDir}" >> Run_info.txt
-    echo -e "\\n\\nUSER VARIABLES:\\n\\nout_path: ${out_path}\\nsample_path: ${sample_path}" >> Run_info.txt
-    """
-}
-//${projectDir} nextflow variable
-//${workflow.commandLine} nextflow variable
-//${workflow.manifest.version} nextflow variable
-//Note that variables like ${out_path} are interpreted in the script block
 
-
-
-process Unzip {
-    label 'unzip'
-    cache 'true'
-
-    input:
-    path zip
-    val sample_path
-
-    output:
-    path "*", emit: unzip_ch
-
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail # return the exit code of the first nonzero command in the pipeline, not just the last one (important when using tee)
-    FILENAME_INI=\$(basename -- "${sample_path}")
-    FILE_EXTENSION="\${FILENAME_INI##*.}"
-    FILENAME="\${FILENAME_INI%.*}"
-    if [[ ! "\${FILE_EXTENSION}" =~ zip ]] ; then
-        echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nTHE FILE EXTENSION MUST BE \\".zip\\" AND NOT \${FILENAME_INI}\\n\\n========\\n\\n"
-        exit 1
-    else
-        unzip ${zip}
-    fi
-    rm \$FILENAME_INI
-    for file in "\$FILENAME"/*.* ; do
-        # Check if the file is a regular file and not a directory
-        if [ -f "\$file" ] ; then
-            # Check if the file does not match the extensions .fasta or .fa
-            if [[ ! "\$file" =~ \\.(fasta|fa|fas|fna|txt|seq)\$ ]] ; then
-                echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nALL THE UNZIPPED FILE EXTENSION MUST BE fasta, fa, fna, txt, seq OR faa.\\nHERE A FILE IS:\\n\$file.\\n\\n========\\n\\n"
-                exit 1
-            fi
-        else
-            echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nTHE UNZIPPED FOLDER MUST CONTAIN ONLY FILES WITH THE FOLLOWING EXTENSION: fasta, fa, fna OR faa\\n\\n========\\n\\n"
-            exit 1
-        fi
-    done
-    cp "\$FILENAME"/*.* .
-    rm -r \$FILENAME
-    """
-}
-
-
-
-// next process is for repertoire
-// It currently only accepts IG reference files and 'mouse' or 'human' species
-process igblast_data_check { // cannot be igblast_data_check outside of process because the files are present in the docker
-    label 'immcantation'
-    //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
-
-    cache 'true'
-
-    input:
-    val igblast_organism
-    val igblast_v_ref_files
-    val igblast_d_ref_files
-    val igblast_j_ref_files
-    val igblast_constant_ref_files
-
-    output:
-    path "*.tsv", emit: allele_names_tsv_all_ch // all tsv files with allele names
-
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    REPO_PATH_VAR="/usr/local/share/germlines/imgt/${igblast_organism}/vdj" # path where the imgt .fasta reference seq files are in the docker container
-    REPO_PATH_CONST="/usr/local/share/germlines/imgt/${igblast_organism}/constant" # path where the imgt .fasta reference seq files are in the docker container
-    V_FILES=\$(awk -v var1="${igblast_v_ref_files}" -v var2="\${REPO_PATH_VAR}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}') # assemble files with their path
-    if [[ "${igblast_d_ref_files}" != "NULL" ]] ; then
-        D_FILES=\$(awk -v var1="${igblast_d_ref_files}" -v var2="\${REPO_PATH_VAR}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}') # assemble files with their path
-    fi
-    J_FILES=\$(awk -v var1="${igblast_j_ref_files}" -v var2="\${REPO_PATH_VAR}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}') # assemble files with their path
-    CONST_FILES=\$(awk -v var1="${igblast_constant_ref_files}" -v var2="\${REPO_PATH_CONST}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}') # assemble files with their path
-    for i1 in \$V_FILES ; do
-        if [[ ! -e \${i1} ]] ; then
-            echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nFILE DOES NOT EXISTS:\\n\${i1}\\n\\nINDICATED PATH:\\n\${REPO_PATH_VAR}\\n\\nCONTAINS:\\n"
-            ls -la -w 1 \${REPO_PATH_VAR}
-            echo -e "\\n\\n========\\n\\n"
-            exit 1
-        else
-            FILENAME=\$(basename -- "\${i1}") # recover a file name without path
-            FILENAME="\${FILENAME%.*}" # remove extension
-            grep -E '^>.*\$' \${i1} | cut -f2 -d'|' > \${FILENAME}.tsv.v # detect line starting by > and extract the 2nd field after cutting by |
-            cp \${FILENAME}.tsv.v \${FILENAME}.tsv
-        fi
-    done
-    if [[ "${igblast_d_ref_files}" != "NULL" ]] ; then
-        for i1 in \$D_FILES ; do
-            if [[ ! -e \${i1} ]] ; then
-                echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nFILE DOES NOT EXISTS:\\n\${i1}\\n\\nINDICATED PATH:\\n\${REPO_PATH_VAR}\\n\\nCONTAINS:\\n"
-                ls -la -w 1 \${REPO_PATH_VAR}
-                echo -e "\\n\\n========\\n\\n"
-                exit 1
-            else
-                FILENAME=\$(basename -- "\${i1}") # recover a file name without path
-                FILENAME="\${FILENAME%.*}" # remove extension
-                grep -E '^>.*\$' \${i1} | cut -f2 -d'|' > \${FILENAME}.tsv.d # detect line starting by > and extract the 2nd field after cutting by |
-                cp \${FILENAME}.tsv.d \${FILENAME}.tsv
-            fi
-        done
-    fi
-    for i1 in \$J_FILES ; do
-        if [[ ! -e \${i1} ]] ; then
-            echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nFILE DOES NOT EXISTS:\\n\${i1}\\n\\nINDICATED PATH:\\n\${REPO_PATH_VAR}\\n\\nCONTAINS:\\n"
-            ls -la -w 1 \${REPO_PATH_VAR}
-            echo -e "\\n\\n========\\n\\n"
-            exit 1
-        else
-            FILENAME=\$(basename -- "\${i1}") # recover a file name without path
-            FILENAME="\${FILENAME%.*}" # remove extension
-            grep -E '^>.*\$' \${i1} | cut -f2 -d'|' > \${FILENAME}.tsv.j # detect line starting by > and extract the 2nd field after cutting by |
-            cp \${FILENAME}.tsv.j \${FILENAME}.tsv
-        fi
-    done
-    for i1 in \$CONST_FILES ; do
-        if [[ ! -e \${i1} ]] ; then
-            echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nFILE DOES NOT EXISTS:\\n\${i1}\\n\\nINDICATED PATH:\\n\${REPO_PATH_CONST}\\n\\nCONTAINS:\\n"
-            ls -la -w 1 \${REPO_PATH_CONST}
-            echo -e "\\n\\n========\\n\\n"
-            exit 1
-        else
-            FILENAME=\$(basename -- "\${i1}") # recover a file name without path
-            FILENAME="\${FILENAME%.*}" # remove extension
-            grep -E '^>.*\$' \${i1} | cut -f2 -d'|' > \${FILENAME}.tsv.c # detect line starting by > and extract the 2nd field after cutting by |
-            cp \${FILENAME}.tsv.c \${FILENAME}.tsv
-        fi
-    done
-    """
-    // write ${} between "" to make a single argument when the variable is made of several values separated by a space. Otherwise, several arguments will be considered
-}
-
-
-
-
-
-
-
-
-
-
-
-// Rename the sequence names in the data file
-// The sequence names are replaced by the values of the column meta_name_replacement (specified in .config) of the metadata file
-process seq_name_replacement {
-    label 'r_ig_clustering'
-    cache 'true'
-
-    input:
-    path add_aa_imgt_ch // parallelization expected
-    path meta_file
-    val meta_seq_names
-    val meta_name_replacement
-    val meta_legend
-
-    output:
-    path "*_renamed_seq.tsv", emit: seq_name_replacement_ch
-    path "seq_name_replacement.log", emit: seq_name_replacement_log_ch
-
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    FILENAME=\$(basename -- ${add_aa_imgt_ch}) # recover a file name without path
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a seq_name_replacement.log
-    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a seq_name_replacement.log
-    # check first that the data file does not have the second column name starting by "initial_". Otherwise, with create unproper behavior in donut
-    if [[ "${meta_file}" == "NULL" ]] ; then
-        rm NULL # remove the initial file to avoid to send it into the channel
-        echo -n "" > NULL # new hard file that can be sent into the channel
-        chmod 777 NULL
-        Rscript -e '
-            seq <- read.table("./${add_aa_imgt_ch}", sep = "\\t", header = TRUE)
-            if(grepl(x = names(seq)[2], pattern = "^initial_")){
-                stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_replacement PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS \\"NULL\\", THEN THE SECOND COLUMN OF THE DATA IN THE sample_path PARAMETER CANNOT HAVE THE NAME OF THE SECOND COLUNM STARTING BY \\"initial_\\"\\n\\n============\\n\\n"), call. = FALSE)
-            }
-        ' |& tee -a seq_name_replacement.log
-        IFS='_' read -r -a TEMPO <<< "\${FILENAME}" # string split into array
-        cat ${add_aa_imgt_ch} > ./\${TEMPO[0]}_renamed_seq.tsv |& tee -a seq_name_replacement.log
-    else
-        # if [[ "${meta_file}" != "NULL" && "${meta_name_replacement}" != "NULL" ]] ; then # or [[ "${meta_file}" -ne "NULL" && "${meta_name_replacement}" -ne "NULL" ]], but not !=
-        Rscript -e '
-            meta <- read.table("./${meta_file}", sep = "\\t", header = TRUE)
-            seq <- read.table("./${add_aa_imgt_ch}", sep = "\\t", header = TRUE)
-            id <- seq[1, 1] # Extract the name of the colum one of seq
-            if( ! "${meta_seq_names}" %in% names(meta)){
-                stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_replacement PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\", THEN THE meta_seq_names PARAMETER MUST BE A COLUMN NAME OF THE METADATA FILE.\\n\\n============\\n\\n"), call. = FALSE)
-            }
-            if(names(seq)[1] != "sequence_id"){
-                stop(paste0("\\n\\n============\\n\\nINTERNAL ERROR IN THE seq_name_replacement PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\", THEN THE TABLE GENERATED USING THE sample_path PARAMETER MUST CONTAIN sequence_id AS FIRST COLUMN NAME.\\n\\n============\\n\\n"), call. = FALSE)
-            }
-            if("${meta_name_replacement}" != "NULL"){
-                if( ! "${meta_name_replacement}" %in% names(meta)){
-                    stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_replacement PROCESS OF NEXTFLOW\\nIF NOT \\"NULL\\", THE meta_name_replacement PARAMETER MUST BE A COLUMN NAME OF THE meta_path PARAMETER (METADATA FILE): ", "${meta_name_replacement}", "\\n\\n============\\n\\n"), call. = FALSE)
-                }
-                seq <- data.frame(seq[1], tempo = seq[1], seq[2:length(seq)]) # the second column is created to keep the initial sequence names, before replacement
-                for(i2 in 1:nrow(meta)){
-                    if(sum(seq[ , 2] %in% meta[i2, "${meta_seq_names}"]) > 1){
-                        stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_replacement PROCESS OF NEXTFLOW\\nIN THE METADATA FILE, A SEQUENCE NAME CANNOT BELONG TO SEVERAL VALUES OF THE meta_name_replacement PARAMETER COLUMN NAME OF THE meta_path PARAMETER\\nTHE METAFILE IS: ${meta_file}\\nTHE COLUM NAME IS: ", "${meta_name_replacement}", "\\nTHE PROBLEMATIC REPLACEMENT NAME IN THE METAFILE IS: ", paste(meta[i2, "${meta_seq_names}"], collapse = " "), "\\n\\n============\\n\\n"), call. = FALSE)
-                    }else if(any(seq[ , 2] == meta[i2, "${meta_seq_names}"])){
-                        if( ! (meta[i2, "${meta_name_replacement}"] == "" | is.na(meta[i2, "${meta_name_replacement}"]))){
-                            seq[seq[ , 2] == meta[i2, "${meta_seq_names}"], 1] <- meta[i2, "${meta_name_replacement}"] # replacement of the name in column 1
-                        }
-                    }
-                }
-                names(seq)[2] <- paste0("initial_", names(seq)[1])
-            }
-            if("${meta_legend}" != "NULL"){
-                if( ! "${meta_legend}" %in% names(meta)){
-                    stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_replacement PROCESS OF NEXTFLOW\\nIF THE meta_legend PARAMETER IS NOT \\"NULL\\", THEN IT MUST BE A COLUMN NAME OF THE METADATA FILE.\\n\\n============\\n\\n"), call. = FALSE)
-                }
-                seq <- data.frame(seq, TEMPO = as.character(NA))
-                names(seq)[length(seq)] <- "${meta_legend}"
-                for(i2 in 1:nrow(meta)){
-                    # ifelse(test = "${meta_name_replacement}" == "NULL", yes = 1, no = 2) because 1st column to use or 2nd column
-                    if(sum(seq[ , ifelse(test = "${meta_name_replacement}" == "NULL", yes = 1, no = 2)] %in% meta[i2, "${meta_seq_names}"]) > 1 | sum(meta[i2, "${meta_seq_names}"] %in% seq[ , ifelse(test = "${meta_name_replacement}" == "NULL", yes = 1, no = 2)]) > 1){
-                        stop(paste0("\\n\\n============\\n\\nERROR IN THE seq_name_replacement PROCESS OF NEXTFLOW\\nIN THE METADATA FILE, A SEQUENCE NAME CANNOT MATCH SEVERAL NAMES IN THE TABLE PROVIDED BY THE sample_path PARAMETER.\\nTHE METAFILE IS: ${meta_file}\\nTHE COLUM NAME IS: ", "${meta_name_replacement}", "\\nTHE PROBLEMATIC REPLACEMENT NAME IN THE METAFILE IS: ", paste(meta[i2, "${meta_seq_names}"], collapse = " "), "\\n\\n============\\n\\n"), call. = FALSE)
-                    }else if(any(seq[ , ifelse(test = "${meta_name_replacement}" == "NULL", yes = 1, no = 2)] == meta[i2, "${meta_seq_names}"])){
-                        if( ! (meta[i2, "${meta_legend}"] == "" | is.na(meta[i2, "${meta_legend}"]))){
-                            seq[seq[ , ifelse(test = "${meta_name_replacement}" == "NULL", yes = 1, no = 2)] == meta[i2, "${meta_seq_names}"], "${meta_legend}"] <- meta[i2, "${meta_legend}"]
-                        }
-                    }
-                }
-            }
-            write.table(seq, file = paste0("./", id, "_renamed_seq.tsv"), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
-            # modification of the metadata file for the correct use of ggtree::"%<+%" in germ_tree_vizu.R that uses the column name meta_seq_names for that 
-            # meta <- data.frame(meta, initial_label = meta[ , "${meta_seq_names}"])
-            # meta[ , "${meta_seq_names}"] <- meta[ , "${meta_name_replacement}"]
-            # write.table(meta, file = "./metadata2.tsv", row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
-            # end modification of the metadata file for the correct use of ggtree::"%<+%" in germ_tree_vizu.R that uses the column name meta_seq_names for that
-        ' |& tee -a seq_name_replacement.log
-    fi
-    """
-}
-
-
-process metadata_check { // cannot be in germ_tree_vizu because I have to use the clone_assigned_seq.tsv file for the check
-    label 'immcantation'
-    publishDir "${out_path}/reports", mode: 'copy', pattern: "{metadata_check.log}", overwrite: false
-    cache 'true'
-
-    input:
-    path data_assembly_ch // no parallelization
-    path meta_file
-    val meta_seq_names
-    val meta_name_replacement
-    val meta_legend
-
-    output:
-    path "metadata_check.log"
-
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    if [[ "${meta_file}" != "NULL" ]] ; then
-        Rscript -e '
-            df <- read.table("${data_assembly_ch}", header = TRUE, sep = "\\t")
-            meta <- read.table("./${meta_file}", sep = "\\t", header = TRUE)
-            meta_seq_names <- "${meta_seq_names}" # conversion here because if NULL, block the code
-            meta_name_replacement <- "${meta_name_replacement}" # conversion here because if NULL, block the code
-            meta_legend <- "${meta_legend}" # conversion here because if NULL, block the code
-            if( ! meta_seq_names %in% names(meta)){
-                stop(paste0("\\n\\n============\\n\\nERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\", THEN THE meta_seq_names PARAMETER MUST BE A COLUMN NAME OF THE METADATA FILE.\\n\\n============\\n\\n"), call. = FALSE)
-            }
-            if(meta_name_replacement == "NULL" & meta_legend == "NULL"){
-                stop(paste0("\\n\\n============\\n\\nERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\", THEN THE meta_name_replacement AND meta_legend PARAMETERS CANNOT BE BOTH \\"NULL\\".\\n\\n============\\n\\n"), call. = FALSE)
-            }
-            if(names(df)[1] != "sequence_id"){
-                stop(paste0("\\n\\n============\\n\\nINTERNAL ERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\", THEN THE TABLE GENERATED USING THE sample_path PARAMETER MUST CONTAIN sequence_id AS FIRST COLUMN NAME.\\n\\n============\\n\\n"), call. = FALSE)
-            }
-            if(meta_name_replacement != "NULL"){
-                if( ! meta_name_replacement %in% names(meta)){
-                    stop(paste0("\\n\\n============\\n\\nERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\" AND IF THE meta_name_replacement PARAMETER IS NOT \\"NULL\\", THEN meta_name_replacement MUST BE A COLUMN NAME OF THE METADATA FILE.\\n\\n============\\n\\n"), call. = FALSE)
-                }
-                if(names(df)[2] != "initial_sequence_id"){
-                    stop(paste0("\\n\\n============\\n\\nINTERNAL ERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\" AND IF THE meta_name_replacement PARAMETER IS NOT \\"NULL\\", THEN THE TABLE GENERATED USING THE sample_path PARAMETER MUST CONTAIN initial_sequence_id AS FIRST COLUMN NAME.\\n\\n============\\n\\n"), call. = FALSE)
-                }
-                if( ! any(meta[ , meta_name_replacement] %in% df[ , 1])){
-                   tempo_warn <- paste0("\\n\\n\\n\\nWARNING IN THE metadata_check PROCESS OF NEXTFLOW\\nTHE meta_file AND meta_name_replacement PARAMETERS OF THE nextflow.config FILE ARE NOT NULL BUT NO NAME REPLACEMENT PERFORMED\\nPROBABLY THAT THE ${meta_seq_names} COLUMN OF THE FILE INDICATED IN THE meta_path PARAMETER IS NOT MADE OF NAMES OF FASTA FILES INDICATED IN THE sample_path PARAMETER\\nFIRST ELEMENTS OF THE ${meta_seq_names} COLUMN (meta_seq_names PARAMETER) OF THE META DATA FILE ARE:\\n", paste(head(meta[ , meta_seq_names], 20), collapse = "\\n"), "\\nFIRST FASTA FILES NAMES ARE:\\n", paste(head(df[ , 1], 20), collapse = "\\n"), "\\n\\n\\n\\n")
-                   cat(tempo_warn)
-                }
-            }
-            if(meta_legend != "NULL"){
-                if( ! meta_legend %in% names(meta)){
-                    stop(paste0("\\n\\n============\\n\\nERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\" AND IF THE meta_legend PARAMETER IS NOT \\"NULL\\", THEN THE meta_legend PARAMETER MUST BE A COLUMN NAME OF THE METADATA FILE.\\n\\n============\\n\\n"), call. = FALSE)
-                }
-                if( ! meta_legend %in% names(df)){
-                    stop(paste0("\\n\\n============\\n\\nINTERNAL ERROR IN THE metadata_check PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\" AND IF THE meta_legend PARAMETER IS NOT \\"NULL\\", THEN meta_legend MUST BE A COLUMN NAME OF clone_assigned_seq.tsv.\\n\\n============\\n\\n"), call. = FALSE)
-                }
-            }
-        ' |& tee -a metadata_check.log
-    else
-        echo "" |& tee -a metadata_check.log
-    fi
-    """
-}
-
-process repertoire {
-    label 'r_ig_clustering'
-    publishDir path: "${out_path}/pdf", mode: 'copy', pattern: "{*_repertoire.pdf}", overwrite: false
-    publishDir path: "${out_path}/figures/png", mode: 'copy', pattern: "{*.png}", overwrite: false
-    publishDir path: "${out_path}/figures/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
-    publishDir path: "${out_path}/repertoires", mode: 'copy', pattern: "{rep_*.tsv}", overwrite: false
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{repertoire.log}", overwrite: false
-    cache 'true'
-
-    input:
-    path seq_name_replacement_ch2 // no parallelization
-    path allele_names_tsv_all_ch
-    path cute_file
-
-    output:
-    path "*_repertoire.pdf"
-    path "*.svg"
-    path "*.png", emit: repertoire_png_ch
-    path "rep_*.tsv"
-    path "repertoire.log"
-
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    repertoire.R \
-"${seq_name_replacement_ch2}" \
-"${allele_names_tsv_all_ch}" \
-"${cute_file}" \
-"repertoire.log"
-    """
-}
-
-// Compares cdr3 différences from sequences with same cdr3 length, same v and same j
-// Number of substitutions normalized by the length of the cdr3
-// NA means cdr3 sequences are exactly the same for the group
-process distToNearest {
-    label 'immcantation'
-    publishDir path: "${out_path}/tsv", mode: 'copy', pattern: "{dist_ignored.tsv}", overwrite: false
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{distToNearest.log}", overwrite: false
-    cache 'true'
-
-    input:
-    path trimtranslate_ch2 // no parallelization
-    val clone_model
-    val clone_normalize
-
-    output:
-    path "nearest_distance.tsv", emit: distToNearest_ch
-    path "dist_ignored.tsv", emit: dist_ignored_ch
-    path "distToNearest.log"
-
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    Rscript -e '
-         # WEIRD stuf: if db alone is returned, and if distToNearest_ch is used for the clone_assignment process and followings, everything is fine. But if db3 is returned with db3 <- data.frame(db, dist_nearest = db2\$dist_nearest) or db3 <- data.frame(db, d = db2\$dist_nearest) or data.frame(db, d = db\$sequence_id) or db3 <- data.frame(db, d = as.numeric(db2\$dist_nearest)) or db3 <- data.frame(db[1:3], d = db\$sequence_id, db[4:length(db)]), the get_germ_tree process cannot make trees, while the wanted_seq.tsv seem identical at the end, between the use of db or db3, except that the clone_id order is not the same
-        db <- read.table("${trimtranslate_ch2}", header = TRUE, sep = "\\t")
-        db2 <- shazam::distToNearest(db, sequenceColumn = "junction", locusColumn = "locus", model = "${clone_model}", normalize = "${clone_normalize}", nproc = 1)
-        missing_line_nb <- NULL
-        tempo_log <- is.na(match(db\$sequence_id, db2\$sequence_id))
-        if(any(tempo_log)){
-            missing_line_nb <- which(tempo_log)
-        }
-        if(is.null(missing_line_nb)){
-            not_selected_df <- db[ -(1:nrow(db)), ]
-        }else{
-            not_selected_df <- db[missing_line_nb, ]
-            tempo_db <- as.data.frame(matrix(data = NA, nrow = nrow(not_selected_df), ncol = ncol(db2)))
-            names(tempo_db) <- names(db2)
-            tempo_db\$sequence_id <- db\$sequence_id[missing_line_nb]
-            db2 <- rbind(db2, tempo_db)
-        }
-        write.table(not_selected_df, file = paste0("./dist_ignored.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
-        write.table(db2, file = paste0("./nearest_distance.tsv"), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
-    ' |& tee -a distToNearest.log
-    """
-}
-
-
-process distance_hist {
-    label 'immcantation'
-    publishDir path: "${out_path}/figures/png", mode: 'copy', pattern: "{*.png}", overwrite: false
-    publishDir path: "${out_path}/figures/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{distance_hist.log}", overwrite: false
-    cache 'true'
-
-    input:
-    path distToNearest_ch // no parallelization
-    path cute_file
-    val clone_model
-    val clone_normalize
-    val clone_distance
-
-    output:
-    path "seq*.pdf", emit: histogram_pdf_ch
-    path "*.png", emit: distance_hist_ch // png plot (but sometimes empty) sustematically returned
-    path "*.svg"
-    path "distance_hist.log"
-
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    histogram.R \
-"${distToNearest_ch}" \
-"${clone_model}" \
-"${clone_normalize}" \
-"${clone_distance}" \
-"${cute_file}" \
-"distance_hist.log"
-    """
-}
-
-process histogram_assembly {
-    label 'r_ig_clustering'
-    publishDir path: "${out_path}/pdf", mode: 'copy', pattern: "{seq_distance.pdf}", overwrite: false
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{histogram_assembly.log}", overwrite: false
-    cache 'true'
-
-    input:
-    path histogram_pdf_ch
-
-    output:
-    path "seq_distance.pdf"
-
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    Rscript -e '
-    # assignation to prevent a returned element
-        tempo <- qpdf::pdf_combine(input = list.files(path = ".", pattern = "^seq.*.pdf\$"), output = "./seq_distance.pdf")
-    ' |& tee -a histogram_assembly.log
-    """
-}
-
-
-process clone_assignment {
-    label 'immcantation'
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
-    publishDir path: "${out_path}/tsv", mode: 'copy', pattern: "failed_clone_assigned_seq.tsv", overwrite: false
-    cache 'true'
-
-    input:
-    path wanted_ch // no parallelization
-    val clone_model
-    val clone_normalize
-    val clone_distance
-    val clone_strategy
-    path meta_file
-    val meta_legend
-
-    output:
-    path "*_clone-pass.tsv", emit: clone_ch
-    path "failed_clone_assigned_seq.tsv", emit: failed_clone_ch
-    path "*.log"
-
-    script:
-    """
-    #!/bin/bash -ue
-    # set -o pipefail # inactivated because DefineClones.py returns error that are handled
-    # if [[ -s ${wanted_ch} ]]; then # see above for -s # no need anymore
-    FILENAME=\$(basename -- ${wanted_ch}) # recover a file name without path
-    FILE=\${FILENAME%.*} # file name without extension
-    DefineClones.py -d ${wanted_ch} --act ${clone_strategy} --model ${clone_model} --norm ${clone_normalize} --dist ${clone_distance} --fail |& tee -a clone_assignment.log
-    shopt -s nullglob
-    # files=(\${FILE}_clone-{pass,fail}.tsv) # expend the two possibilities but assign only the existing ones
-    # cp -Lr "\${files[0]}" "tempo.tsv" # copy whatever failed or succeeded
-    cat > run.R <<'RSCRIPT'
-        options(warning.length = 8170)
-        args = commandArgs(trailingOnly=TRUE)
-        db <- read.table(args[1], sep = "\\t", header = TRUE)
-        wanted <- read.table(args[2], sep = "\\t", header = TRUE)
-        output_name <- args[3]
-        # put back meta_legend column name as in wanted_seq.tsv, beacause in lowercase
-        if("${meta_file}" != "NULL" & "${meta_legend}" != "NULL" ){
-            tempo_log <- names(db) == tolower("${meta_legend}")
-            if(any(tempo_log, na.rm = TRUE)){
-                names(db)[tempo_log] <- "${meta_legend}"
-            }
-        }
-        # end put back meta_legend column names as in wanted_seq.tsv, beacause in lowercase
-        # reorder as in wanted_seq.tsv
-        if( ! all(names(wanted) %in% names(db))){
-            stop(paste0("\\n\\n================\\n\\nERROR IN clone_assignment PROCESS.\\nNAMES OF wanted_seq.tsv SHOULD ALL BE IN THE OUTPUT .tsv FILE OF DefineClones.py.\\nNAMES OF wanted_seq.tsv:\\n", paste0(sort(names(wanted)), collapse = " "), "\\nNAMES OF THE OUTPUT:\\n", paste0(sort(names(db)), collapse = " "), "\\n\\n================\\n\\n"), call. = FALSE)
-        }else{
-            tempo_log <- names(db) %in% names(wanted)
-            tempo_db1 <- db[tempo_log]
-            tempo_db2 <- db[ ! tempo_log]
-            tempo_db1 <- tempo_db1[ , match(names(wanted), names(tempo_db1))] # reorder as in wanted_seq.tsv
-            db2 <- data.frame(tempo_db1, tempo_db2)
-            write.table(db2, file = output_name, row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
-        }
-        # end reorder as in wanted_seq.tsv
-RSCRIPT
-# must be at the start of the line (no spaces/tabs) and with no trailing spaces.
-    if [ -s \${FILE}_clone-fail.tsv ]; then # see above for -s
-        Rscript run.R \${FILE}_clone-fail.tsv ${wanted_ch} "failed_clone_assigned_seq.tsv" |& tee -a clone_assignment.log
-    else
-        echo -e "\\n\\nNOTE: EMPTY failed_clone_assigned_seq.tsv FILE RETURNED FOLLOWING THE clone_assignment PROCESS\\n\\n" |& tee -a clone_assignment.log
-        head -1 \${FILE}_clone-pass.tsv | cat > failed_clone_assigned_seq.tsv # header kept
-    fi
-    if [ -s \${FILE}_clone-pass.tsv ] ; then # see above for -s
-        Rscript run.R \${FILE}_clone-pass.tsv ${wanted_ch} "\${FILE}_clone-pass.tsv" |& tee -a clone_assignment.log
-    else
-        echo -e "\\n\\nNOTE: EMPTY *_clone-pass.tsv FILE RETURNED FOLLOWING THE clone_assignment PROCESS\\n\\n" |& tee -a clone_assignment.log
-        head -1 failed_clone_assigned_seq | cat > \${FILE}_clone-pass.tsv # header kept
-        # set -o pipefail
-        # echo -e "\\n\\n========\\n\\nINTERNAL ERROR IN NEXTFLOW EXECUTION\\n\\nOUTPUT FILE OF DefineClones.py IN THE clone_assignment PROCESS SHOULD RETURN *_clone-pass.tsv.\\nCHECK THE clone_assignment.log IN THE report FOLDER INSIDE THE OUTPUT FOLDER\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n"
-        # exit 1
-    fi
-    """
-}
-
-process split_by_clones { // split the file into multiple files according to the clone_id column
-    label 'immcantation'
-    cache 'true'
-
-    input:
-    path clone_ch // no parallelization
-
-    output:
-    path "*_wanted_seq_clone-pass.tsv", emit: clone_split_ch // multiple files -> parall expected
-
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    FILENAME=\$(basename -- ${clone_ch}) # recover a file name without path
-    cp -Lr ${clone_ch} "./TEMPO.tsv" # to have the hard file, not the symlink, because modifications will be performed inside
-    chmod 777 TEMPO.tsv
-    rm \$FILENAME # remove the initial file to avoid to send it into the channel
-    cp -rp TEMPO.tsv "\$FILENAME" # -p for preserve permissions
-    rm TEMPO.tsv
-
-    # Determine the position of the clone_id column
-    clone_id_col=\$(Rscript -e '
-        args <- commandArgs(trailingOnly = TRUE)
-        filename <- args[1]
-
-        # Read the header of the file
-        header <- read.table(filename, sep = "\\t", header = TRUE, nrows = 1)
-
-        # Find the position of the clone_id column
-        clone_id_col <- which(names(header) == "clone_id")
-
-        if (length(clone_id_col) == 0) {
-          cat("ERROR: clone_id column not found in the input file\\n")
-          quit(status = 1)
-        } else {
-          cat(clone_id_col, "\\n")
-        }
-    ' \$FILENAME)
-
-    if [ -z "\$clone_id_col" ]; then
-        echo "ERROR IN THE SPLIT_BY_CLONES PROCESS: clone_id column not found in the input file"
-        exit 1
-    fi
-
-    awk -v var1=\$FILENAME -v col=\$clone_id_col -F "\\t" '{
-        print \$col
-        if(NR == 1){
-            header=\$0 ; next
-        }else{
-            clone_id=\$col
-            if(system( "[ -f " \$col"_"var1 " ] " ) > 0){ # test if a file exists
-                print header > \$col"_"var1
-            }
-            print \$0 > \$col"_"var1
-        }
-    }' \$FILENAME
-    """
-}
-
-
-
-// This process adds the germline sequences for each v,d,j gene specified in the germline_(v|d|j)_call columns present in the tsv file
-// Inputs:
-//      - closest_ch: tsv file containing at least germline_(v|d|j)_call column (otherwise error), sequences already regrouped in clonal groups
-//      - igblast_organism: value specified in nextflow.config
-//  contains germline ref sequences of IMGT database
-//                                     allele names already contained in the tsv will be used to search in thos files for the corresponding sequence
-// Outputs:
-//      - add_germ_ch: same tsv file as closest_ch, with the addition of the new germline_._seq columns
-process AddGermlineSequences{
-    label 'immcantation'
-    cache 'true'
-
-    input:
-    path germline_coords_ch // parallelization expected (by clonal groups)
-    val igblast_organism
-    val igblast_variable_ref_files
-
-    output:
-    path "*_germ-seq.tsv", emit: add_germ_ch
-    path "*.log", emit: add_germ_log_ch
-
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    FILENAME=\$(basename -- ${germline_coords_ch}) # recover a file name without path
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a AddGermlineSequences.log
-    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a AddGermlineSequences.log
-
-    REPO_PATH="/usr/local/share/germlines/imgt/${igblast_organism}/vdj" # path where the imgt_human_IGHV.fasta, imgt_human_IGHD.fasta and imgt_human_IGHJ.fasta files are in the docker container
-    VDJ_FILES_INI="${igblast_variable_ref_files}"
-    VDJ_FILES_INI="\${VDJ_FILES_INI// NULL / }" # remove the string NULL if exists
-    VDJ_FILES=\$(awk -v var1="\${VDJ_FILES_INI}" -v var2="\${REPO_PATH}" 'BEGIN{ORS=" " ; split(var1, array1, " ") ; for (key in array1) {print var2"/"array1[key]}}')
-    GermlineSequences.py -i \$FILENAME -r \${VDJ_FILES} |& tee -a GermlineSequences.log
-    """
-}
-
-
-
-
-// This process takes the germline_alignment_d_mask column, removes the gaps and adds a column to the tsv
-// It then adds to the tsv the translation in amino-acids of the germline_d_mask without gaps
-process TranslateGermline {
-    label 'r_ig_clustering'
-
-    input:
-    path add_germ_ch // parallelization expected (by clonal groups)
-
-    output:
-    path "*-trans_germ-pass.tsv", emit: translate_germ_ch
-    path "*.log", emit: translate_germ_log_ch
-
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    FILENAME=\$(basename -- ${add_germ_ch}) # recover a file name without path
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a TranslateGermline.log
-    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a TranslateGermline.log
-    Rscript -e '
-        file_name <- "${add_germ_ch}"
-        df <- read.table(file_name, sep = "\\t", header = TRUE)
-        germ_nuc <- df\$clonal_germline_sequence_no_gaps
-        # Make sure all germline sequences are the same (which they are supposed to be since this is a single clonal group)
-        if(any(germ_nuc != germ_nuc[1])){
-            stop(paste0("\\n\\n================\\n\\nERROR IN TranslateGermline PROCESS.\\nTHE VALUES INSIDE THE Germline COLUMN SHOULD ALL BE THE SAME, BUT THEY ARE NOT.\\nHERE THEY ARE:\\n", paste0(germ_nuc, collapse = "\\n"),"\\n\\n================\\n\\n"), call. = FALSE)
-        }
-        length_no_gaps <- nchar(germ_nuc[1])
-        if(length_no_gaps %% 3 != 0){
-            cat(paste0("\\nWARNING: THE clonal_germline_sequence_no_gaps COLUMN CONTAINS ", length_no_gaps, " CHARACTERS WHEN GAPS ARE REMOVED, WHICH IS NOT A MULTIPLE OF 3. \\n"), file = "TranslateGermline.log", append = TRUE)
-        }
-        germ_dna <- Biostrings::DNAString(germ_nuc[1])
-        # Catch a warning in the log file if raised
-        withCallingHandlers(
-            expr = {
-                germ_aa <- Biostrings::translate(germ_dna, if.fuzzy.codon="X")
-            },
-            warning = function(w) {
-                cat("WARNING OF Biostrings::translate FUNCTION: ", conditionMessage(w), "\\n", file = "TranslateGermline.log", append = TRUE)
-                invokeRestart("muffleWarning")
-            }
-        )
-        tempo_name <- "clonal_germline_sequence_aa"
-        df[[tempo_name]] <- toString(germ_aa)
-        file_base <- tools::file_path_sans_ext(basename(file_name))
-        new_file_name <- paste0(file_base, "-trans_germ-pass.tsv")
-        # add controls
-        df <- data.frame(df, clonal_germline_identical = df\$clonal_germline_sequence_no_gaps == df\$clonal_germline_alignment_igblast_airr, clonal_germline_aa_identical = df\$clonal_germline_sequence_aa == df\$clonal_germline_alignment_aa_igblast_airr)
-        # end add controls
-        write.table(df, file = paste0("./", new_file_name), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
-    '|& tee -a TranslateGermline.log
-    """
-
-}
-
-
-
-process Clone_id_count {
-    label 'immcantation'
-    publishDir path: "${out_path}/tsv", mode: 'copy', pattern: "clone_id_count.tsv", overwrite: false
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "clone_id_count.log", overwrite: false
-    cache 'true'
-
-    input:
-    path clone_assigned_seq_ch // no parallelization
-
-
-    output:
-    path "clone_id_count.tsv"
-    path "clone_id_count.log"
-
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    Rscript -e '
-        obs <- read.table("./clone_assigned_seq.tsv", sep = "\\t", header = TRUE)
-        clone_id_count <- as.data.frame(table(obs\$clone_id))
-        names(clone_id_count) <- c("clone_id", "count")
-        write.table(clone_id_count, file = "clone_id_count.tsv", row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
-    ' |& tee -a clone_id_count.log
-    """
-}
-
-
-// Makes a fasta file with several sequences based on the sequences present in the tsv input in BOTH nucleotidic format and amino-acidic format
-// The tsv input is expected to already only contain sequences of one same clonal group. For each clonal group, both nuc and aa fastas will be emitted paired up.
-process Tsv2fasta {
-    label 'r_ig_clustering'
-    cache 'true'
-    // publishDir{if(seq_kind != 'IMGT'){return [ path: "${out_path}/fasta", mode: 'copy', pattern: "{*_nuc/*.fasta}", overwrite: false ]}}
-    // publishDir{if(seq_kind != 'IMGT'){return [ path: "${out_path}/fasta", mode: 'copy', pattern: "{*_aa/*.fasta}", overwrite: false ]}}
-    // publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{for_alignment_nuc/*.fasta}", overwrite: false
-    // publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{for_alignment_aa/*.fasta}", overwrite: false
-
-    input:
-    tuple path(all_files_ch), val(seq_kind) // parallelization expected (by clonal groups over align_clone_nb sequences)
-    val align_seq
-    val clone_germline_kind
-    val align_clone_nb
-    path cute_file
-
-    output:
-    tuple path("for_alignment_nuc/*.fasta"), path("for_alignment_aa/*.fasta"), val(seq_kind), emit: fasta_align_ch, optional: true // // already aligned fasta file with seq_kind == "IMGT"
-    tuple path("sequence_alignment_with_gaps_imgt_nuc.fasta"), path("sequence_alignment_with_gaps_imgt_aa.fasta"), val(seq_kind), emit: fasta_align_imgt_ch, optional: true // // already aligned fasta file with seq_kind == "IMGT"
-    path "Tsv2fasta.log", emit: tsv2fasta_log_ch
-    path "warning.txt", emit: warning_ch, optional: true
-
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    FILENAME=\$(basename -- ${all_files_ch}) # recover a file name without path
-    echo -e "\\n\\n################################\\n\\nFILE \${FILENAME}\\n\\nKIND OF SEQ  ${seq_kind}\\n\\n################################\\n\\n" |& tee -a Tsv2fasta.log
-    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a Tsv2fasta.log
-    Tsv2fasta.R \
-    "${all_files_ch}" \
-    "sequence_id" \
-    "${align_seq}" \
-    "${clone_germline_kind}" \
-    "${align_clone_nb}" \
-    "${cute_file}" \
-    "${seq_kind}" \
-    "Tsv2fasta.log"
-    """
-}
-
-
-// Align the amino-acidic sequences that are already in fasta files (grouped by clonal groups)
-process Abalign_align_aa {
-    label 'abalign'
-    
-    input:
-    tuple path(fasta_nuc), path(fasta_aa), val(seq_kind) // parallelization expected (by clonal groups over align_clone_nb sequences)
-    val igblast_organism
-    val igblast_B_heavy_chain
-    val align_abalign_options
-    
-    output:
-    tuple path(fasta_nuc), path(fasta_aa), path("*_align_aa.fasta"), val(seq_kind), emit: aligned_aa_ch
-    path "Abalign_align_aa.log", emit: abalign_align_aa_log_ch
-    
-    script:
-    if( ! (igblast_B_heavy_chain == "TRUE" || igblast_B_heavy_chain == "FALSE") ){
-        error "\n\n========\n\nERROR IN Abalign_align_aa PROCESS\n\nINVALID heavy_chain PARAMETER:\n${heavy_chain}\nMUST BE EITHER \"TRUE\" OR \"FALSE\"\n\n========\n\n"
-    }
-    parms="-al"
-    if(igblast_B_heavy_chain == "TRUE"){parms="-ah"}
-    // Choose the species parameter for abalign
-    switch (igblast_organism) {
-        case "mouse":
-            species = "MU"
-            break
-        case "human":
-            species = "HS"
-            break
-        case "rabbit":
-            species = "OC"
-            break
-        case "rat":
-            species = "MM"
-            break
-        case "rhesus_monkey":
-            species = "RM"
-            break
-        default:
-            error "\n\n========\n\nERROR IN Abalign_align_aa PROCESS\n\nINVALID igblast_organism PARAMETER:\n${igblast_organism}\nMUST BE EITHER \"mouse\" OR \"human\" OR \"rabbit\" OR \"rat\" OR \"rhesus_monkey\"\n\n========\n\n"
-    }
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    FILENAME=\$(basename -- ${fasta_aa}) # recover a file name without path
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a Abalign_align_aa.log
-    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a Abalign_align_aa.log
-    /bin/Abalign_V2_Linux_Term/Abalign ${align_abalign_options} -i ${fasta_aa} ${parms} ${fasta_aa.baseName}_align_aa.fasta -sp ${species}. |& tee -a Abalign_align_aa.log || true
-    # -g   (IMGT Numbering scheme, default)
-    # -lc length.txt -lg 1 # single length computed spanning the indicated regions. For instance, -lc length.txt -lg 1,2,3,4,5,6,7 returns a single length
-    """
-}
-
-
-// Abalign puts fasta headers in all caps. next script is meant to put those headers back to how they originally were
-process Abalign_rename {
-    label 'r_ext'
-    //publishDir path: "${out_path}/alignments/aa", mode: 'copy', pattern: "{*_aligned_aa.fasta}", overwrite: false
-    
-    input:
-    tuple path(fasta_nuc), path(fasta_aa), path(fasta_aa_align), val(seq_kind) // parallelization expected (by clonal groups over align_clone_nb sequences)
-    
-    output:
-    tuple path(fasta_nuc), path("*_aligned_aa.fasta"), val(seq_kind), emit: renamed_aligned_aa_ch
-    path "*_failed_abalign_align.tsv", emit: failed_abalign_align_ch
-    path "Abalign_rename.log", emit: abalign_rename_log_ch
-    
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    Rscript -e '
-        options(warning.length = 8170)
-        args = commandArgs(trailingOnly=TRUE)
-        df_ini <- readLines(args[1])
-        df_align <- readLines(args[2])
-        ini_header_pos <- which(grepl(x = df_ini, pattern = "^>"))
-        align_header_pos <- which(grepl(x = df_align, pattern = "^>"))
-        if( ! all((ini_header_pos + 1) %% 2 == 0)){
-            stop(paste0("\\n\\n========\\n\\nERROR IN Abalign_rename PROCESS\\n\\nHEADER POSITIONS CANNOT BE EVEN NUMBERS.\\nHERE THEY ARE:\\n", ini_header_pos, "\\n\\n========\\n\\n"), call. = FALSE)
-        }
-        if( ! all((align_header_pos + 1) %% 2 == 0)){
-            stop(paste0("\\n\\n========\\n\\nERROR IN Abalign_rename PROCESS\\n\\nHEADER POSITIONS CANNOT BE EVEN NUMBERS.\\nHERE THEY ARE:\\n", align_header_pos, "\\n\\n========\\n\\n"), call. = FALSE)
-        }
-        failed_abalign_align <- c("fasta_name\\theader")
-        df_ini_low <- tolower(df_ini)
-        df_align_low <- tolower(df_align)
-        tempo_log <-  ! df_ini_low[ini_header_pos] %in% df_align_low[align_header_pos]
-        if(any(tempo_log)){
-            tempo_txt <- paste0(paste0("${fasta_aa.baseName}", "\\t", sub(x = df_ini[ini_header_pos][tempo_log], pattern = "^>", replacement = "")), collapse = "\\n")
-            print(paste0("\\n\\nWARNING: ALIGNMENT FAILED FOR ", tempo_txt, "\\n\\n"))
-            failed_abalign_align <- paste0("fasta_name\\theader\\n", paste0(tempo_txt, collapse = "\\n"))
-        }
-        writeLines(failed_abalign_align, con = "${fasta_aa.baseName}_failed_abalign_align.tsv")
-        for(i2 in align_header_pos){
-            tempo_header_align_low <- tolower(df_align[i2])
-            tempo_log <- df_ini_low %in% tempo_header_align_low
-            if(sum(tempo_log) != 1){
-                stop(paste0("\\n\\n========\\n\\nERROR IN Abalign_rename PROCESS\\n\\ntempo_header_align_low MUST EXIST IN df_ini_low.\\ntempo_header_align_low:\\n", tempo_header_align_low, "\\ndf_ini_low:\\n", df_ini_low, "\\n\\n========\\n\\n"), call. = FALSE)
-            }
-            df_align[i2] <- df_ini[tempo_log]
-        }
-        writeLines(df_align, con = "${fasta_aa.baseName}_aligned_aa_tempo.fasta")
-    ' ${fasta_aa} ${fasta_aa.baseName}_align_aa.fasta |& tee -a Abalign_rename.log
-    awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' ${fasta_aa.baseName}_aligned_aa_tempo.fasta > ${fasta_aa.baseName}_aligned_aa.fasta # remove \\n in seq
-    """
-}
-
-
-// This process aligns the nucleotidic fasta files by transfering amino-acidic alignments onto the nucleotidic ones
-process Abalign_align_nuc {
-    label 'goalign'
-    //publishDir path: "${out_path}/alignments/nuc", mode: 'copy', pattern: "{*_aligned_nuc.fasta}", overwrite: false
-
-    input:
-    tuple path(fasta_nuc), path(aligned_aa), val(seq_kind) // parallelization expected (by clonal groups over align_clone_nb sequences)
-
-    output:
-    tuple path("*_aligned_nuc.fasta"), path(aligned_aa), val(seq_kind), emit: aligned_all_ch
-    path "Abalign_align_nuc.log", emit: abalign_align_nuc_log_ch
-
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    FILENAME=\$(basename -- ${fasta_nuc}) # recover a file name without path
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a Abalign_align_nuc.log
-
-    goalign codonalign -i ${aligned_aa} -f ${fasta_nuc} -o ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta |& tee -a Abalign_align_nuc.log
-    awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta > ${fasta_nuc.baseName}_aligned_nuc.fasta # remove \\n in seq
-    """
-}
-
-
-
-process  Mafft_align {
-    label 'mafft'
-    //publishDir path: "${out_path}/alignments/aa", mode: 'copy', pattern: "{*_aligned_aa.fasta}", overwrite: false
-    //publishDir path: "${out_path}/alignments/nuc", mode: 'copy', pattern: "{*_aligned_nuc.fasta}", overwrite: false
-
-    input:
-    tuple path(fasta_nuc), path(fasta_aa), val(seq_kind) // parallelization expected (by clonal groups over align_clone_nb sequences)
-    val align_mafft_all_options
-    val align_mafft_clonal_options
-
-    output:
-    tuple path("*_aligned_nuc.fasta"), path("*_aligned_aa.fasta"), val(seq_kind), emit: aligned_all_ch
-    path "Mafft_align.log", emit: mafft_align_log_ch
-
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    # --op N	Increase gap opening penalty (fewer gaps).
-    # --ep N	Gap extension penalty (usually leave default).
-    # --leavegappyregion	Don’t over-align ends or regions with many gaps.
-    # --keeplength	Preserve sequence end lengths.
-    # --localpair --maxiterate N	Use accurate local iterative refinement.
-    if [[ "${seq_kind}" == "ALL" ]] ; then
-        mafft ${align_mafft_all_options} ${fasta_nuc} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta
-        awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print toupper(\$0) ; next}}END{print "\\n"}' ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta > ${fasta_nuc.baseName}_aligned_nuc.fasta # remove \\n in seq
-        mafft ${align_mafft_all_options} ${fasta_aa} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_aa.baseName}_aligned_aa_tempo.fasta
-        awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' ${fasta_aa.baseName}_aligned_aa_tempo.fasta > ${fasta_aa.baseName}_aligned_aa.fasta # remove \\n in seq
-    elif [[ "${seq_kind}" == "CLONE" ]] ; then
-        mafft ${align_mafft_clonal_options} ${fasta_nuc} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta
-        awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print toupper(\$0) ; next}}END{print "\\n"}' ${fasta_nuc.baseName}_aligned_nuc_tempo.fasta > ${fasta_nuc.baseName}_aligned_nuc.fasta # remove \\n in seq
-        mafft ${align_mafft_clonal_options} ${fasta_aa} | awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' > ${fasta_aa.baseName}_aligned_aa_tempo.fasta
-        awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){if(NR>1){print "\\n"} ; print \$0"\\n"} else {print \$0 ; next}}END{print "\\n"}' ${fasta_aa.baseName}_aligned_aa_tempo.fasta > ${fasta_aa.baseName}_aligned_aa.fasta # remove \\n in seq
-    fi
-    echo "" > Mafft_align.log
-    """
-}
-
-
-
-
-process Tree {
-    publishDir path: "${out_path}/phylo/aa", mode: 'copy', pattern: "{*_aligned_aa.fasta.treefile}", overwrite: false
-    publishDir path: "${out_path}/phylo/nuc", mode: 'copy', pattern: "{*_aligned_nuc.fasta.treefile}", overwrite: false
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{tree.log}", overwrite: false
-
-    label 'iqtree'
-
-    input:
-    tuple path(fasta_nuc_alignments), path(fasta_aa_alignments)  // parallelization expected (by clonal groups over align_clone_nb sequences)
-    path phylo_tree_model_file
-
-    output:
-    path "*_aligned_aa.fasta.treefile", emit: tree_aa_ch, optional: true
-    path "*_aligned_nuc.fasta.treefile", emit: tree_nuc_ch, optional: true
-    path "tree.log", emit: tree_log_ch
-
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    if (( \$(wc -l < ${fasta_aa_alignments}) / 2 >= 3 )) ; then
-        iqtree -nt ${task.cpus} -s ${fasta_aa_alignments} -m ${phylo_tree_model_file}+I+R6 --seed 123456789 |& tee -a tree.log
-    else
-        echo -e "\\n\\nNUMBER OF AA ALIGNED SEQUENCES < 3: NO TREE RETURNED.\\n\\n" |& tee -a tree.log
-    fi
-    if (( \$(wc -l < ${fasta_nuc_alignments}) / 2 >= 3 )) ; then
-        iqtree -nt ${task.cpus} -s ${fasta_nuc_alignments} -m ${phylo_tree_model_file}+GTR+I+R6 --seed 123456789 |& tee -a tree.log
-    else
-        echo -e "\\n\\nNUMBER OF NUC ALIGNED SEQUENCES < 3: NO TREE RETURNED.\\n\\n" |& tee -a tree.log
-    fi
-    """
-}
-
-process Meta2ITOL  {
-    label 'tabletoitol'
-
-    input:
-    path meta_file // no parallelization
-    val meta_seq_names
-
-    output:
-    path "iTOL*", emit: itol_out_ch
-
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    if [ "${meta_file}" == "NULL" ]; then
-        echo "No metadata provided; skipping iTOL annotation" > skip.iTOL.txt
-        touch iTOL.empty # create the empty file iTOL.empty
-        exit 0
-    else
-        table2itol.R -i ${meta_seq_names} ${meta_file}
-        # create three files: iTOL_colorstrip-Isotype.txt, iTOL_colorstrip-Name.txt, iTOL_gradient-KD.txt
-    fi
-    """
-}
-
-
-process ITOL{
-    label 'gotree'
-
-    input:
-    path tree
-    path itol_files
-    val phylo_tree_itolkey
-
-    output:
-    path "*_aligned_aa.fasta_itol_url.txt", emit: itol_aa_ch, optional: true
-    path "*_aligned_nuc.fasta_itol_url.txt", emit: itol_nuc_ch, optional: true
-
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    # Check if itol_files is made of iTOL.empty # -s means exists and non-empty
-    if [ ! -s "iTOL.empty" ]; then 
-        gotree upload itol --project gotree_uploads --user-id $phylo_tree_itolkey -i $tree > ${tree.baseName}_itol_url.txt 2>&1
-    else
-        # add metadata
-        gotree upload itol --project gotree_uploads --user-id $phylo_tree_itolkey -i $tree $itol_files > ${tree.baseName}_itol_url.txt 2>&1 
-    fi
-    """
-}
-
-
-// Creates donut plots for the constant and variable region ; grouped by same allele or genes
-// Inputs:
-//      - kind: kind of donut plot to display. can be "all", "annotated" or "tree"
-//      - data: tsv file containing the sequences to plot 
-//      - col: columns in the data file to take into account when plotting the donut (can be c_call if the donut should be grouped by same constant region alleles for instance)
-//      - donut_*: parameters for the display of the donut. These are entered in the nextflow.config file
-//      - cute_file: file containing R functions used in the donut.R script
-//      - igblast_variable_ref_files & igblast_constant_ref_files: only used to be certain that all studied loci are displayed in the donut's title (if we included IGL and IGK in the study but only one was found, both loci still need to be in the title)
-process donut {
-    label 'r_ext'
-    //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
-    //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.pdf}", overwrite: false
-    publishDir path: "${out_path}/figures/png", mode: 'copy', pattern: "{*.png}", overwrite: false
-    publishDir path: "${out_path}/figures/svg", mode: 'copy', pattern: "{*.svg}", overwrite: false
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{*.log}", overwrite: false
-    cache 'true'
-
-    input:
-    tuple val(kind), path(data), val(col) // 12 parallelization expected
-    val donut_palette
-    val donut_hole_size
-    val donut_hole_text
-    val donut_hole_text_size
-    val donut_border_color
-    val donut_border_size
-    val donut_annotation_distance
-    val donut_annotation_size
-    val donut_annotation_force
-    val donut_annotation_force_pull
-    val donut_legend_width
-    val donut_legend_text_size
-    val donut_legend_box_size
-    val donut_legend_box_space
-    val donut_legend_limit
-    path cute_file
-    path allele_names_tsv_all_ch
-
-    output:
-    path "*.tsv", emit: donut_tsv_ch, optional: true
-    path "*.pdf", emit: donut_pdf_ch, optional: true
-    path "*.png", emit: donuts_png
-    path "*.svg"
-    path "*.log"
-
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    FILENAME=\$(basename -- ${data}) # recover a file name without path
-    echo -e "\\n\\n################################\\n\\n\$FILENAME\\nKIND: ${kind}\\nCOL: ${col}\\n\\n################################\\n\\n" |& tee -a ${kind}_donut.log
-    echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a ${kind}_donut.log
-    donut.R \
-"${data}" \
-"${kind}" \
-"${col}" \
-"${donut_palette}" \
-"${donut_hole_size}" \
-"${donut_hole_text}" \
-"${donut_hole_text_size}" \
-"${donut_border_color}" \
-"${donut_border_size}" \
-"${donut_annotation_distance}" \
-"${donut_annotation_size}" \
-"${donut_annotation_force}" \
-"${donut_annotation_force_pull}" \
-"${donut_legend_width}" \
-"${donut_legend_text_size}" \
-"${donut_legend_box_size}" \
-"${donut_legend_box_space}" \
-"${donut_legend_limit}" \
-"${cute_file}" \
-"${allele_names_tsv_all_ch}" \
-"${kind}_donut.log"
-    """
-}
-
-process donut_assembly {
-    label 'r_ig_clustering'
-    publishDir path: "${out_path}/pdf", mode: 'copy', pattern: "{donuts.pdf}", overwrite: false
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{donut_assembly.log}", overwrite: false
-    cache 'true'
-
-    input:
-    path donut_pdf_ch2
-
-    output:
-    path "donuts.pdf", emit: donut_assembly_ch
-    path "donut_assembly.log"
-
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    Rscript -e '
-        files <- list.files(path = ".", pattern = ".pdf\$")
-
-        sorted_files <- files[order(
-            !grepl("allele", files),  # Alleles will be displayed before genes
-            grepl("gene", files),     
-            !grepl("vj_", files)     # Amongst alleles and genes, vj will be displayed before c
-        )]
-
-        qpdf::pdf_combine(input = sorted_files, output = "./donuts.pdf")
-    ' |& tee -a donut_assembly.log
-    """
-}
 
     /*
 // alakazam::readChangeoDb() ; dowser::formatClones() ; dowser::getTrees()
@@ -1275,151 +133,6 @@ process germ_tree_vizu {
 }
     */
 
-// The render function only creates the html file with the rmardown
-// Inputs:
-//      template_rmd: rmardown template file used to create the html (file path is defined in config.nextflow)
-//      nb_input: number of fasta sequences in initial input
-//      nb_igblast: number of sequences that igblast could analyse
-//      nb_igblast_fail: number of sequences that igblast could not alayse
-//      donuts_png: provide links to the donut images needed in the rmd inside the work folder
-//      repertoire_png: provide links to the repertoire images needed in the rmd inside the work folder
-//      repertoire_constant_ch: names of the constant gene repertoire files to be displayed
-//      repertoire_vj_ch: names of the variable gene repertoire files to be displayed
-//      itol_subscription: nextflow.config parameter to know if user has paid the subscription to itol automated visualization of trees, process ITOL is only executed if TRUE
-//      heavy_chain: to know if the analyzed data is VL or VH, because "Amino acid sequences phylogeny" section in html report is only displayed for VH
-// Outputs:
-//      "report.html": finalized html report for a specific run
-//      "print_report.log": will contain any error or warning messages produced by rmardown::render
-process print_report{
-    label 'r_ig_clustering'
-
-    publishDir path: "${out_path}", mode: 'copy', pattern: "{report.html}", overwrite: false
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{alignments_viz.html}", overwrite: false
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{print_report.log}", overwrite: false
-    cache 'false'
-
-    input:
-    file template_rmd
-    file alignments_viz_rmd
-    file alignments_viz_html
-    val nb_input
-    val nb_igblast
-    val nb_igblast_fail
-    val nb_productive
-    val nb_unproductive
-    val nb_wanted
-    val nb_unwanted
-    val nb_dist_ignored
-    val nb_clone_assigned
-    val nb_failed_clone
-    val nb_failed_clone_assignment
-    val nb_failed_clone_germline
-    path distance_hist_ch
-    path donuts_png
-    path repertoire_png
-    val repertoire_constant_ch
-    val repertoire_vj_ch
-    val clone_distance
-    val align_soft
-    val itol_subscription
-
-    output:
-    file "report.html"
-    file "alignments_viz.html"
-    file "print_report.log"
-
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    cp ${template_rmd} report_file.rmd
-    cp ${alignments_viz_rmd} alignments_vizu.rmd
-    cp ${alignments_viz_html} alignments_viz.html
-    cp -r "${out_path}/phylo" .
-    cp -r "${out_path}/tsv" .
-    cp -r "${out_path}/pdf" .
-    cp -r "${projectDir}/bin/doc_images" .
-    Rscript -e '
-
-        # Find the constant and vj repertoires to be displayed in the html file (file names differ depending on light/heavy chain)
-        constant_files <- as.character("${repertoire_constant_ch}")
-        vj_files <- as.character("${repertoire_vj_ch}")
-        cleaned_repertoire_constant <- gsub("^\\\\[\\\\[|\\\\]\\\\]\$", "", constant_files)
-        cleaned_repertoire_vj <- gsub("^\\\\[\\\\[|\\\\]\\\\]\$", "", vj_files)
-        constant_paths <- strsplit(cleaned_repertoire_constant, ",\\\\s*")[[1]]
-        vj_paths <- strsplit(cleaned_repertoire_vj, ",\\\\s*")[[1]]
-        constant_names <- basename(constant_paths)
-        vj_names <- basename(vj_paths)
-        # Verification that the resulting file names are as expected
-        constant_rep <- constant_names[grepl("^IG.C_.*gene_non-zero\\\\.png\$", constant_names)]
-        vj_rep <- vj_names[grepl("^rep_gene_IG.V_.*non-zero\\\\.png\$", vj_names)]
-        if(length(constant_rep) == 0 || length(vj_rep) == 0){
-            stop(paste0("\\n\\n========\\n\\nERROR IN print_report PROCESS\\n\\nTHE REPERTOIRE PNG FILES TO BE DISPLAYED WERE NOT FOUND\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n"), call. = FALSE)
-        }
-
-        rmarkdown::render(
-        input = "report_file.rmd",
-        output_file = "report.html",
-        # list of the variables waiting to be replaced in the rmd file:
-        params = list(
-            nb_input = ${nb_input},
-            nb_igblast = ${nb_igblast}, 
-            nb_igblast_fail = ${nb_igblast_fail},
-            nb_productive = ${nb_productive},
-            nb_unproductive = ${nb_unproductive},
-            nb_wanted =  ${nb_wanted},
-            nb_unwanted =  ${nb_unwanted},
-            nb_dist_ignored = ${nb_dist_ignored},
-            nb_clone_assigned = ${nb_clone_assigned},
-            nb_failed_clone = ${nb_failed_clone},
-            nb_failed_clone_assignment = ${nb_failed_clone_assignment}, 
-            nb_failed_clone_germline = ${nb_failed_clone_germline}, 
-            clone_distance = ${clone_distance},
-            constant_rep = constant_rep,
-            vj_rep = vj_rep,
-            align_soft = "${align_soft}",
-            itol_subscription = ${itol_subscription}
-        ),
-        # output_dir = ".",
-        # intermediates_dir = "./",
-        # knit_root_dir = "./",
-        run_pandoc = TRUE,
-        quiet = TRUE,
-        clean = TRUE
-        )
-
-        html_here_ok <- TRUE # set to FALSE to rerun the creation of the alignments_viz_html file
-        if(html_here_ok == FALSE){
-            # dir.create("reports", showWarnings = FALSE, recursive = TRUE)
-            rmarkdown::render(input = "alignments_vizu.rmd", output_file = "alignments_viz.html", run_pandoc = TRUE, quiet = TRUE, clean = TRUE)
-        }
-    ' |& tee -a print_report.log
-    """
-}
-
-
-// Save the config file and the log file for a specific run
-process backup {
-    label 'bash'
-    publishDir "${out_path}/reports", mode: 'copy', overwrite: false // since I am in mode copy, all the output files will be copied into the publishDir. See \\wsl$\Ubuntu-20.04\home\gael\work\aa\a0e9a739acae026fb205bc3fc21f9b
-    cache 'false'
-
-    input:
-    path config_file
-    path log_file
-
-    output:
-    path "${config_file}" // warning message if we use path config_file
-    path "${log_file}" // warning message if we use path log_file
-    path "Log_info.txt"
-
-    script:
-    """
-    #!/bin/bash -ue
-    set -o pipefail
-    echo -e "full .nextflow.log is in: ${launchDir}\nThe one in the result folder is not complete (miss the end)" > Log_info.txt
-    """
-}
 
 //////// End Processes
 
@@ -1432,25 +145,53 @@ process backup {
 
 //////// Modules
 
-include { CheckVariables } from './conf/checks.nf'
-include { reportEmptyProcess; copyLogFile } from './modules/subscribe_helpers.nf'
-include { Igblast_query } from './modules/igblast_query'
-include { Igblast_chain_check } from './modules/igblast_chain_check'
-include { TrimTranslate } from './modules/trim_translate'
-include { parseDb_filtering } from './modules/parseDb_filtering'
-include { Add_dotted_coord } from './modules/add_dotted_coord'
-include { Translate_with_IMGT_gaps } from './modules/translate_with_imgt_gaps'
-include { data_assembly } from './modules/data_assembly'
-include { Mutation_load_germ_genes } from './modules/mutation_load_germ_genes'
-include { Igblast_germline_coords } from './modules/igblast_germline'
-include { Closest_germline } from './modules/closest_germline'
-include { Gff_imgt } from './modules/gff_imgt'
-include { Gff as GffNuc } from './modules/gff'
-include { Gff as GffAa } from './modules/gff'
-include { PrintAlignment as PrintAlignmentIMGTnuc } from './modules/print_alignment'
-include { PrintAlignment as PrintAlignmentIMGTaa } from './modules/print_alignment'
-include { PrintAlignment as PrintAlignmentNuc } from './modules/print_alignment'
-include { PrintAlignment as PrintAlignmentAa } from './modules/print_alignment'
+include {CheckVariables} from './conf/CheckVariables.nf'
+include {reportEmptyProcess; copyLogFile} from './modules/Functions.nf'
+include {Unzip} from './modules/Unzip.nf'
+include {WorkflowParam} from './modules/WorkflowParam.nf'
+include {Igblast_data_check} from './modules/Igblast_data_check.nf'
+include {Igblast_query} from './modules/Igblast_query.nf'
+include {ParseDb_filtering} from './modules/ParseDb_filtering.nf'
+include {Igblast_chain_check} from './modules/Igblast_chain_check.nf'
+include {TrimTranslate} from './modules/TrimTranslate.nf'
+include {DistToNearest} from './modules/DistToNearest.nf'
+include {Distance_hist} from './modules/Distance_hist.nf'
+include {Histogram_assembly} from './modules/Histogram_assembly.nf'
+include {Add_dotted_coord} from './modules/Add_dotted_coord.nf'
+include {Translate_with_IMGT_gaps} from './modules/Translate_with_imgt_gaps.nf'
+include {Seq_name_replacement} from './modules/Seq_name_replacement.nf'
+include {Data_assembly} from './modules/Data_assembly.nf'
+include {Metadata_check} from './modules/Metadata_check.nf'
+include {Repertoire} from './modules/Repertoire.nf'
+include {Clone_assignment} from './modules/Clone_assignment.nf'
+include {Split_by_clones} from './modules/Split_by_clones.nf'
+include {Closest_germline} from './modules/Closest_germline.nf'
+include {Igblast_germline_coords} from './modules/Igblast_germline_coords.nf'
+include {AddGermlineSequences} from './modules/AddGermlineSequences.nf'
+include {Mutation_load_germ_genes} from './modules/Mutation_load_germ_genes.nf'
+include {TranslateGermline} from './modules/TranslateGermline.nf'
+include {Clone_id_count} from './modules/Clone_id_count.nf'
+include {Donut} from './modules/Donut.nf'
+include {Donut_assembly} from './modules/Donut_assembly.nf'
+include {Tsv2fasta} from './modules/Tsv2fasta.nf'
+include {Mafft_align} from './modules/Mafft_align.nf'
+include {Abalign_align_aa} from './modules/Abalign_align_aa.nf'
+include {Abalign_rename} from './modules/Abalign_rename.nf'
+include {Abalign_align_nuc} from './modules/Abalign_align_nuc.nf'
+include {Tree} from './modules/Tree.nf'
+include {Meta2Itol} from './modules/Meta2Itol.nf'
+include {Itol} from './modules/Itol.nf'
+include {Print_report} from './modules/Print_report.nf'
+include {Backup} from './modules/Backup.nf'
+
+
+include {Gff_imgt} from './modules/Gff_imgt.nf'
+include {Gff as GffNuc} from './modules/Gff.nf'
+include {Gff as GffAa} from './modules/Gff.nf'
+include {PrintAlignment as PrintAlignmentIMGTnuc} from './modules/Print_alignment.nf'
+include {PrintAlignment as PrintAlignmentIMGTaa} from './modules/Print_alignment.nf'
+include {PrintAlignment as PrintAlignmentNuc} from './modules/Print_alignment.nf'
+include {PrintAlignment as PrintAlignmentAa} from './modules/Print_alignment.nf'
 
 //////// end Modules
 
@@ -1464,9 +205,9 @@ workflow {
 
     //////// Options of nextflow run
 
-    // --modules (it is just for the process workflowParam)
+    // --modules (it is just for the process WorkflowParam)
     params.modules = "" // if --module is used, this default value will be overridden
-    // end --modules (it is just for the process workflowParam)
+    // end --modules (it is just for the process WorkflowParam)
 
     //////// end Options of nextflow run
 
@@ -1480,15 +221,9 @@ workflow {
     //////// end Variables
 
 
-    //////// Checks
+    //////// inititation
 
-
-    // below: those variable are already used in the config file. Thus, to late to check them. And not possible to check inside the config file
-    // out_ini
     print("\n\nRESULT DIRECTORY: ${out_path}")
-    //print("\n\nWARNING: PARAMETERS ALREADY INTERPRETED IN THE .config FILE:")
-    //print("    system_exec: ${system_exec}")
-    //print("    out_path: ${out_path_ini}")
     if("${system_exec}" == "slurm"){
         print("    queue: ${slurm_queue}")
         print("    qos: ${slurm_qos}")
@@ -1496,17 +231,11 @@ workflow {
     if("${system_exec}" != "local"){
         print("    add_options: ${add_options}")
     }
-    // if(igblast_variable_ref_files =~ /^.*IG(K|L)V.*$/){
-    //     print("\n\nWARNING:\nLIGHT CHAIN DETECTED IN THE igblast_variable_ref_files parameter.\nBUT CLONAL GROUPING IS GENERALLY RESTRICTED TO HEAVY CHAIN SEQUENCES, AS THE DIVERSITY OF LIGHT CHAINS IS NOT SUFFICIENT TO DISTINGUISH CLONES WITH REASONABLE CERTAINTY")
-    // }
-    //print("\n\nWARNING:\nTHE REPERTOIRE PROCESS CURRENTLY ONLY SUPPORTS ig REFERENCE FILES AND 'mouse' OR 'human' SPECIES")
-    print("\n\nWARNING:\nTO MAKE THE REPERTOIRES AND DONUTS, THE SCRIPT CURRENTLY TAKES THE FIRST ANNOTATION OF THE IMGT ANNOTATION IF SEVERAL ARE PRESENTS IN THE v_call, j_call OR c_call COLUMN OF THE wanted_seq.tsv FILE")
+    print("\n\nWARNING:\nCURRENTLY VALIDATED FOR 'mouse' OR 'human' SPECIES. POTENTIAL ERRORS WITH OTHER SPECIES IF VDJ STRUCTURATION OF CHAINS IS DIFFERENT.")
+    print("\n\nWARNING:\nTO MAKE THE REPERTOIRES AND DONUTS, THE SCRIPT CURRENTLY TAKES THE FIRST ANNOTATION OF THE IMGT ANNOTATION IF SEVERAL ARE PRESENTS IN THE v_call, j_call OR c_call COLUMN OF THE wanted_seq.tsv FILE.")
     print("\n\n")
 
-
-
-
-    //////// end Checks
+    //////// end inititation
 
 
     //////// Variable modification
@@ -1612,6 +341,24 @@ workflow {
     //////// Channels
 
     // fs_ch define below because can be a .zip file
+    warning_ch = Channel.empty() // to collect all the warnings
+    // for print_report
+    nb_productive = Channel.empty()
+    nb_unproductive = Channel.empty()
+    nb_wanted = Channel.empty()
+    nb_unwanted = Channel.empty()
+    nb_dist_ignored = Channel.empty()
+    nb_clone_assigned = Channel.empty()
+    nb_failed_clone = Channel.empty()
+    nb_failed_clone_assignment = Channel.empty()
+    nb_failed_clone_germline = Channel.empty()
+    distance_hist_ch  = Channel.empty() // Distance_hist.out.distance_hist_ch, 
+    donuts_png_ch = Channel.empty() // Donut.out.donuts_png.collect(), 
+    repertoire_png_ch = Channel.empty() // Repertoire.out.repertoire_png_ch.collect(), 
+    repertoire_constant_ch = Channel.empty()
+    repertoire_vj_ch = Channel.empty()
+    // end for print_report
+
 
     //////// end Channels
 
@@ -1630,7 +377,6 @@ workflow {
 
     //////// Main
 
-
     CheckVariables()
 
     if(sample_path =~ /.*\.zip$/){
@@ -1645,14 +391,14 @@ workflow {
     
     nb_input = fs_ch.count()
 
-    workflowParam(
+    WorkflowParam(
         modules
     )
 
     file("${out_path}/tsv").mkdirs()
     file("${out_path}/pdf").mkdirs()
 
-    igblast_data_check(
+    Igblast_data_check(
         igblast_organism, 
         igblast_v_ref_files, 
         igblast_d_ref_files, 
@@ -1666,601 +412,649 @@ workflow {
         igblast_organism, 
         igblast_loci
     )
-    //tsv_ch1 = Igblast_query.out.db_pass_ch.map { tuple -> tuple[1] } // Only the igblast_db-pass.tsv files (without _igblast.tsv)
-    tsv_ch1 = Igblast_query.out.db_pass_ch
-    tsv_ch1.count().subscribe{ n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE Igblast_query PROCESS\n\nCHECK THAT THE\nigblast_organism\nigblast_loci\nigblast_B_heavy_chain\nigblast_B_lambda_chain\nigblast_B_kappa_chain\nigblast_T_alpha_chain\nigblast_T_beta_chain\nigblast_T_gamma_chain\nigblast_T_delta_chain\nARE CORRECTLY SET IN THE nextflow.config FILE\n\n========\n\n"}}
-    tsv_ch2 = tsv_ch1.collectFile(name: "igblast_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
-    tsv_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
-    db_unpass = Igblast_query.out.db_unpass_ch.collectFile(name: "failed_igblast_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
-    db_unpass.subscribe{it -> it.copyTo("${out_path}/tsv")}
-    nb_igblast = tsv_ch2.countLines() // warning: .countLines(keepHeader: true) remove the header in the count
-    nb_igblast_fail =  db_unpass.countLines()
-    // nb_igblast.view()
-    fs_ch.count().combine(nb_igblast).combine(nb_igblast_fail).subscribe{n,n1,n2 -> if(n + 1 != n1 + n2 - 1){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF LINES IN THE igblast_aligned_seq.tsv (${n1} - 1) AND igblast_unaligned_seq_name.tsv (${n2} - 1) IS NOT EQUAL TO THE NUMBER OF SUBMITTED FASTA FILES (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
-    copyLogFile('Igblast_query.log', Igblast_query.out.log_ch, out_path)
-
-    parseDb_filtering(
-        Igblast_query.out.db_pass_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Igblast_query PROCESS\n\n========\n\n"}
-    )
-    // parseDb_filtering.out.unproductive_ch.count().subscribe{n -> if ( n == 0 ){print "\n\nWARNING: EMPTY failed_wanted_seq.tsv FILE RETURNED FOLLOWING THE parseDb_filtering PROCESS\n\n"}else{it -> it.copyTo("${out_path}/failed_wanted_seq.tsv")}} // see https://www.nextflow.io/docs/latest/script.html?highlight=copyto#copy-files
-    parseDb_filtering.out.productive_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FILES FOLLOWING THE parseDb_filtering PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
-    productive_ch2 = parseDb_filtering.out.productive_ch.collectFile(name: "productive_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
-    productive_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
-    parseDb_filtering.out.unproductive_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nUNWPRODUCTIVE FILE EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE parseDb_filtering PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // because an empty file must be present
-    unproductive_ch2 = parseDb_filtering.out.unproductive_ch.collectFile(name: "unproductive_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
-    unproductive_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
-    nb_productive = productive_ch2.countLines()
-    nb_unproductive = unproductive_ch2.countLines()
-    nb_productive.subscribe { n -> if ( n == 1 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nO PRODUCTIVE SEQUENCE FOLLOWING THE parseDb_filtering PROCESS\nSEE THE EMPTY productive_seq.tsv FILE AND THE unproductive_seq.tsv FILE IN THE OUTPUT FOLDER\n\n========\n\n"}} // n is the value of nb_productive
-    // nb_productive.map { "Nombre de lignes dans productive_ch2 (productive_seq.tsv): $it (en comptant le header)" }.view()
-    // nb_unproductive.map { "Nombre de lignes dans unproductive_ch2 (unproductive_seq.tsv): $it (en comptant le header)" }.view()
-    // tsv_ch2.countLines().map { "Nombre de lignes dans tsv_ch2 (igblast_seq.tsv): $it (en comptant le header)" }.view()
-    nb_igblast.combine(nb_productive).combine(nb_unproductive).subscribe{n,n1,n2 -> if(n != n1 + n2 - 1){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF LINES IN THE productive_seq.tsv (${n1}) AND unproductive_seq.tsv (${n2} - 1) IS NOT EQUAL TO THE NUMBER OF LINES IN igblast_seq.tsv (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // n1 + n2 - 1 because header counted in both n1 and n2 while only one header in n
-    copyLogFile('ParseDb_filtering.log', parseDb_filtering.out.parseDb_filtering_log_ch, out_path)
-
-
-
-    Igblast_chain_check( // module Igblast_chain_check.nf
-        parseDb_filtering.out.productive_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE data_assembly PROCESS\n\n========\n\n"}, 
-        igblast_data_check.out.allele_names_tsv_all_ch, 
-        igblast_v_ref_files, 
-        igblast_d_ref_files, 
-        igblast_j_ref_files, 
-        igblast_constant_ref_files, 
-        cute_file
-    )
-    Igblast_chain_check.out.checked_tsv_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nO WANTED SEQUENCE FILES FOLLOWING THE Igblast_chain_check PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}}
-    checked_tsv_ch2 = Igblast_chain_check.out.checked_tsv_ch.collectFile(name: "wanted.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
-    Igblast_chain_check.out.not_checked_tsv_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nUNWANTED FILE EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Igblast_chain_check PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // because an empty file must be present
-    not_checked_tsv_ch2 = Igblast_chain_check.out.not_checked_tsv_ch.collectFile(name: "unwanted_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
-    not_checked_tsv_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
-    nb_wanted = checked_tsv_ch2.countLines()
-    nb_unwanted = not_checked_tsv_ch2.countLines()
-    nb_wanted.subscribe { n -> if ( n == 1 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nO WANTED SEQUENCE FOLLOWING THE Igblast_chain_check PROCESS\nSEE THE unwanted_seq.tsv FILE IN THE OUTPUT FOLDER\n\n========\n\n"}} // n is the value of nb_wanted
-    nb_productive.combine(nb_wanted).combine(nb_unwanted).subscribe{n,n1,n2 -> if(n != n1 + n2 - 1){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF LINES IN THE wanted.tsv (${n1}) AND unwanted_seq.tsv (${n2} - 1) IS NOT EQUAL TO THE NUMBER OF LINES IN productive_seq.tsv (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // n1 + n2 - 1 because header counted in both n1 and n2 while only one header in n
-    copyLogFile('igblast_chain_check.log', Igblast_chain_check.out.igblast_chain_check_log, out_path)
-
-
-
-
-    TrimTranslate(
-        Igblast_chain_check.out.checked_tsv_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE parseDb_filtering PROCESS\n\n========\n\n"}
-    )
-    TrimTranslate.out.trimtranslate_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nO SEQUENCE RETURNED FOLLOWING THE TrimTranslate PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // n is number of items in channel because of .count()
-    trimtranslate_ch2 = TrimTranslate.out.trimtranslate_ch.collectFile(name: "trimtranslate.tsv", skip: 1, keepHeader: true) // wanted file with column sequence_alignment_aa added  // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
-    copyLogFile('trimtranslate.log', TrimTranslate.out.trimtranslate_log_ch, out_path)
-
-
-
-
-    distToNearest(
-        trimtranslate_ch2.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE TrimTranslate PROCESS\n\n========\n\n"},
-        clone_model,
-        clone_normalize
-    )
-    nb_dist_ignored = distToNearest.out.dist_ignored_ch.countLines() - 1 // Minus 1 because 1st line = column names // either .tsv is empty (header alone) or has a header to remove to count the lines
-
-
-
-    distance_hist(
-        distToNearest.out.distToNearest_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE distToNearest PROCESS\n\n========\n\n"},
-        cute_file, 
-        clone_model,
-        clone_normalize,
-        clone_distance
-    )
-
-
-
-
-    histogram_assembly(
-        distance_hist.out.histogram_pdf_ch.collect().ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE distance_hist PROCESS\n\n========\n\n"}
-    )
-
-
-
-    Add_dotted_coord( // module
-        TrimTranslate.out.trimtranslate_ch
-    )
-    reportEmptyProcess('Add_dotted_coord', Add_dotted_coord.out.add_dotted_coord_ch)
-    copyLogFile('add_dotted_coord.log', Add_dotted_coord.out.add_dotted_coord_log_ch, out_path)
-
-
-    Translate_with_IMGT_gaps( // module
-        Add_dotted_coord.out.add_dotted_coord_ch
-    )
-    reportEmptyProcess('Translate_with_IMGT_gaps', Translate_with_IMGT_gaps.out.add_aa_imgt_ch)
-    copyLogFile('Translate_with_IMGT_gaps.log', Translate_with_IMGT_gaps.out.translate_with_IMGT_gaps_ch_log, out_path)
-
-
-   seq_name_replacement(
-        Translate_with_IMGT_gaps.out.add_aa_imgt_ch,
-        meta_file,
-        meta_seq_names, 
-        meta_name_replacement,
-        meta_legend
-    )
-    seq_name_replacement.out.seq_name_replacement_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE seq_name_replacement PROCESS\n\n========\n\n"}}
-    seq_name_replacement_ch2 = seq_name_replacement.out.seq_name_replacement_ch.collectFile(name: "replacement.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
-    // seq_name_replacement_ch2.subscribe{it -> it.copyTo("${out_path}")}
-    // tuple_seq_name_replacement = new Tuple("all", seq_name_replacement_ch2) # warning: this is not a channel but a variable now
-    copyLogFile('seq_name_replacement.log', seq_name_replacement.out.seq_name_replacement_log_ch, out_path)
-
-
-
-    data_assembly(
-        seq_name_replacement_ch2.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE seq_name_replacement PROCESS\n\n========\n\n"}, 
-        distToNearest.out.distToNearest_ch
-    )
-    data_assembly.out.wanted_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE data_assembly PROCESS\n\n========\n\n"}}
-
-
-
-    metadata_check(
-        data_assembly.out.wanted_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE data_assembly PROCESS\n\n========\n\n"},
-        meta_file, 
-        meta_seq_names, 
-        meta_name_replacement,
-        meta_legend
-    )
-
-    repertoire(
-        data_assembly.out.wanted_ch,
-        igblast_data_check.out.allele_names_tsv_all_ch,
-        cute_file
-    )
-
-    clone_assignment(
-        data_assembly.out.wanted_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE data_assembly PROCESS\n\n========\n\n"}, 
-        clone_model,
-        clone_normalize,
-        clone_distance,
-        clone_strategy,
-        meta_file,
-        meta_legend
-    )
-    // clone_assignment.out.clone_ch.view()
-    // nb_failed_clone = clone_assignment.out.failed_clone_ch.map { file -> file.countLines() == 0 ? 0: file.countLines() - 1} // either failed_clone_assigned_seq.tsv is empty (no lines) or has a header to remove to count the lines
-    nb_failed_clone_assignment = clone_assignment.out.failed_clone_ch.countLines() - 1 // Minus 1 because 1st line = column names // either failed_clone_assigned_seq.tsv is empty (no lines) or has a header to remove to count the lines
-
-    split_by_clones(
-        clone_assignment.out.clone_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE clone_assignment PROCESS\n\n========\n\n"}
-    )
-    tempo_test = split_by_clones.out.clone_split_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE split_by_clones PROCESS\n\n========\n\n"}
-
-
-    Closest_germline(
-        split_by_clones.out.clone_split_ch.flatten(), // flatten split the list into several objects (required for parallelization)
-        igblast_organism, 
-        igblast_variable_ref_files, 
-        clone_germline_kind,
-        meta_file,
-        meta_legend
-    )
-    failed_clonal_germline_file = Closest_germline.out.failed_clonal_germline_ch.collectFile(name: "failed_clonal_germline_seq.tsv", skip: 1, keepHeader: true)
-    failed_clonal_germline_file.subscribe{it -> it.copyTo("${out_path}/tsv")} // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
-    nb_failed_clone_germline = failed_clonal_germline_file.countLines() - 1
-    nb_failed_clone = nb_failed_clone_germline.combine(nb_failed_clone_assignment).map { new_count, old_count -> new_count + old_count } // to add the two kind of failure
-    copyLogFile('Closest_germline.log', Closest_germline.out.closest_log_ch, out_path)
-
-
-
-    Igblast_germline_coords( // module igblast_germline.nf
-        Closest_germline.out.closest_ch, // no ifEmpty{error} because can be empty for some of the parallelized processes
-        igblast_organism, 
-        igblast_loci
-    )
-    //tsv_ch1 = Igblast_query.out.db_pass_ch.map { tuple -> tuple[1] } // Only the igblast_db-pass.tsv files (without _igblast.tsv)
-    Igblast_germline_coords.out.germline_coords_ch.count().subscribe{ n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE Igblast_germline_coords PROCESS\n\nCHECK THAT THE\nigblast_organism\nigblast_loci\nigblast_B_heavy_chain\nigblast_B_lambda_chain\nigblast_B_kappa_chain\nigblast_T_alpha_chain\nigblast_T_beta_chain\nigblast_T_gamma_chain\nigblast_T_delta_chain\nARE CORRECTLY SET IN THE nextflow.config FILE\n\n========\n\n"}}
-    copyLogFile('Igblast_germline_coords_report.log', Igblast_germline_coords.out.log_ch, out_path)
-
-
-
-
-    AddGermlineSequences(
-        Igblast_germline_coords.out.germline_coords_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Igblast_germline_coords PROCESS\n\n========\n\n"},
-        igblast_organism, 
-        igblast_variable_ref_files
-    )
-    copyLogFile('AddGermlineSequences.log', AddGermlineSequences.out.add_germ_log_ch, out_path)
-
-
-    TranslateGermline(
-        AddGermlineSequences.out.add_germ_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE AddGermlineSequences PROCESS\n\n========\n\n"}
-    )
-    TranslateGermline.out.translate_germ_log_ch.collectFile(name: "TranslateGermline.log").subscribe{it -> it.copyTo("${out_path}/reports")}
-
-
-    Mutation_load_germ_genes(
-        TranslateGermline.out.translate_germ_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE TranslateGermline PROCESS\n\n========\n\n"},
-        meta_file, 
-        meta_legend,
-        clone_mut_obs_seq,
-        clone_mut_germ_seq,
-        clone_mut_regionDefinition
-    )
-    clone_assigned_seq_ch = Mutation_load_germ_genes.out.mutation_load_ch.collectFile(name: "clone_assigned_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
-    nb_clone_assigned = clone_assigned_seq_ch.countLines() - 1 // Minus 1 because 1st line = column names
-    clone_assigned_seq_ch.subscribe{it -> it.copyTo("${out_path}/tsv")}
-    clone_assigned_seq_filtered_ch = Mutation_load_germ_genes.out.mutation_load_ch.filter{ file -> file.countLines() > align_clone_nb.toInteger() } // Only keep clonal groups that have a number of sequences superior to align_clone_nb (variable defined in nextflow.config) 
-    copyLogFile('Mutation_load_germ_genes.log', Mutation_load_germ_genes.out.mutation_load_log_ch, out_path)
-
-
-
-    Clone_id_count(
-        clone_assigned_seq_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Mutation_load_germ_genes PROCESS\n\n========\n\n"}
-    )
-
-
-
-    /*
-
-    get_germ_tree(
-        Mutation_load_germ_genes.out.mutation_load_ch,
-        meta_file, // first() because get_germ_tree process is a parallele one and because meta_file is single
-        cute_file, 
-        align_clone_nb,
-        germ_tree_duplicate_seq,
-        igphylm_exe_path
-    )
-    
-    get_germ_tree.out.rdata_germ_tree_ch.count().subscribe { n -> if ( n == 0 ){
-        print("\n\nWARNING: EMPTY OUTPUT FOLLOWING THE get_germ_tree PROCESS -> NO TREE RETURNED\n\n")
-    }}
-    rdata_germ_tree_ch2 = get_germ_tree.out.rdata_germ_tree_ch.collect()
-    //rdata_germ_tree_ch2.view()
-
-    get_germ_tree.out.no_germ_tree_ch.count().subscribe { n -> if ( n == 0 ){
-        print("\n\nWARNING: ALL SEQUENCES IN TREES FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_dismissed_seq.tsv FILE RETURNED\n\n")
-    }}
-    no_germ_tree_ch2 = get_germ_tree.out.no_germ_tree_ch.collectFile(name: "germ_tree_dismissed_seq.tsv", skip: 1, keepHeader: true)
-    no_germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
-
-    get_germ_tree.out.germ_tree_ch.count().subscribe { n -> if ( n == 0 ){
-        print("\n\nWARNING: NO SEQUENCES IN TREES FOLLOWING THE get_germ_tree PROCESS -> EMPTY seq_for_germ_tree.tsv FILE RETURNED\n\n")
-    }}
-    germ_tree_ch2 = get_germ_tree.out.germ_tree_ch.collectFile(name: "seq_for_germ_tree.tsv", skip: 1, keepHeader: true)
-    // germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
-    germ_tree_ch3 = get_germ_tree.out.germ_tree_ch.flatten().filter{ file -> file.countLines() > align_clone_nb.toInteger() }
-
-    get_germ_tree.out.no_cloneID_ch.count().subscribe { n -> if ( n == 0 ){
-        print("\n\nWARNING: ALL SEQUENCES IN CLONAL GROUP FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_dismissed_clone_id.tsv FILE RETURNED\n\n")
-    }}
-    no_cloneID_ch2 = get_germ_tree.out.no_cloneID_ch.collectFile(name: "germ_tree_dismissed_clone_id.tsv")
-    no_cloneID_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
-
-    get_germ_tree.out.cloneID_ch.count().subscribe { n -> if ( n == 0 ){
-        print("\n\nWARNING: NO CLONAL GROUP FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_clone_id.tsv and germ_tree.pdf FILES RETURNED\n\n")
-    }}
-    cloneID_ch2 = get_germ_tree.out.cloneID_ch.collectFile(name: "germ_tree_clone_id.tsv")
-    cloneID_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
-
-    get_germ_tree.out.get_germ_tree_log_ch.collectFile(name: "get_germ_tree.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
-
-
-
-    germ_tree_vizu(
-        rdata_germ_tree_ch2,
-        germ_tree_kind,
-        align_clone_nb,
-        germ_tree_duplicate_seq,
-        germ_tree_leaf_color,
-        germ_tree_leaf_shape,
-        germ_tree_leaf_size,
-        germ_tree_label_size,
-        germ_tree_label_hjust,
-        germ_tree_label_rigth,
-        germ_tree_label_outside,
-        germ_tree_right_margin,
-        germ_tree_legend,
-        clone_assigned_seq_ch, // may be add .first()
-        meta_file, 
-        meta_legend,
-        cute_file
-    )
-    germ_tree_vizu.out.germ_tree_vizu_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE germ_tree_vizu PROCESS\n\n========\n\n"}
-    //germ_tree_vizu.out.germ_tree_vizu_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE germ_tree_vizu PROCESS\n\n========\n\n"}}
-    germ_tree_vizu.out.germ_tree_dup_seq_not_displayed_ch.ifEmpty{
-        print("\n\nWARNING: -> NO germ_tree_dup_seq_not_displayed.tsv FILE RETURNED\n\n")
-    }
-    germ_tree_dup_seq_not_displayed_ch2 = germ_tree_vizu.out.germ_tree_dup_seq_not_displayed_ch.flatten().collectFile(name: "germ_tree_dup_seq_not_displayed.tsv", skip: 1, keepHeader: true) // flatten split the list into several objects which is required by collectFile()
-    germ_tree_dup_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
-
-    */
-
-
-
-    
-
-
-    tempo1_ch = Channel.of("all", "annotated", "tree") // 1 channel with 3 values (not list)
-    tempo2_ch = data_assembly.out.wanted_ch.mix(data_assembly.out.wanted_ch.mix(clone_assigned_seq_ch)) // 1 channel with 3 paths (do not use flatten() -> not list)
-    tempo3_ch = tempo1_ch.merge(tempo2_ch) // 3 lists
-    tempo4_ch = Channel.of("vj_allele", "c_allele", "vj_gene", "c_gene")
-    tempo5_ch = tempo3_ch.combine(tempo4_ch) // 12 tuples
-
-    donut(
-        tempo5_ch,
-        donut_palette,
-        donut_hole_size,
-        donut_hole_text,
-        donut_hole_text_size,
-        donut_border_color,
-        donut_border_size,
-        donut_annotation_distance,
-        donut_annotation_size,
-        donut_annotation_force,
-        donut_annotation_force_pull,
-        donut_legend_width,
-        donut_legend_text_size,
-        donut_legend_box_size,
-        donut_legend_box_space,
-        donut_legend_limit,
-        cute_file,
-        igblast_data_check.out.allele_names_tsv_all_ch
-    )
-    donut.out.donut_pdf_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut PROCESS\n\n========\n\n"}
-    donut.out.donut_pdf_ch.count().subscribe { n -> if ( n == 0 ){
-        print("\n\nWARNING: EMPTY OUTPUT FOLLOWING THE donut PROCESS -> NO DONUT RETURNED\n\n")}}
-    donut_pdf_ch2 = donut.out.donut_pdf_ch.collect()
-
-    donut.out.donut_tsv_ch.count().subscribe { n -> if ( n == 0 ){
-        print("\n\nWARNING: -> NO donut_stats.tsv FILE RETURNED FOLLOWING THE donut PROCESS\n\n")
-    }}
-    donut_tsv_ch2 = donut.out.donut_tsv_ch.collectFile(name: "donut_stats.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
-    donut_tsv_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
-
-
-
-    donut_assembly(
-        donut_pdf_ch2
-    )
-    //donut_assembly.out.donut_assembly_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}
-    donut_assembly.out.donut_assembly_ch.count().subscribe { n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE donut_assembly PROCESS\n\n========\n\n"}}
-
-/*
-    Reformat(
-        aa_tsv_ch2,
-        igblast_data_check.out.allele_names_ch.collect() // To make sure the igblast_ref files are in the right format before executing following processes
-    )
-    fasta = Reformat.out.aa_fasta_ch
-
-
-    DefineGroups(
-        fasta,
-        wanted_ch2
-    )
-    fastagroups = DefineGroups.out.groups_ch.flatten()
-    align_input = fastagroups.combine(heavy_chain)
-*/
-
-
-    clone_labeled_ch = clone_assigned_seq_filtered_ch.map { file -> tuple(file, 'CLONE') }
-    wanted_labeled_ch = data_assembly.out.wanted_ch.map { file -> tuple(file, 'ALL') }
-    imgt_labeled_ch = data_assembly.out.wanted_ch.map { file -> tuple(file, 'IMGT') }
-    all_files_ch = clone_labeled_ch.mix(wanted_labeled_ch, imgt_labeled_ch)
-    Tsv2fasta(
-        all_files_ch,
-        align_seq, 
-        clone_germline_kind, 
-        align_clone_nb, 
-        cute_path
-    )
-    // fasta_align_imgt_ch = Tsv2fasta.out.fasta_align_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Tsv2fasta PROCESS\n\n========\n\n"}.filter {nuc, aa, kind -> nuc.name.endsWith("_imgt_nuc.fasta")}
-    Tsv2fasta.out.fasta_align_ch.filter{ nuc, aa, kind -> nuc.exists() && aa.exists() }.subscribe{nuc, aa, kind -> nuc.copyTo("${out_path}/fasta/for_alignment_nuc/${nuc.getName()}") ; aa.copyTo("${out_path}/fasta/for_alignment_aa/${aa.getName()}")} // copy the folder and content for_alignment_nuc/* into {out_path}/fasta
-    Tsv2fasta.out.fasta_align_imgt_ch.filter{ nuc, aa, kind -> nuc.exists() && aa.exists() }.subscribe{nuc, aa, kind -> nuc.copyTo("${out_path}/alignments/nuc/imgt/${nuc.getName()}") ; aa.copyTo("${out_path}/alignments/aa/imgt/${aa.getName()}")}
-    fasta_align_imgt_aa_ch = Tsv2fasta.out.fasta_align_imgt_ch.map{ nuc, aa, kind  -> [aa, nuc, kind] } // for aa printing into html
-    // Tsv2fasta.out.fasta_align_imgt_ch.filter{ nuc, aa, kind -> nuc.exists() }.subscribe{nuc, aa, kind -> nuc.copyTo("${out_path}/alignments/nuc/imgt/${nuc.getName()}")} // aa.copyTo("${out_path}/alignments/aa/${aa.getName()}") not used because no gaps in this aa sequences
-    // fasta_align_ch2 = Tsv2fasta.out.fasta_align_ch.filter {nuc, aa, kind -> !nuc.name.endsWith("_imgt_nuc.fasta")}
-    copyLogFile('Tsv2fasta.log', Tsv2fasta.out.tsv2fasta_log_ch, out_path)
-    // Print warnings on the terminal:
-    Tsv2fasta.out.warning_ch.filter{file(it).exists()}.map{file -> file.text} //  file.text = contenu du fichier
-
-    if(align_soft == "abalign" && (align_seq == "query" || align_seq == "igblast_full" || align_seq == "trimmed" || align_seq == "fwr1" || align_seq == "fwr2" || align_seq == "fwr3" || align_seq == "fwr4" || align_seq == "cdr1" || align_seq == "cdr2" || align_seq == "cdr3" || align_seq == "junction" || align_seq == "d_sequence_alignment" || align_seq == "j_sequence_alignment" || align_seq == "c_sequence_alignment" || align_seq == "d_germline_alignment" || align_seq == "j_germline_alignment" || align_seq == "c_germline_alignment")){
-        align_soft = "mafft"
-        print("\n\nWARNING: align_soft PARAMETER RESET TO \"mafft\" SINCE align_soft PARAMETER WAS SET TO \"abalign\" BUT Abalign EITHER 1) REQUIRES AT LEAST A V DOMAIN IN THE SEQUENCES OR 2) TRUNKS THE C CONSTANT REGION,\nWHILE align_seq PARAMETER IS SET TO \"${align_seq}\"\n\n")
-    }
-    if(align_soft == "mafft"){
-        Mafft_align(
-            Tsv2fasta.out.fasta_align_ch,
-            align_mafft_all_options,
-            align_mafft_clonal_options
-        )
-        align_aa_ch = Mafft_align.out.aligned_all_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Mafft_align PROCESS\n\n========\n\n"}.map{ nuc, aa, tag -> [aa, nuc, tag] }
-        align_nuc_ch = Mafft_align.out.aligned_all_ch.map{ nuc, aa, tag -> [nuc, aa, tag] }
-        aligned_all_ch2 = Mafft_align.out.aligned_all_ch.map{ nuc, aa, tag -> [nuc, aa] }
-        copyLogFile('Mafft_align.log', Mafft_align.out.mafft_align_log_ch, out_path)
-    }else if(align_soft == "abalign"){
-        Abalign_align_aa(
-            Tsv2fasta.out.fasta_align_ch,
-            igblast_organism,
-            igblast_B_heavy_chain,
-            align_abalign_options
-        )
-        copyLogFile('Abalign_align_aa.log', Abalign_align_aa.out.abalign_align_aa_log_ch, out_path)
-
-
-        Abalign_rename(
-            Abalign_align_aa.out.aligned_aa_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Abalign_align_aa PROCESS\n\n========\n\n"}
-        )
-        Abalign_rename.out.failed_abalign_align_ch.collectFile(name: "failed_abalign_align.tsv", skip: 1, keepHeader: true).subscribe{it -> it.copyTo("${out_path}/tsv")}
-        copyLogFile('Abalign_rename.log', Abalign_rename.out.abalign_rename_log_ch, out_path)
-
-        // aligned_aa_only_ch = Abalign_align_aa.out.aligned_aa_ch.map { x, y, z -> y }
-        Abalign_align_nuc(
-            Abalign_rename.out.renamed_aligned_aa_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Abalign_align_aa PROCESS\n\n========\n\n"}
-        )
-        align_nuc_ch = Abalign_align_nuc.out.aligned_all_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Abalign_align_nuc PROCESS\n\n========\n\n"}.map{ nuc, aa, tag -> [nuc, aa, tag] }
-        align_aa_ch = Abalign_align_nuc.out.aligned_all_ch.map{ nuc, aa, tag -> [aa, nuc, tag] }
-        aligned_all_ch2 = Abalign_align_nuc.out.aligned_all_ch.map{ nuc, aa, tag -> [nuc, aa] }
-        copyLogFile('Abalign_align_nuc.log', Abalign_align_nuc.out.abalign_align_nuc_log_ch, out_path)
-    }else{
-        error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nINVALID align_soft PARAMETER IN nextflow.config FILE:\n${align_soft}\n\n========\n\n"
-    }
-    align_nuc_ch.subscribe{nuc, aa, tag -> if(tag == "CLONE"){nuc.copyTo("${out_path}/alignments/nuc/clonal/${nuc.getName()}")}else if(tag == "ALL"){nuc.copyTo("${out_path}/alignments/nuc/all/${nuc.getName()}")}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
-    align_aa_ch.subscribe{aa, nuc, tag -> if(tag == "CLONE"){aa.copyTo("${out_path}/alignments/aa/clonal/${aa.getName()}")}else if(tag == "ALL"){aa.copyTo("${out_path}/alignments/aa/all/${aa.getName()}")}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
-
-
-    //Abalign_align_nuc.out.aligned_all_ch.map{ nuc, aa, tag -> [y, z] }.view()
-    //Mutation_load_germ_genes.out.mutation_load_ch.view()
-    branches_nuc = align_nuc_ch.branch {
-        CLONE: it[2] == 'CLONE'
-        ALL  : it[2] == 'ALL'
-    }
-    clone_for_gff_nuc_ch = branches_nuc.CLONE.combine(clone_assigned_seq_filtered_ch.first())
-    all_for_gff_nuc_ch  = branches_nuc.ALL.combine(data_assembly.out.wanted_ch.first())
-    for_gff_nuc_ch = clone_for_gff_nuc_ch.mix(all_for_gff_nuc_ch)
-    branches_aa = align_aa_ch.branch {
-        CLONE: it[2] == 'CLONE'
-        ALL  : it[2] == 'ALL'
-    }
-    clone_for_gff_aa_ch = branches_aa.CLONE.combine(clone_assigned_seq_filtered_ch.first())
-    all_for_gff_aa_ch  = branches_aa.ALL.combine(data_assembly.out.wanted_ch.first())
-    for_gff_aa_ch = clone_for_gff_aa_ch.mix(all_for_gff_aa_ch)
-
-
-
-    GffNuc( // module gff.nf
-        for_gff_nuc_ch,
-        align_seq, 
-        align_clone_nb, 
-        cute_path
-    )
-    GffNuc.out.gff_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE GffNuc PROCESS\n\n========\n\n"}.subscribe{gff_list, tag -> if(tag == "CLONE"){gff_list.each{gff -> gff.copyTo("${out_path}/alignments/nuc/clonal/${gff.getName()}")}}else if(tag == "ALL"){gff_list.each{gff -> gff.copyTo("${out_path}/alignments/nuc/all/${gff.getName()}")}}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}} // .flatten() because gff several files. Otherwise, copyTo does not like it. Finally, .each() also solve the problem
-    copyLogFile('gffNuc.log', GffNuc.out.gff_log_ch, out_path)
-
-
-
-    //for_gff_aa_ch.view()
-    GffAa( // module gff.nf
-        for_gff_aa_ch,
-        align_seq, 
-        align_clone_nb, 
-        cute_path
-    )
-    GffAa.out.gff_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE GffAa PROCESS\n\n========\n\n"}.subscribe{gff_list, tag -> if(tag == "CLONE"){gff_list.each{gff -> gff.copyTo("${out_path}/alignments/aa/clonal/${gff.getName()}")}}else if(tag == "ALL"){gff_list.each{gff -> gff.copyTo("${out_path}/alignments/aa/all/${gff.getName()}")}}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
-    copyLogFile('gffAa.log', GffAa.out.gff_log_ch, out_path)
-//GffAa.out.gff_ch.flatten().view()
-
-
-
-    PrintAlignmentNuc( // module print_alignment.nf
-        align_nuc_ch
-    )
-    PrintAlignmentNuc.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentNuc PROCESS\n\n========\n\n"}.subscribe{html, tag -> if(tag == "CLONE"){html.copyTo("${out_path}/alignments/nuc/clonal/${html.getName()}")}else if(tag == "ALL"){html.copyTo("${out_path}/alignments/nuc/all/${html.getName()}")}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
-    
-    //.subscribe{it -> it.copyTo("${out_path}/alignments/nuc")}
-
-
-
-    PrintAlignmentAa( // module print_alignment.nf
-        align_aa_ch
-    )
-    PrintAlignmentAa.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentAa PROCESS\n\n========\n\n"}.subscribe{html, tag -> if(tag == "CLONE"){html.copyTo("${out_path}/alignments/aa/clonal/${html.getName()}")}else if(tag == "ALL"){html.copyTo("${out_path}/alignments/aa/all/${html.getName()}")}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
-
-
-    has_fasta_align_imgt = Tsv2fasta.out.fasta_align_imgt_ch.map{ true }.ifEmpty { [false] }.first() // has_fasta_align_imgt is false if Tsv2fasta.out.fasta_align_imgt_ch is empty
-    if(has_fasta_align_imgt && (align_seq == "query" || align_seq == "igblast_full" || align_seq == "trimmed" || align_seq == "sequence_alignment")){
-        Gff_imgt( // module gff_imgt.nf
-            Tsv2fasta.out.fasta_align_imgt_ch, 
-            align_seq, 
-            data_assembly.out.wanted_ch, 
-            cute_path
-        )
-        copyLogFile('gff_imgt.log', Gff_imgt.out.gff_log_ch, out_path)
-
-        PrintAlignmentIMGTnuc( // module print_alignment.nf
-            Tsv2fasta.out.fasta_align_imgt_ch
-        )
-        PrintAlignmentIMGTnuc.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentIMGTnuc PROCESS\n\n========\n\n"}.subscribe{html, tag -> html.copyTo("${out_path}/alignments/nuc/imgt")}
-
-        PrintAlignmentIMGTaa( // module print_alignment.nf
-            fasta_align_imgt_aa_ch
-        )
-        PrintAlignmentIMGTaa.out.alignment_html.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE PrintAlignmentIMGTaa PROCESS\n\n========\n\n"}.subscribe{html, tag -> html.copyTo("${out_path}/alignments/aa/imgt")}
-
-        // printing of coordinates for jalview
-
-        // end printing of coordinates for jalview
-    }
-
-
-    Tree(
-        aligned_all_ch2,
-        phylo_tree_model_file
-    )
-
-
-    if(phylo_tree_itol_subscription == "TRUE"){ // Warning: no run if tree does not exist (because tree_nuc_ch and tree_aa_ch are optional)
-
-        Meta2ITOL (
-            meta_file,
-            meta_seq_names
-        )
-
-        tree_aa = Tree.out.tree_aa_ch
-        tree_nuc = Tree.out.tree_nuc_ch
-        //copyLogFile('tree.log', Tree.out.tree_log_ch, out_path)
-        tree = tree_aa.concat(tree_nuc)
-        // The ITOL process can only be executed if user has paid the subsription for automated visualization
-        ITOL(
-            tree, // Warning: no run if tree does not exist (because tree_nuc_ch and tree_aa_ch are optional)
-            Meta2ITOL.out.itol_out_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Meta2ITOL  PROCESS\n\n========\n\n"},
-            phylo_tree_itolkey
-        )
-
-        itol_aa_ch = ITOL.out.itol_aa_ch
-        itol_nuc_ch = ITOL.out.itol_nuc_ch
-
-        itol_aa_ch.subscribe{it -> it.copyTo("${out_path}/phylo/aa")}
-        itol_nuc_ch.subscribe{it -> it.copyTo("${out_path}/phylo/nuc")}
-
-    }
-
-
-
-    repertoire_constant_ch =repertoire.out.repertoire_png_ch
-        .flatten()
-        .filter { file -> 
-            file.name =~ /^.*IG.C_.*gene_non-zero\.png$/
+    igblast_ch1 = Igblast_query.out.db_pass_ch.collectFile(name: "igblast_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
+    unigblast_ch1 = Igblast_query.out.db_unpass_ch.collectFile(name: "failed_igblast_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
+    igblast_ch1.subscribe{it -> it.copyTo("${out_path}/tsv")} // nothing if no file
+    unigblast_ch1.subscribe{it -> it.copyTo("${out_path}/tsv")}
+    nb_igblast = igblast_ch1.countLines() - 1 // -1 for the header
+    nb_unigblast = unigblast_ch1.countLines() - 1 // -1 for the header
+    check_igblast = igblast_ch1.ifEmpty {'NO_FILE'}   // marker \ue202turn0search2
+    check_unigblast = unigblast_ch1.ifEmpty {'NO_FILE'}   // marker \ue202turn0search2
+    check_igblast.combine(check_unigblast).subscribe {x,unx -> 
+        if(x != 'NO_FILE'){
+            n = x.countLines() - 1   // here `x` is a Path, so it exists
+            if(n == -1){
+                throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nIGBLAST FILE EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Igblast_query PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+            }
+            if(n == 0){
+                throw new IllegalStateException("\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE Igblast_query PROCESS.\n\nCHECK THAT THE\nigblast_organism\nigblast_loci\nigblast_B_heavy_chain\nigblast_B_lambda_chain\nigblast_B_kappa_chain\nigblast_T_alpha_chain\nigblast_T_beta_chain\nigblast_T_gamma_chain\nigblast_T_delta_chain\nARE CORRECTLY SET IN THE nextflow.config FILE.\n\n========\n\n")
+            }
         }
-    repertoire_vj_ch = repertoire.out.repertoire_png_ch
-        .flatten()
-        .filter { file ->
-            file.name =~ /.*\/?(rep_gene_IG.V_.*non-zero\.png)$/
+        if(unx != 'NO_FILE'){
+            n = unx.countLines() - 1   // here `x` is a Path, so it exists
+            if(n == -1){
+                throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nFAILED IGBLAST FILE EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Igblast_query PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+            }
         }
+    }
+    fs_ch.count().combine(nb_igblast).combine(nb_unigblast).subscribe{n,n1,n2 -> 
+        if(n != -1 && n1 != -1 && n2 != -1){
+            if(n != n1 + n2){
+                throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF LINES IN THE igblast_aligned_seq.tsv (${n1}) AND igblast_unaligned_seq_name.tsv (${n2}) IS NOT EQUAL TO THE NUMBER OF SUBMITTED FASTA FILES (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+            }
+        }
+    }
+    copyLogFile('igblast_query.log', Igblast_query.out.log_ch, out_path)
+
+
+    // when: nb_igblast > 0
+
+
+        ParseDb_filtering(
+            Igblast_query.out.db_pass_ch, 
+            nb_igblast
+        )
+        productive_ch1 = ParseDb_filtering.out.productive_ch.collectFile(name: "productive_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
+        unproductive_ch1 = ParseDb_filtering.out.unproductive_ch.collectFile(name: "unproductive_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
+        productive_ch1.subscribe{it -> it.copyTo("${out_path}/tsv")} // nothing if no file
+        unproductive_ch1.subscribe{it -> it.copyTo("${out_path}/tsv")}
+        nb_productive = nb_productive.mix(productive_ch1.countLines() - 1) // -1 for the header
+        nb_unproductive = nb_unproductive.mix(unproductive_ch1.countLines() - 1) // -1 for the header
+        check_productive = productive_ch1.ifEmpty {'NO_FILE'}   // marker \ue202turn0search2
+        check_unproductive = unproductive_ch1.ifEmpty {'NO_FILE'}   // marker \ue202turn0search2
+        check_productive.combine(check_unproductive).subscribe {x,unx -> 
+            if(x != 'NO_FILE'){
+                n = x.countLines() - 1   // here `x` is a Path, so it exists
+                if(n == -1){
+                    throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nPRODUCTIVE FILE EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE ParseDb_filtering PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                }
+                if(n == 0){
+                    warn = "\n\nWARNING:\n0 PRODUCTIVE SEQUENCE FOLLOWING THE ParseDb_filtering PROCESS.\nWORFLOW ENDED.\nSEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
+                    print(warn)
+                    warning_ch = warning_ch.mix(Channel.value(warn)) // accumulate
+                }
+            }
+            if(unx != 'NO_FILE'){
+                n = unx.countLines() - 1   // here `x` is a Path, so it exists
+                if(n == -1){
+                    throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nUNPRODUCTIVE FILE EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE ParseDb_filtering PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                }
+            }
+        }
+        nb_igblast.combine(nb_productive).combine(nb_unproductive).subscribe{n,n1,n2 -> 
+            if(n != -1 && n1 != -1 && n2 != -1){
+                if(n != n1 + n2){
+                    throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF LINES IN THE productive_seq.tsv (${n1}) AND unproductive_seq.tsv (${n2}) IS NOT EQUAL TO THE NUMBER OF LINES IN igblast_seq.tsv (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                }
+            }
+        }
+        copyLogFile('parseDb_filtering.log', ParseDb_filtering.out.parseDb_filtering_log_ch, out_path)
+
+        // when: nb_productive > 0
+
+            Igblast_chain_check( // module Igblast_chain_check.nf
+                ParseDb_filtering.out.productive_ch, 
+                Igblast_data_check.out.allele_names_tsv_all_ch, 
+                igblast_v_ref_files, 
+                igblast_d_ref_files, 
+                igblast_j_ref_files, 
+                igblast_constant_ref_files, 
+                cute_file,
+                nb_productive
+            )
+            check_ch1 = Igblast_chain_check.out.checked_tsv_ch.collectFile(name: "wanted_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
+            uncheck_ch1 = Igblast_chain_check.out.not_checked_tsv_ch.collectFile(name: "unwanted_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
+            check_ch1.subscribe{it -> it.copyTo("${out_path}/tsv")} // nothing if no file
+            uncheck_ch1.subscribe{it -> it.copyTo("${out_path}/tsv")}
+            nb_wanted = nb_wanted.mix(check_ch1.countLines() - 1) // -1 for the header
+            nb_unwanted = nb_unwanted.mix(uncheck_ch1.countLines() - 1) // -1 for the header
+            check_check = check_ch1.ifEmpty {'NO_FILE'}   // marker \ue202turn0search2
+            check_uncheck = uncheck_ch1.ifEmpty {'NO_FILE'}   // marker \ue202turn0search2
+            check_check.combine(check_uncheck).subscribe {x,unx -> 
+                if(x != 'NO_FILE'){
+                    n = x.countLines() - 1   // here `x` is a Path, so it exists
+                    if(n == -1){
+                        throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nWANTED FILE EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Igblast_chain_check PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                    }
+                    if(n == 0){
+                        print("\n\nWARNING:\n0 WANTED SEQUENCE FOLLOWING THE Igblast_chain_check PROCESS.\n\nCHECK THAT THE\nigblast_organism\nigblast_loci\nigblast_B_heavy_chain\nigblast_B_lambda_chain\nigblast_B_kappa_chain\nigblast_T_alpha_chain\nigblast_T_beta_chain\nigblast_T_gamma_chain\nigblast_T_delta_chain\nARE CORRECTLY SET IN THE nextflow.config FILE.\n\nWORFLOW ENDED.\nSEE THE PARTIAL RESULTS IN: ${out_path}.\n\n")
+                    }
+                }
+                if(unx != 'NO_FILE'){
+                    n = unx.countLines() - 1   // here `x` is a Path, so it exists
+                    if(n == -1){
+                        throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nUNWANTED FILE EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE nigblast_B_heavy_chain PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                    }
+                }
+            }
+            nb_productive.combine(nb_wanted).combine(nb_unwanted).subscribe{n,n1,n2 -> 
+                if(n != -1 && n1 != -1 && n2 != -1){
+                    if(n != n1 + n2){
+                        throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF LINES IN THE wanted_seq.tsv (${n1}) AND unwanted_seq.tsv (${n2}) IS NOT EQUAL TO THE NUMBER OF LINES IN productive_seq.tsv (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                    }
+                }
+            }
+            copyLogFile('igblast_chain_check.log', Igblast_chain_check.out.igblast_chain_check_log, out_path)
+
+
+            // when: nb_wanted > 0
+
+                TrimTranslate(
+                    Igblast_chain_check.out.checked_tsv_ch,
+                    nb_wanted
+                )
+                //TrimTranslate.out.trimtranslate_ch.count().subscribe {n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nO SEQUENCE RETURNED FOLLOWING THE TrimTranslate PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // n is number of items in channel because of .count()
+                trimtranslate_ch2 = TrimTranslate.out.trimtranslate_ch.collectFile(name: "trimtranslate.tsv", skip: 1, keepHeader: true) // wanted file with column sequence_alignment_aa added  // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
+                copyLogFile('trimtranslate.log', TrimTranslate.out.trimtranslate_log_ch, out_path)
+
+
+                DistToNearest(
+                    trimtranslate_ch2,
+                    clone_model,
+                    clone_normalize
+                )
+                nb_dist_ignored = nb_dist_ignored.mix(DistToNearest.out.dist_ignored_ch.countLines() - 1) // Minus 1 because 1st line = column names // either .tsv is empty (header alone) or has a header to remove to count the lines
+
+
+                Distance_hist(
+                    DistToNearest.out.distToNearest_ch,
+                    cute_file, 
+                    clone_model,
+                    clone_normalize,
+                    clone_distance
+                )
+                distance_hist_ch = distance_hist_ch.mix(Distance_hist.out.distance_hist_ch)
+
+                Histogram_assembly(
+                    Distance_hist.out.histogram_pdf_ch.collect()
+                )
+
+
+                Add_dotted_coord( // module
+                    TrimTranslate.out.trimtranslate_ch
+                )
+                copyLogFile('add_dotted_coord.log', Add_dotted_coord.out.add_dotted_coord_log_ch, out_path)
+
+
+                Translate_with_IMGT_gaps( // module
+                    Add_dotted_coord.out.add_dotted_coord_ch
+                )
+                copyLogFile('Translate_with_IMGT_gaps.log', Translate_with_IMGT_gaps.out.translate_with_IMGT_gaps_ch_log, out_path)
+
+
+                Seq_name_replacement(
+                    Translate_with_IMGT_gaps.out.add_aa_imgt_ch,
+                    meta_file,
+                    meta_seq_names, 
+                    meta_name_replacement,
+                    meta_legend
+                )
+                seq_name_replacement_ch2 = Seq_name_replacement.out.seq_name_replacement_ch.collectFile(name: "replacement.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
+                // seq_name_replacement_ch2.subscribe{it -> it.copyTo("${out_path}")}
+                // tuple_seq_name_replacement = new Tuple("all", seq_name_replacement_ch2) # warning: this is not a channel but a variable now
+                copyLogFile('seq_name_replacement.log', Seq_name_replacement.out.seq_name_replacement_log_ch, out_path)
 
 
 
-    print_report(
-        template_rmd,
-        alignments_viz_rmd, 
-        alignments_viz_html, 
-        nb_input, 
-        nb_igblast - 1, 
-        nb_igblast_fail - 1, 
-        nb_productive - 1, // Minus 1 because the 1st line = the column names
-        nb_unproductive - 1, // Minus 1 because the 1st line = the column names
-        nb_wanted - 1, // Minus 1 because the 1st line = the column names
-        nb_unwanted - 1, // Minus 1 because the 1st line = the column names
+                Data_assembly(
+                    seq_name_replacement_ch2, 
+                    DistToNearest.out.distToNearest_ch
+                )
+
+
+                Metadata_check(
+                    Data_assembly.out.wanted_ch,
+                    meta_file, 
+                    meta_seq_names, 
+                    meta_name_replacement,
+                    meta_legend
+                )
+
+                Repertoire(
+                    Data_assembly.out.wanted_ch,
+                    Igblast_data_check.out.allele_names_tsv_all_ch,
+                    cute_file
+                )
+                repertoire_png_ch = repertoire_png_ch.mix(Repertoire.out.repertoire_png_ch.collect())
+                repertoire_constant_ch = repertoire_constant_ch.mix(Repertoire.out.repertoire_png_ch.flatten().filter {file -> 
+                        file.name =~ /^.*IG.C_.*gene_non-zero\.png$/
+                    })
+                repertoire_vj_ch =repertoire_vj_ch.mix( Repertoire.out.repertoire_png_ch.flatten().filter {file ->
+                        file.name =~ /.*\/?(rep_gene_IG.V_.*non-zero\.png)$/
+                    })
+
+
+                Clone_assignment(
+                    Data_assembly.out.wanted_ch, 
+                    clone_model,
+                    clone_normalize,
+                    clone_distance,
+                    clone_strategy,
+                    meta_file,
+                    meta_legend
+                )
+                // Clone_assignment.out.clone_ch.view()
+                // nb_failed_clone = Clone_assignment.out.failed_clone_ch.map {file -> file.countLines() == 0 ? 0: file.countLines() - 1} // either failed_clone_assigned_seq.tsv is empty (no lines) or has a header to remove to count the lines
+                nb_failed_clone_assignment = nb_failed_clone_assignment.mix(Clone_assignment.out.failed_clone_ch.countLines() - 1) // Minus 1 because 1st line = column names // either failed_clone_assigned_seq.tsv is empty (no lines) or has a header to remove to count the lines
+
+
+                Split_by_clones(
+                    Clone_assignment.out.clone_ch
+                )
+
+
+                Closest_germline(
+                    Split_by_clones.out.clone_split_ch.flatten(), // flatten split the list into several objects (required for parallelization)
+                    igblast_organism, 
+                    igblast_variable_ref_files, 
+                    clone_germline_kind,
+                    meta_file,
+                    meta_legend
+                )
+                failed_clonal_germline_file = Closest_germline.out.failed_clonal_germline_ch.collectFile(name: "failed_clonal_germline_seq.tsv", skip: 1, keepHeader: true)
+                failed_clonal_germline_file.subscribe{it -> it.copyTo("${out_path}/tsv")} // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
+                nb_failed_clone_germline = nb_failed_clone_germline.mix(failed_clonal_germline_file.countLines() - 1)
+                nb_failed_clone = nb_failed_clone.mix(nb_failed_clone_germline.combine(nb_failed_clone_assignment).map{new_count, old_count -> new_count + old_count}) // to add the two kind of failure
+                copyLogFile('Closest_germline.log', Closest_germline.out.closest_log_ch, out_path)
+
+
+
+                Igblast_germline_coords( // module igblast_germline.nf
+                    Closest_germline.out.closest_ch, // no ifEmpty{error} because can be empty for some of the parallelized processes
+                    igblast_organism, 
+                    igblast_loci
+                )
+                copyLogFile('Igblast_germline_coords_report.log', Igblast_germline_coords.out.log_ch, out_path)
+
+
+
+                AddGermlineSequences(
+                    Igblast_germline_coords.out.germline_coords_ch,
+                    igblast_organism, 
+                    igblast_variable_ref_files
+                )
+                copyLogFile('AddGermlineSequences.log', AddGermlineSequences.out.add_germ_log_ch, out_path)
+
+
+
+                TranslateGermline(
+                    AddGermlineSequences.out.add_germ_ch
+                )
+                TranslateGermline.out.translate_germ_log_ch.collectFile(name: "translateGermline.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+
+
+
+                Mutation_load_germ_genes(
+                    TranslateGermline.out.translate_germ_ch,
+                    meta_file, 
+                    meta_legend,
+                    clone_mut_obs_seq,
+                    clone_mut_germ_seq,
+                    clone_mut_regionDefinition
+                )
+                clone_assigned_seq_ch = Mutation_load_germ_genes.out.mutation_load_ch.collectFile(name: "clone_assigned_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
+                nb_clone_assigned = nb_clone_assigned.mix(clone_assigned_seq_ch.countLines() - 1) // Minus 1 because 1st line = column names
+                clone_assigned_seq_ch.subscribe{it -> it.copyTo("${out_path}/tsv")}
+                clone_assigned_seq_filtered_ch = Mutation_load_germ_genes.out.mutation_load_ch.filter{file -> file.countLines() > align_clone_nb.toInteger() } // Only keep clonal groups that have a number of sequences superior to align_clone_nb (variable defined in nextflow.config) 
+                copyLogFile('mutation_load_germ_genes.log', Mutation_load_germ_genes.out.mutation_load_log_ch, out_path)
+
+
+
+                Clone_id_count(
+                    clone_assigned_seq_ch
+                )
+
+
+
+                /*
+
+                get_germ_tree(
+                    Mutation_load_germ_genes.out.mutation_load_ch,
+                    meta_file, // first() because get_germ_tree process is a parallele one and because meta_file is single
+                    cute_file, 
+                    align_clone_nb,
+                    germ_tree_duplicate_seq,
+                    igphylm_exe_path
+                )
+                
+                get_germ_tree.out.rdata_germ_tree_ch.count().subscribe {n -> if ( n == 0 ){
+                    print("\n\nWARNING:\nEMPTY OUTPUT FOLLOWING THE get_germ_tree PROCESS -> NO TREE RETURNED\n\n")
+                }}
+                rdata_germ_tree_ch2 = get_germ_tree.out.rdata_germ_tree_ch.collect()
+                //rdata_germ_tree_ch2.view()
+
+                get_germ_tree.out.no_germ_tree_ch.count().subscribe {n -> if ( n == 0 ){
+                    print("\n\nWARNING:\nALL SEQUENCES IN TREES FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_dismissed_seq.tsv FILE RETURNED\n\n")
+                }}
+                no_germ_tree_ch2 = get_germ_tree.out.no_germ_tree_ch.collectFile(name: "germ_tree_dismissed_seq.tsv", skip: 1, keepHeader: true)
+                no_germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
+
+                get_germ_tree.out.germ_tree_ch.count().subscribe {n -> if ( n == 0 ){
+                    print("\n\nWARNING:\nNO SEQUENCES IN TREES FOLLOWING THE get_germ_tree PROCESS -> EMPTY seq_for_germ_tree.tsv FILE RETURNED\n\n")
+                }}
+                germ_tree_ch2 = get_germ_tree.out.germ_tree_ch.collectFile(name: "seq_for_germ_tree.tsv", skip: 1, keepHeader: true)
+                // germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
+                germ_tree_ch3 = get_germ_tree.out.germ_tree_ch.flatten().filter{file -> file.countLines() > align_clone_nb.toInteger() }
+
+                get_germ_tree.out.no_cloneID_ch.count().subscribe {n -> if ( n == 0 ){
+                    print("\n\nWARNING:\nALL SEQUENCES IN CLONAL GROUP FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_dismissed_clone_id.tsv FILE RETURNED\n\n")
+                }}
+                no_cloneID_ch2 = get_germ_tree.out.no_cloneID_ch.collectFile(name: "germ_tree_dismissed_clone_id.tsv")
+                no_cloneID_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
+
+                get_germ_tree.out.cloneID_ch.count().subscribe {n -> if ( n == 0 ){
+                    print("\n\nWARNING:\nNO CLONAL GROUP FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_clone_id.tsv and germ_tree.pdf FILES RETURNED\n\n")
+                }}
+                cloneID_ch2 = get_germ_tree.out.cloneID_ch.collectFile(name: "germ_tree_clone_id.tsv")
+                cloneID_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
+
+                get_germ_tree.out.get_germ_tree_log_ch.collectFile(name: "get_germ_tree.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
+
+
+
+                germ_tree_vizu(
+                    rdata_germ_tree_ch2,
+                    germ_tree_kind,
+                    align_clone_nb,
+                    germ_tree_duplicate_seq,
+                    germ_tree_leaf_color,
+                    germ_tree_leaf_shape,
+                    germ_tree_leaf_size,
+                    germ_tree_label_size,
+                    germ_tree_label_hjust,
+                    germ_tree_label_rigth,
+                    germ_tree_label_outside,
+                    germ_tree_right_margin,
+                    germ_tree_legend,
+                    clone_assigned_seq_ch, // may be add .first()
+                    meta_file, 
+                    meta_legend,
+                    cute_file
+                )
+                germ_tree_vizu.out.germ_tree_vizu_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE germ_tree_vizu PROCESS\n\n========\n\n"}
+                //germ_tree_vizu.out.germ_tree_vizu_ch.count().subscribe {n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE germ_tree_vizu PROCESS\n\n========\n\n"}}
+                germ_tree_vizu.out.germ_tree_dup_seq_not_displayed_ch.ifEmpty{
+                    print("\n\nWARNING:\n-> NO germ_tree_dup_seq_not_displayed.tsv FILE RETURNED\n\n")
+                }
+                germ_tree_dup_seq_not_displayed_ch2 = germ_tree_vizu.out.germ_tree_dup_seq_not_displayed_ch.flatten().collectFile(name: "germ_tree_dup_seq_not_displayed.tsv", skip: 1, keepHeader: true) // flatten split the list into several objects which is required by collectFile()
+                germ_tree_dup_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
+
+                */
+
+
+                tempo1_ch = Channel.of("all", "annotated", "tree") // 1 channel with 3 values (not list)
+                tempo2_ch = Data_assembly.out.wanted_ch.mix(Data_assembly.out.wanted_ch.mix(clone_assigned_seq_ch)) // 1 channel with 3 paths (do not use flatten() -> not list)
+                tempo3_ch = tempo1_ch.merge(tempo2_ch) // 3 lists
+                tempo4_ch = Channel.of("vj_allele", "c_allele", "vj_gene", "c_gene")
+                tempo5_ch = tempo3_ch.combine(tempo4_ch) // 12 tuples
+                Donut(
+                    tempo5_ch,
+                    donut_palette,
+                    donut_hole_size,
+                    donut_hole_text,
+                    donut_hole_text_size,
+                    donut_border_color,
+                    donut_border_size,
+                    donut_annotation_distance,
+                    donut_annotation_size,
+                    donut_annotation_force,
+                    donut_annotation_force_pull,
+                    donut_legend_width,
+                    donut_legend_text_size,
+                    donut_legend_box_size,
+                    donut_legend_box_space,
+                    donut_legend_limit,
+                    cute_file,
+                    Igblast_data_check.out.allele_names_tsv_all_ch
+                )
+                donut_tsv_ch2 = Donut.out.donut_tsv_ch.collectFile(name: "donut_stats.tsv", skip: 1, keepHeader: true).subscribe{it -> it.copyTo("${out_path}/tsv")} // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
+                donuts_png_ch = donuts_png_ch.mix(Donut.out.donuts_png_ch.collect())
+
+
+                Donut_assembly(
+                    Donut.out.donut_pdf_ch.collect()
+                )
+
+
+
+                clone_labeled_ch = clone_assigned_seq_filtered_ch.map {file -> tuple(file, 'CLONE') }
+                wanted_labeled_ch = Data_assembly.out.wanted_ch.map {file -> tuple(file, 'ALL') }
+                imgt_labeled_ch = Data_assembly.out.wanted_ch.map {file -> tuple(file, 'IMGT') }
+                all_files_ch = clone_labeled_ch.mix(wanted_labeled_ch, imgt_labeled_ch)
+                Tsv2fasta(
+                    all_files_ch,
+                    align_seq, 
+                    clone_germline_kind, 
+                    align_clone_nb, 
+                    cute_path
+                )
+                // fasta_align_imgt_ch = Tsv2fasta.out.fasta_align_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Tsv2fasta PROCESS\n\n========\n\n"}.filter {nuc, aa, kind -> nuc.name.endsWith("_imgt_nuc.fasta")}
+                Tsv2fasta.out.fasta_align_ch.filter{nuc, aa, kind -> nuc.exists() && aa.exists() }.subscribe{nuc, aa, kind -> nuc.copyTo("${out_path}/fasta/for_alignment_nuc/${nuc.getName()}") ; aa.copyTo("${out_path}/fasta/for_alignment_aa/${aa.getName()}")} // copy the folder and content for_alignment_nuc/* into {out_path}/fasta
+                Tsv2fasta.out.fasta_align_imgt_ch.filter{nuc, aa, kind -> nuc.exists() && aa.exists() }.subscribe{nuc, aa, kind -> nuc.copyTo("${out_path}/alignments/nuc/imgt/${nuc.getName()}") ; aa.copyTo("${out_path}/alignments/aa/imgt/${aa.getName()}")}
+                fasta_align_imgt_aa_ch = Tsv2fasta.out.fasta_align_imgt_ch.map{nuc, aa, kind  -> [aa, nuc, kind] } // for aa printing into html
+                // Tsv2fasta.out.fasta_align_imgt_ch.filter{nuc, aa, kind -> nuc.exists() }.subscribe{nuc, aa, kind -> nuc.copyTo("${out_path}/alignments/nuc/imgt/${nuc.getName()}")} // aa.copyTo("${out_path}/alignments/aa/${aa.getName()}") not used because no gaps in this aa sequences
+                // fasta_align_ch2 = Tsv2fasta.out.fasta_align_ch.filter {nuc, aa, kind -> !nuc.name.endsWith("_imgt_nuc.fasta")}
+                copyLogFile('Tsv2fasta.log', Tsv2fasta.out.tsv2fasta_log_ch, out_path)
+                // Print warnings on the terminal:
+                Tsv2fasta.out.warning_ch.filter{file(it).exists()}.map{file -> file.text} //  file.text = contenu du fichier
+                has_fasta_align_imgt = Tsv2fasta.out.fasta_align_imgt_ch.map{true }.ifEmpty {[false] }.first() // has_fasta_align_imgt is false if Tsv2fasta.out.fasta_align_imgt_ch is empty
+
+
+
+                if(align_soft == "abalign" && (align_seq == "query" || align_seq == "igblast_full" || align_seq == "trimmed" || align_seq == "fwr1" || align_seq == "fwr2" || align_seq == "fwr3" || align_seq == "fwr4" || align_seq == "cdr1" || align_seq == "cdr2" || align_seq == "cdr3" || align_seq == "junction" || align_seq == "d_sequence_alignment" || align_seq == "j_sequence_alignment" || align_seq == "c_sequence_alignment" || align_seq == "d_germline_alignment" || align_seq == "j_germline_alignment" || align_seq == "c_germline_alignment")){
+                    align_soft = "mafft"
+                    print("\n\nWARNING:\nalign_soft PARAMETER RESET TO \"mafft\" SINCE align_soft PARAMETER WAS SET TO \"abalign\" BUT Abalign EITHER 1) REQUIRES AT LEAST A V DOMAIN IN THE SEQUENCES OR 2) TRUNKS THE C CONSTANT REGION,\nWHILE align_seq PARAMETER IS SET TO \"${align_seq}\"\n\n")
+                }
+                if(align_soft == "mafft"){
+
+
+                    Mafft_align(
+                        Tsv2fasta.out.fasta_align_ch,
+                        align_mafft_all_options,
+                        align_mafft_clonal_options
+                    )
+                    align_aa_ch = Mafft_align.out.aligned_all_ch.map{nuc, aa, tag -> [aa, nuc, tag] }
+                    align_nuc_ch = Mafft_align.out.aligned_all_ch.map{nuc, aa, tag -> [nuc, aa, tag] }
+                    aligned_all_ch2 = Mafft_align.out.aligned_all_ch.map{nuc, aa, tag -> [nuc, aa] }
+                    copyLogFile('mafft_align.log', Mafft_align.out.mafft_align_log_ch, out_path)
+
+
+
+                }else if(align_soft == "abalign"){
+
+
+                    Abalign_align_aa(
+                        Tsv2fasta.out.fasta_align_ch,
+                        igblast_organism,
+                        igblast_B_heavy_chain,
+                        align_abalign_options
+                    )
+                    copyLogFile('abalign_align_aa.log', Abalign_align_aa.out.abalign_align_aa_log_ch, out_path)
+
+
+
+                    Abalign_rename(
+                        Abalign_align_aa.out.aligned_aa_c
+                    )
+                    Abalign_rename.out.failed_abalign_align_ch.collectFile(name: "failed_abalign_align.tsv", skip: 1, keepHeader: true).subscribe{it -> it.copyTo("${out_path}/tsv")}
+                    copyLogFile('abalign_rename.log', Abalign_rename.out.abalign_rename_log_ch, out_path)
+
+
+
+                    Abalign_align_nuc(
+                        Abalign_rename.out.renamed_aligned_aa_ch
+                    )
+                    align_nuc_ch = Abalign_align_nuc.out.aligned_all_ch.map{nuc, aa, tag -> [nuc, aa, tag] }
+                    align_aa_ch = Abalign_align_nuc.out.aligned_all_ch.map{nuc, aa, tag -> [aa, nuc, tag] }
+                    aligned_all_ch2 = Abalign_align_nuc.out.aligned_all_ch.map{nuc, aa, tag -> [nuc, aa] }
+                    copyLogFile('abalign_align_nuc.log', Abalign_align_nuc.out.abalign_align_nuc_log_ch, out_path)
+
+
+
+                }else{
+                    error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nINVALID align_soft PARAMETER IN nextflow.config FILE:\n${align_soft}\n\n========\n\n"
+                }
+                align_nuc_ch.subscribe{nuc, aa, tag -> if(tag == "CLONE"){nuc.copyTo("${out_path}/alignments/nuc/clonal/${nuc.getName()}")}else if(tag == "ALL"){nuc.copyTo("${out_path}/alignments/nuc/all/${nuc.getName()}")}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
+                align_aa_ch.subscribe{aa, nuc, tag -> if(tag == "CLONE"){aa.copyTo("${out_path}/alignments/aa/clonal/${aa.getName()}")}else if(tag == "ALL"){aa.copyTo("${out_path}/alignments/aa/all/${aa.getName()}")}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
+
+
+                //Abalign_align_nuc.out.aligned_all_ch.map{nuc, aa, tag -> [y, z] }.view()
+                //Mutation_load_germ_genes.out.mutation_load_ch.view()
+                branches_nuc = align_nuc_ch.branch {
+                    CLONE: it[2] == 'CLONE'
+                    ALL  : it[2] == 'ALL'
+                }
+                clone_for_gff_nuc_ch = branches_nuc.CLONE.combine(clone_assigned_seq_filtered_ch.first())
+                all_for_gff_nuc_ch  = branches_nuc.ALL.combine(Data_assembly.out.wanted_ch.first())
+                for_gff_nuc_ch = clone_for_gff_nuc_ch.mix(all_for_gff_nuc_ch)
+                branches_aa = align_aa_ch.branch {
+                    CLONE: it[2] == 'CLONE'
+                    ALL  : it[2] == 'ALL'
+                }
+                clone_for_gff_aa_ch = branches_aa.CLONE.combine(clone_assigned_seq_filtered_ch.first())
+                all_for_gff_aa_ch  = branches_aa.ALL.combine(Data_assembly.out.wanted_ch.first())
+                for_gff_aa_ch = clone_for_gff_aa_ch.mix(all_for_gff_aa_ch)
+
+
+
+                GffNuc( // module gff.nf
+                    for_gff_nuc_ch,
+                    align_seq, 
+                    align_clone_nb, 
+                    cute_path
+                )
+                GffNuc.out.gff_ch.subscribe{gff_list, tag -> if(tag == "CLONE"){gff_list.each{gff -> gff.copyTo("${out_path}/alignments/nuc/clonal/${gff.getName()}")}}else if(tag == "ALL"){gff_list.each{gff -> gff.copyTo("${out_path}/alignments/nuc/all/${gff.getName()}")}}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}} // .flatten() because gff several files. Otherwise, copyTo does not like it. Finally, .each() also solve the problem
+                copyLogFile('gffNuc.log', GffNuc.out.gff_log_ch, out_path)
+
+
+
+                //for_gff_aa_ch.view()
+                GffAa( // module gff.nf
+                    for_gff_aa_ch,
+                    align_seq, 
+                    align_clone_nb, 
+                    cute_path
+                )
+                GffAa.out.gff_ch.subscribe{gff_list, tag -> if(tag == "CLONE"){gff_list.each{gff -> gff.copyTo("${out_path}/alignments/aa/clonal/${gff.getName()}")}}else if(tag == "ALL"){gff_list.each{gff -> gff.copyTo("${out_path}/alignments/aa/all/${gff.getName()}")}}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
+                copyLogFile('gffAa.log', GffAa.out.gff_log_ch, out_path)
+
+
+
+                PrintAlignmentNuc( // module print_alignment.nf
+                    align_nuc_ch
+                )
+                PrintAlignmentNuc.out.alignment_html.subscribe{html, tag -> if(tag == "CLONE"){html.copyTo("${out_path}/alignments/nuc/clonal/${html.getName()}")}else if(tag == "ALL"){html.copyTo("${out_path}/alignments/nuc/all/${html.getName()}")}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
+                
+                //.subscribe{it -> it.copyTo("${out_path}/alignments/nuc")}
+
+
+
+                PrintAlignmentAa( // module print_alignment.nf
+                    align_aa_ch
+                )
+                PrintAlignmentAa.out.alignment_html.subscribe{html, tag -> if(tag == "CLONE"){html.copyTo("${out_path}/alignments/aa/clonal/${html.getName()}")}else if(tag == "ALL"){html.copyTo("${out_path}/alignments/aa/all/${html.getName()}")}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
+
+
+
+                if(has_fasta_align_imgt && (align_seq == "query" || align_seq == "igblast_full" || align_seq == "trimmed" || align_seq == "sequence_alignment")){
+
+
+                    Gff_imgt( // module gff_imgt.nf
+                        Tsv2fasta.out.fasta_align_imgt_ch, 
+                        align_seq, 
+                        Data_assembly.out.wanted_ch, 
+                        cute_path
+                    )
+                    copyLogFile('gff_imgt.log', Gff_imgt.out.gff_log_ch, out_path)
+
+
+
+                    PrintAlignmentIMGTnuc( // module print_alignment.nf
+                        Tsv2fasta.out.fasta_align_imgt_ch
+                    )
+                    PrintAlignmentIMGTnuc.out.alignment_html.subscribe{html, tag -> html.copyTo("${out_path}/alignments/nuc/imgt")}
+
+
+
+                    PrintAlignmentIMGTaa( // module print_alignment.nf
+                        fasta_align_imgt_aa_ch
+                    )
+                    PrintAlignmentIMGTaa.out.alignment_html.subscribe{html, tag -> html.copyTo("${out_path}/alignments/aa/imgt")}
+
+
+                }
+
+
+                Tree(
+                    aligned_all_ch2,
+                    phylo_tree_model_file
+                )
+
+
+                if(phylo_tree_itol_subscription == "TRUE"){ // Warning: no run if tree does not exist (because tree_nuc_ch and tree_aa_ch are optional)
+
+                    Meta2Itol (
+                        meta_file,
+                        meta_seq_names
+                    )
+
+                    tree_aa = Tree.out.tree_aa_ch
+                    tree_nuc = Tree.out.tree_nuc_ch
+                    //copyLogFile('tree.log', Tree.out.tree_log_ch, out_path)
+                    tree = tree_aa.concat(tree_nuc)
+
+
+
+                    // The ITOL process can only be executed if user has paid the subsription for automated visualization
+                    Itol(
+                        tree, // Warning: no run if tree does not exist (because tree_nuc_ch and tree_aa_ch are optional)
+                        Meta2Itol.out.itol_out_ch,
+                        phylo_tree_itolkey
+                    )
+                    itol_aa_ch = Itol.out.itol_aa_ch
+                    itol_nuc_ch = Itol.out.itol_nuc_ch
+
+                    itol_aa_ch.subscribe{it -> it.copyTo("${out_path}/phylo/aa")}
+                    itol_nuc_ch.subscribe{it -> it.copyTo("${out_path}/phylo/nuc")}
+
+                }
+
+
+            // end when: nb_wanted > 0
+
+        // end when: nb_productive > 0
+
+    // end when: nb_igblast > 0
+
+    Print_report(
+        template_rmd, // from parameter
+        alignments_viz_rmd, // from parameter
+        alignments_viz_html, // from parameter
+        nb_input, // mandatory
+        nb_igblast, // mandatory
+        nb_unigblast, // mandatory
+        nb_productive, 
+        nb_unproductive, 
+        nb_wanted, 
+        nb_unwanted, 
         nb_dist_ignored, 
         nb_clone_assigned, 
         nb_failed_clone, 
         nb_failed_clone_assignment, 
         nb_failed_clone_germline, 
-        distance_hist.out.distance_hist_ch, 
-        donut.out.donuts_png.collect(), 
-        repertoire.out.repertoire_png_ch.collect(), 
+        distance_hist_ch, 
+        Donut.out.donuts_png_ch.collect(), 
+        Repertoire.out.repertoire_png_ch.collect(), 
         repertoire_constant_ch, 
         repertoire_vj_ch, 
-        clone_distance,  
-        align_soft, 
-        phylo_tree_itol_subscription
+        clone_distance, // parameter
+        align_soft, // parameter
+        phylo_tree_itol_subscription, // parameter
+        warning_ch.collect().map{it.join('\n\n')} // concatenate all warnings into a single string
     )
 
 
-
-    backup(
+    Backup(
         config_file, 
         log_file
     )

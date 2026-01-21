@@ -2,7 +2,7 @@
 // Add the dist_to_nearest values and gene columns in the seq_name_replacement file, thereby creating the wanted_seq.tsv file
 // The gene columns are created with the allele columns, minus the allele part
 // + isotype class (4 first characters of the c_gene column)
-process data_assembly {
+process Data_assembly {
     label 'immcantation'
     publishDir path: "${out_path}/tsv", mode: 'copy', pattern: "{wanted_seq.tsv}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{data_assembly.log}", overwrite: false

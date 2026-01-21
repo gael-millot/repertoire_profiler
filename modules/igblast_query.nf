@@ -21,7 +21,7 @@ process Igblast_query {
     output:
     path "*igblast_aligned_seq.tsv", emit: db_pass_ch
     path "*igblast_unaligned_seq.tsv", emit: db_unpass_ch
-    path "*.log", emit: log_ch, optional: true
+    path "*.log", emit: log_ch
 
     script:
     """
