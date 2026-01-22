@@ -1033,24 +1033,24 @@ workflow {
         nb_input, // mandatory
         nb_igblast, // mandatory
         nb_unigblast, // mandatory
-        nb_productive, 
-        nb_unproductive, 
-        nb_wanted, 
-        nb_unwanted, 
-        nb_dist_ignored, 
-        nb_clone_assigned, 
-        nb_failed_clone, 
-        nb_failed_clone_assignment, 
-        nb_failed_clone_germline, 
-        distance_hist_ch, 
-        Donut.out.donuts_png_ch.collect(), 
-        Repertoire.out.repertoire_png_ch.collect(), 
-        repertoire_constant_ch, 
-        repertoire_vj_ch, 
+        nb_productive.ifEmpty {'EMPTY'}, 
+        nb_unproductive.ifEmpty {'EMPTY'}, 
+        nb_wanted.ifEmpty {'EMPTY'}, 
+        nb_unwanted.ifEmpty {'EMPTY'}, 
+        nb_dist_ignored.ifEmpty {'EMPTY'}, 
+        nb_clone_assigned.ifEmpty {'EMPTY'}, 
+        nb_failed_clone.ifEmpty {'EMPTY'}, 
+        nb_failed_clone_assignment.ifEmpty {'EMPTY'}, 
+        nb_failed_clone_germline.ifEmpty {'EMPTY'}, 
+        distance_hist_ch.ifEmpty {'EMPTY'}, 
+        Donut.out.donuts_png_ch.collect().ifEmpty {'EMPTY'}, 
+        Repertoire.out.repertoire_png_ch.collect().ifEmpty {'EMPTY'}, 
+        repertoire_constant_ch.ifEmpty {'EMPTY'}, 
+        repertoire_vj_ch.ifEmpty {'EMPTY'}, 
         clone_distance, // parameter
         align_soft, // parameter
         phylo_tree_itol_subscription, // parameter
-        warning_ch.collect().map{it.join('\n\n')} // concatenate all warnings into a single string
+        warning_ch.collect().map{it.join('\n\n')}.ifEmpty {'EMPTY'} // concatenate all warnings into a single string
     )
 
 

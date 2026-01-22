@@ -128,7 +128,7 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
         SEQ_B=$(seqkit seq -s ./wanted_nuc/align/"${NAME}"_align.fasta | sed 's/-//g') #call seq and remove ---
         # Find start position of B in A
         START_POS=$(seqkit locate -p "$SEQ_B" ./wanted_nuc/query/"${NAME}"_query.fasta | tail -n 1 | cut -f5) # determine if trimming has been done by igblast when returning aligned VDJ seq
-        if ! [[ "$START_POS" =~ ^-?[0-9]+$ ]]; then
+        if [[ ! "$START_POS" =~ ^-?[0-9]+$ ]] ; then
             print "\n\n========\n\nERROR IN NEXTFLOW EXECUTION OF THE TrimTranslate PROCESS\n\nSTART_POS MUST BE AN INTEGER OF POSITION.\nHERE IT IS:\n"$START_POS"\n\n========\n\n"
             exit 1
         fi

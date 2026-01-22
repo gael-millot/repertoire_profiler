@@ -23,7 +23,7 @@ params:
   vj_rep: ""
   align_soft: ""
   itol_subscription: "TRUE"
-  warning: ""
+  warning_collect: ""
 ---
 
 \n\n<br><br>\n\n

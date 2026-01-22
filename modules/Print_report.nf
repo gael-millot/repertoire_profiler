@@ -22,9 +22,9 @@ process Print_report{
     cache 'false'
 
     input:
-    file template_rmd
-    file alignments_viz_rmd
-    file alignments_viz_html
+    path template_rmd // to have the file in the work dir
+    path alignments_viz_rmd // to have the file in the work dir
+    path alignments_viz_html // to have the file in the work dir
     val nb_input
     val nb_igblast
     val nb_unigblast
@@ -37,15 +37,15 @@ process Print_report{
     val nb_failed_clone
     val nb_failed_clone_assignment
     val nb_failed_clone_germline
-    path distance_hist_ch
-    path donuts_png
-    path repertoire_png
+    path distance_hist_ch // to have the folder in the work dir
+    path donuts_png // to have the folder in the work dir
+    path repertoire_png // to have the folder in the work dir
     val repertoire_constant_ch
     val repertoire_vj_ch
     val clone_distance
     val align_soft
     val itol_subscription
-    val warning
+    val warning_collect
 
     output:
     file "report.html"
@@ -56,15 +56,29 @@ process Print_report{
     """
     #!/bin/bash -ue
     set -o pipefail
+    # remove symlink and import folder
     cp ${template_rmd} report_file.rmd
     cp ${alignments_viz_rmd} alignments_vizu.rmd
     cp ${alignments_viz_html} alignments_viz.html
-    cp -r "${out_path}/phylo" .
-    cp -r "${out_path}/tsv" .
-    cp -r "${out_path}/pdf" .
+    if [[ -d "${out_path}/phylo" ]]; then
+        cp -r "${out_path}/phylo" .
+    else
+        mkdir ./phylo
+    fi
+    if [[ -d "${out_path}/tsv" ]]; then
+        cp -r "${out_path}/tsv" .
+    else
+        mkdir ./tsv
+    fi
+    if [[ -d "${out_path}/pdf" ]]; then
+        cp -r "${out_path}/pdf" .
+    else
+        mkdir ./pdf
+    fi
     cp -r "${projectDir}/bin/doc_images" .
-    Rscript -e '
+    # end remove symlink and import folder
 
+    Rscript -e '
         # Find the constant and vj repertoires to be displayed in the html file (file names differ depending on light/heavy chain)
         constant_files <- as.character("${repertoire_constant_ch}")
         vj_files <- as.character("${repertoire_vj_ch}")
@@ -80,6 +94,69 @@ process Print_report{
         if(length(constant_rep) == 0 || length(vj_rep) == 0){
             stop(paste0("\\n\\n========\\n\\nERROR IN print_report PROCESS\\n\\nTHE REPERTOIRE PNG FILES TO BE DISPLAYED WERE NOT FOUND\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n"), call. = FALSE)
         }
+        # end Find the constant and vj repertoires to be displayed in the html file (file names differ depending on light/heavy chain)
+        # empty "EMPTY" channel
+        nb_productive = "${nb_productive}"
+        nb_unproductive = "${nb_unproductive}"
+        nb_wanted =  "${nb_wanted}"
+        nb_unwanted =  "${nb_unwanted}"
+        nb_dist_ignored = "${nb_dist_ignored}"
+        nb_clone_assigned = "${nb_clone_assigned}"
+        nb_failed_clone = "${nb_failed_clone}"
+        nb_failed_clone_assignment = "${nb_failed_clone_assignment}"
+        nb_failed_clone_germline = "${nb_failed_clone_germline}"
+        warning_collect = "${warning_collect}"
+        if(nb_productive == "EMPTY"){
+            nb_productive <- -1
+        }else{
+            nb_productive = ${nb_productive}
+        }
+        if(nb_unproductive == "EMPTY"){
+            nb_unproductive <- -1
+        }else{
+            nb_unproductive = ${nb_unproductive}
+        }
+        if(nb_wanted == "EMPTY"){
+            nb_wanted <- -1
+        }else{
+            nb_wanted = ${nb_wanted}
+        }
+        if(nb_unwanted == "EMPTY"){
+            nb_unwanted <- -1
+        }else{
+            nb_unwanted = ${nb_unwanted}
+        }
+        if(nb_dist_ignored == "EMPTY"){
+            nb_dist_ignored <- -1
+        }else{
+            nb_dist_ignored = ${nb_dist_ignored}
+        }
+        if(nb_clone_assigned == "EMPTY"){
+            nb_clone_assigned <- -1
+        }else{
+            nb_clone_assigned = ${nb_clone_assigned}
+        }
+        if(nb_failed_clone == "EMPTY"){
+            nb_failed_clone <- -1
+        }else{
+            nb_failed_clone = ${nb_failed_clone}
+        }
+        if(nb_failed_clone_assignment == "EMPTY"){
+            nb_failed_clone_assignment <- -1
+        }else{
+            nb_failed_clone_assignment = ${nb_failed_clone_assignment}
+        }
+        if(nb_failed_clone_germline == "EMPTY"){
+            nb_failed_clone_germline <- -1
+        }else{
+            nb_failed_clone_germline = ${nb_failed_clone_germline}
+        }
+        if(warning_collect == "EMPTY"){
+            warning_collect <- ""
+        }else{
+            warning_collect = ${warning_collect}
+        }
+        # empty "EMPTY" channel
 
         rmarkdown::render(
         input = "report_file.rmd",
@@ -89,21 +166,21 @@ process Print_report{
             nb_input = ${nb_input},
             nb_igblast = ${nb_igblast}, 
             nb_unigblast = ${nb_unigblast},
-            nb_productive = ${nb_productive},
-            nb_unproductive = ${nb_unproductive},
-            nb_wanted =  ${nb_wanted},
-            nb_unwanted =  ${nb_unwanted},
-            nb_dist_ignored = ${nb_dist_ignored},
-            nb_clone_assigned = ${nb_clone_assigned},
-            nb_failed_clone = ${nb_failed_clone},
-            nb_failed_clone_assignment = ${nb_failed_clone_assignment}, 
-            nb_failed_clone_germline = ${nb_failed_clone_germline}, 
+            nb_productive = nb_productive, 
+            nb_unproductive = nb_unproductive, 
+            nb_wanted =  nb_wanted, 
+            nb_unwanted =  nb_unwanted, 
+            nb_dist_ignored = nb_dist_ignored, 
+            nb_clone_assigned = nb_clone_assigned, 
+            nb_failed_clone = nb_failed_clone, 
+            nb_failed_clone_assignment = nb_failed_clone_assignment,  
+            nb_failed_clone_germline = nb_failed_clone_germline,  
             clone_distance = ${clone_distance},
             constant_rep = constant_rep,
             vj_rep = vj_rep,
             align_soft = "${align_soft}",
             itol_subscription = ${itol_subscription},
-            warning_collect = ${warning}
+            warning_collect = warning_collect
         ),
         # output_dir = ".",
         # intermediates_dir = "./",
