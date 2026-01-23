@@ -76,7 +76,8 @@ The metadata file used in the *nextflow.config* file, as an example, is availabl
 
 Other dataset can be fould here:<br>
 [OAS](https://opig.stats.ox.ac.uk/webapps/oas/)<br>
-[OTS](https://opig.stats.ox.ac.uk/webapps/ots/)<br>
+[OTS](https://opig.stats.ox.ac.uk/webapps/ots/)
+<br><br>
 
 Use this code to split a multi sequence fasta file into fasta files made of a single sequence:
 

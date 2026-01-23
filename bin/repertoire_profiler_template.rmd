@@ -6,24 +6,33 @@ output:
     toc: TRUE
     toc_float: TRUE
 params:
-  nb_input: -1
-  nb_igblast: -1
-  nb_unigblast: -1
-  nb_productive: -1
-  nb_unproductive: -1
-  nb_wanted: -1
-  nb_unwanted: -1
-  nb_dist_ignored: -1
-  nb_clone_assigned: -1
-  nb_failed_clone: -1
-  nb_failed_clone_assignment: -1
-  nb_failed_clone_germline: -1
-  clone_distance: -1
-  constant_rep: ""
-  vj_rep: ""
-  align_soft: ""
-  itol_subscription: "TRUE"
-  warning_collect: ""
+    igblast_organism: ""
+    igblast_loci: ""
+    igblast_B_heavy_chain: "TRUE"
+    igblast_B_lambda_chain: "TRUE"
+    igblast_B_kappa_chain: "TRUE"
+    igblast_T_alpha_chain: "TRUE"
+    igblast_T_beta_chain: "TRUE"
+    igblast_T_gamma_chain: "TRUE"
+    igblast_T_delta_chain: "TRUE"
+    nb_input: -1
+    nb_igblast: -1
+    nb_unigblast: -1
+    nb_productive: -1
+    nb_unproductive: -1
+    nb_wanted: -1
+    nb_unwanted: -1
+    nb_dist_ignored: -1
+    nb_clone_assigned: -1
+    nb_failed_clone: -1
+    nb_failed_clone_assignment: -1
+    nb_failed_clone_germline: -1
+    clone_distance: -1
+    constant_rep: ""
+    vj_rep: ""
+    align_soft: ""
+    itol_subscription: "TRUE"
+    warning_collect: ""
 ---
 
 \n\n<br><br>\n\n
@@ -31,7 +40,7 @@ params:
 
 
 
-[comment]: <> (The following script is used to be able to zoom on images)
+[comment 1]: <> (The following script is used to be able to zoom on images)
 
 <script>
   function toggleFullscreen(img) {
@@ -72,33 +81,35 @@ params:
     </style>
 </head>
 
-[comment]: <> (End of script to zoom on images)
+[comment 2]: <> (End of script to zoom on images)
 
-[comment]: <> (The following script is meant to display the tsv files in a readable way)
+[comment 3]: <> (The following script is meant to display the tsv files in a readable way)
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(readr)
 library(knitr)
 
-read_tsv_with_dummy <- function(file_path) {
-  if (file.info(file_path)$size == 0) {
-    return("File is empty")
-  } else {
-    df <- read_tsv(file_path, show_col_types = FALSE)
-    truncated <- FALSE
-    # If the file is empty but has column names, add an empty line to make the column names readable
-    if (nrow(df) == 0) {
-      dummy_row <- as.data.frame(matrix("", nrow = 1, ncol = ncol(df)))
-      colnames(dummy_row) <- colnames(df)
-      df <- rbind(df, dummy_row)
-    }else if (nrow(df) > 10) {
-      df <- df[1:10, ]
-      truncated <- TRUE
+read_tsv_with_dummy <- function(file_path){
+    if ( ! file.exists(file_path)) {
+        return("File does not exists")
+    }else if (file.info(file_path)$size == 0) {
+        return("File is empty")
+    }else{
+        df <- read_tsv(file_path, show_col_types = FALSE)
+        truncated <- FALSE
+        # If the file is empty but has column names, add an empty line to make the column names readable
+        if (nrow(df) == 0) {
+            dummy_row <- as.data.frame(matrix("", nrow = 1, ncol = ncol(df)))
+            colnames(dummy_row) <- colnames(df)
+            df <- rbind(df, dummy_row)
+        }else if (nrow(df) > 10) {
+            df <- df[1:10, ]
+            truncated <- TRUE
+        }
+        attr(df, "truncated") <- truncated
+        return(df)
     }
-    attr(df, "truncated") <- truncated
-    return(df)
-  }
 }
 ```
 
@@ -106,7 +117,32 @@ read_tsv_with_dummy <- function(file_path) {
 details.inline {display:inline-block;}
 </style>
 
-[comment]: <> (End tsv display)
+[comment 4]: <> (End tsv display)
+
+[comment 5]: <> (Openable .config file)
+
+```{r echo=FALSE, results='hide'}
+txt <- readLines("./config_file.txt", warn = FALSE)
+# basic HTML-escaping so config symbols display correctly
+escape <- function(x) {
+  x <- gsub("&", "&amp;", x, fixed = TRUE)
+  x <- gsub("<", "&lt;",  x, fixed = TRUE)
+  x <- gsub(">", "&gt;",  x, fixed = TRUE)
+  x
+}
+out <- c(
+  "<!doctype html>",
+  "<meta charset='utf-8'>",
+  "<title>nextflow.config</title>",
+  "<pre style='white-space:pre; font-family:monospace;'>",
+  escape(txt),
+  "</pre>"
+)
+writeLines(out, "nextflow.config.html")
+``` 
+
+[comment 6]: <> (end Openable .config file)
+
 
 ```{r, echo=FALSE, results='asis'}
 if(params$nb_productive == -1){
@@ -123,7 +159,10 @@ if(params$nb_wanted == -1){
     }
 }
 ```
-
+Description of the folders and files can be found [here](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output)
+<br>
+The <i>[nextflow.config](./reports/nextflow.config.html)</i> file mentioned here is the one gathering all the parameters set for the present analysis. It is saved in the [reports](./reports) folder.
+<br><br>
 
 ### Initial dataset
 
@@ -134,9 +173,9 @@ Number of initial input sequences: ```r params$nb_input```
 ### Igblast sequence annotation
 
 
-Succes number of sequences: ```r params$nb_igblast```
+Number of annotated sequences: ```r params$nb_igblast```
 <br>
-Failed number of sequences: ```r params$nb_unigblast```
+Number of sequences failing annotation: ```r params$nb_unigblast```
 <br>
 Total: ```r params$nb_igblast + params$nb_unigblast```
 
@@ -150,9 +189,11 @@ See the igblast_seq.tsv and the failed_igblast_seq.tsv files in the [tsv](./tsv)
 
 
 **Productive sequences** are igblast annotated sequences with the following properties in their VDJ region:<br><ul><li>an open reading frame (start and stop codon).<br></li><li>no defect in the start codon, splicing sites or regulatory elements.<br></li><li>no internal stop codons.<br></li><li>in-frame junction between regions.<br></ul>
+Unproductive sequences could deserve a sequence profile visual inspection to exclude any problem of automatic profile translation.
 <br><br>
-**Wanted sequences** are productive sequences removed from unwanted sequences, according to the parameters of the <i>nextflow.config</i> file:<br><ul><li><code>igblast_B_heavy_chain</code><br></li><li><code>igblast_B_lambda_chain</code><br></li><li><code>igblast_B_kappa_chain</code><br></li><li><code>igblast_T_alpha_chain</code><br></li><li><code>igblast_T_beta_chain</code><br></li><li><code>igblast_T_gamma_chain</code><br></li><li><code>igblast_T_delta_chain</code><br></ul>
-<br><br>
+
+**Wanted sequences** are productive sequences removed from unwanted sequences, according to the parameters of the <i>nextflow.config</i> file:<br><ul><li><code>igblast_organism</code>:    `r params$igblast_organism`<br></li><li><code>igblast_loci</code>:    `r params$igblast_loci`<br></li><li><code>igblast_B_heavy_chain</code>:    `r params$igblast_B_heavy_chain`<br></li><li><code>igblast_B_lambda_chain</code>:    `r params$igblast_B_lambda_chain`<br></li><li><code>igblast_B_kappa_chain</code>:    `r params$igblast_B_kappa_chain`<br></li><li><code>igblast_T_alpha_chain</code>:    `r params$igblast_T_alpha_chain`<br></li><li><code>igblast_T_beta_chain</code>:    `r params$igblast_T_beta_chain`<br></li><li><code>igblast_T_gamma_chain</code>:    `r params$igblast_T_gamma_chain`<br></li><li><code>igblast_T_delta_chain</code>:    `r params$igblast_T_delta_chain`<br></ul>
+<br>
 
 ```{r, echo=FALSE, results='asis'}
 if(params$nb_productive != -1){
@@ -160,55 +201,85 @@ if(params$nb_productive != -1){
         params$nb_wanted <- 0
     }
     cat('
-Number of productive sequences: ', params$nb_productive,'&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
+Number of productive sequences: ', params$nb_productive
+    )
+    if(params$nb_productive > 0){
+        cat('
+&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
 <span style="color:green">*productive_seq.tsv file in the [tsv](./tsv) folder*</span>
-    ')
-    df <- read_tsv_with_dummy("tsv/productive_seq.tsv")
-    if (is.data.frame(df) && attr(df, "truncated")) {
-    cat("\n**(Note: Table truncated to 10 rows. Full file available in the productive_seq.tsv file.)**\n\n")
-    }
-    kable(df, format = "markdown", row.names = FALSE)
-    cat('
+        ')
+        df <- read_tsv_with_dummy("tsv/productive_seq.tsv")
+        if(is.data.frame(df) && attr(df, "truncated")){
+            cat('
+\n**(Note: Table truncated to 10 rows. Full file available in the productive_seq.tsv file.)**\n\n
+            ')
+        }
+        cat(knitr::kable(df, format = "html", row.names = FALSE))
+        cat('
 </details>
+        ')
+    }
+    cat('
 <br>
-Number of unproductive sequences: ', params$nb_unproductive, ' &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
+Number of unproductive sequences: ', params$nb_unproductive
+    )
+    if(params$nb_unproductive > 0){
+        cat('
+&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
 <span style="color:green">*unproductive_seq.tsv file in the [tsv](./tsv) folder*</span>
-    ')
-    df <- read_tsv_with_dummy("tsv/unproductive_seq.tsv")
-    if (is.data.frame(df) && attr(df, "truncated")) {
-        cat(
+        ')
+        df <- read_tsv_with_dummy("tsv/unproductive_seq.tsv")
+        if(is.data.frame(df) && attr(df, "truncated")){
+            cat(
 '\n**(Note: Table truncated to 10 rows. Full file available in the unproductive_seq.tsv file.)**\n\n
+            ')
+        }
+        cat(knitr::kable(df, format = "html", row.names = FALSE))
+        cat('
+</details>
         ')
     }
-    kable(df, format = "markdown", row.names = FALSE)
     cat('
-</details>
 <br>
-Number of wanted sequences: ', params$nb_wanted, '&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
+Number of wanted sequences: ', params$nb_wanted    
+    )
+    if(params$nb_wanted > 0){
+        cat('
+&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
 <span style="color:green">*wanted_seq.tsv file in the [tsv](./tsv) folder*</span>
-    ')
-    df <- read_tsv_with_dummy("tsv/wanted_seq.tsv")
-    if (is.data.frame(df) && attr(df, "truncated")) {
-        cat('
+        ')
+        df <- read_tsv_with_dummy("tsv/wanted_seq.tsv")
+        if (is.data.frame(df) && attr(df, "truncated")) {
+            cat('
 \n**(Note: Table truncated to 10 rows. Full file available in the wanted_seq.tsv file.)**\n\n
-        ')
-    }
-    kable(df, format = "markdown", row.names = FALSE)
-    cat('
-</details>
-<br>
-Number of unwanted sequences: ', params$nb_unwanted, ' &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-<span style="color:green">*unwanted_seq.tsv file in the [tsv](./tsv) folder*</span>
-    ')
-    df <- read_tsv_with_dummy("tsv/unwanted_seq.tsv")
-    if (is.data.frame(df) && attr(df, "truncated")) {
+            ')
+        }
+        cat(knitr::kable(df, format = "html", row.names = FALSE))
         cat('
-\n**(Note: Table truncated to 10 rows. Full file available in the unwanted_seq.tsv file.)**\n\n
+</details>
         ')
     }
-    kable(df, format = "markdown", row.names = FALSE)
     cat('
+Number of unwanted sequences: ', params$nb_unwanted
+    )
+    if(params$nb_unwanted > 0){
+        cat('
+&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
+<span style="color:green">*unwanted_seq.tsv file in the [tsv](./tsv) folder*</span>
+        ')
+        df <- read_tsv_with_dummy("tsv/unwanted_seq.tsv")
+        if (is.data.frame(df) && attr(df, "truncated")) {
+            cat('
+\n**(Note: Table truncated to 10 rows. Full file available in the unwanted_seq.tsv file.)**\n\n
+            ')
+        }
+        cat(knitr::kable(df, format = "html", row.names = FALSE))
+        cat('
 </details>
+        ')
+    }
+    cat('
+<br>
 Total (wanted + unproductive + unwanted): ', params$nb_wanted + params$nb_unproductive + params$nb_unwanted, '
 
 Productive / Total ratio: ', base::round(params$nb_productive / (params$nb_wanted + params$nb_unproductive + params$nb_unwanted), 2), '
@@ -266,104 +337,149 @@ Warning: only the first annotation is considered if several are presents in the 
 <div class="image-container">
   <img src="vj_gene_all_donutchart.png" onclick="toggleFullscreen(this)" />
   <img src="vj_gene_annotated_donutchart.png" onclick="toggleFullscreen(this)" />
-  <img src="vj_gene_tree_donutchart.png" onclick="toggleFullscreen(this)" />
+
+```{r, echo=FALSE, results='asis'}
+if(file.exists("vj_gene_tree_donutchart.png")){
+    cat('
+<img src="vj_gene_tree_donutchart.png" onclick="toggleFullscreen(this)" />
+    ')
+}
+```
 </div>
 <div class="image-container">
   <img src="c_gene_all_donutchart.png" onclick="toggleFullscreen(this)" />
   <img src="c_gene_annotated_donutchart.png" onclick="toggleFullscreen(this)" />
-  <img src="c_gene_tree_donutchart.png" onclick="toggleFullscreen(this)" />
+
+```{r, echo=FALSE, results='asis'}
+if(file.exists("vj_gene_tree_donutchart.png")){
+    cat('
+<img src="c_gene_tree_donutchart.png" onclick="toggleFullscreen(this)" />
+    ')
+}
+```
 </div>
 
 <br><br><br>
 
 ###  Clonal prediction
+
 ```{r, echo=FALSE, results='asis'}
-if(params$nb_productive != -1 && params$nb_wanted != -1 && params$nb_clone_assigned != -1){
+if(params$nb_productive != -1 && params$nb_wanted != -1){
     nb_clone_assigned <- ifelse(params$nb_clone_assigned > 0, params$nb_clone_assigned, 0)
     nb_failed_clone <- ifelse(params$nb_failed_clone > 0, params$nb_failed_clone, 0)
     nb_failed_clone_assignment <- ifelse(params$nb_failed_clone_assignment > 0, params$nb_failed_clone_assignment, 0)
     nb_failed_clone_germline <- ifelse(params$nb_failed_clone_germline > 0, params$nb_failed_clone_germline, 0)
     nb_dist_ignored <- ifelse(params$nb_dist_ignored > 0, params$nb_dist_ignored, 0)
     cat('
-    **Clone-assigned sequences** are wanted sequences with additionnal features:<br><ul><li>germline clustering (clone ID).<br></li><li>inference of clonal germline sequence (different from the sequence germline inference).<br></li><li>mutation load.<br></ul> 
-
-    Number of clone-assigned sequences: ', nb_clone_assigned, '&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-    <span style="color:green">*clone_assigned_seq.tsv file in the [tsv](./tsv) folder*</span>
-    ')
-    df <- read_tsv_with_dummy("tsv/clone_assigned_seq.tsv")
-    if (is.data.frame(df) && attr(df, "truncated")) {
-    cat("\n**(Note: Table truncated to 10 rows. Full file available in the clone_assigned_seq.tsv file.)**\n\n")
+**Clone-assigned sequences** are wanted sequences with additionnal features:<br><ul><li>germline clustering (clone ID).<br></li><li>inference of clonal germline sequence (different from the sequence germline inference).<br></li><li>mutation load.<br></ul><br>
+Clonal prediction aims to gather all the sequences that putatively come from a same germline cell. See <a href="https://changeo.readthedocs.io/en/stable/examples/cloning.html#assigning-clones">here</a>, <a href="https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette/">here</a> and <a href="https://genomemedicine.biomedcentral.com/articles/10.1186/s13073-015-0243-2">this article</a> for details. In summary, it follows these steps:<br><ul><li>grouping the sequences according to "same V, J and junction length" (to facilitate the distance computation).<br></li><li>for each group, 2x2 distance computation using by default (<code>clone_model</code> and <code>clone_normalize</code> parameters of the <i>nextflow.config</i> file) the <a href="https://biology.stackexchange.com/questions/23523/hamming-distance-between-two-dna-strings">Hamming distance</a>.<br></li><li>cutoff definition.<br></li><li>using the cutoff (<code>clone_distance</code> parameter of the <i>nextflow.config</i> file) to define clonal groups inside each "same V, J and junction length" group.<br></ul><br>
+Number of clone-assigned sequences: ', nb_clone_assigned
+    )
+    if(nb_clone_assigned > 0){
+        cat('
+&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
+<span style="color:green">*clone_assigned_seq.tsv file in the [tsv](./tsv) folder*</span>
+        ')
+        df <- read_tsv_with_dummy("tsv/clone_assigned_seq.tsv")
+        if (is.data.frame(df) && attr(df, "truncated")) {
+            cat('
+\n**(Note: Table truncated to 10 rows. Full file available in the clone_assigned_seq.tsv file.)**\n\n
+            ')
+        }
+        cat(knitr::kable(df, format = "html", row.names = FALSE))
+        cat('
+</details>
+        ')
     }
-    kable(df, format = "markdown", row.names = FALSE)
     cat('
-    </details>
-    <br>
-    Number of sequences with failed clonal assignement: ', nb_failed_clone_assignment, ' &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-    <span style="color:green">*failed_clone_assigned_seq.tsv file in the [tsv](./tsv) folder*</span>
-    ')
-    df <- read_tsv_with_dummy("tsv/failed_clone_assigned_seq.tsv")
-    if (is.data.frame(df) && attr(df, "truncated")) {
-    cat("\n**(Note: Table truncated to 10 rows. Full file available in the failed_clone_assigned_seq.tsv file.)**\n\n")
+<br>
+Number of sequences with failed clonal assignement: ', nb_failed_clone_assignment
+    )
+    if(nb_failed_clone_assignment > 0){
+        cat('
+&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
+<span style="color:green">*failed_clone_assigned_seq.tsv file in the [tsv](./tsv) folder*</span>
+        ')
+        df <- read_tsv_with_dummy("tsv/failed_clone_assigned_seq.tsv")
+        if(is.data.frame(df) && attr(df, "truncated")){
+            cat('
+\n**(Note: Table truncated to 10 rows. Full file available in the failed_clone_assigned_seq.tsv file.)**\n\n
+            ')
+        }
+        cat(knitr::kable(df, format = "html", row.names = FALSE))
+        cat('
+</details>
+        ')
     }
-    kable(df, format = "markdown", row.names = FALSE)
     cat('
-    </details>
-    <br>
-    Number of clone assigned sequences with failed germline sequence computation: ', nb_failed_clone_germline, ' &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-    <span style="color:green">*failed_clonal_germline_seq.tsv file in the [tsv](./tsv) folder*</span>
-    ')
-    df <- read_tsv_with_dummy("tsv/failed_clonal_germline_seq.tsv")
-    if (is.data.frame(df) && attr(df, "truncated")) {
-    cat("\n**(Note: Table truncated to 10 rows. Full file available in the failed_clonal_germline_seq.tsv file.)**\n\n")
+<br>
+Number of clone assigned sequences with failed germline sequence computation: ', nb_failed_clone_germline
+    )
+    if(nb_failed_clone_germline > 0){
+        cat('
+&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
+<span style="color:green">*failed_clonal_germline_seq.tsv file in the [tsv](./tsv) folder*</span>
+        ')
+        df <- read_tsv_with_dummy("tsv/failed_clonal_germline_seq.tsv")
+        if (is.data.frame(df) && attr(df, "truncated")) {
+            cat('
+\n**(Note: Table truncated to 10 rows. Full file available in the failed_clonal_germline_seq.tsv file.)**\n\n
+            ')
+        }
+        cat(knitr::kable(df, format = "html", row.names = FALSE))
+        cat('
+</details>
+        ')
     }
-    kable(df, format = "markdown", row.names = FALSE)
     cat('
-    </details>
-    Total (clone-assigned + failed_clone_assignment + failed_clonal_germline): ', nb_clone_assigned + nb_failed_clone_assignment + nb_failed_clone_germline, '
+Total (clone-assigned + failed_clone_assignment + failed_clonal_germline): ', nb_clone_assigned + nb_failed_clone_assignment + nb_failed_clone_germline, '
 
-    Clone assigned ratio: ', base::round(nb_clone_assigned / (nb_clone_assigned + nb_failed_clone_assignment + nb_failed_clone_germline), 2), '
+Clone assigned ratio: ', base::round(nb_clone_assigned / (nb_clone_assigned + nb_failed_clone_assignment + nb_failed_clone_germline), 2), '
 
-    See the clone_assigned_seq.tsv, as well as both the failed_clone_assigned_seq.tsv and the failed_clonal_germline_seq.tsv (sequences from the wanted file that fail to be clone-assigned by `DefineClones.py` and `CreateGermlines.py`) files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output).
-
-    <br>
-    Number of sequences per clone ID: &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-    <span style="color:green">*clone_id_count.tsv file in the [tsv](./tsv) folder*</span>
+See the clone_assigned_seq.tsv, as well as both the failed_clone_assigned_seq.tsv and the failed_clonal_germline_seq.tsv (sequences from the wanted file that fail to be clone-assigned by `DefineClones.py` and `CreateGermlines.py`) files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output).
     ')
-    df <- read_tsv_with_dummy("tsv/clone_id_count.tsv")
-    if (is.data.frame(df) && attr(df, "truncated")) {
-    cat("\n**(Note: Table truncated to 10 rows. Full file available in the clone_id_count.tsv file.)**\n\n")
+    if(nb_clone_assigned > 0){
+        cat('
+<br>
+Number of sequences per clone ID: &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
+<span style="color:green">*clone_id_count.tsv file in the [tsv](./tsv) folder*</span>
+        ')
+        df <- read_tsv_with_dummy("tsv/clone_id_count.tsv")
+        if (is.data.frame(df) && attr(df, "truncated")) {
+        cat("\n**(Note: Table truncated to 10 rows. Full file available in the clone_id_count.tsv file.)**\n\n")
+        }
+        kable(df, format = "markdown", row.names = FALSE)
+        cat('
+</details>
+<br>
+
+Threshold value set in the `clone_distance` parameter of the *nextflow.config* file: ', params$clone_distance, '
+
+This value is used to assemble sequences into clonal groups.
+
+On the graphs below, the vertical dotted red line (threshold value) must separate the two bumps of the bimodal distributions.
+
+If it is not the case, please adapt the value of the `clone_distance` parameter and rerun.
+
+If no bimodal distribution is observed, it means that the number of sequences analyzed is too low for correct clonal group attribution. A lack of values could be due to a lack of sequences with the same V, J and junction length.
+
+Of note: 
+
+Number of sequences used in the distance matrix (from wanted_seq.tsv): ', params$nb_wanted, '
+<br>
+Number of sequences that could not be used in the distance matrix: ', nb_dist_ignored, '
+
+Sequence ratio: ', base::round((params$nb_wanted - nb_dist_ignored)/ params$nb_wanted, 2), '
+
+<br>
+
+<div class="image-container">
+<img src="seq_distance_manual.png" onclick="toggleFullscreen(this)" />
+<img src="seq_distance_mixture_auto.png" onclick="toggleFullscreen(this)" />
+<img src="seq_distance_smoothed_auto.png" onclick="toggleFullscreen(this)" />
+</div>
+        ')
     }
-    kable(df, format = "markdown", row.names = FALSE)
-    cat('
-    </details>
-    <br>
-
-    Threshold value set in the `clone_distance` parameter of the *nextflow.config* file: ', params$clone_distance, '
-
-    This value is used to assemble sequences into clonal groups.
-
-    On the graphs below, the vertical dotted red line (threshold value) must separate the two bumps of the bimodal distributions.
-
-    If it is not the case, please adapt the value of the `clone_distance` parameter and rerun.
-
-    If no bimodal distribution is observed, it means that the number of sequences analyzed is too low for correct clonal group attribution.
-
-    Of note: 
-
-    Number of sequences used in the distance matrix (from wanted_seq.tsv): ', params$nb_wanted, '
-    <br>
-    Number of sequences that could not be used in the distance matrix: ', nb_dist_ignored, '
-
-    Sequence ratio: ', base::round((params$nb_wanted - nb_dist_ignored)/ params$nb_wanted, 2), '
-
-    <br>
-
-    <div class="image-container">
-    <img src="seq_distance_manual.png" onclick="toggleFullscreen(this)" />
-    <img src="seq_distance_mixture_auto.png" onclick="toggleFullscreen(this)" />
-    <img src="seq_distance_smoothed_auto.png" onclick="toggleFullscreen(this)" />
-    </div>
-    ')
 }else{
     cat('
 No clonal assignment obtained.
@@ -431,7 +547,7 @@ Alignment visualization is available for each clonal group used in each tree, in
 
 <br><br>
 
-###  WARNINGS
+###  Warnings
 
 ```{r, echo=FALSE, results='asis'}
 #remove work directory from current directory

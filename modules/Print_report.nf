@@ -16,15 +16,26 @@
 process Print_report{
     label 'r_ig_clustering'
 
+    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{nextflow.config.html}", overwrite: false
     publishDir path: "${out_path}", mode: 'copy', pattern: "{report.html}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{alignments_viz.html}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{print_report.log}", overwrite: false
     cache 'false'
 
     input:
+    path config_file // to have the file in the work dir
     path template_rmd // to have the file in the work dir
     path alignments_viz_rmd // to have the file in the work dir
     path alignments_viz_html // to have the file in the work dir
+    val igblast_organism
+    val igblast_loci
+    val igblast_B_heavy_chain
+    val igblast_B_lambda_chain
+    val igblast_B_kappa_chain
+    val igblast_T_alpha_chain
+    val igblast_T_beta_chain
+    val igblast_T_gamma_chain
+    val igblast_T_delta_chain
     val nb_input
     val nb_igblast
     val nb_unigblast
@@ -48,6 +59,7 @@ process Print_report{
     val warning_collect
 
     output:
+    file "nextflow.config.html"
     file "report.html"
     file "alignments_viz.html"
     file "print_report.log"
@@ -57,6 +69,7 @@ process Print_report{
     #!/bin/bash -ue
     set -o pipefail
     # remove symlink and import folder
+    cp ${config_file} config_file.txt
     cp ${template_rmd} report_file.rmd
     cp ${alignments_viz_rmd} alignments_vizu.rmd
     cp ${alignments_viz_html} alignments_viz.html
@@ -163,6 +176,15 @@ process Print_report{
         output_file = "report.html",
         # list of the variables waiting to be replaced in the rmd file:
         params = list(
+            igblast_organism = "${igblast_organism}",
+            igblast_loci = "${igblast_loci}",
+            igblast_B_heavy_chain = ${igblast_B_heavy_chain},
+            igblast_B_lambda_chain = ${igblast_B_lambda_chain},
+            igblast_B_kappa_chain = ${igblast_B_kappa_chain},
+            igblast_T_alpha_chain = ${igblast_T_alpha_chain},
+            igblast_T_beta_chain = ${igblast_T_beta_chain},
+            igblast_T_gamma_chain = ${igblast_T_gamma_chain},
+            igblast_T_delta_chain = ${igblast_T_delta_chain},
             nb_input = ${nb_input},
             nb_igblast = ${nb_igblast}, 
             nb_unigblast = ${nb_unigblast},

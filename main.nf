@@ -1027,9 +1027,19 @@ workflow {
     // end when: nb_igblast > 0
 
     Print_report(
+        config_file, // from parameter
         template_rmd, // from parameter
         alignments_viz_rmd, // from parameter
         alignments_viz_html, // from parameter
+        igblast_organism, // parameter
+        igblast_loci, // parameter
+        igblast_B_heavy_chain, // parameter
+        igblast_B_lambda_chain, // parameter
+        igblast_B_kappa_chain, // parameter
+        igblast_T_alpha_chain, // parameter
+        igblast_T_beta_chain, // parameter
+        igblast_T_gamma_chain, // parameter
+        igblast_T_delta_chain, // parameter
         nb_input, // mandatory
         nb_igblast, // mandatory
         nb_unigblast, // mandatory
