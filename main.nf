@@ -357,6 +357,9 @@ workflow {
     repertoire_png_ch = Channel.empty() // Repertoire.out.repertoire_png_ch.collect(), 
     repertoire_constant_ch = Channel.empty()
     repertoire_vj_ch = Channel.empty()
+    empty_distance_hist = file('empty_distance_hist') // to deal with empty path channel
+    empty_donuts_png = file('empty_donuts_png') // to deal with empty path channel
+    empty_repertoire_png = file('empty_repertoire_png') // to deal with empty path channel
     // end for print_report
 
 
@@ -1043,24 +1046,24 @@ workflow {
         nb_input, // mandatory
         nb_igblast, // mandatory
         nb_unigblast, // mandatory
-        nb_productive.ifEmpty {'EMPTY'}, 
-        nb_unproductive.ifEmpty {'EMPTY'}, 
-        nb_wanted.ifEmpty {'EMPTY'}, 
-        nb_unwanted.ifEmpty {'EMPTY'}, 
-        nb_dist_ignored.ifEmpty {'EMPTY'}, 
-        nb_clone_assigned.ifEmpty {'EMPTY'}, 
-        nb_failed_clone.ifEmpty {'EMPTY'}, 
-        nb_failed_clone_assignment.ifEmpty {'EMPTY'}, 
-        nb_failed_clone_germline.ifEmpty {'EMPTY'}, 
-        distance_hist_ch.ifEmpty {'EMPTY'}, 
-        Donut.out.donuts_png_ch.collect().ifEmpty {'EMPTY'}, 
-        Repertoire.out.repertoire_png_ch.collect().ifEmpty {'EMPTY'}, 
-        repertoire_constant_ch.ifEmpty {'EMPTY'}, 
-        repertoire_vj_ch.ifEmpty {'EMPTY'}, 
+        nb_productive.ifEmpty{'EMPTY'}, 
+        nb_unproductive.ifEmpty{'EMPTY'}, 
+        nb_wanted.ifEmpty{'EMPTY'}, 
+        nb_unwanted.ifEmpty{'EMPTY'}, 
+        nb_dist_ignored.ifEmpty{'EMPTY'}, 
+        nb_clone_assigned.ifEmpty{'EMPTY'}, 
+        nb_failed_clone.ifEmpty{'EMPTY'}, 
+        nb_failed_clone_assignment.ifEmpty{'EMPTY'}, 
+        nb_failed_clone_germline.ifEmpty{'EMPTY'}, 
+        distance_hist_ch.ifEmpty{[empty_distance_hist]}, 
+        Donut.out.donuts_png_ch.collect().ifEmpty{ [empty_donuts_png] }, 
+        Repertoire.out.repertoire_png_ch.collect().ifEmpty{ [empty_repertoire_png] }, 
+        repertoire_constant_ch.ifEmpty{'EMPTY'}, 
+        repertoire_vj_ch.ifEmpty{'EMPTY'}, 
         clone_distance, // parameter
         align_soft, // parameter
         phylo_tree_itol_subscription, // parameter
-        warning_ch.collect().map{it.join('\n\n')}.ifEmpty {'EMPTY'} // concatenate all warnings into a single string
+        warning_ch.collect().map{it.join('\n\n')}.ifEmpty{'EMPTY'} // concatenate all warnings into a single string
     )
 
 

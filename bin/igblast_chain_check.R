@@ -395,10 +395,7 @@ if(is.null(not_good_line_nb)){
     selected_df <- df[ - not_good_line_nb, ]
     not_selected_df <- df[not_good_line_nb, ]
 }
-
-if(nrow(selected_df) > 0){ # required. Otherwive empty line data frame sent into the next parallelized process -> error
-    write.table(selected_df, file = paste0("./selected.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
-}
+write.table(selected_df, file = paste0("./selected.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
 write.table(not_selected_df, file = paste0("./not_selected.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
 
 

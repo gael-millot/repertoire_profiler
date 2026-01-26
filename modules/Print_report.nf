@@ -92,20 +92,25 @@ process Print_report{
     # end remove symlink and import folder
 
     Rscript -e '
-        # Find the constant and vj repertoires to be displayed in the html file (file names differ depending on light/heavy chain)
-        constant_files <- as.character("${repertoire_constant_ch}")
-        vj_files <- as.character("${repertoire_vj_ch}")
-        cleaned_repertoire_constant <- gsub("^\\\\[\\\\[|\\\\]\\\\]\$", "", constant_files)
-        cleaned_repertoire_vj <- gsub("^\\\\[\\\\[|\\\\]\\\\]\$", "", vj_files)
-        constant_paths <- strsplit(cleaned_repertoire_constant, ",\\\\s*")[[1]]
-        vj_paths <- strsplit(cleaned_repertoire_vj, ",\\\\s*")[[1]]
-        constant_names <- basename(constant_paths)
-        vj_names <- basename(vj_paths)
-        # Verification that the resulting file names are as expected
-        constant_rep <- constant_names[grepl("^IG.C_.*gene_non-zero\\\\.png\$", constant_names)]
-        vj_rep <- vj_names[grepl("^rep_gene_IG.V_.*non-zero\\\\.png\$", vj_names)]
-        if(length(constant_rep) == 0 || length(vj_rep) == 0){
-            stop(paste0("\\n\\n========\\n\\nERROR IN print_report PROCESS\\n\\nTHE REPERTOIRE PNG FILES TO BE DISPLAYED WERE NOT FOUND\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n"), call. = FALSE)
+    if(as.integer("${nb_wanted}") > 0){
+            # Find the constant and vj repertoires to be displayed in the html file (file names differ depending on light/heavy chain)
+            constant_files <- as.character("${repertoire_constant_ch}")
+            vj_files <- as.character("${repertoire_vj_ch}")
+            cleaned_repertoire_constant <- gsub("^\\\\[\\\\[|\\\\]\\\\]\$", "", constant_files)
+            cleaned_repertoire_vj <- gsub("^\\\\[\\\\[|\\\\]\\\\]\$", "", vj_files)
+            constant_paths <- strsplit(cleaned_repertoire_constant, ",\\\\s*")[[1]]
+            vj_paths <- strsplit(cleaned_repertoire_vj, ",\\\\s*")[[1]]
+            constant_names <- basename(constant_paths)
+            vj_names <- basename(vj_paths)
+            # Verification that the resulting file names are as expected
+            constant_rep <- constant_names[grepl("^IG.C_.*gene_non-zero\\\\.png\$", constant_names)]
+            vj_rep <- vj_names[grepl("^rep_gene_IG.V_.*non-zero\\\\.png\$", vj_names)]
+            if(length(constant_rep) == 0 || length(vj_rep) == 0){
+                stop(paste0("\\n\\n========\\n\\nERROR IN print_report PROCESS\\n\\nTHE REPERTOIRE PNG FILES TO BE DISPLAYED WERE NOT FOUND\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n"), call. = FALSE)
+            }
+        }else{
+            constant_rep <- ""
+            vj_rep <- ""
         }
         # end Find the constant and vj repertoires to be displayed in the html file (file names differ depending on light/heavy chain)
         # empty "EMPTY" channel
