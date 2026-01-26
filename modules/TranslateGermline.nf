@@ -9,6 +9,7 @@ process TranslateGermline {
     output:
     path "*-trans_germ-pass.tsv", emit: translate_germ_ch
     path "*.log", emit: translate_germ_log_ch
+    path "warnings.txt", emit: translate_germ_warn_ch
 
     script:
     """
@@ -18,6 +19,8 @@ process TranslateGermline {
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a translateGermline.log
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a translateGermline.log
     Rscript -e '
+        options(warning.length = 8170)
+        warn <- ""
         file_name <- "${add_germ_ch}"
         df <- read.table(file_name, sep = "\\t", header = TRUE)
         germ_nuc <- df\$clonal_germline_sequence_no_gaps
@@ -27,7 +30,9 @@ process TranslateGermline {
         }
         length_no_gaps <- nchar(germ_nuc[1])
         if(length_no_gaps %% 3 != 0){
-            cat(paste0("\\nWARNING:\nTHE clonal_germline_sequence_no_gaps COLUMN CONTAINS ", length_no_gaps, " CHARACTERS WHEN GAPS ARE REMOVED, WHICH IS NOT A MULTIPLE OF 3. \\n"), file = "translateGermline.log", append = TRUE)
+            tempo_warn <- paste0("\\nWARNING:\nTHE clonal_germline_sequence_no_gaps COLUMN CONTAINS ", length_no_gaps, " CHARACTERS WHEN GAPS ARE REMOVED, WHICH IS NOT A MULTIPLE OF 3. \\n")
+            warn <- base::paste0(base::ifelse(test = warn == "", yes = tempo_warn, no = base::paste0(warn, "\n\n", tempo_warn, collapse = NULL, recycle0 = FALSE)), collapse = NULL, recycle0 = FALSE)
+            cat(tempo_warn, file = "translateGermline.log", append = TRUE)
         }
         germ_dna <- Biostrings::DNAString(germ_nuc[1])
         # Catch a warning in the log file if raised
@@ -47,6 +52,7 @@ process TranslateGermline {
         # add controls
         df <- data.frame(df, clonal_germline_identical = df\$clonal_germline_sequence_no_gaps == df\$clonal_germline_alignment_igblast_airr, clonal_germline_aa_identical = df\$clonal_germline_sequence_aa == df\$clonal_germline_alignment_aa_igblast_airr)
         # end add controls
+        writeLines(warn, con = "warnings.txt")
         write.table(df, file = paste0("./", new_file_name), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
     '|& tee -a translateGermline.log
     """

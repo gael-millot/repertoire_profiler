@@ -231,8 +231,13 @@ workflow {
     if("${system_exec}" != "local"){
         print("    add_options: ${add_options}")
     }
-    print("\n\nWARNING:\nCURRENTLY VALIDATED FOR 'mouse' OR 'human' SPECIES. POTENTIAL ERRORS WITH OTHER SPECIES IF VDJ STRUCTURATION OF CHAINS IS DIFFERENT.")
-    print("\n\nWARNING:\nTO MAKE THE REPERTOIRES AND DONUTS, THE SCRIPT CURRENTLY TAKES THE FIRST ANNOTATION OF THE IMGT ANNOTATION IF SEVERAL ARE PRESENTS IN THE v_call, j_call OR c_call COLUMN OF THE wanted_seq.tsv FILE.")
+    warning_ch = Channel.empty() // to collect all the warnings
+    warn = "\n\nWARNING:\nCURRENTLY VALIDATED FOR 'mouse' OR 'human' SPECIES. POTENTIAL ERRORS WITH OTHER SPECIES IF VDJ STRUCTURATION OF CHAINS IS DIFFERENT."
+    print(warn)
+    warning_ch = warning_ch.mix(Channel.value(warn))
+    warn = "\n\nWARNING:\nTO MAKE THE REPERTOIRES AND DONUTS, THE SCRIPT CURRENTLY TAKES THE FIRST ANNOTATION OF THE IMGT ANNOTATION IF SEVERAL ARE PRESENTS IN THE v_call, j_call OR c_call COLUMN OF THE wanted_seq.tsv FILE."
+    print(warn)
+    warning_ch = warning_ch.mix(Channel.value(warn))
     print("\n\n")
 
     //////// end inititation
@@ -341,7 +346,7 @@ workflow {
     //////// Channels
 
     // fs_ch define below because can be a .zip file
-    warning_ch = Channel.empty() // to collect all the warnings
+    // warning_ch = Channel.empty() // already set above
     // for print_report
     nb_productive = Channel.empty()
     nb_unproductive = Channel.empty()
@@ -443,7 +448,7 @@ workflow {
     fs_ch.count().combine(nb_igblast).combine(nb_unigblast).subscribe{n,n1,n2 -> 
         if(n != -1 && n1 != -1 && n2 != -1){
             if(n != n1 + n2){
-                throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF LINES IN THE igblast_aligned_seq.tsv (${n1}) AND igblast_unaligned_seq_name.tsv (${n2}) IS NOT EQUAL TO THE NUMBER OF SUBMITTED FASTA FILES (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF LINES IN THE igblast_aligned_seq.tsv (${n1}) AND igblast_unaligned_seq.tsv (${n2}) IS NOT EQUAL TO THE NUMBER OF SUBMITTED FASTA FILES (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
             }
         }
     }
@@ -454,7 +459,7 @@ workflow {
 
 
         ParseDb_filtering(
-            Igblast_query.out.db_pass_ch, 
+            Igblast_query.out.db_pass_ch.map{file -> nlines = file.text.readLines().size() ; tuple(file, nlines)}, 
             nb_igblast
         )
         productive_ch1 = ParseDb_filtering.out.productive_ch.collectFile(name: "productive_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
@@ -496,14 +501,14 @@ workflow {
         // when: nb_productive > 0
 
             Igblast_chain_check( // module Igblast_chain_check.nf
-                ParseDb_filtering.out.productive_ch, 
+                ParseDb_filtering.out.productive_ch.map{file -> nlines = file.text.readLines().size() ; tuple(file, nlines)}, 
                 Igblast_data_check.out.allele_names_tsv_all_ch, 
                 igblast_v_ref_files, 
                 igblast_d_ref_files, 
                 igblast_j_ref_files, 
                 igblast_constant_ref_files, 
                 cute_file,
-                nb_productive
+                nb_productive.first()
             )
             check_ch1 = Igblast_chain_check.out.checked_tsv_ch.collectFile(name: "wanted_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
             uncheck_ch1 = Igblast_chain_check.out.not_checked_tsv_ch.collectFile(name: "unwanted_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
@@ -520,13 +525,15 @@ workflow {
                         throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nWANTED FILE EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Igblast_chain_check PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
                     }
                     if(n == 0){
-                        print("\n\nWARNING:\n0 WANTED SEQUENCE FOLLOWING THE Igblast_chain_check PROCESS.\n\nCHECK THAT THE\nigblast_organism\nigblast_loci\nigblast_B_heavy_chain\nigblast_B_lambda_chain\nigblast_B_kappa_chain\nigblast_T_alpha_chain\nigblast_T_beta_chain\nigblast_T_gamma_chain\nigblast_T_delta_chain\nARE CORRECTLY SET IN THE nextflow.config FILE.\n\nWORFLOW ENDED.\nSEE THE PARTIAL RESULTS IN: ${out_path}.\n\n")
+                        warn = "\n\nWARNING:\n0 WANTED SEQUENCE FOLLOWING THE Igblast_chain_check PROCESS.\n\nCHECK THAT THE\nigblast_organism\nigblast_loci\nigblast_B_heavy_chain\nigblast_B_lambda_chain\nigblast_B_kappa_chain\nigblast_T_alpha_chain\nigblast_T_beta_chain\nigblast_T_gamma_chain\nigblast_T_delta_chain\nARE CORRECTLY SET IN THE nextflow.config FILE.\n\nWORFLOW ENDED.\nSEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
+                        print(warn)
+                        warning_ch = warning_ch.mix(Channel.value(warn)) // accumulate
                     }
                 }
                 if(unx != 'NO_FILE'){
                     n = unx.countLines() - 1   // here `x` is a Path, so it exists
                     if(n == -1){
-                        throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nUNWANTED FILE EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE nigblast_B_heavy_chain PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                        throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nUNWANTED FILE EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE igblast_B_heavy_chain PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
                     }
                 }
             }
@@ -543,8 +550,8 @@ workflow {
             // when: nb_wanted > 0
 
                 TrimTranslate(
-                    Igblast_chain_check.out.checked_tsv_ch,
-                    nb_wanted
+                    Igblast_chain_check.out.checked_tsv_ch.map{file -> nlines = file.text.readLines().size() ; tuple(file, nlines)},
+                    nb_wanted.first()
                 )
                 //TrimTranslate.out.trimtranslate_ch.count().subscribe {n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nO SEQUENCE RETURNED FOLLOWING THE TrimTranslate PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // n is number of items in channel because of .count()
                 trimtranslate_ch2 = TrimTranslate.out.trimtranslate_ch.collectFile(name: "trimtranslate.tsv", skip: 1, keepHeader: true) // wanted file with column sequence_alignment_aa added  // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
@@ -603,7 +610,7 @@ workflow {
                     seq_name_replacement_ch2, 
                     DistToNearest.out.distToNearest_ch
                 )
-
+                warning_ch = warning_ch.mix(Data_assembly.out.data_assembly_warn_ch) // accumulate
 
                 Metadata_check(
                     Data_assembly.out.wanted_ch,
@@ -612,6 +619,7 @@ workflow {
                     meta_name_replacement,
                     meta_legend
                 )
+                warning_ch = warning_ch.mix(Metadata_check.out.metadata_check_warn_ch) // accumulate
 
                 Repertoire(
                     Data_assembly.out.wanted_ch,
@@ -684,6 +692,7 @@ workflow {
                     AddGermlineSequences.out.add_germ_ch
                 )
                 TranslateGermline.out.translate_germ_log_ch.collectFile(name: "translateGermline.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+                warning_ch = warning_ch.mix(TranslateGermline.out.translate_germ_warn_ch) // accumulate
 
 
 
@@ -839,14 +848,16 @@ workflow {
                 // fasta_align_ch2 = Tsv2fasta.out.fasta_align_ch.filter {nuc, aa, kind -> !nuc.name.endsWith("_imgt_nuc.fasta")}
                 copyLogFile('Tsv2fasta.log', Tsv2fasta.out.tsv2fasta_log_ch, out_path)
                 // Print warnings on the terminal:
-                Tsv2fasta.out.warning_ch.filter{file(it).exists()}.map{file -> file.text} //  file.text = contenu du fichier
+                warning_ch = warning_ch.mix(Tsv2fasta.out.warning_ch.filter{file(it).exists()}.map{file -> file.text}) //  file.text = contenu du fichier
                 has_fasta_align_imgt = Tsv2fasta.out.fasta_align_imgt_ch.map{true }.ifEmpty {[false] }.first() // has_fasta_align_imgt is false if Tsv2fasta.out.fasta_align_imgt_ch is empty
 
 
 
                 if(align_soft == "abalign" && (align_seq == "query" || align_seq == "igblast_full" || align_seq == "trimmed" || align_seq == "fwr1" || align_seq == "fwr2" || align_seq == "fwr3" || align_seq == "fwr4" || align_seq == "cdr1" || align_seq == "cdr2" || align_seq == "cdr3" || align_seq == "junction" || align_seq == "d_sequence_alignment" || align_seq == "j_sequence_alignment" || align_seq == "c_sequence_alignment" || align_seq == "d_germline_alignment" || align_seq == "j_germline_alignment" || align_seq == "c_germline_alignment")){
                     align_soft = "mafft"
-                    print("\n\nWARNING:\nalign_soft PARAMETER RESET TO \"mafft\" SINCE align_soft PARAMETER WAS SET TO \"abalign\" BUT Abalign EITHER 1) REQUIRES AT LEAST A V DOMAIN IN THE SEQUENCES OR 2) TRUNKS THE C CONSTANT REGION,\nWHILE align_seq PARAMETER IS SET TO \"${align_seq}\"\n\n")
+                    warn = "\n\nWARNING:\nalign_soft PARAMETER RESET TO \"mafft\" SINCE align_soft PARAMETER WAS SET TO \"abalign\" BUT Abalign EITHER 1) REQUIRES AT LEAST A V DOMAIN IN THE SEQUENCES OR 2) TRUNKS THE C CONSTANT REGION,\nWHILE align_seq PARAMETER IS SET TO \"${align_seq}\"\n\n"
+                    print(warn)
+                    warning_ch = warning_ch.mix(Channel.value(warn)) // accumulate
                 }
                 if(align_soft == "mafft"){
 
@@ -880,6 +891,7 @@ workflow {
                         Abalign_align_aa.out.aligned_aa_c
                     )
                     Abalign_rename.out.failed_abalign_align_ch.collectFile(name: "failed_abalign_align.tsv", skip: 1, keepHeader: true).subscribe{it -> it.copyTo("${out_path}/tsv")}
+                    warning_ch = warning_ch.mix(Abalign_rename.out.abalign_rename_warn_ch) // accumulate
                     copyLogFile('abalign_rename.log', Abalign_rename.out.abalign_rename_log_ch, out_path)
 
 

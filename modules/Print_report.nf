@@ -172,7 +172,7 @@ process Print_report{
         if(warning_collect == "EMPTY"){
             warning_collect <- ""
         }else{
-            warning_collect = ${warning_collect}
+            warning_collect = "${warning_collect}"
         }
         # empty "EMPTY" channel
 

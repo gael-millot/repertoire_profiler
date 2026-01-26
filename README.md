@@ -832,9 +832,15 @@ Special acknowledgement to:
 <br><br>
 ## WHAT'S NEW IN
 
+#### v24.0
+
+- workflow now always returns a html report.
+- Bug fixed.
+- Warnings collected and reported in the html report.
+
 #### v23.1
 
-- Bug fixed when no metadata file
+- Bug fixed when no metadata file.
 
 #### v23.0
 

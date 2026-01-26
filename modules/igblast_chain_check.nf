@@ -1,11 +1,11 @@
 
 process Igblast_chain_check {
     label 'r_ig_clustering'
-    publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{igblast_chain_check.log}", overwrite: false
+    // publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{igblast_chain_check.log}", overwrite: false
     cache 'true'
 
     input:
-    path productive_ch // no parallelization
+    tuple path(productive_ch), val(nlines) // parallelization
     path allele_names_tsv_all_ch // to have all the files in the work dir
     val igblast_v_ref_files 
     val igblast_d_ref_files 
@@ -16,6 +16,7 @@ process Igblast_chain_check {
 
     when:
     nb_productive > 0
+    nlines > 1
 
     output:
     path "selected.tsv", emit: checked_tsv_ch

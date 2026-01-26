@@ -8,11 +8,12 @@ process ParseDb_filtering {
     cache 'true'
 
     input:
-    path db_pass_ch // parallelization expected
+    tuple path(db_pass_ch), val(nlines) // parallelization expected
     val nb_igblast
 
     when:
     nb_igblast > 0
+    nlines > 1
 
     output:
     path "productive_seq_init.tsv", emit: productive_ch

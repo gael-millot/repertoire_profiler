@@ -15,12 +15,15 @@ process Data_assembly {
     output:
     path "wanted_seq.tsv", emit: wanted_ch
     path "data_assembly.log"
+    path "warnings.txt", emit: data_assembly_warn_ch
 
     script:
     """
     #!/bin/bash -ue
     set -o pipefail
     Rscript -e '
+        warn <- ""
+
         db <- read.table("${seq_name_replacement_ch2}", header = TRUE, sep = "\\t")
         dtn <- read.table("${distToNearest_ch}", header = TRUE, sep = "\\t")
 
@@ -39,8 +42,9 @@ process Data_assembly {
         }
         if(all(c("sequence_id", "initial_sequence_id") %in% names(db))){
             if(all(db\$sequence_id == db\$initial_sequence_id)){
-                tempo.cat <- paste0("\\n\\n\\n\\nWARNING IN THE data_assembly PROCESS OF NEXTFLOW\\nTHE meta_path AND meta_name_replacement PARAMETERS ARE NOT \\"NULL\\" BUT NO SEQUENCE NAMES HAVE BEEN REPLACED WHEN USING THE meta_name_replacement COLUMN\\n\\n\\n\\n")
-                cat(tempo.cat)
+                tempo_warn <- paste0("\\n\\n\\n\\nWARNING IN THE data_assembly PROCESS OF NEXTFLOW\\nTHE meta_path AND meta_name_replacement PARAMETERS ARE NOT \\"NULL\\" BUT NO SEQUENCE NAMES HAVE BEEN REPLACED WHEN USING THE meta_name_replacement COLUMN\\n\\n\\n\\n")
+                warn <- base::paste0(base::ifelse(test = warn == "", yes = tempo_warn, no = base::paste0(warn, "\n\n", tempo_warn, collapse = NULL, recycle0 = FALSE)), collapse = NULL, recycle0 = FALSE)
+                print(tempo_warn)
             }
         }
         if(any(is.na(match(db[, tempo.col.name], dtn\$sequence_id)))){
@@ -100,7 +104,7 @@ process Data_assembly {
         db4 <- data.frame(db3, v_gene = sub_v, j_gene = sub_j, isotype_class = as.character(class), c_gene = as.character(subclass))
 
         #### end remove allele info
-
+        writeLines(warn, con = "warnings.txt")
         write.table(db4, file = paste0("./wanted_seq.tsv"), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
     ' |& tee -a data_assembly.log
     """

@@ -58,13 +58,13 @@ process Igblast_query {
     # See https://changeo.readthedocs.io/en/stable/tools/AssignGenes.html for the details
     AssignGenes.py igblast -s \${FILE}.fa -b /usr/local/share/igblast --organism ${igblast_organism} --loci ${igblast_loci} --format blast |& tee -a igblast_report.log # *_igblast.fmt7
     AssignGenes.py igblast -s \${FILE}.fa -b /usr/local/share/igblast --organism ${igblast_organism} --loci ${igblast_loci} --format airr |& tee -a igblast_report.log # output is *_igblast.tsv
-    # convert to tsv
-    # Also convert data from the web interface IMGT/HighV-QUEST
-    MakeDb.py igblast -i ./\${FILE}_igblast.fmt7 -s ./\${FILE}.fa -r \${VDJ_FILES} --extended -o blast_format.tsv |& tee -a igblast_report.log
-    # end convert to tsv
     # test that the AssignGenes.py igblast --format airr is ok
     expected="sequence_id	sequence	sequence_aa	locus	stop_codon	vj_in_frame	v_frameshift	productive	rev_comp	complete_vdj	d_frame	v_call	d_call	j_call	c_call	sequence_alignment	germline_alignment	sequence_alignment_aa	germline_alignment_aa	v_alignment_start	v_alignment_end	d_alignment_start	d_alignment_end	j_alignment_start	j_alignment_end	c_alignment_start	c_alignment_end	v_sequence_alignment	v_sequence_alignment_aa	v_germline_alignment	v_germline_alignment_aa	d_sequence_alignment	d_sequence_alignment_aa	d_germline_alignment	d_germline_alignment_aa	j_sequence_alignment	j_sequence_alignment_aa	j_germline_alignment	j_germline_alignment_aa	c_sequence_alignment	c_sequence_alignment_aa	c_germline_alignment	c_germline_alignment_aa	fwr1	fwr1_aa	cdr1	cdr1_aa	fwr2	fwr2_aa	cdr2	cdr2_aa	fwr3	fwr3_aa	fwr4	fwr4_aa	cdr3	cdr3_aa	junction	junction_length	junction_aa	junction_aa_length	v_score	d_score	j_score	c_score	v_cigar	d_cigar	j_cigar	c_cigar	v_support	d_support	j_support	c_support	v_identity	d_identity	j_identity	c_identity	v_sequence_start	v_sequence_end	v_germline_start	v_germline_end	d_sequence_start	d_sequence_end	d_germline_start	d_germline_end	j_sequence_start	j_sequence_end	j_germline_start	j_germline_end	c_sequence_start	c_sequence_end	c_germline_start	c_germline_end	fwr1_start	fwr1_end	cdr1_start	cdr1_end	fwr2_start	fwr2_end	cdr2_start	cdr2_end	fwr3_start	fwr3_end	fwr4_start	fwr4_end	cdr3_start	cdr3_end	np1	np1_length	np2	np2_length"
     if [[ -s ./\${FILE}_igblast.tsv ]]; then # -s means --format airr has worked
+        # convert to tsv
+        # Also convert data from the web interface IMGT/HighV-QUEST
+        MakeDb.py igblast -i ./\${FILE}_igblast.fmt7 -s ./\${FILE}.fa -r \${VDJ_FILES} --extended -o blast_format.tsv |& tee -a igblast_report.log
+        # end convert to tsv
         read -r firstline < ./\${FILE}_igblast.tsv
         if [[ "\$firstline" != "\$expected" ]]; then
             echo -e "\\n\\n========\\n\\nINTERNAL ERROR IN NEXTFLOW EXECUTION\\n\\nTHE COMANND AssignGenes.py igblast --format airr DOES NOT RETURN THE EXPECTED COLUMN NAMES\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n"
@@ -165,6 +165,8 @@ process Igblast_query {
     else
         echo \$expected > igblast_aligned_seq.tsv
         echo \$expected > igblast_unaligned_seq.tsv
+        SEQ_NAME=\$(awk 'FNR==NR{lineKind=(NR-1)%2 ; if(lineKind==0){gsub(">", "", \$0)}}' \${FILE}.fa)
+        echo \$SEQ_NAME >> igblast_unaligned_seq.tsv # append as a new line
     fi
     """
     // write ${} between "" to make a single argument when the variable is made of several values separated by a space. Otherwise, several arguments will be considered
