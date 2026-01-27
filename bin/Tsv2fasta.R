@@ -657,10 +657,15 @@ fun_report(data = paste0("\n\n################################ RUNNING END"), ou
 
 fun_report(data = paste0("\n\n################################ RECAPITULATION OF WARNING MESSAGES"), output = log, path = "./", overwrite = FALSE)
 if( ! is.null(warn)){
-    fun_report(data = paste0("\n\n", warn), output = log, path = "./", overwrite = FALSE)
+    tempo.cat <- paste0("IN Tsv2fasta.R OF THE NEXFLOW EXECUTION:\n\n", warn)
+    fun_report(data = tempo.cat, output = log, path = "./", overwrite = FALSE)
+    cat(tempo.cat)
+    writeLines(tempo.cat, con = "warnings.txt")
 }else{
     fun_report(data = paste0("\n\nNO WARNING MESSAGE TO REPORT"), output = log, path = "./", overwrite = FALSE)
+    writeLines("", con = "warnings.txt")
 }
+on.exit(exp = options(warning.length = ini.warning.length), add = TRUE)
 
 
 ################ end Warning messages

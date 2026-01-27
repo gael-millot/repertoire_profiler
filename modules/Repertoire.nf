@@ -19,6 +19,7 @@ process Repertoire {
     path "*.png", emit: repertoire_png_ch
     path "rep_*.tsv"
     path "repertoire.log"
+    path "warnings.txt", emit: repertoire_warn_ch
 
     script:
     """

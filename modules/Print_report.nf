@@ -56,7 +56,7 @@ process Print_report{
     val clone_distance
     val align_soft
     val itol_subscription
-    val warning_collect
+    //val warning_collect
 
     output:
     file "nextflow.config.html"
@@ -89,6 +89,7 @@ process Print_report{
         mkdir ./pdf
     fi
     cp -r "${projectDir}/bin/doc_images" .
+    cp -r "${out_path}/reports" .
     # end remove symlink and import folder
 
     Rscript -e '
@@ -114,66 +115,67 @@ process Print_report{
         }
         # end Find the constant and vj repertoires to be displayed in the html file (file names differ depending on light/heavy chain)
         # empty "EMPTY" channel
-        nb_productive = "${nb_productive}"
-        nb_unproductive = "${nb_unproductive}"
-        nb_wanted =  "${nb_wanted}"
-        nb_unwanted =  "${nb_unwanted}"
-        nb_dist_ignored = "${nb_dist_ignored}"
-        nb_clone_assigned = "${nb_clone_assigned}"
-        nb_failed_clone = "${nb_failed_clone}"
-        nb_failed_clone_assignment = "${nb_failed_clone_assignment}"
-        nb_failed_clone_germline = "${nb_failed_clone_germline}"
-        warning_collect = "${warning_collect}"
+        nb_productive <- "${nb_productive}"
+        nb_unproductive <- "${nb_unproductive}"
+        nb_wanted <-  "${nb_wanted}"
+        nb_unwanted <-  "${nb_unwanted}"
+        nb_dist_ignored <- "${nb_dist_ignored}"
+        nb_clone_assigned <- "${nb_clone_assigned}"
+        nb_failed_clone <- "${nb_failed_clone}"
+        nb_failed_clone_assignment <- "${nb_failed_clone_assignment}"
+        nb_failed_clone_germline <- "${nb_failed_clone_germline}"
+        # warning_collect <- "${warning_collect}"
+        warning_collect <- readLines("./reports/warnings.txt", warn = FALSE) # one string per line
         if(nb_productive == "EMPTY"){
             nb_productive <- -1
         }else{
-            nb_productive = ${nb_productive}
+            nb_productive <- ${nb_productive}
         }
         if(nb_unproductive == "EMPTY"){
             nb_unproductive <- -1
         }else{
-            nb_unproductive = ${nb_unproductive}
+            nb_unproductive <- ${nb_unproductive}
         }
         if(nb_wanted == "EMPTY"){
             nb_wanted <- -1
         }else{
-            nb_wanted = ${nb_wanted}
+            nb_wanted <- ${nb_wanted}
         }
         if(nb_unwanted == "EMPTY"){
             nb_unwanted <- -1
         }else{
-            nb_unwanted = ${nb_unwanted}
+            nb_unwanted <- ${nb_unwanted}
         }
         if(nb_dist_ignored == "EMPTY"){
             nb_dist_ignored <- -1
         }else{
-            nb_dist_ignored = ${nb_dist_ignored}
+            nb_dist_ignored <- ${nb_dist_ignored}
         }
         if(nb_clone_assigned == "EMPTY"){
             nb_clone_assigned <- -1
         }else{
-            nb_clone_assigned = ${nb_clone_assigned}
+            nb_clone_assigned <- ${nb_clone_assigned}
         }
         if(nb_failed_clone == "EMPTY"){
             nb_failed_clone <- -1
         }else{
-            nb_failed_clone = ${nb_failed_clone}
+            nb_failed_clone <- ${nb_failed_clone}
         }
         if(nb_failed_clone_assignment == "EMPTY"){
             nb_failed_clone_assignment <- -1
         }else{
-            nb_failed_clone_assignment = ${nb_failed_clone_assignment}
+            nb_failed_clone_assignment <- ${nb_failed_clone_assignment}
         }
         if(nb_failed_clone_germline == "EMPTY"){
             nb_failed_clone_germline <- -1
         }else{
-            nb_failed_clone_germline = ${nb_failed_clone_germline}
+            nb_failed_clone_germline <- ${nb_failed_clone_germline}
         }
-        if(warning_collect == "EMPTY"){
-            warning_collect <- ""
-        }else{
-            warning_collect = "${warning_collect}"
-        }
+        # if(warning_collect == "EMPTY"){
+            # warning_collect <- ""
+        # }else{
+            # warning_collect <- "${warning_collect}"
+        # }
         # empty "EMPTY" channel
 
         rmarkdown::render(

@@ -640,7 +640,11 @@ No wanted sequence detected.
 if(warning_collect == ""){
     cat('No warning message reported.')
 }else{
-    cat(warning_collect)
+     # remove strings
+    warning_collect <- warning_collect[warning_collect != ""]
+    warning_collect <- warning_collect[ ! grepl(x = warning_collect, pattern = "^ *WARNING: *")]
+    # end remove strings
+    cat(paste0(warning_collect, collapse = "\n\n")
 }
 ```
 

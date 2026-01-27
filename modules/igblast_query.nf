@@ -165,8 +165,9 @@ process Igblast_query {
     else
         echo \$expected > igblast_aligned_seq.tsv
         echo \$expected > igblast_unaligned_seq.tsv
-        SEQ_NAME=\$(awk 'FNR==NR{lineKind=(NR-1)%2 ; if(lineKind==0){gsub(">", "", \$0)}}' \${FILE}.fa)
-        echo \$SEQ_NAME >> igblast_unaligned_seq.tsv # append as a new line
+        SEQ_NAME=\$(awk 'FNR==NR{lineKind=(NR-1)%2 ; if(lineKind==0){sub(/^>/,"") ; print}}' \${FILE}.fa)
+        SEQ=\$(awk 'FNR==NR{lineKind=(NR-1)%2 ; if(lineKind==1){print}}' \${FILE}.fa)
+        echo -e "\$SEQ_NAME\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\\t\$SEQ" >> igblast_unaligned_seq.tsv # append as a new line
     fi
     """
     // write ${} between "" to make a single argument when the variable is made of several values separated by a space. Otherwise, several arguments will be considered

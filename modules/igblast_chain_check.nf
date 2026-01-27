@@ -22,6 +22,7 @@ process Igblast_chain_check {
     path "selected.tsv", emit: checked_tsv_ch
     path "not_selected.tsv", emit: not_checked_tsv_ch
     path "igblast_chain_check.log", emit: igblast_chain_check_log
+    path "warnings.txt", emit: igblast_chain_check_warn_ch
 
     script:
     """

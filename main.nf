@@ -545,6 +545,7 @@ workflow {
                 }
             }
             copyLogFile('igblast_chain_check.log', Igblast_chain_check.out.igblast_chain_check_log, out_path)
+            warning_ch = warning_ch.mix(Igblast_chain_check.out.igblast_chain_check_warn_ch.filter{file(it).exists()}.map{file -> file.text}) //  file.text = contenu du fichier
 
 
             // when: nb_wanted > 0
@@ -610,7 +611,7 @@ workflow {
                     seq_name_replacement_ch2, 
                     DistToNearest.out.distToNearest_ch
                 )
-                warning_ch = warning_ch.mix(Data_assembly.out.data_assembly_warn_ch) // accumulate
+                warning_ch = warning_ch.mix(Data_assembly.out.data_assembly_warn_ch.filter{file(it).exists()}.map{file -> file.text}) //  file.text = contenu du fichier) // accumulate
 
                 Metadata_check(
                     Data_assembly.out.wanted_ch,
@@ -619,7 +620,7 @@ workflow {
                     meta_name_replacement,
                     meta_legend
                 )
-                warning_ch = warning_ch.mix(Metadata_check.out.metadata_check_warn_ch) // accumulate
+                warning_ch = warning_ch.mix(Metadata_check.out.metadata_check_warn_ch.filter{file(it).exists()}.map{file -> file.text}) //  file.text = contenu du fichier) // accumulate
 
                 Repertoire(
                     Data_assembly.out.wanted_ch,
@@ -633,6 +634,7 @@ workflow {
                 repertoire_vj_ch =repertoire_vj_ch.mix( Repertoire.out.repertoire_png_ch.flatten().filter {file ->
                         file.name =~ /.*\/?(rep_gene_IG.V_.*non-zero\.png)$/
                     })
+                warning_ch = warning_ch.mix(Repertoire.out.repertoire_warn_ch.filter{file(it).exists()}.map{file -> file.text}) //  file.text = contenu du fichier
 
 
                 Clone_assignment(
@@ -692,7 +694,7 @@ workflow {
                     AddGermlineSequences.out.add_germ_ch
                 )
                 TranslateGermline.out.translate_germ_log_ch.collectFile(name: "translateGermline.log").subscribe{it -> it.copyTo("${out_path}/reports")}
-                warning_ch = warning_ch.mix(TranslateGermline.out.translate_germ_warn_ch) // accumulate
+                warning_ch = warning_ch.mix(TranslateGermline.out.translate_germ_warn_ch.filter{file(it).exists()}.map{file -> file.text}) //  file.text = contenu du fichier) // accumulate
 
 
 
@@ -821,7 +823,7 @@ workflow {
                 )
                 donut_tsv_ch2 = Donut.out.donut_tsv_ch.collectFile(name: "donut_stats.tsv", skip: 1, keepHeader: true).subscribe{it -> it.copyTo("${out_path}/tsv")} // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
                 donuts_png_ch = donuts_png_ch.mix(Donut.out.donuts_png_ch.collect())
-
+                warning_ch = warning_ch.mix(Donut.out.donut_warn_ch.filter{file(it).exists()}.map{file -> file.text}) //  file.text = contenu du fichier
 
                 Donut_assembly(
                     Donut.out.donut_pdf_ch.collect()
@@ -891,7 +893,7 @@ workflow {
                         Abalign_align_aa.out.aligned_aa_c
                     )
                     Abalign_rename.out.failed_abalign_align_ch.collectFile(name: "failed_abalign_align.tsv", skip: 1, keepHeader: true).subscribe{it -> it.copyTo("${out_path}/tsv")}
-                    warning_ch = warning_ch.mix(Abalign_rename.out.abalign_rename_warn_ch) // accumulate
+                    warning_ch = warning_ch.mix(Abalign_rename.out.abalign_rename_warn_ch.filter{file(it).exists()}.map{file -> file.text}) //  file.text = contenu du fichier) // accumulate
                     copyLogFile('abalign_rename.log', Abalign_rename.out.abalign_rename_log_ch, out_path)
 
 
@@ -940,7 +942,7 @@ workflow {
                 )
                 GffNuc.out.gff_ch.subscribe{gff_list, tag -> if(tag == "CLONE"){gff_list.each{gff -> gff.copyTo("${out_path}/alignments/nuc/clonal/${gff.getName()}")}}else if(tag == "ALL"){gff_list.each{gff -> gff.copyTo("${out_path}/alignments/nuc/all/${gff.getName()}")}}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}} // .flatten() because gff several files. Otherwise, copyTo does not like it. Finally, .each() also solve the problem
                 copyLogFile('gffNuc.log', GffNuc.out.gff_log_ch, out_path)
-
+                warning_ch = warning_ch.mix(GffNuc.out.gff_warn_ch.filter{file(it).exists()}.map{file -> file.text}) //  file.text = contenu du fichier
 
 
                 //for_gff_aa_ch.view()
@@ -952,7 +954,7 @@ workflow {
                 )
                 GffAa.out.gff_ch.subscribe{gff_list, tag -> if(tag == "CLONE"){gff_list.each{gff -> gff.copyTo("${out_path}/alignments/aa/clonal/${gff.getName()}")}}else if(tag == "ALL"){gff_list.each{gff -> gff.copyTo("${out_path}/alignments/aa/all/${gff.getName()}")}}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
                 copyLogFile('gffAa.log', GffAa.out.gff_log_ch, out_path)
-
+                warning_ch = warning_ch.mix(GffAa.out.gff_warn_ch.filter{file(it).exists()}.map{file -> file.text}) //  file.text = contenu du fichier
 
 
                 PrintAlignmentNuc( // module print_alignment.nf
@@ -1040,7 +1042,7 @@ workflow {
         // end when: nb_productive > 0
 
     // end when: nb_igblast > 0
-
+    warning_ch.collectFile(name: "warnings.txt").subscribe{it -> it.copyTo("${out_path}/reports")}
     Print_report(
         config_file, // from parameter
         template_rmd, // from parameter
@@ -1074,8 +1076,8 @@ workflow {
         repertoire_vj_ch.ifEmpty{'EMPTY'}, 
         clone_distance, // parameter
         align_soft, // parameter
-        phylo_tree_itol_subscription, // parameter
-        warning_ch.collect().map{it.join('\n\n')}.ifEmpty{'EMPTY'} // concatenate all warnings into a single string
+        phylo_tree_itol_subscription // parameter
+        //warning_ch.collect().map{it.join('\n\n')}.ifEmpty{'EMPTY'} // concatenate all warnings into a single string // finally, the gathered string is very loong. I prefer to use a file added in /reports/
     )
 
 

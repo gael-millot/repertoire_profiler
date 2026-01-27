@@ -19,7 +19,7 @@ process Tsv2fasta {
     tuple path("for_alignment_nuc/*.fasta"), path("for_alignment_aa/*.fasta"), val(seq_kind), emit: fasta_align_ch, optional: true // // already aligned fasta file with seq_kind == "IMGT"
     tuple path("sequence_alignment_with_gaps_imgt_nuc.fasta"), path("sequence_alignment_with_gaps_imgt_aa.fasta"), val(seq_kind), emit: fasta_align_imgt_ch, optional: true // // already aligned fasta file with seq_kind == "IMGT"
     path "Tsv2fasta.log", emit: tsv2fasta_log_ch
-    path "warning.txt", emit: warning_ch, optional: true
+    path "warnings.txt", emit: warning_ch
 
     script:
     """
