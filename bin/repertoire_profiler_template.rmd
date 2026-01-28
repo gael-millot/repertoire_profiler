@@ -223,7 +223,7 @@ See the igblast_seq.tsv and the failed_igblast_seq.tsv files in the [tsv](./tsv)
 
 
 **Productive sequences** are igblast annotated sequences with the following properties in their VDJ region:<br><ul><li>an open reading frame (start and stop codon).<br></li><li>no defect in the start codon, splicing sites or regulatory elements.<br></li><li>no internal stop codons.<br></li><li>in-frame junction between regions.<br></ul>
-Unproductive sequences could deserve a sequence profile visual inspection to exclude any problem of automatic profile translation.
+Unproductive sequences could deserve a visual inspection of the sequence profile to exclude any problem of automatic profile translation.
 <br><br>
 
 **Wanted sequences** are productive sequences selected according to the parameters of the <i>nextflow.config</i> file:<br><ul><li><code>igblast_organism</code>:&nbsp;&nbsp;&nbsp;`r igblast_organism`<br></li><li><code>igblast_loci</code>:&nbsp;&nbsp;&nbsp;`r igblast_loci`<br></li><li><code>igblast_B_heavy_chain</code>:&nbsp;&nbsp;&nbsp;`r igblast_B_heavy_chain`<br></li><li><code>igblast_B_lambda_chain</code>:&nbsp;&nbsp;&nbsp;`r igblast_B_lambda_chain`<br></li><li><code>igblast_B_kappa_chain</code>:&nbsp;&nbsp;&nbsp;`r igblast_B_kappa_chain`<br></li><li><code>igblast_T_alpha_chain</code>:&nbsp;&nbsp;&nbsp;`r igblast_T_alpha_chain`<br></li><li><code>igblast_T_beta_chain</code>:&nbsp;&nbsp;&nbsp;`r igblast_T_beta_chain`<br></li><li><code>igblast_T_gamma_chain</code>:&nbsp;&nbsp;&nbsp;`r igblast_T_gamma_chain`<br></li><li><code>igblast_T_delta_chain</code>:&nbsp;&nbsp;&nbsp;`r igblast_T_delta_chain`<br></ul>
@@ -237,86 +237,87 @@ if(nb_productive != -1){
     if(nb_unwanted == -1){
         nb_unwanted <- 0
     }
-    cat('
+    # warning: cat() concatenates without paste0() but with default argument sep = " "
+    cat(paste0('
 Number of productive sequences: ', nb_productive
-    )
+    ))
     if(nb_productive > 0){
-        cat('
+        cat(paste0('
 &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
 <span style="color:green">*productive_seq.tsv file in the [tsv](./tsv) folder*</span>
-        ')
+        '))
         df <- read_tsv_with_dummy("tsv/productive_seq.tsv")
         if(is.data.frame(df) && attr(df, "truncated")){
-            cat('
+            cat(paste0('
 \n**(Note: Table truncated to 10 rows. Full file available in the productive_seq.tsv file.)**\n\n
-            ')
+            '))
         }
         cat(knitr::kable(df, format = "html", row.names = FALSE))
-        cat('
+        cat(paste0('
 </details>
-        ')
+        '))
     }
-    cat('
+    cat(paste0('
 <br>
 Number of unproductive sequences: ', nb_unproductive
-    )
+    ))
     if(nb_unproductive > 0){
-        cat('
+        cat(paste0('
 &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
 <span style="color:green">*unproductive_seq.tsv file in the [tsv](./tsv) folder*</span>
-        ')
+        '))
         df <- read_tsv_with_dummy("tsv/unproductive_seq.tsv")
         if(is.data.frame(df) && attr(df, "truncated")){
-            cat(
-'\n**(Note: Table truncated to 10 rows. Full file available in the unproductive_seq.tsv file.)**\n\n
-            ')
+            cat(paste0('
+\n**(Note: Table truncated to 10 rows. Full file available in the unproductive_seq.tsv file.)**\n\n
+            '))
         }
         cat(knitr::kable(df, format = "html", row.names = FALSE))
-        cat('
+        cat(paste0('
 </details>
-        ')
+        '))
     }
-    cat('
+    cat(paste0('
 <br>
 Number of wanted sequences: ', nb_wanted    
-    )
+    ))
     if(nb_wanted > 0){
-        cat('
+        cat(paste0('
 &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
 <span style="color:green">*wanted_seq.tsv file in the [tsv](./tsv) folder*</span>
-        ')
+        '))
         df <- read_tsv_with_dummy("tsv/wanted_seq.tsv")
         if (is.data.frame(df) && attr(df, "truncated")) {
-            cat('
+            cat(paste0('
 \n**(Note: Table truncated to 10 rows. Full file available in the wanted_seq.tsv file.)**\n\n
-            ')
+            '))
         }
         cat(knitr::kable(df, format = "html", row.names = FALSE))
-        cat('
+        cat(paste0('
 </details>
-        ')
+        '))
     }
-    cat('
+    cat(paste0('
 <br>
 Number of unwanted sequences: ', nb_unwanted
-    )
+    ))
     if(nb_unwanted > 0){
-        cat('
+        cat(paste0('
 &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
 <span style="color:green">*unwanted_seq.tsv file in the [tsv](./tsv) folder*</span>
-        ')
+        '))
         df <- read_tsv_with_dummy("tsv/unwanted_seq.tsv")
         if (is.data.frame(df) && attr(df, "truncated")) {
-            cat('
+            cat(paste0('
 \n**(Note: Table truncated to 10 rows. Full file available in the unwanted_seq.tsv file.)**\n\n
-            ')
+            '))
         }
         cat(knitr::kable(df, format = "html", row.names = FALSE))
-        cat('
+        cat(paste0('
 </details>
-        ')
+        '))
     }
-    cat('
+    cat(paste0('
 <br>
 Total (wanted + unproductive + unwanted): ', nb_wanted + nb_unproductive + nb_unwanted, '
 
@@ -326,11 +327,11 @@ Wanted / Productive ratio: ', base::round(nb_wanted / nb_productive, 2), '
 
 See the productive_seq.tsv, unproductive_seq.tsv, wanted_seq.tsv and unwanted_seq.tsv files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output).
 
-    ')
+    '))
 }else{
-    cat('
+    cat(paste0('
 No productive sequence detected.
-    ')
+    '))
 }
 ```
 
@@ -339,8 +340,8 @@ No productive sequence detected.
 ### Repertoire summary
 
 ```{r, echo=FALSE, results='asis'}
-if(nb_wanted > 0 ){
-    cat('
+if(nb_wanted > 0){
+    cat(paste0('
 
 Compilation of the [wanted_seq.tsv](./tsv) file (and also of the [clone_assigned_seq.tsv](./tsv) file for the donut plots).
 
@@ -357,22 +358,19 @@ Warning: only the first annotation is considered if several are presents in the 
 
 <br>
 
-<div class="image-container">
-    ')
+'))
+    cat('<div class="image-container">')
     if(file.exists(constant_rep)){
-        cat('
-<img src="', constant_rep, '" onclick="toggleFullscreen(this)" style="border: 2px solid black; width: 25%;"/>
-        ')
+        # warning: cat() concatenates without paste0() but with default argument sep = " "
+        cat(paste0('<img src="', constant_rep, '" onclick="toggleFullscreen(this)" ',
+  'style="border:1px solid black;width:25%;display:inline-block;margin:0;" />'))
     }
     if(file.exists(vj_rep)){
-        cat('
-<img src="', vj_rep, '" onclick="toggleFullscreen(this)" style="border: 2px solid black; width: 25%"/>
-        ')
+        cat(paste0('<img src="', vj_rep, '" onclick="toggleFullscreen(this)" ',
+  'style="border:1px solid black;width:25%;display:inline-block;margin:0;" />'))
     }
-    cat('
-</div>
-
-<br><br><br>
+    cat('</div><br><br><br>')
+    cat(paste0('
 
 #### Donut plots
 
@@ -384,51 +382,32 @@ Only genes are displayed here. See the [donuts.pdf](./pdf/donuts.pdf) file in th
 Warning: only the first annotation is considered if several are presents in the v_call, j_call or c_call column of the wanted_seq.tsv file.
 
 <br>
-
-<div class="image-container">
-    ')
+'))
+    cat('<div class="image-container">')
     if(file.exists("vj_gene_all_donutchart.png")){
-        cat('
-<img src="vj_gene_all_donutchart.png" onclick="toggleFullscreen(this)" />
-        ')
+        cat('<img src="vj_gene_all_donutchart.png" onclick="toggleFullscreen(this)" style="border: 1px solid black"/>')
     }
     if(file.exists("vj_gene_annotated_donutchart.png")){
-        cat('
-<img src="vj_gene_annotated_donutchart.png" onclick="toggleFullscreen(this)" />
-        ')
+        cat('<img src="vj_gene_annotated_donutchart.png" onclick="toggleFullscreen(this)" style="border: 1px solid black"/>')
     }
     if(file.exists("vj_gene_tree_donutchart.png")){
-        cat('
-<img src="vj_gene_tree_donutchart.png" onclick="toggleFullscreen(this)" />
-        ')
+        cat('<img src="vj_gene_tree_donutchart.png" onclick="toggleFullscreen(this)" style="border: 1px solid black"/>')
     }
-    cat('
-</div>
-<div class="image-container">
-    ')
+    cat('</div><div class="image-container">')
     if(file.exists("c_gene_all_donutchart.png")){
-        cat('
-<img src="c_gene_all_donutchart.png" onclick="toggleFullscreen(this)" />
-        ')
+        cat('<img src="c_gene_all_donutchart.png" onclick="toggleFullscreen(this)" style="border: 1px solid black"/>')
     }
     if(file.exists("c_gene_annotated_donutchart.png")){
-        cat('
-<img src="c_gene_annotated_donutchart.png" onclick="toggleFullscreen(this)" />
-        ')
+        cat('<img src="c_gene_annotated_donutchart.png" onclick="toggleFullscreen(this)" style="border: 1px solid black"/>')
     }
-    if(file.exists("vj_gene_tree_donutchart.png")){
-        cat('
-<img src="c_gene_tree_donutchart.png" onclick="toggleFullscreen(this)" />
-        ')
+    if(file.exists("c_gene_tree_donutchart.png")){
+        cat('<img src="c_gene_tree_donutchart.png" onclick="toggleFullscreen(this)" style="border: 1px solid black"/>')
     }
-    cat('
-</div>
-<br><br><br>
-    ')
+    cat('</div><br><br><br>')
 }else{
-    cat('
+    cat(paste0('
 No wanted sequence detected.
-    ')
+    '))
 }
 ```
 <br><br>
@@ -442,86 +421,86 @@ if(nb_wanted > 0){
     nb_failed_clone_assignment <- ifelse(nb_failed_clone_assignment > 0, nb_failed_clone_assignment, 0)
     nb_failed_clone_germline <- ifelse(nb_failed_clone_germline > 0, nb_failed_clone_germline, 0)
     nb_dist_ignored <- ifelse(nb_dist_ignored > 0, nb_dist_ignored, 0)
-    cat('
+    cat(paste0('
 **Clone-assigned sequences** are wanted sequences with additionnal features:<br><ul><li>germline clustering (clone ID).<br></li><li>inference of clonal germline sequence (different from the sequence germline inference).<br></li><li>mutation load.<br></ul><br>
 Clonal prediction aims to gather all the sequences that putatively come from a same germline cell. See <a href="https://changeo.readthedocs.io/en/stable/examples/cloning.html#assigning-clones">here</a>, <a href="https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette/">here</a> and <a href="https://genomemedicine.biomedcentral.com/articles/10.1186/s13073-015-0243-2">this article</a> for details. In summary, it follows these steps:<br><ul><li>grouping the sequences according to "same V, J and junction length" (to facilitate the distance computation).<br></li><li>for each group, 2x2 distance computation using by default (<code>clone_model</code> and <code>clone_normalize</code> parameters of the <i>nextflow.config</i> file) the <a href="https://biology.stackexchange.com/questions/23523/hamming-distance-between-two-dna-strings">Hamming distance</a>.<br></li><li>cutoff definition.<br></li><li>using the cutoff (<code>clone_distance</code> parameter of the <i>nextflow.config</i> file) to define clonal groups inside each "same V, J and junction length" group.<br></ul><br>
 Number of clone-assigned sequences: ', nb_clone_assigned
-    )
+    ))
     if(nb_clone_assigned > 0){
-        cat('
+        cat(paste0('
 &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
 <span style="color:green">*clone_assigned_seq.tsv file in the [tsv](./tsv) folder*</span>
-        ')
+        '))
         df <- read_tsv_with_dummy("tsv/clone_assigned_seq.tsv")
-        if (is.data.frame(df) && attr(df, "truncated")) {
-            cat('
+        if(is.data.frame(df) && attr(df, "truncated")) {
+            cat(paste0('
 \n**(Note: Table truncated to 10 rows. Full file available in the clone_assigned_seq.tsv file.)**\n\n
-            ')
+            '))
         }
         cat(knitr::kable(df, format = "html", row.names = FALSE))
-        cat('
+        cat(paste0('
 </details>
-        ')
+        '))
     }
-    cat('
+    cat(paste0('
 <br>
 Number of sequences with failed clonal assignement: ', nb_failed_clone_assignment
-    )
+    ))
     if(nb_failed_clone_assignment > 0){
-        cat('
+        cat(paste0('
 &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
 <span style="color:green">*failed_clone_assigned_seq.tsv file in the [tsv](./tsv) folder*</span>
-        ')
+        '))
         df <- read_tsv_with_dummy("tsv/failed_clone_assigned_seq.tsv")
         if(is.data.frame(df) && attr(df, "truncated")){
-            cat('
+            cat(paste0('
 \n**(Note: Table truncated to 10 rows. Full file available in the failed_clone_assigned_seq.tsv file.)**\n\n
-            ')
+            '))
         }
         cat(knitr::kable(df, format = "html", row.names = FALSE))
-        cat('
+        cat(paste0('
 </details>
-        ')
+        '))
     }
-    cat('
+    cat(paste0('
 <br>
 Number of clone assigned sequences with failed germline sequence computation: ', nb_failed_clone_germline
-    )
+    ))
     if(nb_failed_clone_germline > 0){
-        cat('
+        cat(paste0('
 &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
 <span style="color:green">*failed_clonal_germline_seq.tsv file in the [tsv](./tsv) folder*</span>
-        ')
+        '))
         df <- read_tsv_with_dummy("tsv/failed_clonal_germline_seq.tsv")
         if (is.data.frame(df) && attr(df, "truncated")) {
-            cat('
+            cat(paste0('
 \n**(Note: Table truncated to 10 rows. Full file available in the failed_clonal_germline_seq.tsv file.)**\n\n
-            ')
+            '))
         }
         cat(knitr::kable(df, format = "html", row.names = FALSE))
-        cat('
+        cat(paste0('
 </details>
-        ')
+        '))
     }
-    cat('
+    cat(paste0('
 Total (clone-assigned + failed_clone_assignment + failed_clonal_germline): ', nb_clone_assigned + nb_failed_clone_assignment + nb_failed_clone_germline, '
 
 Clone assigned ratio: ', base::round(nb_clone_assigned / (nb_clone_assigned + nb_failed_clone_assignment + nb_failed_clone_germline), 2), '
 
 See the clone_assigned_seq.tsv, as well as both the failed_clone_assigned_seq.tsv and the failed_clonal_germline_seq.tsv (sequences from the wanted file that fail to be clone-assigned by `DefineClones.py` and `CreateGermlines.py`) files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output).
-    ')
+    '))
     if(nb_clone_assigned > 0){
-        cat('
+        cat(paste0('
 <br>
 Number of sequences per clone ID: &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
 <span style="color:green">*clone_id_count.tsv file in the [tsv](./tsv) folder*</span>
-        ')
+        '))
         df <- read_tsv_with_dummy("tsv/clone_id_count.tsv")
         if (is.data.frame(df) && attr(df, "truncated")) {
         cat("\n**(Note: Table truncated to 10 rows. Full file available in the clone_id_count.tsv file.)**\n\n")
         }
         kable(df, format = "markdown", row.names = FALSE)
-        cat('
+        cat(paste0('
 </details>
 <br>
 
@@ -546,16 +525,16 @@ Sequence ratio: ', base::round((nb_wanted - nb_dist_ignored)/ nb_wanted, 2), '
 <br>
 
 <div class="image-container">
-<img src="seq_distance_manual.png" onclick="toggleFullscreen(this)" />
-<img src="seq_distance_mixture_auto.png" onclick="toggleFullscreen(this)" />
-<img src="seq_distance_smoothed_auto.png" onclick="toggleFullscreen(this)" />
+<img src="seq_distance_manual.png" onclick="toggleFullscreen(this)" style="border: 1px solid black"/>
+<img src="seq_distance_mixture_auto.png" onclick="toggleFullscreen(this)" style="border: 1px solid black"/>
+<img src="seq_distance_smoothed_auto.png" onclick="toggleFullscreen(this)" style="border: 1px solid black"/>
 </div>
-        ')
+        '))
     }
 }else{
-    cat('
+    cat(paste0('
 No clonal assignment obtained.
-    ')
+    '))
 }
 ```
 
@@ -564,38 +543,38 @@ No clonal assignment obtained.
 ### Sequence alignments
 
 ```{r, echo=FALSE, results='asis'}
-if(nb_wanted > 0 ){
-    cat('
+if(nb_wanted > 0){
+    cat(paste0('
 Sequence Alignments are available in the [alignments/nuc](./alignments/nuc) folder for nucleotide alignments and in the [alignments/aa](./alignments/aa) folder for amino acids alignments. Click on the desired html files to see the alignments.<br><br>See [here](reports/alignments_viz.html) the ways to deal with alignment visualization and saving.
-    ')
+    '))
     if(align_soft == "abalign"){
         df <- read_tsv_with_dummy("tsv/failed_abalign_align.tsv")
-        cat('
+        cat(paste0('
 Such alignments were obtained using [Abalign](https://academic.oup.com/nar/article/51/W1/W17/7173809) (alignments guided by IMGT antibody numbering schemes).<br><br>Warning: some sequences may not be aligned, because they are too short or out of the VDJ region.
 <br><br>
 Number of failed alignments: <code class="r-output">', nrow(df), '</code>&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
 <span style="color:green">*failed_abalign_align.tsv file in the [tsv](.) folder*</span>
-        ')
+        '))
         if (is.data.frame(df) && attr(df, "truncated")) {
             cat("\n**Note: Table truncated to 10 rows. Full file available in the [tsv](.) folder.**\n\n")
         }
         print(kable(df, format = "markdown", row.names = FALSE))
-        cat('
+        cat(paste0('
 </details>
 <br><br>
-        ')
+        '))
     }else if(align_soft == "mafft"){
-        cat('
+        cat(paste0('
 Such alignments were obtain using [Mafft](https://mafft.cbrc.jp/alignment/server/index.html).
-        ')
+        '))
     }
-    cat('
+    cat(paste0('
 Warning in clonal group alignments ([alignments/nuc/clonal](./alignments/nuc/clonal) and [alignments/aa/clonal](./alignments/aa/clonal) folders):<br><ul><li>short sequences sometimes hardly align with the full length germline clonal sequence.<br></li><li>FWR/CDR feature highlighting (.gff files) is not correct at the FWR3 / CDR3 junction, due to the stretch of hyphens and N/X in that region, but coordinates reported in the <i>clonal_germline_fwr3_end</i> and <i>clonal_germline_cdr3_start</i> columns of the <i>clone_assigned_seq.tsv</i> should correctly indicate the TGT (cys) boundary.
-    ')
+    '))
 }else{
-    cat('
+    cat(paste0('
 No wanted sequence detected.
-    ')
+    '))
 }
 ```
 <br><br>
@@ -603,30 +582,30 @@ No wanted sequence detected.
 ###  Phylogeny
 
 ```{r, echo=FALSE, results='asis'}
-if(nb_wanted > 0 ){
+if(nb_wanted > 0){
     #remove work directory from current directory
     if(length(list.files("phylo/aa", all.files = TRUE, no.. = TRUE)) == 0 && length(list.files("phylo/aa", all.files = TRUE, no.. = TRUE)) == 0){
-        cat('
+        cat(paste0('
 No tree computed because of lack of sequences in clonal groups.
-        ')
+        '))
     }else{
         if(itol_subscription == "TRUE"){
-            cat('
+            cat(paste0('
 Open the different **sequences_\\<SEQ_NAME\\>_align.fasta_itol_url.txt** files in the [phylo/aa](./phylo/aa) folder and click on the link to see the trees.\n\n
-            ')
+            '))
         }else{
-            cat('
+            cat(paste0('
 To see the trees, follow the link: https://itol.embl.de/upload.cgi. Choose a name for your tree (optional) and upload a "*.treefile" file from the [phylo/aa](./phylo/aa) folder. The trees will then be displayed by iTOL.\n\n
-            ')
+            '))
         }
-        cat('
+        cat(paste0('
 Alignment visualization is available for each clonal group used in each tree, in the [phylo/aa](./phylo/aa) folder in html format.\nTree scale is the number of mutations per position. Multiply by the length of the sequence to have the number of mutations per sequence.
-        ')
+        '))
     }
 }else{
-    cat('
+    cat(paste0('
 No wanted sequence detected.
-    ')
+    '))
 }
 ```
 
@@ -637,14 +616,14 @@ No wanted sequence detected.
 
 ```{r, echo=FALSE, results='asis'}
 #remove work directory from current directory
-if(warning_collect == ""){
-    cat('No warning message reported.')
+if(length(warning_collect) == 1 && all(warning_collect == "")){
+    cat(paste0('No warning message reported.'))
 }else{
      # remove strings
     warning_collect <- warning_collect[warning_collect != ""]
     warning_collect <- warning_collect[ ! grepl(x = warning_collect, pattern = "^ *WARNING: *")]
     # end remove strings
-    cat(paste0(warning_collect, collapse = "\n\n")
+    cat(paste0(warning_collect, collapse = "\n\n"))
 }
 ```
 

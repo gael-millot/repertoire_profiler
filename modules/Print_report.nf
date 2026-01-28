@@ -124,7 +124,7 @@ process Print_report{
         nb_failed_clone <- "${nb_failed_clone}"
         nb_failed_clone_assignment <- "${nb_failed_clone_assignment}"
         nb_failed_clone_germline <- "${nb_failed_clone_germline}"
-        # warning_collect <- "${warning_collect}"
+        # warning_collect <- "{warning_collect}"
         warning_collect <- readLines("./reports/warnings.txt", warn = FALSE) # one string per line
         if(nb_productive == "EMPTY"){
             nb_productive <- -1
@@ -174,7 +174,7 @@ process Print_report{
         # if(warning_collect == "EMPTY"){
             # warning_collect <- ""
         # }else{
-            # warning_collect <- "${warning_collect}"
+            # warning_collect <- "{warning_collect}"
         # }
         # empty "EMPTY" channel
 
