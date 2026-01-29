@@ -353,10 +353,12 @@ workflow {
     nb_wanted = Channel.empty()
     nb_unwanted = Channel.empty()
     nb_dist_ignored = Channel.empty()
-    nb_clone_assigned = Channel.empty()
-    nb_failed_clone = Channel.empty()
-    nb_failed_clone_assignment = Channel.empty()
-    nb_failed_clone_germline = Channel.empty()
+    nb_clone_assignment = Channel.empty()
+    nb_clone_unassignment = Channel.empty()
+    nb_clone_germline = Channel.empty()
+    nb_clone_ungermline = Channel.empty()
+    nb_clone_tot = Channel.empty()
+    nb_unclone_tot = Channel.empty()
     distance_hist_ch  = Channel.empty() // Distance_hist.out.distance_hist_ch, 
     donuts_png_ch = Channel.empty() // Donut.out.donuts_png.collect(), 
     repertoire_png_ch = Channel.empty() // Repertoire.out.repertoire_png_ch.collect(), 
@@ -545,7 +547,6 @@ workflow {
                 }
             }
             copyLogFile('igblast_chain_check.log', Igblast_chain_check.out.igblast_chain_check_log, out_path)
-            warning_ch = warning_ch.mix(Igblast_chain_check.out.igblast_chain_check_warn_ch.filter{file(it).exists()}.map{file -> file.text}) //  file.text = contenu du fichier
 
 
             // when: nb_wanted > 0
@@ -575,6 +576,7 @@ workflow {
                     clone_distance
                 )
                 distance_hist_ch = distance_hist_ch.mix(Distance_hist.out.distance_hist_ch)
+
 
                 Histogram_assembly(
                     Distance_hist.out.histogram_pdf_ch.collect()
@@ -606,12 +608,12 @@ workflow {
                 copyLogFile('seq_name_replacement.log', Seq_name_replacement.out.seq_name_replacement_log_ch, out_path)
 
 
-
                 Data_assembly(
                     seq_name_replacement_ch2, 
                     DistToNearest.out.distToNearest_ch
                 )
                 warning_ch = warning_ch.mix(Data_assembly.out.data_assembly_warn_ch.filter{file(it).exists()}.map{file -> file.text}) //  file.text = contenu du fichier) // accumulate
+
 
                 Metadata_check(
                     Data_assembly.out.wanted_ch,
@@ -621,6 +623,7 @@ workflow {
                     meta_legend
                 )
                 warning_ch = warning_ch.mix(Metadata_check.out.metadata_check_warn_ch.filter{file(it).exists()}.map{file -> file.text}) //  file.text = contenu du fichier) // accumulate
+
 
                 Repertoire(
                     Data_assembly.out.wanted_ch,
@@ -634,7 +637,6 @@ workflow {
                 repertoire_vj_ch =repertoire_vj_ch.mix( Repertoire.out.repertoire_png_ch.flatten().filter {file ->
                         file.name =~ /.*\/?(rep_gene_IG.V_.*non-zero\.png)$/
                     })
-                warning_ch = warning_ch.mix(Repertoire.out.repertoire_warn_ch.filter{file(it).exists()}.map{file -> file.text}) //  file.text = contenu du fichier
 
 
                 Clone_assignment(
@@ -648,8 +650,40 @@ workflow {
                 )
                 // Clone_assignment.out.clone_ch.view()
                 // nb_failed_clone = Clone_assignment.out.failed_clone_ch.map {file -> file.countLines() == 0 ? 0: file.countLines() - 1} // either failed_clone_assigned_seq.tsv is empty (no lines) or has a header to remove to count the lines
-                nb_failed_clone_assignment = nb_failed_clone_assignment.mix(Clone_assignment.out.failed_clone_ch.countLines() - 1) // Minus 1 because 1st line = column names // either failed_clone_assigned_seq.tsv is empty (no lines) or has a header to remove to count the lines
+                nb_clone_unassignment = nb_clone_unassignment.mix(Clone_assignment.out.failed_clone_ch.countLines() - 1) // Minus 1 because 1st line = column names // either failed_clone_assigned_seq.tsv is empty (no lines) or has a header to remove to count the lines
+                nb_clone_assignment = nb_clone_assignment.mix(Clone_assignment.out.clone_ch.countLines() - 1) // -1 for the header
+                nb_clone_unassignment = nb_clone_unassignment.mix(Clone_assignment.out.failed_clone_ch.countLines() - 1) // -1 for the header
+                check_check = check_ch1.ifEmpty {'NO_FILE'}   // marker \ue202turn0search2
+                check_uncheck = uncheck_ch1.ifEmpty {'NO_FILE'}   // marker \ue202turn0search2
+                check_check.combine(check_uncheck).subscribe {x,unx -> 
+                    if(x != 'NO_FILE'){
+                        n = x.countLines() - 1   // here `x` is a Path, so it exists
+                        if(n == -1){
+                            throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nWANTED FILE EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Igblast_chain_check PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                        }
+                        if(n == 0){
+                            warn = "\n\nWARNING:\n0 WANTED SEQUENCE FOLLOWING THE Igblast_chain_check PROCESS.\n\nCHECK THAT THE\nigblast_organism\nigblast_loci\nigblast_B_heavy_chain\nigblast_B_lambda_chain\nigblast_B_kappa_chain\nigblast_T_alpha_chain\nigblast_T_beta_chain\nigblast_T_gamma_chain\nigblast_T_delta_chain\nARE CORRECTLY SET IN THE nextflow.config FILE.\n\nWORFLOW ENDED.\nSEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
+                            print(warn)
+                            warning_ch = warning_ch.mix(Channel.value(warn)) // accumulate
+                        }
+                    }
+                    if(unx != 'NO_FILE'){
+                        n = unx.countLines() - 1   // here `x` is a Path, so it exists
+                        if(n == -1){
+                            throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nUNWANTED FILE EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE igblast_B_heavy_chain PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                        }
+                    }
+                }
+                nb_productive.combine(nb_wanted).combine(nb_unwanted).subscribe{n,n1,n2 -> 
+                    if(n != -1 && n1 != -1 && n2 != -1){
+                        if(n != n1 + n2){
+                            throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF LINES IN THE wanted_seq.tsv (${n1}) AND unwanted_seq.tsv (${n2}) IS NOT EQUAL TO THE NUMBER OF LINES IN productive_seq.tsv (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                        }
+                    }
+                }
 
+
+                // when: nb_wanted > 0
 
                 Split_by_clones(
                     Clone_assignment.out.clone_ch
@@ -666,8 +700,8 @@ workflow {
                 )
                 failed_clonal_germline_file = Closest_germline.out.failed_clonal_germline_ch.collectFile(name: "failed_clonal_germline_seq.tsv", skip: 1, keepHeader: true)
                 failed_clonal_germline_file.subscribe{it -> it.copyTo("${out_path}/tsv")} // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
-                nb_failed_clone_germline = nb_failed_clone_germline.mix(failed_clonal_germline_file.countLines() - 1)
-                nb_failed_clone = nb_failed_clone.mix(nb_failed_clone_germline.combine(nb_failed_clone_assignment).map{new_count, old_count -> new_count + old_count}) // to add the two kind of failure
+                nb_clone_ungermline = nb_clone_ungermline.mix(failed_clonal_germline_file.countLines() - 1)
+                nb_unclone_tot = nb_unclone_tot.mix(nb_clone_ungermline.combine(nb_clone_unassignment).map{new_count, old_count -> new_count + old_count}) // to add the two kind of failure
                 copyLogFile('Closest_germline.log', Closest_germline.out.closest_log_ch, out_path)
 
 
@@ -707,7 +741,7 @@ workflow {
                     clone_mut_regionDefinition
                 )
                 clone_assigned_seq_ch = Mutation_load_germ_genes.out.mutation_load_ch.collectFile(name: "clone_assigned_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
-                nb_clone_assigned = nb_clone_assigned.mix(clone_assigned_seq_ch.countLines() - 1) // Minus 1 because 1st line = column names
+                nb_clone_tot = nb_clone_tot.mix(clone_assigned_seq_ch.countLines() - 1) // Minus 1 because 1st line = column names
                 clone_assigned_seq_ch.subscribe{it -> it.copyTo("${out_path}/tsv")}
                 clone_assigned_seq_filtered_ch = Mutation_load_germ_genes.out.mutation_load_ch.filter{file -> file.countLines() > align_clone_nb.toInteger() } // Only keep clonal groups that have a number of sequences superior to align_clone_nb (variable defined in nextflow.config) 
                 copyLogFile('mutation_load_germ_genes.log', Mutation_load_germ_genes.out.mutation_load_log_ch, out_path)
@@ -823,7 +857,6 @@ workflow {
                 )
                 donut_tsv_ch2 = Donut.out.donut_tsv_ch.collectFile(name: "donut_stats.tsv", skip: 1, keepHeader: true).subscribe{it -> it.copyTo("${out_path}/tsv")} // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
                 donuts_png_ch = donuts_png_ch.mix(Donut.out.donuts_png_ch.collect())
-                warning_ch = warning_ch.mix(Donut.out.donut_warn_ch.filter{file(it).exists()}.map{file -> file.text}) //  file.text = contenu du fichier
 
                 Donut_assembly(
                     Donut.out.donut_pdf_ch.collect()
@@ -857,7 +890,7 @@ workflow {
 
                 if(align_soft == "abalign" && (align_seq == "query" || align_seq == "igblast_full" || align_seq == "trimmed" || align_seq == "fwr1" || align_seq == "fwr2" || align_seq == "fwr3" || align_seq == "fwr4" || align_seq == "cdr1" || align_seq == "cdr2" || align_seq == "cdr3" || align_seq == "junction" || align_seq == "d_sequence_alignment" || align_seq == "j_sequence_alignment" || align_seq == "c_sequence_alignment" || align_seq == "d_germline_alignment" || align_seq == "j_germline_alignment" || align_seq == "c_germline_alignment")){
                     align_soft = "mafft"
-                    warn = "\n\nWARNING:\nalign_soft PARAMETER RESET TO \"mafft\" SINCE align_soft PARAMETER WAS SET TO \"abalign\" BUT Abalign EITHER 1) REQUIRES AT LEAST A V DOMAIN IN THE SEQUENCES OR 2) TRUNKS THE C CONSTANT REGION,\nWHILE align_seq PARAMETER IS SET TO \"${align_seq}\"\n\n"
+                    warn = "\n\nWARNING:\nalign_soft PARAMETER OF THE nextflow.config FILE RESET TO \"mafft\" SINCE align_soft PARAMETER WAS SET TO \"abalign\" BUT Abalign EITHER 1) REQUIRES AT LEAST A V DOMAIN IN THE SEQUENCES OR 2) TRUNKS THE C CONSTANT REGION,\nWHILE align_seq PARAMETER IS SET TO \"${align_seq}\"\n\n"
                     print(warn)
                     warning_ch = warning_ch.mix(Channel.value(warn)) // accumulate
                 }
@@ -1065,10 +1098,10 @@ workflow {
         nb_wanted.ifEmpty{'EMPTY'}, 
         nb_unwanted.ifEmpty{'EMPTY'}, 
         nb_dist_ignored.ifEmpty{'EMPTY'}, 
-        nb_clone_assigned.ifEmpty{'EMPTY'}, 
-        nb_failed_clone.ifEmpty{'EMPTY'}, 
-        nb_failed_clone_assignment.ifEmpty{'EMPTY'}, 
-        nb_failed_clone_germline.ifEmpty{'EMPTY'}, 
+        nb_clone_tot.ifEmpty{'EMPTY'}, 
+        nb_unclone_tot.ifEmpty{'EMPTY'}, 
+        nb_clone_unassignment.ifEmpty{'EMPTY'}, 
+        nb_clone_ungermline.ifEmpty{'EMPTY'}, 
         distance_hist_ch.ifEmpty{[empty_distance_hist]}, 
         Donut.out.donuts_png_ch.collect().ifEmpty{ [empty_donuts_png] }, 
         Repertoire.out.repertoire_png_ch.collect().ifEmpty{ [empty_repertoire_png] }, 

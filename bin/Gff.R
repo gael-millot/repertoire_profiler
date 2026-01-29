@@ -628,9 +628,9 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
                                     assign(tempo_coord_name, as.integer(trunc(coord / 3)))
                                 }
                                 if(as.integer(coord) %% 3 != 0){
-                                    tempo.warn <- paste0("APPROXIMATE AA COORDINATES FOR ", df[selected_index[i3], Name], ", FOR THE ", get(paste0(i2, "_column_", i7))[i4], " COLUMN, SINCE NUC COORDINATES ARE NOT MULTIPLE OF 3.")
-                                    cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
-                                    fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+                                    tempo.warn <- paste0("WARNING:\n IN THE GffAa PROCESS, APPROXIMATE AA COORDINATES FOR ", df[selected_index[i3], Name], ", FOR THE ", get(paste0(i2, "_column_", i7))[i4], " COLUMN, SINCE NUC COORDINATES ARE NOT MULTIPLE OF 3.")
+                                    cat(paste0("\n", tempo.warn, "\n\n"))
+                                    fun_report(data = paste0("\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
                                     warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
                                 }
                             }

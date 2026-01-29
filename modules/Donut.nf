@@ -41,7 +41,6 @@ process Donut {
     path "*.png", emit: donuts_png_ch
     path "*.svg"
     path "*.log"
-    path "warnings.txt", emit: donut_warn_ch
 
     script:
     """

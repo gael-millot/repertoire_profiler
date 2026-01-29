@@ -455,9 +455,9 @@ if(seq_kind == "IMGT" & align_seq %in% c("query", "igblast_full", "trimmed", "se
         cat(tempo_cat, file = file.path(paste0(tempo_name, "_imgt_aa.fasta")), append = TRUE) # tempo_name because name of nuc kept
     }
 }else if(seq_kind == "IMGT"){
-    tempo.warn <- paste0("NO SEQUENCE WITH IMGT GAPS PROVIDED AS ALIGNMENTS WITH align_seq PARAMETER OF THE nextflow.config FILE SET AS:\n", align_seq)
-    cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
-    fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+    tempo.warn <- paste0("WARNING:\nIN THE Tsv2fasta PROCESS, NO SEQUENCE WITH IMGT GAPS PROVIDED AS ALIGNMENTS WITH align_seq PARAMETER OF THE nextflow.config FILE SET AS:\n", align_seq)
+    cat(paste0("\n", tempo.warn, "\n\n"))
+    fun_report(data = paste0("\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
     warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
 }else{
 # end print the sequence_alignment_with_gaps sequences as aligned fasta
@@ -483,9 +483,9 @@ if(seq_kind == "IMGT" & align_seq %in% c("query", "igblast_full", "trimmed", "se
             # NB : align_clone_nb is defined in nextflow.config
             # Create the fasta files :
             if(any(tempo.log)){
-                tempo.warn <- paste0("IMPORTED FILE:\n", path, "\nHAS ", sum(tempo.log, na.rm = TRUE), " AMONG ", nrow(obs), " EMPTY SEQUENCES (NA OR \"\") IN THE ", i0, " COLUMN IN LINES:\n", paste(which(tempo.log), collapse = "\n"))
-                cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
-                fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+                tempo.warn <- paste0("WARNING:\nIN THE Tsv2fasta PROCESS, IMPORTED FILE:\n", path, "\nHAS ", sum(tempo.log, na.rm = TRUE), " AMONG ", nrow(obs), " EMPTY SEQUENCES (NA OR \"\") IN THE ", i0, " COLUMN IN LINES:\n", paste(which(tempo.log), collapse = "\n"))
+                cat(paste0("\n", tempo.warn, "\n\n"))
+                fun_report(data = paste0("\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
                 warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
             }else{
                 tempo.cat <- paste0("\nIMPORTED FILE:\n", path, "\nHAS NO EMPTY SEQUENCES (NA OR \"\") AMONG ", nrow(obs), " IN THE ", i0, " COLUMN\n")
@@ -502,12 +502,12 @@ if(seq_kind == "IMGT" & align_seq %in% c("query", "igblast_full", "trimmed", "se
                 multiple_v_genes <- TRUE
             }else if(any(df$v_gene != df$v_gene[1])) {
                 tempo.warn <- paste0(
-                    "Different genes for the V cassette were found in this clonal group\n",
-                    "Here they are:\n", paste0(df$v_gene, collapse = "\n"),
-                    "\nSet clone_strategy = \"first\" in nextflow.config to avoid this."
+                    "WARNING:\nIN THE Tsv2fasta PROCESS, DIFFERENT GENES FOR THE V CASSETTE WERE FOUND IN THIS CLONAL GROUP\n",
+                    "HERE THEY ARE:\n", paste0(df$v_gene, collapse = "\n"),
+                    "\nSET clone_strategy = \"first\" IN THE nextflow.config FILE TO AVOID THIS."
                 )
-                cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
-                fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+                cat(paste0("\n", tempo.warn, "\n\n"))
+                fun_report(data = paste0("\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
                 warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
                 multiple_v_genes <- TRUE
             }
@@ -515,12 +515,12 @@ if(seq_kind == "IMGT" & align_seq %in% c("query", "igblast_full", "trimmed", "se
                 multiple_j_genes <- TRUE
             }else if(any(df$j_gene != df$j_gene[1])) {
                 tempo.warn <- paste0(
-                    "Different genes for the V cassette were found this clonal group\n",
-                    "Here they are:\n", paste0(df$j_gene, collapse = "\n"),
-                    "\nSet clone_strategy = \"first\" in nextflow.config to avoid this."
+                    "WARNING:\nIN THE Tsv2fasta PROCESS, DIFFERENT GENES FOR THE J CASSETTE WERE FOUND IN THIS CLONAL GROUP\n",
+                    "HERE THEY ARE:\n", paste0(df$j_gene, collapse = "\n"),
+                    "\nSET clone_strategy = \"first\" IN THE nextflow.config FILE TO AVOID THIS."
                 )
-                cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
-                fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+                cat(paste0("\n", tempo.warn, "\n\n"))
+                fun_report(data = paste0("\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
                 warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
                 multiple_j_genes <- TRUE
             }
@@ -600,23 +600,23 @@ if(seq_kind == "IMGT" & align_seq %in% c("query", "igblast_full", "trimmed", "se
                 # If germlines differ in the group, issue a warning
                 if (length(unique(germ_seq)) > 1) {
                     tempo.warn <- paste0(
-                        "Multiple germline sequences found for clone_id ", df[1, "clone_id"], ".\n",
-                        "Selected germline from sequence: ", df[selected_index, Name], "\n",
-                        "Associated clonal_germline_v_gene: ", df[selected_index, "clonal_germline_v_gene"], "\n",
-                        "Associated clonal_germline_j_gene: ", df[selected_index, "clonal_germline_j_gene"], "\n",
-                        "Associated v_gene: ", df[selected_index, "v_gene"], "\n",
-                        "Associated j_gene: ", df[selected_index, "j_gene"], "\n",
-                        "Used germline sequence: ", selected_germline_seq
+                        "WARNING:\nIN THE Tsv2fasta PROCESS, MULTIPLE GERMLINE SEQUENCES FOUND FOR clone_id ", df[1, "clone_id"], ".\n",
+                        "SELECTED GERMLINE FROM SEQUENCE: ", df[selected_index, Name], "\n",
+                        "ASSOCIATED clonal_germline_v_gene: ", df[selected_index, "clonal_germline_v_gene"], "\n",
+                        "ASSOCIATED clonal_germline_j_gene: ", df[selected_index, "clonal_germline_j_gene"], "\n",
+                        "ASSOCIATED v_gene: ", df[selected_index, "v_gene"], "\n",
+                        "ASSOCIATED j_gene: ", df[selected_index, "j_gene"], "\n",
+                        "USED GERMLINE SEQUENCE: ", selected_germline_seq
                     )
-                    cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
-                    fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+                    cat(paste0("\n", tempo.warn, "\n\n"))
+                    fun_report(data = paste0("\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
                     warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
                 }
             }
         }else{
-            tempo.warn <- paste0("NO FASTA AND GFF FILES CREATED BECAUSE THE IMPORTED FILE:\n", path, "\nHAS LESS THAN ", align_clone_nb, " SEQUENCES (TOO MUCH NA OR \"\") IN THE ", i0, " COLUMN.")
-            cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
-            fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+            tempo.warn <- paste0("WARNING:\nIN THE Tsv2fasta PROCESS, NO FASTA AND GFF FILES CREATED BECAUSE THE IMPORTED FILE:\n", path, "\nHAS LESS THAN ", align_clone_nb, " SEQUENCES (TOO MUCH NA OR \"\") IN THE ", i0, " COLUMN.")
+            cat(paste0("\n", tempo.warn, "\n\n"))
+            fun_report(data = paste0("\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
             warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
         }
     }
@@ -625,11 +625,11 @@ if(seq_kind == "IMGT" & align_seq %in% c("query", "igblast_full", "trimmed", "se
 if(seq_kind == "CLONE"){
     if (multiple_j_genes || multiple_v_genes){
         tempo.warn <- paste0(
-            "\n[WARNING] Multiple V or J genes detected in a clonal group. ",
-            "\nSet clone_strategy = \"first\" in nextflow.config to avoid this."
+            "WARNING:\nIN THE Tsv2fasta PROCESS, MULTIPLE V OR J GENES DETECTED IN A CLONAL GROUP.\n",
+            "\nSET clone_strategy = \"first\" IN THE nextflow.config FILE TO AVOID THIS."
         )
-        cat(paste0("\nWARNING IN ", script, ".R\n", tempo.warn, "\n\n"))
-        fun_report(data = paste0("WARNING\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+        cat(paste0("\n", tempo.warn, "\n\n"))
+        fun_report(data = paste0("\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
         warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
     }
 }

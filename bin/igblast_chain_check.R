@@ -257,8 +257,6 @@ set.seed(1)
 # warning initiation
 ini.warning.length <- options()$warning.length
 options(warning.length = 8170)
-warn <- NULL
-# warn.count <- 0 # not required
 # end warning initiation
 # other checkings (not full checked because already checked in the .nf file)
 
@@ -433,16 +431,6 @@ fun_report(data = paste0("\n\nALL DATA SAVED IN all_objects.RData"), output = lo
 ################ Warning messages
 
 
-fun_report(data = paste0("\n\n################################ RECAPITULATION OF WARNING MESSAGES"), output = log, path = "./", overwrite = FALSE)
-if( ! is.null(warn)){
-    tempo.cat <- paste0("IN repertoire.R OF THE NEXFLOW EXECUTION:\n\n", warn)
-    fun_report(data = tempo.cat, output = log, path = "./", overwrite = FALSE)
-    cat(tempo.cat)
-    writeLines(tempo.cat, con = "warnings.txt")
-}else{
-    fun_report(data = paste0("\n\nNO WARNING MESSAGE TO REPORT"), output = log, path = "./", overwrite = FALSE)
-    writeLines("", con = "warnings.txt")
-}
 on.exit(exp = options(warning.length = ini.warning.length), add = TRUE)
 
 

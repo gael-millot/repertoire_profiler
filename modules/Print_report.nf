@@ -44,10 +44,10 @@ process Print_report{
     val nb_wanted
     val nb_unwanted
     val nb_dist_ignored
-    val nb_clone_assigned
-    val nb_failed_clone
-    val nb_failed_clone_assignment
-    val nb_failed_clone_germline
+    val nb_clone_tot
+    val nb_unclone_tot
+    val nb_clone_unassignment
+    val nb_clone_ungermline
     path distance_hist_ch // to have the folder in the work dir
     path donuts_png // to have the folder in the work dir
     path repertoire_png // to have the folder in the work dir
@@ -120,10 +120,10 @@ process Print_report{
         nb_wanted <-  "${nb_wanted}"
         nb_unwanted <-  "${nb_unwanted}"
         nb_dist_ignored <- "${nb_dist_ignored}"
-        nb_clone_assigned <- "${nb_clone_assigned}"
-        nb_failed_clone <- "${nb_failed_clone}"
-        nb_failed_clone_assignment <- "${nb_failed_clone_assignment}"
-        nb_failed_clone_germline <- "${nb_failed_clone_germline}"
+        nb_clone_tot <- "${nb_clone_tot}"
+        nb_unclone_tot <- "${nb_unclone_tot}"
+        nb_clone_unassignment <- "${nb_clone_unassignment}"
+        nb_clone_ungermline <- "${nb_clone_ungermline}"
         # warning_collect <- "{warning_collect}"
         warning_collect <- readLines("./reports/warnings.txt", warn = FALSE) # one string per line
         if(nb_productive == "EMPTY"){
@@ -151,25 +151,25 @@ process Print_report{
         }else{
             nb_dist_ignored <- ${nb_dist_ignored}
         }
-        if(nb_clone_assigned == "EMPTY"){
-            nb_clone_assigned <- -1
+        if(nb_clone_tot == "EMPTY"){
+            nb_clone_tot <- -1
         }else{
-            nb_clone_assigned <- ${nb_clone_assigned}
+            nb_clone_tot <- ${nb_clone_tot}
         }
-        if(nb_failed_clone == "EMPTY"){
-            nb_failed_clone <- -1
+        if(nb_unclone_tot == "EMPTY"){
+            nb_unclone_tot <- -1
         }else{
-            nb_failed_clone <- ${nb_failed_clone}
+            nb_unclone_tot <- ${nb_unclone_tot}
         }
-        if(nb_failed_clone_assignment == "EMPTY"){
-            nb_failed_clone_assignment <- -1
+        if(nb_clone_unassignment == "EMPTY"){
+            nb_clone_unassignment <- -1
         }else{
-            nb_failed_clone_assignment <- ${nb_failed_clone_assignment}
+            nb_clone_unassignment <- ${nb_clone_unassignment}
         }
-        if(nb_failed_clone_germline == "EMPTY"){
-            nb_failed_clone_germline <- -1
+        if(nb_clone_ungermline == "EMPTY"){
+            nb_clone_ungermline <- -1
         }else{
-            nb_failed_clone_germline <- ${nb_failed_clone_germline}
+            nb_clone_ungermline <- ${nb_clone_ungermline}
         }
         # if(warning_collect == "EMPTY"){
             # warning_collect <- ""
@@ -200,10 +200,10 @@ process Print_report{
             nb_wanted =  nb_wanted, 
             nb_unwanted =  nb_unwanted, 
             nb_dist_ignored = nb_dist_ignored, 
-            nb_clone_assigned = nb_clone_assigned, 
-            nb_failed_clone = nb_failed_clone, 
-            nb_failed_clone_assignment = nb_failed_clone_assignment,  
-            nb_failed_clone_germline = nb_failed_clone_germline,  
+            nb_clone_tot = nb_clone_tot, 
+            nb_unclone_tot = nb_unclone_tot, 
+            nb_clone_unassignment = nb_clone_unassignment,  
+            nb_clone_ungermline = nb_clone_ungermline,  
             clone_distance = ${clone_distance},
             constant_rep = constant_rep,
             vj_rep = vj_rep,

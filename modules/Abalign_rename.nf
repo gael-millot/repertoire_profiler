@@ -37,7 +37,7 @@ process Abalign_rename {
         tempo_log <-  ! df_ini_low[ini_header_pos] %in% df_align_low[align_header_pos]
         if(any(tempo_log)){
             tempo_txt <- paste0(paste0("${fasta_aa.baseName}", "\\t", sub(x = df_ini[ini_header_pos][tempo_log], pattern = "^>", replacement = "")), collapse = "\\n")
-            tempo_warn <- paste0("\\n\\nWARNING:\nALIGNMENT FAILED FOR ", tempo_txt, "\\n\\n")
+            tempo_warn <- paste0("\\n\\nWARNING:\nIN THE Abalign_rename PROCESS, ALIGNMENT FAILED FOR ", tempo_txt, "\\n\\n")
             warn <- base::paste0(base::ifelse(test = warn == "", yes = tempo_warn, no = base::paste0(warn, "\n\n", tempo_warn, collapse = NULL, recycle0 = FALSE)), collapse = NULL, recycle0 = FALSE)
             print(tempo_warn)
             failed_abalign_align <- paste0("fasta_name\\theader\\n", paste0(tempo_txt, collapse = "\\n"))

@@ -23,10 +23,10 @@ params:
     nb_wanted: -1
     nb_unwanted: -1
     nb_dist_ignored: -1
-    nb_clone_assigned: -1
-    nb_failed_clone: -1
-    nb_failed_clone_assignment: -1
-    nb_failed_clone_germline: -1
+    nb_clone_tot: -1
+    nb_unclone_tot: -1
+    nb_clone_unassignment: -1
+    nb_clone_ungermline: -1
     clone_distance: -1
     constant_rep: ""
     vj_rep: ""
@@ -163,10 +163,10 @@ writeLines(out, "nextflow.config.html")
     nb_wanted <- params$nb_wanted
     nb_unwanted <- params$nb_unwanted
     nb_dist_ignored <- params$nb_dist_ignored
-    nb_clone_assigned <- params$nb_clone_assigned
-    nb_failed_clone <- params$nb_failed_clone
-    nb_failed_clone_assignment <- params$nb_failed_clone_assignment
-    nb_failed_clone_germline <- params$nb_failed_clone_germline
+    nb_clone_tot <- params$nb_clone_tot
+    nb_unclone_tot <- params$nb_unclone_tot
+    nb_clone_unassignment <- params$nb_clone_unassignment
+    nb_clone_ungermline <- params$nb_clone_ungermline
     clone_distance <- params$clone_distance
     constant_rep <- params$constant_rep
     vj_rep <- params$vj_rep
@@ -183,13 +183,13 @@ if(nb_productive == -1){
     if(nb_wanted != -1){
         stop(paste0("\n\n================\n\nINTERNAL ERROR IN Print_report PROCESS.\nnb_wanted CANNOT BE OTHER THAN -1 IF nb_productive IS -1:\nnb_wanted: ", nb_wanted, "\nnb_productive: ", nb_productive, "\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"), call. = FALSE)
     }
-    if(nb_clone_assigned != -1){
-        stop(paste0("\n\n================\n\nINTERNAL ERROR IN Print_report PROCESS.\nnb_clone_assigned CANNOT BE OTHER THAN -1 IF nb_productive IS -1:\nnb_clone_assigned: ", nb_clone_assigned, "\nnb_productive: ", nb_productive, "\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"), call. = FALSE)
+    if(nb_clone_tot != -1){
+        stop(paste0("\n\n================\n\nINTERNAL ERROR IN Print_report PROCESS.\nnb_clone_tot CANNOT BE OTHER THAN -1 IF nb_productive IS -1:\nnb_clone_tot: ", nb_clone_tot, "\nnb_productive: ", nb_productive, "\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"), call. = FALSE)
     }
 }
 if(nb_wanted == -1){
-    if(nb_clone_assigned != -1){
-        stop(paste0("\n\n================\n\nINTERNAL ERROR IN Print_report PROCESS.\nnb_clone_assigned CANNOT BE OTHER THAN -1 IF nb_wanted IS -1:\nnb_clone_assigned: ", nb_clone_assigned, "\nnb_wanted: ", b_wanted, "\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"), call. = FALSE)
+    if(nb_clone_tot != -1){
+        stop(paste0("\n\n================\n\nINTERNAL ERROR IN Print_report PROCESS.\nnb_clone_tot CANNOT BE OTHER THAN -1 IF nb_wanted IS -1:\nnb_clone_tot: ", nb_clone_tot, "\nnb_wanted: ", b_wanted, "\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"), call. = FALSE)
     }
 }
 ```
@@ -416,17 +416,17 @@ No wanted sequence detected.
 
 ```{r, echo=FALSE, results='asis'}
 if(nb_wanted > 0){
-    nb_clone_assigned <- ifelse(nb_clone_assigned > 0, nb_clone_assigned, 0)
-    nb_failed_clone <- ifelse(nb_failed_clone > 0, nb_failed_clone, 0)
-    nb_failed_clone_assignment <- ifelse(nb_failed_clone_assignment > 0, nb_failed_clone_assignment, 0)
-    nb_failed_clone_germline <- ifelse(nb_failed_clone_germline > 0, nb_failed_clone_germline, 0)
+    nb_clone_tot <- ifelse(nb_clone_tot > 0, nb_clone_tot, 0)
+    nb_unclone_tot <- ifelse(nb_unclone_tot > 0, nb_unclone_tot, 0)
+    nb_clone_unassignment <- ifelse(nb_clone_unassignment > 0, nb_clone_unassignment, 0)
+    nb_clone_ungermline <- ifelse(nb_clone_ungermline > 0, nb_clone_ungermline, 0)
     nb_dist_ignored <- ifelse(nb_dist_ignored > 0, nb_dist_ignored, 0)
     cat(paste0('
 **Clone-assigned sequences** are wanted sequences with additionnal features:<br><ul><li>germline clustering (clone ID).<br></li><li>inference of clonal germline sequence (different from the sequence germline inference).<br></li><li>mutation load.<br></ul><br>
 Clonal prediction aims to gather all the sequences that putatively come from a same germline cell. See <a href="https://changeo.readthedocs.io/en/stable/examples/cloning.html#assigning-clones">here</a>, <a href="https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette/">here</a> and <a href="https://genomemedicine.biomedcentral.com/articles/10.1186/s13073-015-0243-2">this article</a> for details. In summary, it follows these steps:<br><ul><li>grouping the sequences according to "same V, J and junction length" (to facilitate the distance computation).<br></li><li>for each group, 2x2 distance computation using by default (<code>clone_model</code> and <code>clone_normalize</code> parameters of the <i>nextflow.config</i> file) the <a href="https://biology.stackexchange.com/questions/23523/hamming-distance-between-two-dna-strings">Hamming distance</a>.<br></li><li>cutoff definition.<br></li><li>using the cutoff (<code>clone_distance</code> parameter of the <i>nextflow.config</i> file) to define clonal groups inside each "same V, J and junction length" group.<br></ul><br>
-Number of clone-assigned sequences: ', nb_clone_assigned
+Number of clone-assigned sequences: ', nb_clone_tot
     ))
-    if(nb_clone_assigned > 0){
+    if(nb_clone_tot > 0){
         cat(paste0('
 &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
 <span style="color:green">*clone_assigned_seq.tsv file in the [tsv](./tsv) folder*</span>
@@ -444,9 +444,9 @@ Number of clone-assigned sequences: ', nb_clone_assigned
     }
     cat(paste0('
 <br>
-Number of sequences with failed clonal assignement: ', nb_failed_clone_assignment
+Number of sequences with failed clonal assignement: ', nb_clone_unassignment
     ))
-    if(nb_failed_clone_assignment > 0){
+    if(nb_clone_unassignment > 0){
         cat(paste0('
 &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
 <span style="color:green">*failed_clone_assigned_seq.tsv file in the [tsv](./tsv) folder*</span>
@@ -464,9 +464,9 @@ Number of sequences with failed clonal assignement: ', nb_failed_clone_assignmen
     }
     cat(paste0('
 <br>
-Number of clone assigned sequences with failed germline sequence computation: ', nb_failed_clone_germline
+Number of clone assigned sequences with failed germline sequence computation: ', nb_clone_ungermline
     ))
-    if(nb_failed_clone_germline > 0){
+    if(nb_clone_ungermline > 0){
         cat(paste0('
 &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
 <span style="color:green">*failed_clonal_germline_seq.tsv file in the [tsv](./tsv) folder*</span>
@@ -483,13 +483,13 @@ Number of clone assigned sequences with failed germline sequence computation: ',
         '))
     }
     cat(paste0('
-Total (clone-assigned + failed_clone_assignment + failed_clonal_germline): ', nb_clone_assigned + nb_failed_clone_assignment + nb_failed_clone_germline, '
+Total (clone-assigned + failed_clone_assignment + failed_clonal_germline): ', nb_clone_tot + nb_clone_unassignment + nb_clone_ungermline, '
 
-Clone assigned ratio: ', base::round(nb_clone_assigned / (nb_clone_assigned + nb_failed_clone_assignment + nb_failed_clone_germline), 2), '
+Clone assigned ratio: ', base::round(nb_clone_tot / (nb_clone_tot + nb_clone_unassignment + nb_clone_ungermline), 2), '
 
 See the clone_assigned_seq.tsv, as well as both the failed_clone_assigned_seq.tsv and the failed_clonal_germline_seq.tsv (sequences from the wanted file that fail to be clone-assigned by `DefineClones.py` and `CreateGermlines.py`) files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output).
     '))
-    if(nb_clone_assigned > 0){
+    if(nb_clone_tot > 0){
         cat(paste0('
 <br>
 Number of sequences per clone ID: &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>

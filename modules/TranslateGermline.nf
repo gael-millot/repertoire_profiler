@@ -23,6 +23,7 @@ process TranslateGermline {
         warn <- ""
         file_name <- "${add_germ_ch}"
         df <- read.table(file_name, sep = "\\t", header = TRUE)
+        seq_name <- df[ , 1]
         germ_nuc <- df\$clonal_germline_sequence_no_gaps
         # Make sure all germline sequences are the same (which they are supposed to be since this is a single clonal group)
         if(any(germ_nuc != germ_nuc[1])){
@@ -30,7 +31,7 @@ process TranslateGermline {
         }
         length_no_gaps <- nchar(germ_nuc[1])
         if(length_no_gaps %% 3 != 0){
-            tempo_warn <- paste0("\\nWARNING:\nTHE clonal_germline_sequence_no_gaps COLUMN CONTAINS ", length_no_gaps, " CHARACTERS WHEN GAPS ARE REMOVED, WHICH IS NOT A MULTIPLE OF 3. \\n")
+            tempo_warn <- paste0("\\nWARNING:\nIN THE TranslateGermline PROCESS, FOR THE ", seq_name, " SEQUENCE THE clonal_germline_sequence_no_gaps COLUMN CONTAINS ", length_no_gaps, " CHARACTERS WHEN GAPS ARE REMOVED, WHICH IS NOT A MULTIPLE OF 3.")
             warn <- base::paste0(base::ifelse(test = warn == "", yes = tempo_warn, no = base::paste0(warn, "\n\n", tempo_warn, collapse = NULL, recycle0 = FALSE)), collapse = NULL, recycle0 = FALSE)
             cat(tempo_warn, file = "translateGermline.log", append = TRUE)
         }
@@ -40,11 +41,18 @@ process TranslateGermline {
             expr = {
                 germ_aa <- Biostrings::translate(germ_dna, if.fuzzy.codon="X")
             },
-            warning = function(w) {
-                cat("WARNING OF Biostrings::translate FUNCTION: ", conditionMessage(w), "\\n", file = "translateGermline.log", append = TRUE)
+            warning = function(w){
+                tempo_warn <- paste0("\\nWARNING:\nBiostrings::translate FUNCTION IN THE TranslateGermline PROCESS: ", conditionMessage(w))
+                writeLines(tempo_warn, con = "tempo_warnings.txt")
                 invokeRestart("muffleWarning")
             }
         )
+        
+        if(file.exists("tempo_warnings.txt")){
+            tempo_warn <- readLines("tempo_warnings.txt")
+            warn <- base::paste0(base::ifelse(test = warn == "", yes = tempo_warn, no = base::paste0(warn, "\n\n", tempo_warn, collapse = NULL, recycle0 = FALSE)), collapse = NULL, recycle0 = FALSE)
+            cat(tempo_warn, file = "translateGermline.log", append = TRUE)
+        }
         tempo_name <- "clonal_germline_sequence_aa"
         df[[tempo_name]] <- toString(germ_aa)
         file_base <- tools::file_path_sans_ext(basename(file_name))
