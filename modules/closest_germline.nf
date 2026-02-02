@@ -14,7 +14,7 @@ process Closest_germline {
     val meta_legend
 
     output:
-    tuple path("*_germ-pass.tsv"), path("clonal_germline_seq.fasta"), emit: closest_ch, optional: true
+    tuple path("*_germ-pass.tsv"), path("clonal_germline_seq.fasta"), emit: closest_ch
     path "failed_clonal_germline_seq.tsv", emit: failed_clonal_germline_ch
     path "*.log", emit: closest_log_ch
 
@@ -156,6 +156,8 @@ process Closest_germline {
             # end reorder as in productive_seq.tsv
             write.table(db, file = args[1], row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
         ' failed_clonal_germline_seq.tsv \$FILENAME |& tee -a Closest_germline.log
+        head -1 failed_clonal_germline_seq.tsv | cat > \${FILE}_germ-pass.tsv # keep the header
+        echo -e "" > clonal_germline_seq.fasta # empty fasta file
     fi
     """
 }

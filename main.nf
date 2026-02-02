@@ -682,7 +682,7 @@ workflow {
 
                 // when: nb_clone_assignment > 0
 
-                    Split_by_clones(
+                    Split_by_clones( // split by clone ID, not by single sequence
                         Clone_assignment.out.clone_ch.map{file -> nlines = file.text.readLines().size() ; tuple(file, nlines)}
                     )
 
@@ -695,15 +695,15 @@ workflow {
                         meta_file,
                         meta_legend
                     )
-                    closest_ch1 = Closest_germline.out.closest_ch.collectFile(name: "closest_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
+                    closest_ch1 = Closest_germline.out.closest_ch.map { it[0] }.collectFile(name: "closest_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files // it[0] to take only the tsv, not the fasta
                     unclosest_ch1 = Closest_germline.out.failed_clonal_germline_ch.collectFile(name: "failed_clonal_germline_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
-                    // closest_ch1.subscribe{it -> it.copyTo("${out_path}/tsv")} // nothing if no file // not now
+                    closest_ch1.subscribe{it -> it.copyTo("${out_path}/tsv")} // nothing if no file // not now
                     unclosest_ch1.subscribe{it -> it.copyTo("${out_path}/tsv")}
                     nb_clone_germline = nb_clone_germline.mix(closest_ch1.countLines() - 1) // -1 for the header
                     nb_clone_ungermline = nb_clone_ungermline.mix(unclosest_ch1.countLines() - 1) // -1 for the header
-                    check_closest = closest_ch1.ifEmpty {'NO_FILE'}   // marker \ue202turn0search2
-                    check_unclosest = unclosest_ch1.ifEmpty {'NO_FILE'}   // marker \ue202turn0search2
-                    check_closest.combine(check_unclosest).subscribe {x,unx -> 
+                    check_closest = closest_ch1.ifEmpty{'NO_FILE'}   // marker \ue202turn0search2
+                    check_unclosest = unclosest_ch1.ifEmpty{'NO_FILE'}   // marker \ue202turn0search2
+                    check_closest.combine(check_unclosest).subscribe{x,unx -> 
                         if(x != 'NO_FILE'){
                             n = x.countLines() - 1   // here `x` is a Path, so it exists
                             if(n == -1){
@@ -792,7 +792,7 @@ workflow {
                                 }
                             }
                         }
-                        clone_assigned_seq_filtered_ch = clone_assigned_seq_ch.filter{file -> file.countLines() > align_clone_nb.toInteger() } // Only keep clonal groups that have a number of sequences superior to align_clone_nb (variable defined in nextflow.config) 
+                        clone_assigned_seq_filtered_ch = Mutation_load_germ_genes.out.mutation_load_ch.filter{file -> file.countLines() > align_clone_nb.toInteger()} // Only keep clonal groups that have a number of sequences superior to align_clone_nb (variable defined in nextflow.config) 
                         copyLogFile('mutation_load_germ_genes.log', Mutation_load_germ_genes.out.mutation_load_log_ch, out_path)
 
 

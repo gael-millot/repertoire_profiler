@@ -495,7 +495,7 @@ if(seq_kind == "IMGT" & align_seq %in% c("query", "igblast_full", "trimmed", "se
             if(seq_kind == "CLONE"){
                 # Sequences in the same clone_assigned_seq.tsv file belong to the same clonal group and should have the same values in columns relative to clonal groups
                 if(any(df$clone_id != df$clone_id[1])){
-                    stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL clone_id VALUES SHOULD BE THE SAME IN A clone_assigned_seq.tsv FILE, BUT THEY ARE NOT.\nHERE THEY ARE : ", paste0(df$clone_id, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
+                    stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nALL clone_id VALUES SHOULD BE THE SAME IN A clone_assigned_seq.tsv FILE, BUT THEY ARE NOT.\nHERE THEY ARE:\n", paste0(df$clone_id, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
                 }
             }
             if(seq_kind == "ALL"){
