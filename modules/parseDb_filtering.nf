@@ -9,11 +9,10 @@ process ParseDb_filtering {
 
     input:
     tuple path(db_pass_ch), val(nlines) // parallelization expected
-    val nb_igblast
+
 
     when:
-    nb_igblast > 0
-    nlines > 1
+    nlines > 1 // over 1 means "more than header only"
 
     output:
     path "productive_seq_init.tsv", emit: productive_ch

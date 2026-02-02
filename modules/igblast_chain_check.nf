@@ -12,11 +12,9 @@ process Igblast_chain_check {
     val igblast_j_ref_files 
     val igblast_constant_ref_files 
     path cute_file
-    val nb_productive
 
     when:
-    nb_productive > 0
-    nlines > 1
+    nlines > 1 // over 1 means "more than header only"
 
     output:
     path "selected.tsv", emit: checked_tsv_ch

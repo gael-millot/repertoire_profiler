@@ -434,7 +434,7 @@ workflow {
         if(x != 'NO_FILE'){
             n = x.countLines() - 1   // here `x` is a Path, so it exists
             if(n == -1){
-                throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nIGBLAST FILE EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Igblast_query PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nIGBLAST FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Igblast_query PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
             }
             if(n == 0){
                 throw new IllegalStateException("\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE Igblast_query PROCESS.\n\nCHECK THAT THE\nigblast_organism\nigblast_loci\nigblast_B_heavy_chain\nigblast_B_lambda_chain\nigblast_B_kappa_chain\nigblast_T_alpha_chain\nigblast_T_beta_chain\nigblast_T_gamma_chain\nigblast_T_delta_chain\nARE CORRECTLY SET IN THE nextflow.config FILE.\n\n========\n\n")
@@ -443,7 +443,7 @@ workflow {
         if(unx != 'NO_FILE'){
             n = unx.countLines() - 1   // here `x` is a Path, so it exists
             if(n == -1){
-                throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nFAILED IGBLAST FILE EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Igblast_query PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nFAILED IGBLAST FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Igblast_query PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
             }
         }
     }
@@ -461,8 +461,7 @@ workflow {
 
 
         ParseDb_filtering(
-            Igblast_query.out.db_pass_ch.map{file -> nlines = file.text.readLines().size() ; tuple(file, nlines)}, 
-            nb_igblast
+            Igblast_query.out.db_pass_ch.map{file -> nlines = file.text.readLines().size() ; tuple(file, nlines)}
         )
         productive_ch1 = ParseDb_filtering.out.productive_ch.collectFile(name: "productive_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
         unproductive_ch1 = ParseDb_filtering.out.unproductive_ch.collectFile(name: "unproductive_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
@@ -476,7 +475,7 @@ workflow {
             if(x != 'NO_FILE'){
                 n = x.countLines() - 1   // here `x` is a Path, so it exists
                 if(n == -1){
-                    throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nPRODUCTIVE FILE EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE ParseDb_filtering PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                    throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nPRODUCTIVE FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE ParseDb_filtering PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
                 }
                 if(n == 0){
                     warn = "\n\nWARNING:\n0 PRODUCTIVE SEQUENCE FOLLOWING THE ParseDb_filtering PROCESS.\nWORFLOW ENDED.\nSEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
@@ -487,7 +486,7 @@ workflow {
             if(unx != 'NO_FILE'){
                 n = unx.countLines() - 1   // here `x` is a Path, so it exists
                 if(n == -1){
-                    throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nUNPRODUCTIVE FILE EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE ParseDb_filtering PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                    throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nUNPRODUCTIVE FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE ParseDb_filtering PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
                 }
             }
         }
@@ -509,8 +508,7 @@ workflow {
                 igblast_d_ref_files, 
                 igblast_j_ref_files, 
                 igblast_constant_ref_files, 
-                cute_file,
-                nb_productive.first()
+                cute_file
             )
             check_ch1 = Igblast_chain_check.out.checked_tsv_ch.collectFile(name: "wanted_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
             uncheck_ch1 = Igblast_chain_check.out.not_checked_tsv_ch.collectFile(name: "unwanted_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
@@ -524,7 +522,7 @@ workflow {
                 if(x != 'NO_FILE'){
                     n = x.countLines() - 1   // here `x` is a Path, so it exists
                     if(n == -1){
-                        throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nWANTED FILE EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Igblast_chain_check PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                        throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nWANTED FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Igblast_chain_check PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
                     }
                     if(n == 0){
                         warn = "\n\nWARNING:\n0 WANTED SEQUENCE FOLLOWING THE Igblast_chain_check PROCESS.\n\nCHECK THAT THE\nigblast_organism\nigblast_loci\nigblast_B_heavy_chain\nigblast_B_lambda_chain\nigblast_B_kappa_chain\nigblast_T_alpha_chain\nigblast_T_beta_chain\nigblast_T_gamma_chain\nigblast_T_delta_chain\nARE CORRECTLY SET IN THE nextflow.config FILE.\n\nWORFLOW ENDED.\nSEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
@@ -535,7 +533,7 @@ workflow {
                 if(unx != 'NO_FILE'){
                     n = unx.countLines() - 1   // here `x` is a Path, so it exists
                     if(n == -1){
-                        throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nUNWANTED FILE EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE igblast_B_heavy_chain PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                        throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nUNWANTED FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE igblast_B_heavy_chain PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
                     }
                 }
             }
@@ -552,8 +550,7 @@ workflow {
             // when: nb_wanted > 0
 
                 TrimTranslate(
-                    Igblast_chain_check.out.checked_tsv_ch.map{file -> nlines = file.text.readLines().size() ; tuple(file, nlines)},
-                    nb_wanted.first()
+                    Igblast_chain_check.out.checked_tsv_ch.map{file -> nlines = file.text.readLines().size() ; tuple(file, nlines)}
                 )
                 //TrimTranslate.out.trimtranslate_ch.count().subscribe {n -> if ( n == 0 ){error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nO SEQUENCE RETURNED FOLLOWING THE TrimTranslate PROCESS\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"}} // n is number of items in channel because of .count()
                 trimtranslate_ch2 = TrimTranslate.out.trimtranslate_ch.collectFile(name: "trimtranslate.tsv", skip: 1, keepHeader: true) // wanted file with column sequence_alignment_aa added  // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
@@ -648,21 +645,21 @@ workflow {
                     meta_file,
                     meta_legend
                 )
-                // Clone_assignment.out.clone_ch.view()
-                // nb_failed_clone = Clone_assignment.out.failed_clone_ch.map {file -> file.countLines() == 0 ? 0: file.countLines() - 1} // either failed_clone_assigned_seq.tsv is empty (no lines) or has a header to remove to count the lines
-                nb_clone_unassignment = nb_clone_unassignment.mix(Clone_assignment.out.failed_clone_ch.countLines() - 1) // Minus 1 because 1st line = column names // either failed_clone_assigned_seq.tsv is empty (no lines) or has a header to remove to count the lines
-                nb_clone_assignment = nb_clone_assignment.mix(Clone_assignment.out.clone_ch.countLines() - 1) // -1 for the header
-                nb_clone_unassignment = nb_clone_unassignment.mix(Clone_assignment.out.failed_clone_ch.countLines() - 1) // -1 for the header
-                check_check = check_ch1.ifEmpty {'NO_FILE'}   // marker \ue202turn0search2
-                check_uncheck = uncheck_ch1.ifEmpty {'NO_FILE'}   // marker \ue202turn0search2
-                check_check.combine(check_uncheck).subscribe {x,unx -> 
+                assign_ch1 = Clone_assignment.out.clone_ch // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
+                unassign_ch1 = Clone_assignment.out.failed_clone_ch // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
+                unassign_ch1.collectFile(name: "failed_clone_assigned_seq.tsv", skip: 1, keepHeader: true).subscribe{it -> it.copyTo("${out_path}/tsv")}
+                nb_clone_assignment = nb_clone_assignment.mix(assign_ch1.countLines() - 1) // -1 for the header
+                nb_clone_unassignment = nb_clone_unassignment.mix(unassign_ch1.countLines() - 1) // -1 for the header
+                check_assign = assign_ch1.ifEmpty {'NO_FILE'}   // marker \ue202turn0search2
+                check_unassign = unassign_ch1.ifEmpty {'NO_FILE'}   // marker \ue202turn0search2
+                check_assign.combine(check_unassign).subscribe {x,unx -> 
                     if(x != 'NO_FILE'){
                         n = x.countLines() - 1   // here `x` is a Path, so it exists
                         if(n == -1){
-                            throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nWANTED FILE EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Igblast_chain_check PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                            throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nASSIGNMENT FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Clone_assignment PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
                         }
                         if(n == 0){
-                            warn = "\n\nWARNING:\n0 WANTED SEQUENCE FOLLOWING THE Igblast_chain_check PROCESS.\n\nCHECK THAT THE\nigblast_organism\nigblast_loci\nigblast_B_heavy_chain\nigblast_B_lambda_chain\nigblast_B_kappa_chain\nigblast_T_alpha_chain\nigblast_T_beta_chain\nigblast_T_gamma_chain\nigblast_T_delta_chain\nARE CORRECTLY SET IN THE nextflow.config FILE.\n\nWORFLOW ENDED.\nSEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
+                            warn = "\n\nWARNING:\n0 ASSIGNED SEQUENCE FOLLOWING THE Clone_assignment PROCESS.\n\nGERMLINE SEQUENCE & TREE PARTS OF THE WORFLOW ENDED.\nSEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
                             print(warn)
                             warning_ch = warning_ch.mix(Channel.value(warn)) // accumulate
                         }
@@ -670,165 +667,218 @@ workflow {
                     if(unx != 'NO_FILE'){
                         n = unx.countLines() - 1   // here `x` is a Path, so it exists
                         if(n == -1){
-                            throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nUNWANTED FILE EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE igblast_B_heavy_chain PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                            throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nUNASSIGNMENT FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Clone_assignment PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
                         }
                     }
                 }
-                nb_productive.combine(nb_wanted).combine(nb_unwanted).subscribe{n,n1,n2 -> 
+                nb_wanted.combine(nb_clone_assignment).combine(nb_clone_unassignment).subscribe{n,n1,n2 -> 
                     if(n != -1 && n1 != -1 && n2 != -1){
                         if(n != n1 + n2){
-                            throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF LINES IN THE wanted_seq.tsv (${n1}) AND unwanted_seq.tsv (${n2}) IS NOT EQUAL TO THE NUMBER OF LINES IN productive_seq.tsv (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                            throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF LINES IN THE ASSIGNMENT FILE (${n1}) AND failed_clone_assigned_seq.tsv (${n2}) IS NOT EQUAL TO THE NUMBER OF LINES IN wanted_seq.tsv (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
                         }
                     }
                 }
 
 
-                // when: nb_wanted > 0
+                // when: nb_clone_assignment > 0
 
-                Split_by_clones(
-                    Clone_assignment.out.clone_ch
-                )
-
-
-                Closest_germline(
-                    Split_by_clones.out.clone_split_ch.flatten(), // flatten split the list into several objects (required for parallelization)
-                    igblast_organism, 
-                    igblast_variable_ref_files, 
-                    clone_germline_kind,
-                    meta_file,
-                    meta_legend
-                )
-                failed_clonal_germline_file = Closest_germline.out.failed_clonal_germline_ch.collectFile(name: "failed_clonal_germline_seq.tsv", skip: 1, keepHeader: true)
-                failed_clonal_germline_file.subscribe{it -> it.copyTo("${out_path}/tsv")} // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
-                nb_clone_ungermline = nb_clone_ungermline.mix(failed_clonal_germline_file.countLines() - 1)
-                nb_unclone_tot = nb_unclone_tot.mix(nb_clone_ungermline.combine(nb_clone_unassignment).map{new_count, old_count -> new_count + old_count}) // to add the two kind of failure
-                copyLogFile('Closest_germline.log', Closest_germline.out.closest_log_ch, out_path)
+                    Split_by_clones(
+                        Clone_assignment.out.clone_ch.map{file -> nlines = file.text.readLines().size() ; tuple(file, nlines)}
+                    )
 
 
-
-                Igblast_germline_coords( // module igblast_germline.nf
-                    Closest_germline.out.closest_ch, // no ifEmpty{error} because can be empty for some of the parallelized processes
-                    igblast_organism, 
-                    igblast_loci
-                )
-                copyLogFile('Igblast_germline_coords_report.log', Igblast_germline_coords.out.log_ch, out_path)
-
-
-
-                AddGermlineSequences(
-                    Igblast_germline_coords.out.germline_coords_ch,
-                    igblast_organism, 
-                    igblast_variable_ref_files
-                )
-                copyLogFile('AddGermlineSequences.log', AddGermlineSequences.out.add_germ_log_ch, out_path)
-
-
-
-                TranslateGermline(
-                    AddGermlineSequences.out.add_germ_ch
-                )
-                TranslateGermline.out.translate_germ_log_ch.collectFile(name: "translateGermline.log").subscribe{it -> it.copyTo("${out_path}/reports")}
-                warning_ch = warning_ch.mix(TranslateGermline.out.translate_germ_warn_ch.filter{file(it).exists()}.map{file -> file.text}) //  file.text = contenu du fichier) // accumulate
-
-
-
-                Mutation_load_germ_genes(
-                    TranslateGermline.out.translate_germ_ch,
-                    meta_file, 
-                    meta_legend,
-                    clone_mut_obs_seq,
-                    clone_mut_germ_seq,
-                    clone_mut_regionDefinition
-                )
-                clone_assigned_seq_ch = Mutation_load_germ_genes.out.mutation_load_ch.collectFile(name: "clone_assigned_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
-                nb_clone_tot = nb_clone_tot.mix(clone_assigned_seq_ch.countLines() - 1) // Minus 1 because 1st line = column names
-                clone_assigned_seq_ch.subscribe{it -> it.copyTo("${out_path}/tsv")}
-                clone_assigned_seq_filtered_ch = Mutation_load_germ_genes.out.mutation_load_ch.filter{file -> file.countLines() > align_clone_nb.toInteger() } // Only keep clonal groups that have a number of sequences superior to align_clone_nb (variable defined in nextflow.config) 
-                copyLogFile('mutation_load_germ_genes.log', Mutation_load_germ_genes.out.mutation_load_log_ch, out_path)
-
-
-
-                Clone_id_count(
-                    clone_assigned_seq_ch
-                )
+                    Closest_germline(
+                        Split_by_clones.out.clone_split_ch.flatten(), // flatten split the list into several objects (required for parallelization)
+                        igblast_organism, 
+                        igblast_variable_ref_files, 
+                        clone_germline_kind,
+                        meta_file,
+                        meta_legend
+                    )
+                    closest_ch1 = Closest_germline.out.closest_ch.collectFile(name: "closest_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
+                    unclosest_ch1 = Closest_germline.out.failed_clonal_germline_ch.collectFile(name: "failed_clonal_germline_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
+                    // closest_ch1.subscribe{it -> it.copyTo("${out_path}/tsv")} // nothing if no file // not now
+                    unclosest_ch1.subscribe{it -> it.copyTo("${out_path}/tsv")}
+                    nb_clone_germline = nb_clone_germline.mix(closest_ch1.countLines() - 1) // -1 for the header
+                    nb_clone_ungermline = nb_clone_ungermline.mix(unclosest_ch1.countLines() - 1) // -1 for the header
+                    check_closest = closest_ch1.ifEmpty {'NO_FILE'}   // marker \ue202turn0search2
+                    check_unclosest = unclosest_ch1.ifEmpty {'NO_FILE'}   // marker \ue202turn0search2
+                    check_closest.combine(check_unclosest).subscribe {x,unx -> 
+                        if(x != 'NO_FILE'){
+                            n = x.countLines() - 1   // here `x` is a Path, so it exists
+                            if(n == -1){
+                                throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nCLOSEST GERMLINE FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Closest_germline PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                            }
+                            if(n == 0){
+                                warn = "\n\nWARNING:\n0 CLOSEST GERMLINE SEQUENCE FOLLOWING THE Closest_germline PROCESS.\n\nGERMLINE SEQUENCE & TREE PARTS OF THE WORFLOW ENDED.\nSEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
+                                print(warn)
+                                warning_ch = warning_ch.mix(Channel.value(warn)) // accumulate
+                            }
+                        }
+                        if(unx != 'NO_FILE'){
+                            n = unx.countLines() - 1   // here `x` is a Path, so it exists
+                            if(n == -1){
+                                throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nUNCLOSEST FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Closest_germline PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                            }
+                        }
+                    }
+                    nb_clone_assignment.combine(nb_clone_germline).combine(nb_clone_ungermline).subscribe{n,n1,n2 -> 
+                        if(n != -1 && n1 != -1 && n2 != -1){
+                            if(n != n1 + n2){
+                                throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF LINES IN THE CLOSEST GERMLINE FILE (${n1}) AND failed_clonal_germline_seq.tsv (${n2}) IS NOT EQUAL TO THE NUMBER OF LINES IN THE CLONE ASSIGNMENT FILE (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                            }
+                        }
+                    }
+                    copyLogFile('Closest_germline.log', Closest_germline.out.closest_log_ch, out_path)
 
 
+                    // when: nb_clone_germline > 0
 
-                /*
+                        Igblast_germline_coords( // module igblast_germline.nf
+                            Closest_germline.out.closest_ch.map{tsv, fasta -> tsv_nlines = tsv.text.readLines().size() ; tuple(tsv, fasta, tsv_nlines)}, // no ifEmpty{error} because can be empty for some of the parallelized processes
+                            igblast_organism, 
+                            igblast_loci
+                        )
+                        copyLogFile('Igblast_germline_coords_report.log', Igblast_germline_coords.out.log_ch, out_path)
 
-                get_germ_tree(
-                    Mutation_load_germ_genes.out.mutation_load_ch,
-                    meta_file, // first() because get_germ_tree process is a parallele one and because meta_file is single
-                    cute_file, 
-                    align_clone_nb,
-                    germ_tree_duplicate_seq,
-                    igphylm_exe_path
-                )
-                
-                get_germ_tree.out.rdata_germ_tree_ch.count().subscribe {n -> if ( n == 0 ){
-                    print("\n\nWARNING:\nEMPTY OUTPUT FOLLOWING THE get_germ_tree PROCESS -> NO TREE RETURNED\n\n")
-                }}
-                rdata_germ_tree_ch2 = get_germ_tree.out.rdata_germ_tree_ch.collect()
-                //rdata_germ_tree_ch2.view()
 
-                get_germ_tree.out.no_germ_tree_ch.count().subscribe {n -> if ( n == 0 ){
-                    print("\n\nWARNING:\nALL SEQUENCES IN TREES FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_dismissed_seq.tsv FILE RETURNED\n\n")
-                }}
-                no_germ_tree_ch2 = get_germ_tree.out.no_germ_tree_ch.collectFile(name: "germ_tree_dismissed_seq.tsv", skip: 1, keepHeader: true)
-                no_germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
-
-                get_germ_tree.out.germ_tree_ch.count().subscribe {n -> if ( n == 0 ){
-                    print("\n\nWARNING:\nNO SEQUENCES IN TREES FOLLOWING THE get_germ_tree PROCESS -> EMPTY seq_for_germ_tree.tsv FILE RETURNED\n\n")
-                }}
-                germ_tree_ch2 = get_germ_tree.out.germ_tree_ch.collectFile(name: "seq_for_germ_tree.tsv", skip: 1, keepHeader: true)
-                // germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
-                germ_tree_ch3 = get_germ_tree.out.germ_tree_ch.flatten().filter{file -> file.countLines() > align_clone_nb.toInteger() }
-
-                get_germ_tree.out.no_cloneID_ch.count().subscribe {n -> if ( n == 0 ){
-                    print("\n\nWARNING:\nALL SEQUENCES IN CLONAL GROUP FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_dismissed_clone_id.tsv FILE RETURNED\n\n")
-                }}
-                no_cloneID_ch2 = get_germ_tree.out.no_cloneID_ch.collectFile(name: "germ_tree_dismissed_clone_id.tsv")
-                no_cloneID_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
-
-                get_germ_tree.out.cloneID_ch.count().subscribe {n -> if ( n == 0 ){
-                    print("\n\nWARNING:\nNO CLONAL GROUP FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_clone_id.tsv and germ_tree.pdf FILES RETURNED\n\n")
-                }}
-                cloneID_ch2 = get_germ_tree.out.cloneID_ch.collectFile(name: "germ_tree_clone_id.tsv")
-                cloneID_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
-
-                get_germ_tree.out.get_germ_tree_log_ch.collectFile(name: "get_germ_tree.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
+                        AddGermlineSequences(
+                            Igblast_germline_coords.out.germline_coords_ch,
+                            igblast_organism, 
+                            igblast_variable_ref_files
+                        )
+                        copyLogFile('AddGermlineSequences.log', AddGermlineSequences.out.add_germ_log_ch, out_path)
 
 
 
-                germ_tree_vizu(
-                    rdata_germ_tree_ch2,
-                    germ_tree_kind,
-                    align_clone_nb,
-                    germ_tree_duplicate_seq,
-                    germ_tree_leaf_color,
-                    germ_tree_leaf_shape,
-                    germ_tree_leaf_size,
-                    germ_tree_label_size,
-                    germ_tree_label_hjust,
-                    germ_tree_label_rigth,
-                    germ_tree_label_outside,
-                    germ_tree_right_margin,
-                    germ_tree_legend,
-                    clone_assigned_seq_ch, // may be add .first()
-                    meta_file, 
-                    meta_legend,
-                    cute_file
-                )
-                germ_tree_vizu.out.germ_tree_vizu_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE germ_tree_vizu PROCESS\n\n========\n\n"}
-                //germ_tree_vizu.out.germ_tree_vizu_ch.count().subscribe {n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE germ_tree_vizu PROCESS\n\n========\n\n"}}
-                germ_tree_vizu.out.germ_tree_dup_seq_not_displayed_ch.ifEmpty{
-                    print("\n\nWARNING:\n-> NO germ_tree_dup_seq_not_displayed.tsv FILE RETURNED\n\n")
-                }
-                germ_tree_dup_seq_not_displayed_ch2 = germ_tree_vizu.out.germ_tree_dup_seq_not_displayed_ch.flatten().collectFile(name: "germ_tree_dup_seq_not_displayed.tsv", skip: 1, keepHeader: true) // flatten split the list into several objects which is required by collectFile()
-                germ_tree_dup_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
+                        TranslateGermline(
+                            AddGermlineSequences.out.add_germ_ch
+                        )
+                        TranslateGermline.out.translate_germ_log_ch.collectFile(name: "translateGermline.log").subscribe{it -> it.copyTo("${out_path}/reports")}
+                        warning_ch = warning_ch.mix(TranslateGermline.out.translate_germ_warn_ch.filter{file(it).exists()}.map{file -> file.text}) //  file.text = contenu du fichier) // accumulate
 
-                */
 
+
+                        Mutation_load_germ_genes(
+                            TranslateGermline.out.translate_germ_ch,
+                            meta_file, 
+                            meta_legend,
+                            clone_mut_obs_seq,
+                            clone_mut_germ_seq,
+                            clone_mut_regionDefinition
+                        )
+                        clone_assigned_seq_ch = Mutation_load_germ_genes.out.mutation_load_ch.collectFile(name: "clone_assigned_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
+                        clone_assigned_seq_ch.subscribe{it -> it.copyTo("${out_path}/tsv")}
+                        nb_clone_tot = nb_clone_tot.mix(clone_assigned_seq_ch.countLines() - 1) // -1 for the header
+                        nb_unclone_tot = nb_unclone_tot.mix(nb_clone_unassignment.combine(nb_clone_ungermline).map{n1,n2 -> n1 + n2}) // -1 for the header
+                        check_clone_tot = clone_assigned_seq_ch.ifEmpty {'NO_FILE'}   // marker \ue202turn0search2
+                        check_clone_tot.subscribe {x -> 
+                            if(x != 'NO_FILE'){
+                                n = x.countLines() - 1   // here `x` is a Path, so it exists
+                                if(n == -1){
+                                    throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nclone_assigned_seq.tsv FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Mutation_load_germ_genes PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                                }
+                                if(n == 0){
+                                    warn = "\n\nWARNING:\n0 CLONAL SEQUENCE FOLLOWING THE Mutation_load_germ_genes PROCESS.\n\nGERMLINE SEQUENCE & TREE PARTS OF THE WORFLOW ENDED.\nSEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
+                                    print(warn)
+                                    warning_ch = warning_ch.mix(Channel.value(warn)) // accumulate
+                                }
+                            }
+                        }
+                        nb_wanted.combine(nb_clone_tot).combine(nb_unclone_tot).subscribe{n,n1,n2 -> 
+                            if(n != -1 && n1 != -1 && n2 != -1){
+                                if(n != n1 + n2){
+                                    throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF LINES IN THE clone_assigned_seq.tsv FILE (${n1}) AND failed_clone_assigned_seq.tsv + failed_clonal_germline_seq.tsv (${n2}) IS NOT EQUAL TO THE NUMBER OF LINES IN THE wanted_seq.tsv FILE (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                                }
+                            }
+                        }
+                        clone_assigned_seq_filtered_ch = clone_assigned_seq_ch.filter{file -> file.countLines() > align_clone_nb.toInteger() } // Only keep clonal groups that have a number of sequences superior to align_clone_nb (variable defined in nextflow.config) 
+                        copyLogFile('mutation_load_germ_genes.log', Mutation_load_germ_genes.out.mutation_load_log_ch, out_path)
+
+
+
+                        Clone_id_count(
+                            clone_assigned_seq_ch
+                        )
+
+                    // end when: nb_clone_germline > 0
+
+                    /*
+
+                    get_germ_tree(
+                        Mutation_load_germ_genes.out.mutation_load_ch,
+                        meta_file, // first() because get_germ_tree process is a parallele one and because meta_file is single
+                        cute_file, 
+                        align_clone_nb,
+                        germ_tree_duplicate_seq,
+                        igphylm_exe_path
+                    )
+                    
+                    get_germ_tree.out.rdata_germ_tree_ch.count().subscribe {n -> if ( n == 0 ){
+                        print("\n\nWARNING:\nEMPTY OUTPUT FOLLOWING THE get_germ_tree PROCESS -> NO TREE RETURNED\n\n")
+                    }}
+                    rdata_germ_tree_ch2 = get_germ_tree.out.rdata_germ_tree_ch.collect()
+                    //rdata_germ_tree_ch2.view()
+
+                    get_germ_tree.out.no_germ_tree_ch.count().subscribe {n -> if ( n == 0 ){
+                        print("\n\nWARNING:\nALL SEQUENCES IN TREES FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_dismissed_seq.tsv FILE RETURNED\n\n")
+                    }}
+                    no_germ_tree_ch2 = get_germ_tree.out.no_germ_tree_ch.collectFile(name: "germ_tree_dismissed_seq.tsv", skip: 1, keepHeader: true)
+                    no_germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
+
+                    get_germ_tree.out.germ_tree_ch.count().subscribe {n -> if ( n == 0 ){
+                        print("\n\nWARNING:\nNO SEQUENCES IN TREES FOLLOWING THE get_germ_tree PROCESS -> EMPTY seq_for_germ_tree.tsv FILE RETURNED\n\n")
+                    }}
+                    germ_tree_ch2 = get_germ_tree.out.germ_tree_ch.collectFile(name: "seq_for_germ_tree.tsv", skip: 1, keepHeader: true)
+                    // germ_tree_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
+                    germ_tree_ch3 = get_germ_tree.out.germ_tree_ch.flatten().filter{file -> file.countLines() > align_clone_nb.toInteger() }
+
+                    get_germ_tree.out.no_cloneID_ch.count().subscribe {n -> if ( n == 0 ){
+                        print("\n\nWARNING:\nALL SEQUENCES IN CLONAL GROUP FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_dismissed_clone_id.tsv FILE RETURNED\n\n")
+                    }}
+                    no_cloneID_ch2 = get_germ_tree.out.no_cloneID_ch.collectFile(name: "germ_tree_dismissed_clone_id.tsv")
+                    no_cloneID_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
+
+                    get_germ_tree.out.cloneID_ch.count().subscribe {n -> if ( n == 0 ){
+                        print("\n\nWARNING:\nNO CLONAL GROUP FOLLOWING THE get_germ_tree PROCESS -> EMPTY germ_tree_clone_id.tsv and germ_tree.pdf FILES RETURNED\n\n")
+                    }}
+                    cloneID_ch2 = get_germ_tree.out.cloneID_ch.collectFile(name: "germ_tree_clone_id.tsv")
+                    cloneID_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
+
+                    get_germ_tree.out.get_germ_tree_log_ch.collectFile(name: "get_germ_tree.log").subscribe{it -> it.copyTo("${out_path}/reports")} // 
+
+
+
+                    germ_tree_vizu(
+                        rdata_germ_tree_ch2,
+                        germ_tree_kind,
+                        align_clone_nb,
+                        germ_tree_duplicate_seq,
+                        germ_tree_leaf_color,
+                        germ_tree_leaf_shape,
+                        germ_tree_leaf_size,
+                        germ_tree_label_size,
+                        germ_tree_label_hjust,
+                        germ_tree_label_rigth,
+                        germ_tree_label_outside,
+                        germ_tree_right_margin,
+                        germ_tree_legend,
+                        clone_assigned_seq_ch, // may be add .first()
+                        meta_file, 
+                        meta_legend,
+                        cute_file
+                    )
+                    germ_tree_vizu.out.germ_tree_vizu_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE germ_tree_vizu PROCESS\n\n========\n\n"}
+                    //germ_tree_vizu.out.germ_tree_vizu_ch.count().subscribe {n -> if ( n == 0 ){error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE germ_tree_vizu PROCESS\n\n========\n\n"}}
+                    germ_tree_vizu.out.germ_tree_dup_seq_not_displayed_ch.ifEmpty{
+                        print("\n\nWARNING:\n-> NO germ_tree_dup_seq_not_displayed.tsv FILE RETURNED\n\n")
+                    }
+                    germ_tree_dup_seq_not_displayed_ch2 = germ_tree_vizu.out.germ_tree_dup_seq_not_displayed_ch.flatten().collectFile(name: "germ_tree_dup_seq_not_displayed.tsv", skip: 1, keepHeader: true) // flatten split the list into several objects which is required by collectFile()
+                    germ_tree_dup_seq_not_displayed_ch2.subscribe{it -> it.copyTo("${out_path}/tsv")}
+
+                    */
+
+                // end when: nb_clone_assignment > 0
 
                 tempo1_ch = Channel.of("all", "annotated", "tree") // 1 channel with 3 values (not list)
                 tempo2_ch = Data_assembly.out.wanted_ch.mix(Data_assembly.out.wanted_ch.mix(clone_assigned_seq_ch)) // 1 channel with 3 paths (do not use flatten() -> not list)

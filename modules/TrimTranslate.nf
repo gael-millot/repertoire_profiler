@@ -14,11 +14,9 @@ process TrimTranslate {
 
     input:
     tuple path(checked_tsv_ch), val(nlines) // parallelization
-    val nb_wanted
 
     when:
-    nb_wanted > 0
-    nlines > 1
+    nlines > 1 // over 1 means "more than header only"
 
     output:
     path "trimtranslate.tsv", emit: trimtranslate_ch // productive file with column sequence_alignment_aa added

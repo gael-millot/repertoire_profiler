@@ -5,7 +5,10 @@ process Split_by_clones { // split the file into multiple files according to the
     cache 'true'
 
     input:
-    path clone_ch // no parallelization
+    tuple path(clone_ch), val(nlines) // no parallelization
+
+    when:
+    nlines > 1 // over 1 means "more than header only"
 
     output:
     path "*_wanted_seq_clone-pass.tsv", emit: clone_split_ch // multiple files -> parall expected

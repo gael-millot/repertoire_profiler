@@ -5,9 +5,12 @@ process Igblast_germline_coords {
     cache 'true'
 
     input:
-    tuple path(tsv), path(fasta) // parallelization expected (for each fasta file)
+    tuple path(tsv), path(fasta), val(tsv_nlines) // parallelization expected (for each fasta file)
     val igblast_organism
     val igblast_loci
+
+    when:
+    tsv_nlines > 1 // over 1 means "more than header only"
 
     output:
     path "with_germ_coords.tsv", emit: germline_coords_ch
