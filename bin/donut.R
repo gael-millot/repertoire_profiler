@@ -338,7 +338,7 @@ if( ! file.exists(file_name)){
     stop(paste0("\n\n================\n\n", tempo$text, "\n\n================\n\n"), call. = FALSE)
 }
 
-tempo <- fun_check(data = kind, options = c("all", "tree", "annotated"), length = 1) ; eval(ee)
+tempo <- fun_check(data = kind, options = c("all", "clone", "annotated"), length = 1) ; eval(ee)
 if(tempo$problem == TRUE){
     stop(paste0("\n\n================\n\n", tempo$text, "\n\n================\n\n"), call. = FALSE)
 }
@@ -353,7 +353,7 @@ if(donut_palette == "NULL"){
 }
 donut_hole_size <- as.numeric(donut_hole_size) # numeric string already checked by nextflow
 if( ! (length(donut_hole_text) == 1 & any(donut_hole_text %in% c("TRUE", "FALSE")))){ # positive numeric
-    tempo.cat <- paste0("ERROR IN donut.R:\nTHE tree_label_size PARAMETER MUST BE \"TRUE\" OR \"FALSE\"\nHERE IT IS: \n", paste0(donut_hole_text, collapse = " "))
+    tempo.cat <- paste0("ERROR IN donut.R:\nTHE donut_hole_text PARAMETER MUST BE \"TRUE\" OR \"FALSE\"\nHERE IT IS: \n", paste0(donut_hole_text, collapse = " "))
     text.check2 <- c(text.check2, tempo.cat)
     arg.check2 <- c(arg.check2, TRUE)
 }else if(donut_hole_text == "TRUE"){
@@ -449,9 +449,9 @@ tempo.title <- paste0(
             kind
         ), 
         ifelse(
-            kind == "tree", 
+            kind == "clone", 
             paste0(
-                "Donut plot of the sequences in trees (see the corresponding germ_tree_seq.tsv), grouped by same ", type_text, "\n\n",
+                "Donut plot of the sequences in clones (see the corresponding clone_assigned_seq.tsv), grouped by same ", type_text, "\n\n",
                 "Kind of sequences: ",
                 kind
             ), 
@@ -462,7 +462,7 @@ tempo.title <- paste0(
                     "Kind of sequences: ",
                     kind
                 ), 
-                stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 4 IN donut.R for kind THAT CAN ONLY BE \"all\", \"annotated\" OR \"tree\".\nHER IT IS: ", kind, "\n\n================\n\n"))
+                stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 4 IN donut.R for kind THAT CAN ONLY BE \"all\", \"annotated\" OR \"clone\".\nHER IT IS: ", kind, "\n\n================\n\n"))
             )
         )
     )
@@ -473,7 +473,7 @@ loci <- sapply(repertoire_names_ch, extract_chain)
 chain <- unique(loci[!is.na(loci)]) # extract the IGH or IGK name (ignoring NA values)
 
 if(nrow(obs) > 0){
-    if(kind == "tree"){
+    if(kind == "clone"){
         if (col == "vj_allele") {
             tempo.primary <- obs$germline_v_call
             tempo.secondary <- obs$germline_j_call
@@ -624,7 +624,7 @@ if(nrow(obs) > 0){
         "Proportions of sequences with the indicated ", type_text, " are indicated in the legend, after the labels.\n", 
         "The total number of non NA ", type_text, " detected is indicated in the center of the donut.\n",
         "See the donut_stats.tsv file for the complete stats.\n", 
-        "Number of sequences selected (depending on \"all\", \"annotated\" or \"tree\"): ",
+        "Number of sequences selected (depending on \"all\", \"annotated\" or \"clone\"): ",
         nb_total,
         ".\nNumber of NA removed from the ", type_text, " among the selected number of sequences: ",
         nb_na,
@@ -695,7 +695,7 @@ if(nrow(obs) > 0){
 
 
 
-################ end Plotting tree
+################ end Plotting
 
 ################ saving plots
 

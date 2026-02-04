@@ -195,7 +195,7 @@ if(nb_wanted == -1){
 ```
 Description of the folders and files can be found [here](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output)
 <br>
-The <i>[nextflow.config](./reports/nextflow.config.html)</i> file mentioned here is the one gathering all the parameters set for the present analysis. It is saved in the [reports](./reports) folder.
+The <i>[nextflow.config](./reports/nextflow.config.html)</i> file mentioned here is the one gathering all the parameters set for the present analysis. A copy is saved in the [reports](./reports) folder.
 <br><br>
 
 ### Initial dataset
@@ -204,7 +204,7 @@ Number of initial input sequences: ```r nb_input```
 
 <br><br>
 
-### Igblast sequence annotation
+### Sequence annotation using Igblast
 
 
 Number of annotated sequences: ```r nb_igblast```
@@ -343,12 +343,11 @@ No productive sequence detected.
 if(nb_wanted > 0){
     cat(paste0('
 
-Compilation of the [wanted_seq.tsv](./tsv) file (and also of the [clone_assigned_seq.tsv](./tsv) file for the donut plots).
+Compilation of the [wanted_seq.tsv](./tsv) file.
 
 <br>
 
 #### Heatmaps
-
 <br>
 Click on a figure to enlarge. Reclick to go back to the report.
 <br>
@@ -373,7 +372,6 @@ Warning: only the first annotation is considered if several are presents in the 
     cat(paste0('
 
 #### Donut plots
-
 <br>
 Click on a figure to enlarge. Reclick to go back to the report.
 <br>
@@ -390,18 +388,12 @@ Warning: only the first annotation is considered if several are presents in the 
     if(file.exists("vj_gene_annotated_donutchart.png")){
         cat('<img src="vj_gene_annotated_donutchart.png" onclick="toggleFullscreen(this)" style="border: 1px solid black"/>')
     }
-    if(file.exists("vj_gene_tree_donutchart.png")){
-        cat('<img src="vj_gene_tree_donutchart.png" onclick="toggleFullscreen(this)" style="border: 1px solid black"/>')
-    }
     cat('</div><div class="image-container">')
     if(file.exists("c_gene_all_donutchart.png")){
         cat('<img src="c_gene_all_donutchart.png" onclick="toggleFullscreen(this)" style="border: 1px solid black"/>')
     }
     if(file.exists("c_gene_annotated_donutchart.png")){
         cat('<img src="c_gene_annotated_donutchart.png" onclick="toggleFullscreen(this)" style="border: 1px solid black"/>')
-    }
-    if(file.exists("c_gene_tree_donutchart.png")){
-        cat('<img src="c_gene_tree_donutchart.png" onclick="toggleFullscreen(this)" style="border: 1px solid black"/>')
     }
     cat('</div><br><br><br>')
 }else{
@@ -424,6 +416,11 @@ if(nb_wanted > 0){
     cat(paste0('
 **Clone-assigned sequences** are wanted sequences with additionnal features:<br><ul><li>germline clustering (clone ID).<br></li><li>inference of clonal germline sequence (different from the sequence germline inference).<br></li><li>mutation load.<br></ul><br>
 Clonal prediction aims to gather all the sequences that putatively come from a same germline cell. See <a href="https://changeo.readthedocs.io/en/stable/examples/cloning.html#assigning-clones">here</a>, <a href="https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette/">here</a> and <a href="https://genomemedicine.biomedcentral.com/articles/10.1186/s13073-015-0243-2">this article</a> for details. In summary, it follows these steps:<br><ul><li>grouping the sequences according to "same V, J and junction length" (to facilitate the distance computation).<br></li><li>for each group, 2x2 distance computation using by default (<code>clone_model</code> and <code>clone_normalize</code> parameters of the <i>nextflow.config</i> file) the <a href="https://biology.stackexchange.com/questions/23523/hamming-distance-between-two-dna-strings">Hamming distance</a>.<br></li><li>cutoff definition.<br></li><li>using the cutoff (<code>clone_distance</code> parameter of the <i>nextflow.config</i> file) to define clonal groups inside each "same V, J and junction length" group.<br></ul><br>
+
+
+#### Results
+
+
 Number of clone-assigned sequences: ', nb_clone_tot
     ))
     if(nb_clone_tot > 0){
@@ -499,10 +496,35 @@ Number of sequences per clone ID: &nbsp; <details class="inline"><summary style=
         if (is.data.frame(df) && attr(df, "truncated")) {
         cat("\n**(Note: Table truncated to 10 rows. Full file available in the clone_id_count.tsv file.)**\n\n")
         }
-        kable(df, format = "markdown", row.names = FALSE)
+        kable(df, format = "html", row.names = FALSE)
         cat(paste0('
 </details>
 <br>
+
+#### Donut plots
+
+Compilation of the [clone_assigned_seq.tsv](./tsv) file.
+<br>
+Click on a figure to enlarge. Reclick to go back to the report.
+<br>
+Only genes are displayed here. See the [donuts.pdf](./pdf/donuts.pdf) file in the [pdf](./pdf) folder for the complete results, including the alleles (different copies of a same gene) proportions.
+<br>
+Warning: only the first annotation is considered if several are presents in the v_call, j_call or c_call column of the wanted_seq.tsv file.
+
+<br>
+'))
+        cat('<div class="image-container">')
+        if(file.exists("vj_gene_clone_donutchart.png")){
+            cat('<img src="vj_gene_clone_donutchart.png" onclick="toggleFullscreen(this)" style="border: 1px solid black"/>')
+        }
+        if(file.exists("c_gene_clone_donutchart.png")){
+            cat('<img src="c_gene_clone_donutchart.png" onclick="toggleFullscreen(this)" style="border: 1px solid black"/>')
+        }
+        cat('</div><br><br><br>')
+        cat(paste0('
+<br>
+
+#### Threshold distance
 
 Threshold value set in the `clone_distance` parameter of the *nextflow.config* file: ', clone_distance, '
 
@@ -558,7 +580,7 @@ Number of failed alignments: <code class="r-output">', nrow(df), '</code>&nbsp; 
         if (is.data.frame(df) && attr(df, "truncated")) {
             cat("\n**Note: Table truncated to 10 rows. Full file available in the [tsv](.) folder.**\n\n")
         }
-        print(kable(df, format = "markdown", row.names = FALSE))
+        print(kable(df, format = "html", row.names = FALSE))
         cat(paste0('
 </details>
 <br><br>

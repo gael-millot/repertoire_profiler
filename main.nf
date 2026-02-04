@@ -174,6 +174,7 @@ include {Clone_id_count} from './modules/Clone_id_count.nf'
 include {Donut} from './modules/Donut.nf'
 include {Donut_assembly} from './modules/Donut_assembly.nf'
 include {Tsv2fasta} from './modules/Tsv2fasta.nf'
+include {Gff_imgt} from './modules/Gff_imgt.nf'
 include {Mafft_align} from './modules/Mafft_align.nf'
 include {Abalign_align_aa} from './modules/Abalign_align_aa.nf'
 include {Abalign_rename} from './modules/Abalign_rename.nf'
@@ -185,7 +186,8 @@ include {Print_report} from './modules/Print_report.nf'
 include {Backup} from './modules/Backup.nf'
 
 
-include {Gff_imgt} from './modules/Gff_imgt.nf'
+
+//include {CopyLogFile as CopyLogFile_Closest_germline} from './modules/CopyLogFile.nf'
 include {Gff as GffNuc} from './modules/Gff.nf'
 include {Gff as GffAa} from './modules/Gff.nf'
 include {PrintAlignment as PrintAlignmentIMGTnuc} from './modules/Print_alignment.nf'
@@ -481,6 +483,7 @@ workflow {
                     warn = "\n\nWARNING:\n0 PRODUCTIVE SEQUENCE FOLLOWING THE ParseDb_filtering PROCESS.\nWORFLOW ENDED.\nSEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
                     print(warn)
                     warning_ch = warning_ch.mix(Channel.value(warn)) // accumulate
+                    warning_ch.view()
                 }
             }
             if(unx != 'NO_FILE'){
@@ -730,7 +733,10 @@ workflow {
                         }
                     }
                     copyLogFile('Closest_germline.log', Closest_germline.out.closest_log_ch, out_path)
-
+                    //CopyLogFile_Closest_germline(
+                    //    Closest_germline.out.closest_log_ch.collectFile(name: "Closest_germline.log"),
+                    //    out_path
+                    //)
 
                     // when: nb_clone_germline > 0
 
@@ -880,7 +886,7 @@ workflow {
 
                 // end when: nb_clone_assignment > 0
 
-                tempo1_ch = Channel.of("all", "annotated", "tree") // 1 channel with 3 values (not list)
+                tempo1_ch = Channel.of("all", "annotated", "clone") // 1 channel with 3 values (not list)
                 tempo2_ch = Data_assembly.out.wanted_ch.mix(Data_assembly.out.wanted_ch.mix(clone_assigned_seq_ch)) // 1 channel with 3 paths (do not use flatten() -> not list)
                 tempo3_ch = tempo1_ch.merge(tempo2_ch) // 3 lists
                 tempo4_ch = Channel.of("vj_allele", "c_allele", "vj_gene", "c_gene")
@@ -1125,7 +1131,7 @@ workflow {
         // end when: nb_productive > 0
 
     // end when: nb_igblast > 0
-    warning_ch.collectFile(name: "warnings.txt").subscribe{it -> it.copyTo("${out_path}/reports")}
+    warning_ch.ifEmpty{''}.collectFile(name: "warnings.txt").subscribe{it -> it.copyTo("${out_path}/reports")}
     Print_report(
         config_file, // from parameter
         template_rmd, // from parameter

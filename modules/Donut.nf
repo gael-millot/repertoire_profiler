@@ -1,6 +1,6 @@
 // Creates donut plots for the constant and variable region ; grouped by same allele or genes
 // Inputs:
-//      - kind: kind of donut plot to display. can be "all", "annotated" or "tree"
+//      - kind: kind of donut plot to display. can be "all", "annotated" or "clone"
 //      - data: tsv file containing the sequences to plot 
 //      - col: columns in the data file to take into account when plotting the donut (can be c_call if the donut should be grouped by same constant region alleles for instance)
 //      - donut_*: parameters for the display of the donut. These are entered in the nextflow.config file
