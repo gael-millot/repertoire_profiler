@@ -473,7 +473,7 @@ workflow {
         nb_unproductive = nb_unproductive.mix(unproductive_ch1.countLines() - 1) // -1 for the header
         check_productive = productive_ch1.ifEmpty {'NO_FILE'}   // marker \ue202turn0search2
         check_unproductive = unproductive_ch1.ifEmpty {'NO_FILE'}   // marker \ue202turn0search2
-        check_productive.combine(check_unproductive).subscribe {x,unx -> 
+        warning_ch = warning_ch.mix(check_productive.combine(check_unproductive).map{x,unx -> 
             if(x != 'NO_FILE'){
                 n = x.countLines() - 1   // here `x` is a Path, so it exists
                 if(n == -1){
@@ -482,17 +482,22 @@ workflow {
                 if(n == 0){
                     warn = "\n\nWARNING:\n0 PRODUCTIVE SEQUENCE FOLLOWING THE ParseDb_filtering PROCESS.\nWORFLOW ENDED.\nSEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
                     print(warn)
-                    warning_ch = warning_ch.mix(Channel.value(warn)) // accumulate
-                    warning_ch.view()
+                    return warn // accumulate
                 }
+            }else{
+                return null
             }
             if(unx != 'NO_FILE'){
                 n = unx.countLines() - 1   // here `x` is a Path, so it exists
                 if(n == -1){
                     throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nUNPRODUCTIVE FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE ParseDb_filtering PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                }else{
+                    return null
                 }
+            }else{
+                return null
             }
-        }
+        })
         nb_igblast.combine(nb_productive).combine(nb_unproductive).subscribe{n,n1,n2 -> 
             if(n != -1 && n1 != -1 && n2 != -1){
                 if(n != n1 + n2){
@@ -521,7 +526,7 @@ workflow {
             nb_unwanted = nb_unwanted.mix(uncheck_ch1.countLines() - 1) // -1 for the header
             check_check = check_ch1.ifEmpty {'NO_FILE'}   // marker \ue202turn0search2
             check_uncheck = uncheck_ch1.ifEmpty {'NO_FILE'}   // marker \ue202turn0search2
-            check_check.combine(check_uncheck).subscribe {x,unx -> 
+            warning_ch = warning_ch.mix(check_check.combine(check_uncheck).map{x,unx -> 
                 if(x != 'NO_FILE'){
                     n = x.countLines() - 1   // here `x` is a Path, so it exists
                     if(n == -1){
@@ -530,16 +535,22 @@ workflow {
                     if(n == 0){
                         warn = "\n\nWARNING:\n0 WANTED SEQUENCE FOLLOWING THE Igblast_chain_check PROCESS.\n\nCHECK THAT THE\nigblast_organism\nigblast_loci\nigblast_B_heavy_chain\nigblast_B_lambda_chain\nigblast_B_kappa_chain\nigblast_T_alpha_chain\nigblast_T_beta_chain\nigblast_T_gamma_chain\nigblast_T_delta_chain\nARE CORRECTLY SET IN THE nextflow.config FILE.\n\nWORFLOW ENDED.\nSEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
                         print(warn)
-                        warning_ch = warning_ch.mix(Channel.value(warn)) // accumulate
+                        return warn // accumulate
                     }
+                }else{
+                    return null
                 }
                 if(unx != 'NO_FILE'){
                     n = unx.countLines() - 1   // here `x` is a Path, so it exists
                     if(n == -1){
                         throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nUNWANTED FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE igblast_B_heavy_chain PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                    }else{
+                        return null
                     }
+                }else{
+                    return null
                 }
-            }
+            })
             nb_productive.combine(nb_wanted).combine(nb_unwanted).subscribe{n,n1,n2 -> 
                 if(n != -1 && n1 != -1 && n2 != -1){
                     if(n != n1 + n2){
@@ -655,7 +666,7 @@ workflow {
                 nb_clone_unassignment = nb_clone_unassignment.mix(unassign_ch1.countLines() - 1) // -1 for the header
                 check_assign = assign_ch1.ifEmpty {'NO_FILE'}   // marker \ue202turn0search2
                 check_unassign = unassign_ch1.ifEmpty {'NO_FILE'}   // marker \ue202turn0search2
-                check_assign.combine(check_unassign).subscribe {x,unx -> 
+                warning_ch = warning_ch.mix(check_assign.combine(check_unassign).map{x,unx -> 
                     if(x != 'NO_FILE'){
                         n = x.countLines() - 1   // here `x` is a Path, so it exists
                         if(n == -1){
@@ -664,16 +675,22 @@ workflow {
                         if(n == 0){
                             warn = "\n\nWARNING:\n0 ASSIGNED SEQUENCE FOLLOWING THE Clone_assignment PROCESS.\n\nGERMLINE SEQUENCE & TREE PARTS OF THE WORFLOW ENDED.\nSEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
                             print(warn)
-                            warning_ch = warning_ch.mix(Channel.value(warn)) // accumulate
+                            return warn // accumulate
                         }
+                    }else{
+                        return null
                     }
                     if(unx != 'NO_FILE'){
                         n = unx.countLines() - 1   // here `x` is a Path, so it exists
                         if(n == -1){
                             throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nUNASSIGNMENT FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Clone_assignment PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                        }else{
+                            return null
                         }
+                    }else{
+                        return null
                     }
-                }
+                })
                 nb_wanted.combine(nb_clone_assignment).combine(nb_clone_unassignment).subscribe{n,n1,n2 -> 
                     if(n != -1 && n1 != -1 && n2 != -1){
                         if(n != n1 + n2){
@@ -706,7 +723,7 @@ workflow {
                     nb_clone_ungermline = nb_clone_ungermline.mix(unclosest_ch1.countLines() - 1) // -1 for the header
                     check_closest = closest_ch1.ifEmpty{'NO_FILE'}   // marker \ue202turn0search2
                     check_unclosest = unclosest_ch1.ifEmpty{'NO_FILE'}   // marker \ue202turn0search2
-                    check_closest.combine(check_unclosest).subscribe{x,unx -> 
+                    warning_ch = warning_ch.mix(check_closest.combine(check_unclosest).map{x,unx -> 
                         if(x != 'NO_FILE'){
                             n = x.countLines() - 1   // here `x` is a Path, so it exists
                             if(n == -1){
@@ -715,16 +732,22 @@ workflow {
                             if(n == 0){
                                 warn = "\n\nWARNING:\n0 CLOSEST GERMLINE SEQUENCE FOLLOWING THE Closest_germline PROCESS.\n\nGERMLINE SEQUENCE & TREE PARTS OF THE WORFLOW ENDED.\nSEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
                                 print(warn)
-                                warning_ch = warning_ch.mix(Channel.value(warn)) // accumulate
+                                return warn // accumulate
                             }
+                        }else{
+                            return null
                         }
                         if(unx != 'NO_FILE'){
                             n = unx.countLines() - 1   // here `x` is a Path, so it exists
                             if(n == -1){
                                 throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nUNCLOSEST FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Closest_germline PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
+                            }else{
+                                return null
                             }
+                        }else{
+                            return null
                         }
-                    }
+                    })
                     nb_clone_assignment.combine(nb_clone_germline).combine(nb_clone_ungermline).subscribe{n,n1,n2 -> 
                         if(n != -1 && n1 != -1 && n2 != -1){
                             if(n != n1 + n2){
@@ -733,10 +756,7 @@ workflow {
                         }
                     }
                     copyLogFile('Closest_germline.log', Closest_germline.out.closest_log_ch, out_path)
-                    //CopyLogFile_Closest_germline(
-                    //    Closest_germline.out.closest_log_ch.collectFile(name: "Closest_germline.log"),
-                    //    out_path
-                    //)
+
 
                     // when: nb_clone_germline > 0
 
@@ -778,7 +798,7 @@ workflow {
                         nb_clone_tot = nb_clone_tot.mix(clone_assigned_seq_ch.countLines() - 1) // -1 for the header
                         nb_unclone_tot = nb_unclone_tot.mix(nb_clone_unassignment.combine(nb_clone_ungermline).map{n1,n2 -> n1 + n2}) // -1 for the header
                         check_clone_tot = clone_assigned_seq_ch.ifEmpty {'NO_FILE'}   // marker \ue202turn0search2
-                        check_clone_tot.subscribe {x -> 
+                        warning_ch = warning_ch.mix(check_clone_tot.map {x -> 
                             if(x != 'NO_FILE'){
                                 n = x.countLines() - 1   // here `x` is a Path, so it exists
                                 if(n == -1){
@@ -787,10 +807,12 @@ workflow {
                                 if(n == 0){
                                     warn = "\n\nWARNING:\n0 CLONAL SEQUENCE FOLLOWING THE Mutation_load_germ_genes PROCESS.\n\nGERMLINE SEQUENCE & TREE PARTS OF THE WORFLOW ENDED.\nSEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
                                     print(warn)
-                                    warning_ch = warning_ch.mix(Channel.value(warn)) // accumulate
+                                    return warn // accumulate
                                 }
+                            }else{
+                                return null
                             }
-                        }
+                        })
                         nb_wanted.combine(nb_clone_tot).combine(nb_unclone_tot).subscribe{n,n1,n2 -> 
                             if(n != -1 && n1 != -1 && n2 != -1){
                                 if(n != n1 + n2){
@@ -1044,6 +1066,7 @@ workflow {
                 GffAa.out.gff_ch.subscribe{gff_list, tag -> if(tag == "CLONE"){gff_list.each{gff -> gff.copyTo("${out_path}/alignments/aa/clonal/${gff.getName()}")}}else if(tag == "ALL"){gff_list.each{gff -> gff.copyTo("${out_path}/alignments/aa/all/${gff.getName()}")}}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
                 copyLogFile('gffAa.log', GffAa.out.gff_log_ch, out_path)
                 warning_ch = warning_ch.mix(GffAa.out.gff_warn_ch.filter{file(it).exists()}.map{file -> file.text}) //  file.text = contenu du fichier
+                //GffAa.out.gff_approx_coord_ch.collectFile(name: "gff_aa_approx_coord.tsv", skip: 1, keepHeader: true).subscribe{it -> it.copyTo("${out_path}/tsv")} // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
 
 
                 PrintAlignmentNuc( // module print_alignment.nf
@@ -1132,6 +1155,7 @@ workflow {
 
     // end when: nb_igblast > 0
     warning_ch.ifEmpty{''}.collectFile(name: "warnings.txt").subscribe{it -> it.copyTo("${out_path}/reports")}
+
     Print_report(
         config_file, // from parameter
         template_rmd, // from parameter
@@ -1166,7 +1190,7 @@ workflow {
         clone_distance, // parameter
         align_soft, // parameter
         phylo_tree_itol_subscription // parameter
-        //warning_ch.collect().map{it.join('\n\n')}.ifEmpty{'EMPTY'} // concatenate all warnings into a single string // finally, the gathered string is very loong. I prefer to use a file added in /reports/
+        //final_warning_ch // just so that print_report wait for all warnings // warning_ch.collect().map{it.join('\n\n')}.ifEmpty{'EMPTY'} // concatenate all warnings into a single string // finally, the gathered string is very loong. I prefer to use a file added in /reports/
     )
 
 

@@ -56,6 +56,7 @@ process Print_report{
     val clone_distance
     val align_soft
     val itol_subscription
+    //path final_warning_ch // just so that print_report wait for all warnings
     //val warning_collect
 
     output:
@@ -93,7 +94,7 @@ process Print_report{
     # end remove symlink and import folder
 
     Rscript -e '
-    if(as.integer("${nb_wanted}") > 0){
+        if(as.integer("${nb_wanted}") > 0){
             # Find the constant and vj repertoires to be displayed in the html file (file names differ depending on light/heavy chain)
             constant_files <- as.character("${repertoire_constant_ch}")
             vj_files <- as.character("${repertoire_vj_ch}")

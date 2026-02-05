@@ -76,8 +76,8 @@ script <- "Gff"
 # tag <- "CLONE"
 # log <- "Tsv2fastaGff.log"
 
-# fasta_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1765310139/alignments/nuc/all/sequence_alignment_aligned_nuc.fasta"
-# tsv_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/results/repertoire_profiler_1765310139/tsv/wanted_seq.tsv"
+# fasta_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/9d/d82a212d0ad7685e331c9641d6720b/trimmed_sequence_aa_clone_id_10_IGHV4-34_IGHJ6_aligned_aa.fasta"
+# tsv_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/9d/d82a212d0ad7685e331c9641d6720b/with_germ_coords_germ-seq-trans_germ-pass_shm-pass.tsv"
 # Name <- "sequence_id"                # name of the column containing the sequence ids
 # align_seq <- "sequence_alignment"        # name of the columns containing the sequences to put in the fasta file (can be a single string or several strings seperated by "," if several columns are needed. the fastas will then be created in different folders)
 # align_clone_nb <- 3                    # Minimum number of rows in the tsv file. The program expects this to be respected, otherwise raises an error.
@@ -602,6 +602,21 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
         selected_index <- which(df$clone_id == clone_id)[1] # first line taken for coordinates. Warning: only use this in df
     }
     # end get the names of sequences
+    # make table of approximate coordinates
+    tempo_col_name <- c("sequence_id", "tag")
+    for(i2 in c("vdjc", "fwr_cdr")){
+            for(i4 in 1:length(get(paste0(i2, "_features")))){
+                        for(i7 in c("start", "end")){
+                            tempo_col_name <- c(tempo_col_name, get(paste0(i2, "_column_", i7))[i4])
+                        }
+            }
+    }
+    approx <- data.frame(matrix(nrow = length(selected_index), ncol = length(tempo_col_name)))
+    names(approx) <- tempo_col_name
+    approx[] <- FALSE
+    approx$sequence_id <-  df[selected_index, Name]
+    approx$tag <- tag
+    # end make table of approximate coordinates
     # get coordinates
     for(i2 in c("vdjc", "fwr_cdr")){
         gff_rows <- list()
@@ -628,10 +643,7 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
                                     assign(tempo_coord_name, as.integer(trunc(coord / 3)))
                                 }
                                 if(as.integer(coord) %% 3 != 0){
-                                    tempo.warn <- paste0("WARNING:\n IN THE GffAa PROCESS, APPROXIMATE AA COORDINATES FOR ", df[selected_index[i3], Name], ", FOR THE ", get(paste0(i2, "_column_", i7))[i4], " COLUMN, SINCE NUC COORDINATES ARE NOT MULTIPLE OF 3.")
-                                    cat(paste0("\n", tempo.warn, "\n\n"))
-                                    fun_report(data = paste0("\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
-                                    warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
+                                    approx[i3, get(paste0(i2, "_column_", i7))[i4]] <- TRUE
                                 }
                             }
                         }
@@ -716,6 +728,21 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
             writeLines(gff_lines_jalv, con = imgt_gff_jalv)
         }
     }
+    if(nuc_or_aa == "aa"){
+        if(any(approx[,-1] == TRUE)){
+            tempo.warn <- paste0("WARNING:\n IN THE tag ", tag, " OF THE GffAa PROCESS, APPROXIMATE AA COORDINATES SINCE NUC COORDINATES ARE NOT MULTIPLE OF 3.")
+            cat(paste0("\n", tempo.warn, "\n\n"))
+            fun_report(data = paste0("\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+            warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
+            write.table(approx, file = paste0("./gff_aa_approx_coord.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
+        }else if(nrow(approx) > 0){
+            write.table(approx[-(1:nrow(approx)),], file = paste0("./gff_aa_approx_coord.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
+        }else{
+            write.table(approx, file = paste0("./gff_aa_approx_coord.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
+        }
+    }else{
+        write.table(approx, file = paste0("./gff_aa_approx_coord.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
+    }
     # end Create the gff file
 } else {
     stop(paste0("\n\n================\n\nERROR IN ", script, ".R\nNO FASTA AND GFF FILES CREATED BECAUSE THE IMPORTED FILE:\n", tsv_path, "\nHAS LESS THAN ", align_clone_nb, " SEQUENCES (TOO MUCH NA OR \"\") IN THE ", align_seq3, " COLUMN\n\n================\n\n"))
@@ -746,7 +773,7 @@ fun_report(data = paste0("\n\n################################ RUNNING END"), ou
 
 fun_report(data = paste0("\n\n################################ RECAPITULATION OF WARNING MESSAGES"), output = log, path = "./", overwrite = FALSE)
 if( ! is.null(warn)){
-    tempo.cat <- paste0("IN Gff.R OF THE NEXFLOW EXECUTION:\n\n", warn)
+    tempo.cat <- warn
     fun_report(data = tempo.cat, output = log, path = "./", overwrite = FALSE)
     cat(tempo.cat)
     writeLines(tempo.cat, con = "warnings.txt")
