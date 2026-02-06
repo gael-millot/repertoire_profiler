@@ -14,7 +14,7 @@ process Gff {
     path "*_sequence_alignment_with_gaps_imgt_*.tempo", emit: imgt_gff_ch, optional: true
     path "Gff.log", emit: gff_log_ch
     path "warnings.txt", emit: gff_warn_ch
-    path "gff_aa_approx_coord.tsv", emit: gff_approx_coord_ch
+    tuple path("gff_aa_approx_coord_*.tsv"), val(tag), emit: gff_approx_coord_ch
 
     script:
     """

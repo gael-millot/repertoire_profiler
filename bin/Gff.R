@@ -76,13 +76,13 @@ script <- "Gff"
 # tag <- "CLONE"
 # log <- "Tsv2fastaGff.log"
 
-# fasta_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/9d/d82a212d0ad7685e331c9641d6720b/trimmed_sequence_aa_clone_id_10_IGHV4-34_IGHJ6_aligned_aa.fasta"
-# tsv_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/9d/d82a212d0ad7685e331c9641d6720b/with_germ_coords_germ-seq-trans_germ-pass_shm-pass.tsv"
+# fasta_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/eb/fa06768b7175a4ea8d60b0143ae927/trimmed_sequence_aa_clone_id_10_IGHV4-34_IGHJ6_aligned_aa.fasta"
+# tsv_path <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/eb/fa06768b7175a4ea8d60b0143ae927/with_germ_coords_germ-seq-trans_germ-pass_shm-pass.tsv"
 # Name <- "sequence_id"                # name of the column containing the sequence ids
 # align_seq <- "sequence_alignment"        # name of the columns containing the sequences to put in the fasta file (can be a single string or several strings seperated by "," if several columns are needed. the fastas will then be created in different folders)
 # align_clone_nb <- 3                    # Minimum number of rows in the tsv file. The program expects this to be respected, otherwise raises an error.
 # cute <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/bin/cute_little_R_functions_v12.8.R"
-# tag <- "ALL"
+# tag <- "CLONE"
 # log <- "Tsv2fastaGff.log"
 
 
@@ -329,6 +329,7 @@ text.check <- NULL #
 checked.arg.names <- NULL # for function debbuging: used by r_debugging_tools
 ee <- expression(arg.check <- c(arg.check, tempo$problem) , text.check <- c(text.check, tempo$text) , checked.arg.names <- c(checked.arg.names, tempo$object.name))
 tempo <- fun_check(data = fasta_path, class = "vector", typeof = "character", length = 1) ; eval(ee)
+tempo <- fun_check(data = tsv_path, class = "vector", typeof = "character", length = 1) ; eval(ee)
 tempo <- fun_check(data = Name, class = "vector", typeof = "character", length = 1) ; eval(ee)
 tempo <- fun_check(data = align_seq, options = c("query", "igblast_full", "trimmed", "fwr1", "fwr2", "fwr3", "fwr4", "cdr1", "cdr2", "cdr3", "junction", "sequence_alignment", "v_sequence_alignment", "d_sequence_alignment", "j_sequence_alignment", "c_sequence_alignment", "germline_alignment", "v_germline_alignment", "d_germline_alignment", "j_germline_alignment", "c_germline_alignment")) ; eval(ee)
 tempo <- fun_check(data = align_clone_nb, class = "vector", typeof = "integer", length = 1, double.as.integer.allowed = TRUE) ; eval(ee)
@@ -614,7 +615,11 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
     approx <- data.frame(matrix(nrow = length(selected_index), ncol = length(tempo_col_name)))
     names(approx) <- tempo_col_name
     approx[] <- FALSE
-    approx$sequence_id <-  df[selected_index, Name]
+    if(tag == "ALL"){
+        approx$sequence_id <-  df[selected_index, Name]
+    }else if(tag == "CLONE"){
+        approx$sequence_id <-  seq_names_for_tsv
+    }
     approx$tag <- tag
     # end make table of approximate coordinates
     # get coordinates
@@ -729,19 +734,19 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
         }
     }
     if(nuc_or_aa == "aa"){
-        if(any(approx[,-1] == TRUE)){
-            tempo.warn <- paste0("WARNING:\n IN THE tag ", tag, " OF THE GffAa PROCESS, APPROXIMATE AA COORDINATES SINCE NUC COORDINATES ARE NOT MULTIPLE OF 3.")
+        if(any(approx[,-(1:2)] == TRUE)){
+            tempo.warn <- paste0("WARNING:\n IN THE ", tag, " tag OF THE GffAa PROCESS, APPROXIMATE AA COORDINATES DETECTED SINCE NUC COORDINATES ARE NOT MULTIPLE OF 3. SEE THE .tsv FILE IN /alignments/aa/", ifelse(test = tag == "CLONE", yes = "clonal", no = "all"), " FOLDER.")
             cat(paste0("\n", tempo.warn, "\n\n"))
             fun_report(data = paste0("\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
             warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
-            write.table(approx, file = paste0("./gff_aa_approx_coord.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
+            write.table(approx, file = paste0("./gff_aa_approx_coord_", tolower(tag), ".tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
         }else if(nrow(approx) > 0){
-            write.table(approx[-(1:nrow(approx)),], file = paste0("./gff_aa_approx_coord.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
+            write.table(approx[-(1:nrow(approx)),], file = paste0("./gff_aa_approx_coord_", tolower(tag), ".tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
         }else{
-            write.table(approx, file = paste0("./gff_aa_approx_coord.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
+            write.table(approx, file = paste0("./gff_aa_approx_coord_", tolower(tag), ".tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
         }
     }else{
-        write.table(approx, file = paste0("./gff_aa_approx_coord.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
+        write.table(approx, file = paste0("./gff_aa_approx_coord_", tolower(tag), ".tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
     }
     # end Create the gff file
 } else {

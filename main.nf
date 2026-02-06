@@ -778,8 +778,10 @@ workflow {
 
 
                         TranslateGermline(
-                            AddGermlineSequences.out.add_germ_ch
+                            AddGermlineSequences.out.add_germ_ch,
+                            cute_file
                         )
+                        TranslateGermline.out.translate_problem_ch.collectFile(name: "clonal_germline_sequence_no_gaps_problems.tsv", skip: 1, keepHeader: true).subscribe{it -> it.copyTo("${out_path}/tsv")}
                         TranslateGermline.out.translate_germ_log_ch.collectFile(name: "translateGermline.log").subscribe{it -> it.copyTo("${out_path}/reports")}
                         warning_ch = warning_ch.mix(TranslateGermline.out.translate_germ_warn_ch.filter{file(it).exists()}.map{file -> file.text}) //  file.text = contenu du fichier) // accumulate
 
@@ -1066,7 +1068,8 @@ workflow {
                 GffAa.out.gff_ch.subscribe{gff_list, tag -> if(tag == "CLONE"){gff_list.each{gff -> gff.copyTo("${out_path}/alignments/aa/clonal/${gff.getName()}")}}else if(tag == "ALL"){gff_list.each{gff -> gff.copyTo("${out_path}/alignments/aa/all/${gff.getName()}")}}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
                 copyLogFile('gffAa.log', GffAa.out.gff_log_ch, out_path)
                 warning_ch = warning_ch.mix(GffAa.out.gff_warn_ch.filter{file(it).exists()}.map{file -> file.text}) //  file.text = contenu du fichier
-                GffAa.out.gff_approx_coord_ch.collectFile(name: "gff_aa_approx_coord.tsv", skip: 1, keepHeader: true).subscribe{it -> it.copyTo("${out_path}/tsv")} // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
+                GffAa.out.gff_approx_coord_ch.subscribe{tsv, tag -> if(tag == "CLONE"){tsv.copyTo("${out_path}/alignments/aa/clonal/${tsv.getName()}")}else if(tag == "ALL"){tsv.copyTo("${out_path}/alignments/aa/all/${tsv.getName()}")}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}} // .flatten() because gff several files. Otherwise, copyTo does not like it. Finally, .each() also solve the problem
+                //GffAa.out.gff_approx_coord_ch.collectFile(name: "gff_aa_approx_coord.tsv", skip: 1, keepHeader: true).subscribe{it -> it.copyTo("${out_path}/tsv")} // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
 
 
                 PrintAlignmentNuc( // module print_alignment.nf

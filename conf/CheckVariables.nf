@@ -24,6 +24,7 @@ tested_files_bin = [
     "repertoire.R", 
     "repertoire_profiler_template.rmd", 
     "trimtranslate.sh", 
+    "TranslateGermline.R", 
     "Tsv2fasta.R"
     ]
 for(i1 in tested_files_bin){

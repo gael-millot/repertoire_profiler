@@ -5,9 +5,11 @@ process TranslateGermline {
 
     input:
     path add_germ_ch // parallelization expected (by clonal groups)
+    path cute_file
 
     output:
     path "*-trans_germ-pass.tsv", emit: translate_germ_ch
+    path "clonal_germline_sequence_no_gaps_problems.tsv", emit: translate_problem_ch
     path "*.log", emit: translate_germ_log_ch
     path "warnings.txt", emit: translate_germ_warn_ch
 
@@ -18,52 +20,10 @@ process TranslateGermline {
     FILENAME=\$(basename -- ${add_germ_ch}) # recover a file name without path
     echo -e "\\n\\n################################\\n\\n\$FILENAME\\n\\n################################\\n\\n" |& tee -a translateGermline.log
     echo -e "WORKING FOLDER:\\n\$(pwd)\\n\\n" |& tee -a translateGermline.log
-    Rscript -e '
-        options(warning.length = 8170)
-        warn <- ""
-        file_name <- "${add_germ_ch}"
-        df <- read.table(file_name, sep = "\\t", header = TRUE)
-        seq_name <- df[ , 1]
-        germ_nuc <- df\$clonal_germline_sequence_no_gaps
-        # Make sure all germline sequences are the same (which they are supposed to be since this is a single clonal group)
-        if(any(germ_nuc != germ_nuc[1])){
-            stop(paste0("\\n\\n================\\n\\nERROR IN TranslateGermline PROCESS.\\nTHE VALUES INSIDE THE Germline COLUMN SHOULD ALL BE THE SAME, BUT THEY ARE NOT.\\nHERE THEY ARE:\\n", paste0(germ_nuc, collapse = "\\n"),"\\n\\n================\\n\\n"), call. = FALSE)
-        }
-        length_no_gaps <- nchar(germ_nuc[1])
-        if(length_no_gaps %% 3 != 0){
-            tempo_warn <- paste0("\\nWARNING:\nIN THE TranslateGermline PROCESS, FOR THE ", seq_name, " SEQUENCE THE clonal_germline_sequence_no_gaps COLUMN CONTAINS ", length_no_gaps, " CHARACTERS WHEN GAPS ARE REMOVED, WHICH IS NOT A MULTIPLE OF 3.")
-            warn <- base::paste0(base::ifelse(test = warn == "", yes = tempo_warn, no = base::paste0(warn, "\n\n", tempo_warn, collapse = NULL, recycle0 = FALSE)), collapse = NULL, recycle0 = FALSE)
-            cat(tempo_warn, file = "translateGermline.log", append = TRUE)
-        }
-        germ_dna <- Biostrings::DNAString(germ_nuc[1])
-        # Catch a warning in the log file if raised
-        withCallingHandlers(
-            expr = {
-                germ_aa <- Biostrings::translate(germ_dna, if.fuzzy.codon="X")
-            },
-            warning = function(w){
-                tempo_warn <- paste0("\\nWARNING:\nBiostrings::translate FUNCTION IN THE TranslateGermline PROCESS: ", conditionMessage(w))
-                writeLines(tempo_warn, con = "tempo_warnings.txt")
-                invokeRestart("muffleWarning")
-            }
-        )
-        
-        if(file.exists("tempo_warnings.txt")){
-            tempo_warn <- readLines("tempo_warnings.txt")
-            warn <- base::paste0(base::ifelse(test = warn == "", yes = tempo_warn, no = base::paste0(warn, "\n\n", tempo_warn, collapse = NULL, recycle0 = FALSE)), collapse = NULL, recycle0 = FALSE)
-            cat(tempo_warn, file = "translateGermline.log", append = TRUE)
-        }
-        tempo_name <- "clonal_germline_sequence_aa"
-        df[[tempo_name]] <- toString(germ_aa)
-        file_base <- tools::file_path_sans_ext(basename(file_name))
-        new_file_name <- paste0(file_base, "-trans_germ-pass.tsv")
-        # add controls
-        df <- data.frame(df, clonal_germline_identical = df\$clonal_germline_sequence_no_gaps == df\$clonal_germline_alignment_igblast_airr, clonal_germline_aa_identical = df\$clonal_germline_sequence_aa == df\$clonal_germline_alignment_aa_igblast_airr)
-        # end add controls
-        writeLines(warn, con = "warnings.txt")
-        write.table(df, file = paste0("./", new_file_name), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\\t")
-    '|& tee -a translateGermline.log
+    TranslateGermline.R \
+    "${add_germ_ch}" \
+    "${cute_file}" \
+    "translateGermline.log"
     """
-
 }
 
