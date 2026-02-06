@@ -20,7 +20,7 @@ process Print_report{
     publishDir path: "${out_path}", mode: 'copy', pattern: "{report.html}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{alignments_viz.html}", overwrite: false
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{print_report.log}", overwrite: false
-    cache 'false'
+    cache 'true'
 
     input:
     path config_file // to have the file in the work dir
