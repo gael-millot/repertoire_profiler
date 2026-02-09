@@ -9,7 +9,7 @@ process TranslateGermline {
 
     output:
     path "*-trans_germ-pass.tsv", emit: translate_germ_ch
-    path "clonal_germl_translation_pb.tsv.tsv", emit: translate_problem_ch
+    path "clonal_germline_translation_pb.tsv", emit: translate_problem_ch
     path "*.log", emit: translate_germ_log_ch
     path "warnings.txt", emit: translate_germ_warn_ch
 

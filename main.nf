@@ -781,7 +781,7 @@ workflow {
                             AddGermlineSequences.out.add_germ_ch,
                             cute_file
                         )
-                        TranslateGermline.out.translate_problem_ch.collectFile(name: "clonal_germl_translation_pb.tsv.tsv", skip: 1, keepHeader: true).subscribe{it -> it.copyTo("${out_path}/tsv")}
+                        TranslateGermline.out.translate_problem_ch.collectFile(name: "clonal_germline_translation_pb.tsv", skip: 1, keepHeader: true).subscribe{it -> it.copyTo("${out_path}/tsv")}
                         TranslateGermline.out.translate_germ_log_ch.collectFile(name: "translateGermline.log").subscribe{it -> it.copyTo("${out_path}/reports")}
                         warning_ch = warning_ch.mix(TranslateGermline.out.translate_germ_warn_ch.filter{file(it).exists()}.map{file -> file.text}) //  file.text = contenu du fichier) // accumulate
 

@@ -369,7 +369,7 @@ withCallingHandlers(
     }
 )
 if( ! all(approx == "", na.rm = TRUE)){
-    tempo_warn <- paste0("\nWARNING:\nIN THE TranslateGermline PROCESS, THE PROCESS HAS DETECTED SOME SEQUENCES IN THE clonal_germline_sequence_no_gaps COLUMN THAT CONTAINS N NUCLEOTIDES NOT A MULTIPLE OF 3 WHEN GAPS ARE REMOVED. SEE THE clonal_germl_translation_pb.tsv FILE IN THE [tsv](./tsv) FOLDER.\n\n")
+    tempo_warn <- paste0("\nWARNING:\nIN THE TranslateGermline PROCESS, THE PROCESS HAS DETECTED SOME SEQUENCES IN THE clonal_germline_sequence_no_gaps COLUMN THAT CONTAINS N NUCLEOTIDES NOT A MULTIPLE OF 3 WHEN GAPS ARE REMOVED. SEE THE clonal_germline_translation_pb.tsv FILE IN THE [tsv](./tsv) FOLDER.\n\n")
     warn <- base::paste0(base::ifelse(test = base::is.null(x = warn), yes = tempo_warn, no = base::paste0(warn, "\n\n", tempo_warn, collapse = NULL, recycle0 = FALSE)), collapse = NULL, recycle0 = FALSE)
     cat(tempo_warn, file = "translateGermline.log", append = TRUE)
 }else{
@@ -380,7 +380,7 @@ if(file.exists("tempo_warnings.txt")){
     warn <- base::paste0(base::ifelse(test = base::is.null(x = warn), yes = tempo_warn, no = base::paste0(warn, "\n\n", tempo_warn, collapse = NULL, recycle0 = FALSE)), collapse = NULL, recycle0 = FALSE)
     cat(tempo_warn, file = "translateGermline.log", append = TRUE)
 }
-write.table(approx, file = paste0("./clonal_germl_translation_pb.tsv.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
+write.table(approx, file = paste0("./clonal_germline_translation_pb.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
 tempo_name <- "clonal_germline_sequence_aa"
 df[[tempo_name]] <- toString(germ_aa)
 file_base <- tools::file_path_sans_ext(basename(file_name))
