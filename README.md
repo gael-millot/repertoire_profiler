@@ -431,7 +431,7 @@ If the text is cut in the table, reload the page or change the width of the wind
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color: #A9A9A9 !important; background-color: darkgrey; padding: 2px;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color: #FFFFFF !important; background-color: darkgrey; padding: 2px;">
             tsv
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color: #A9A9A9 !important; background-color: darkgrey; padding: 2px;">
