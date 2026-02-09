@@ -113,10 +113,10 @@ rm(tempo.cat)
 
 ################################ Test
 
-# setwd("C:/Users/gael/Documents/Git_projects/19532_marbouty/dataset/test")
-# file_name = "./caca.tsv"
-# kind = "all"
-# col = "vj_allele"
+# setwd("C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/b7/b38b134c2cb42833aa1998e96051e8")
+# file_name = "./wanted_seq.tsv"
+# kind = "annotated"
+# col = "c_allele"
 # donut_palette = "NULL" 
 # donut_hole_size = "0.5" 
 # donut_hole_text = "TRUE" 
@@ -132,8 +132,10 @@ rm(tempo.cat)
 # donut_legend_box_size = "5" 
 # donut_legend_box_space = "2" 
 # donut_legend_limit = "0.1"
-# cute = "https://gitlab.pasteur.fr/gmillot/cute_little_R_functions/-/raw/v12.2.0/cute_little_R_functions.R"
+# cute = "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/bin/cute_little_R_functions_v12.8.R"
+# repertoire_names_ch = "imgt_human_IGHC2.tsv imgt_human_IGHD2.tsv imgt_human_IGHJ2.tsv imgt_human_IGHV2.tsv"
 # log = "all_donut.log"
+
 
 
 ################################ end Test
@@ -378,7 +380,6 @@ if(donut_legend_limit == "NULL"){
     donut_legend_limit <- "all" # numeric string already checked by nextflow
 }else{
     donut_legend_limit <- as.numeric(donut_legend_limit) # numeric string already checked by nextflow
-
 }
 # end following parameter are those of the gg_donut() function and are checked by this one
 
@@ -547,7 +548,7 @@ if(nrow(obs) > 0){
     # remove "IGH" if heavy chain ; remove "IG" if light chain to keep the info about K or L locus (if all values are NA it is correctly handled)
     third_character <- substr(tempo.primary, 3, 3)
     third_character_non_na <- third_character[!is.na(third_character)]
-    if(length(third_character_non_na) == 0 || !all(third_character_non_na == "H")) {
+    if(length(third_character_non_na) == 0 || !all(third_character_non_na == "H")){
         tronc <- 3
     } else {
         tronc <- 4
@@ -588,6 +589,18 @@ if(nrow(obs) > 0){
         obs2 <- data.frame(obs2, Prop = obs2$Freq / sum(obs2$Freq), kind = kind)
         obs2[[col]] <- factor(obs2[[col]], levels = obs2[[col]][order(obs2$Prop, decreasing = TRUE)]) # reorder so that the donut is according to decreasing proportion starting at the top in a clockwise direction
         obs2 <- obs2[order(as.numeric(obs2[[col]]), decreasing = FALSE), ] # obs2 with rows in decreasing order, according to Prop
+
+        if(all.annotation.log == FALSE){
+            tempo.data1 <- aggregate(tempo.labels ~ clone.name, FUN = function(x){paste(x, collapse = ",")})
+            obs2 <- data.frame(obs2, labels = tempo.data1$tempo.labels[match(obs2[[col]], tempo.data1$clone.name)])
+        }
+        
+        if(kind == "annotated" & all.annotation.log != TRUE){
+            obs3 <- obs2[ ! is.na(obs2$labels) ,]
+        }else{
+            obs3 <- obs2
+        }
+
     } else { # Handle the situation in which all values are NA in the original column
         # structure vide avec les bonnes colonnes pour éviter les erreurs en aval
         obs2 <- data.frame(
@@ -598,18 +611,10 @@ if(nrow(obs) > 0){
         )
         names(obs2)[1] <- col
         obs2[[col]] <- factor(obs2[[col]], levels = character(0))  # nécessaire pour éviter erreur au reorder
-    }
-
-    if(all.annotation.log == FALSE){
-        tempo.data1 <- aggregate(tempo.labels ~ clone.name, FUN = function(x){paste(x, collapse = ",")})
-        obs2 <- data.frame(obs2, labels = tempo.data1$tempo.labels[match(obs2[[col]], tempo.data1$clone.name)])
-    }
-    
-    if(kind == "annotated" & all.annotation.log != TRUE){
-        obs3 <- obs2[ ! is.na(obs2$labels) ,]
-    }else{
         obs3 <- obs2
     }
+
+
 
 
 

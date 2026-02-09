@@ -68,11 +68,17 @@ RSCRIPT
     if [ -s \${FILE}_clone-pass.tsv ] ; then # see above for -s
         Rscript run.R \${FILE}_clone-pass.tsv ${wanted_ch} "\${FILE}_clone-pass.tsv" |& tee -a clone_assignment.log
     else
-        echo -e "\\n\\nNOTE: EMPTY *_clone-pass.tsv FILE RETURNED FOLLOWING THE Clone_assignment PROCESS\\n\\n" |& tee -a clone_assignment.log
-        head -1 failed_clone_assigned_seq | cat > \${FILE}_clone-pass.tsv # header kept
-        # set -o pipefail
-        # echo -e "\\n\\n========\\n\\nINTERNAL ERROR IN NEXTFLOW EXECUTION\\n\\nOUTPUT FILE OF DefineClones.py IN THE Clone_assignment PROCESS SHOULD RETURN *_clone-pass.tsv.\\nCHECK THE clone_assignment.log IN THE report FOLDER INSIDE THE OUTPUT FOLDER\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n"
-        # exit 1
+        if [ -s \${FILE}_clone-fail.tsv ]; then 
+            echo -e "\\n\\nNOTE: EMPTY *_clone-pass.tsv FILE RETURNED FOLLOWING THE Clone_assignment PROCESS\\n\\n" |& tee -a clone_assignment.log
+            head -1 failed_clone_assigned_seq.tsv | cat > \${FILE}_clone-pass.tsv # header kept
+            # set -o pipefail
+            # echo -e "\\n\\n========\\n\\nINTERNAL ERROR IN NEXTFLOW EXECUTION\\n\\nOUTPUT FILE OF DefineClones.py IN THE Clone_assignment PROCESS SHOULD RETURN *_clone-pass.tsv.\\nCHECK THE clone_assignment.log IN THE report FOLDER INSIDE THE OUTPUT FOLDER\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n"
+            # exit 1
+        else
+            echo -e "\\n\\nNOTE: EMPTY *_clone-pass.tsv AND *_clone-fail.tsv FILES RETURNED FOLLOWING THE Clone_assignment PROCESS\\n\\n" |& tee -a clone_assignment.log
+            head -1 ${wanted_ch} | cat > \${FILE}_clone-pass.tsv # header kept
+            head -1 ${wanted_ch} | cat > failed_clone_assigned_seq.tsv # header kept
+        fi
     fi
     """
 }

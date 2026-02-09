@@ -97,13 +97,11 @@ rm(tempo.cat)
 ################################ Test
 
 
-# setwd("C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/7a/aad70e0b08422d451c7ed1b6b3c7d9")
+# setwd("C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/2a/5fedee748c186ca83d623bee2ae0eb")
 # wanted_seq <- "wanted_seq.tsv"
-# repertoire_names_ch <- "imgt_human_TRAC.tsv2 imgt_human_TRAJ.tsv2 imgt_human_TRAV.tsv2"
+# repertoire_names_ch <- "imgt_human_IGHC.tsv imgt_human_IGHD.tsv imgt_human_IGHJ.tsv imgt_human_IGHV.tsv"
 # cute = "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/bin/cute_little_R_functions_v12.8.R"
 # log = "repertoire.log"
-
-
 
 
 ################################ end Test
@@ -1018,7 +1016,7 @@ for(i0 in type){
             "Chain: ", paste(chain, collapse = " "), "\n",
             "Total count: 0"
         )
-        final.plot <- fun_gg_empty_graph(title = tempo.title, title.size = 7, text = paste0("NO GRAPH PLOTTED FOR VxJ for ", i1, "\nNO C ALLELE/GENE DETECTED"), text.size = 3, title = tempo.title)
+        final.plot <- fun_gg_empty_graph(title = tempo.title, title.size = 7, text = paste0("NO GRAPH PLOTTED FOR VxJ for ", i1, "\nNO C ALLELE/GENE DETECTED"), text.size = 3)
         ggplot2::ggsave(filename = paste0("./rep_", i0, "_no_C_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white") # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
         ggplot2::ggsave(filename = paste0("./rep_", i0, "_no_C_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white")
         ggplot2::ggsave(filename = paste0("./rep_", i0, "_no_C_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white")

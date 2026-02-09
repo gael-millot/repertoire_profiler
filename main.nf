@@ -480,7 +480,7 @@ workflow {
                     throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nPRODUCTIVE FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE ParseDb_filtering PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
                 }
                 if(n == 0){
-                    warn = "\n\nWARNING:\n0 PRODUCTIVE SEQUENCE FOLLOWING THE ParseDb_filtering PROCESS.\nWORFLOW ENDED.\nSEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
+                    warn = "\n\nWARNING:\n0 PRODUCTIVE SEQUENCE FOLLOWING THE ParseDb_filtering PROCESS. WORFLOW ENDED. SEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
                     print(warn)
                     return warn // accumulate
                 }
@@ -533,7 +533,7 @@ workflow {
                         throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nWANTED FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Igblast_chain_check PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
                     }
                     if(n == 0){
-                        warn = "\n\nWARNING:\n0 WANTED SEQUENCE FOLLOWING THE Igblast_chain_check PROCESS.\n\nCHECK THAT THE\nigblast_organism\nigblast_loci\nigblast_B_heavy_chain\nigblast_B_lambda_chain\nigblast_B_kappa_chain\nigblast_T_alpha_chain\nigblast_T_beta_chain\nigblast_T_gamma_chain\nigblast_T_delta_chain\nARE CORRECTLY SET IN THE nextflow.config FILE.\n\nWORFLOW ENDED.\nSEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
+                        warn = "\n\nWARNING:\n0 WANTED SEQUENCE FOLLOWING THE Igblast_chain_check PROCESS. CHECK THAT THE igblast_organism, igblast_loci, igblast_B_heavy_chain, igblast_B_lambda_chain, igblast_B_kappa_chain, igblast_T_alpha_chain, igblast_T_beta_chain, igblast_T_gamma_chain AND igblast_T_delta_chain ARE CORRECTLY SET IN THE nextflow.config FILE. WORFLOW ENDED. SEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
                         print(warn)
                         return warn // accumulate
                     }
@@ -673,7 +673,7 @@ workflow {
                             throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nASSIGNMENT FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Clone_assignment PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
                         }
                         if(n == 0){
-                            warn = "\n\nWARNING:\n0 ASSIGNED SEQUENCE FOLLOWING THE Clone_assignment PROCESS.\n\nGERMLINE SEQUENCE & TREE PARTS OF THE WORFLOW ENDED.\nSEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
+                            warn = "\n\nWARNING:\n0 ASSIGNED SEQUENCE FOLLOWING THE Clone_assignment PROCESS. GERMLINE SEQUENCE & TREE PARTS OF THE WORFLOW ENDED. SEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
                             print(warn)
                             return warn // accumulate
                         }
@@ -730,7 +730,7 @@ workflow {
                                 throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nCLOSEST GERMLINE FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Closest_germline PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
                             }
                             if(n == 0){
-                                warn = "\n\nWARNING:\n0 CLOSEST GERMLINE SEQUENCE FOLLOWING THE Closest_germline PROCESS.\n\nGERMLINE SEQUENCE & TREE PARTS OF THE WORFLOW ENDED.\nSEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
+                                warn = "\n\nWARNING: 0 CLOSEST GERMLINE SEQUENCE FOLLOWING THE Closest_germline PROCESS. GERMLINE SEQUENCE & TREE PARTS OF THE WORFLOW ENDED. SEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
                                 print(warn)
                                 return warn // accumulate
                             }
@@ -807,7 +807,7 @@ workflow {
                                     throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nclone_assigned_seq.tsv FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Mutation_load_germ_genes PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
                                 }
                                 if(n == 0){
-                                    warn = "\n\nWARNING:\n0 CLONAL SEQUENCE FOLLOWING THE Mutation_load_germ_genes PROCESS.\n\nGERMLINE SEQUENCE & TREE PARTS OF THE WORFLOW ENDED.\nSEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
+                                    warn = "\n\nWARNING:\n0 CLONAL SEQUENCE FOLLOWING THE Mutation_load_germ_genes PROCESS. GERMLINE SEQUENCE & TREE PARTS OF THE WORFLOW ENDED. SEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
                                     print(warn)
                                     return warn // accumulate
                                 }

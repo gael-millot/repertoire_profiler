@@ -279,10 +279,10 @@ If the text is cut in the table, reload the page or change the width of the wind
 <div style="overflow-x:auto; max-width:100%;">
 <table style="width:100%; border-collapse:collapse; overflow-wrap: anywhere;table-layout:fixed; word-break:break-all;">
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color:darkgrey;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             repertoire_profiler_&#8203;&lt;UNIQUE_ID&gt; folders and files
         </th>
-        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color:darkgrey;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Description
         </th>
     </tr>
@@ -395,10 +395,10 @@ If the text is cut in the table, reload the page or change the width of the wind
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color:darkgrey;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             pdf
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color:darkgrey;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Folder containing all the  <b>pdf files</b> described below : 
         </td>
     </tr>
@@ -431,10 +431,10 @@ If the text is cut in the table, reload the page or change the width of the wind
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color:#2f2f2f; color:white;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             tsv
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color:#2f2f2f; color:white;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Folder containing all the  <b>tsv files</b> described below : 
         </td>
     </tr>
@@ -764,7 +764,7 @@ If the text is cut in the table, reload the page or change the width of the wind
             - clonal_germline&#8203;_translation&#8203;_pb.tsv
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            Indicate that the nuc sequence in the <i>clonal_germline_sequence_no_gaps</i> column of the <i>clone_assigned_seq.tsv</i> file has not a length multiple of 3, and so that the translation of this sequence in the <i>clonal_germline_sequence_aa</i> column could be wrong. See the <code>Biostrings::translate</code> warning in the <i>translateGermline.log</i> file present in the <i>report</i> folder to know how the problem has been overcome ("last base was ignored" for instance).
+            Indicate that the nuc sequence in the <i>clonal_germline_sequence_no_gaps</i> column of the <i>clone_assigned_seq.tsv</i> file has not a length multiple of 3, and so that the translation of this sequence in the <i>clonal_germline_sequence_aa</i> column could be wrong. See the <code>Biostrings::translate</code> warning in the <i>translateGermline.log</i> file present in the <i>report</i> folder to know how the problem has been overcome to provide the translation ("last base was ignored" for instance).
         </td>
     </tr>
 </table>
