@@ -280,7 +280,7 @@ If the text is cut in the table, reload the page or change the width of the wind
 <table style="width:100%; border-collapse:collapse; overflow-wrap: anywhere;table-layout:fixed; word-break:break-all;">
     <tr>
         <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color:darkgrey;">
-            repertoire_profiler_&lt;UNIQUE_ID&gt; folders and files
+            repertoire_profiler_&#8203;&lt;UNIQUE_ID&gt; folders and files
         </th>
         <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color:darkgrey;">
             Description
