@@ -279,10 +279,10 @@ If the text is cut in the table, reload the page or change the width of the wind
 <div style="overflow-x:auto; max-width:100%;">
 <table style="width:100%; border-collapse:collapse; overflow-wrap: anywhere;table-layout:fixed; word-break:break-all;">
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color: #A9A9A9 !important; background-color: darkgrey; padding: 2px;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color:darkgrey;">
             repertoire_profiler_&#8203;&lt;UNIQUE_ID&gt; folders and files
         </th>
-        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color: #A9A9A9 !important; background-color: darkgrey; padding: 2px;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color:darkgrey;">
             Description
         </th>
     </tr>
@@ -395,10 +395,10 @@ If the text is cut in the table, reload the page or change the width of the wind
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color: #A9A9A9 !important; background-color: darkgrey; padding: 2px;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color:darkgrey;">
             pdf
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color: #A9A9A9 !important; background-color: darkgrey; padding: 2px;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color:darkgrey;">
             Folder containing all the  <b>pdf files</b> described below : 
         </td>
     </tr>
@@ -431,10 +431,10 @@ If the text is cut in the table, reload the page or change the width of the wind
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color: #FFFFFF !important; background-color: darkgrey; padding: 2px;">
-            tsv
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color:darkgrey;">
+            <span style="background-color:darkgrey; display:block; padding:2px;">tsv</span>
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color: #A9A9A9 !important; background-color: darkgrey; padding: 2px;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color:darkgrey;">
             Folder containing all the  <b>tsv files</b> described below : 
         </td>
     </tr>
