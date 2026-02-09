@@ -634,7 +634,7 @@ No wanted sequence detected.
 
 <br><br>
 
-###  Warnings
+###  Warnings recapitulation
 
 ```{r, echo=FALSE, results='asis'}
 #remove work directory from current directory
@@ -642,6 +642,7 @@ if(length(warning_collect) == 1 && all(warning_collect == "")){
     cat(paste0('No warning message reported.'))
 }else{
      # remove strings
+    warning_collect <-  unique(warning_collect)
     warning_collect <- warning_collect[warning_collect != ""]
     warning_collect <- warning_collect[ ! grepl(x = warning_collect, pattern = "^ *WARNING: *")]
     # end remove strings

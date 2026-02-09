@@ -279,10 +279,10 @@ If the text is cut in the table, reload the page or change the width of the wind
 <div style="overflow-x:auto; max-width:100%;">
 <table style="width:100%; border-collapse:collapse; overflow-wrap: anywhere;table-layout:fixed; word-break:break-all;">
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color:darkgrey;">
             repertoire_profiler_&lt;UNIQUE_ID&gt; folders and files
         </th>
-        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color:darkgrey;">
             Description
         </th>
     </tr>
@@ -352,10 +352,10 @@ If the text is cut in the table, reload the page or change the width of the wind
                             <ul style="padding-left:1.2em; margin:0;"><li>all: <i>&lt;vdjc&gt;&#8203;_sequence&#8203;_start/&#8203;end</i> and  <i>&lt;fwr|cdr&gt;&#8203;_start/&#8203;end</i> columns of the <i>wanted_seq.tsv</i> files if <code>align_seq</code> parameter of the <i>nextflow.config</i> file is <code>igblast_full|query</code>, and from the <i>&lt;vdjc|&#8203;fwr|&#8203;cdr&gt;&#8203;_sequence_&#8203;start/&#8203;end</i> columns of the <i>wanted_seq.tsv</i> files otherwise.
                             </li><li>clonal: <i>&lt;vdjc|&#8203;fwr|&#8203;cdr&gt;&#8203;_clonal_&#8203;germline_*&#8203;_start/&#8203;end</i> columns of the <i>clone_assigned_seq.tsv</i> file.
                             </li><li>imgt: <i>&lt;vdjc|&#8203;fwr|&#8203;cdr&gt;&#8203;_*_&#8203;alignment_&#8203;with_&#8203;gaps_&#8203;start/&#8203;end</i> columns of the <i>wanted_seq.tsv</i> file.
-                </ul>Warning: for <i>biojs.gff</i>, coordinates do not match necessarily with the corresponding columns of .tsv files indicated above, since they are adjusted to the number of hyphens and dots inserted in the aligned sequences. However, they match in the <i>jalview.gff</i> file, in accordance with requirement of this visualization tool.
-                <br>Warning: coordinates provided for the aa sequences can be approximated if the coordinates of the nuc sequences in the .tsv files are not multiple of 3. They can even be aberrant if the nucleotide sequence is not in codon phase from the 5' part beginning (X aa should be present in the sequence, as well as aa sequence unproperly aligned to the others). See the <i>GffAa.log</i> in the <i>report</i> folder.
-                <br>Coordinates are returned in the .gff files, except if the <code>align_seq</code> parameter of the <i>nextflow.config</i> file is <code>fwr1|fwr2|fwr3|fwr4|cdr1|cdr2|cdr3|junction</code> (<i>vdjc_*.gff</i> and <i>fwr_cdr_*.gff</i> files are empty).
-                <br>Warning: coordinates might not be correct in the masked region when the <code>clone_germline_kind</code> parameter of the <i>nextflow.config</i> file is set to "dmask".
+                </ul><br>Warning: for <i>biojs.gff</i>, coordinates do not match necessarily the corresponding columns of the <i>wanted_seq.tsv</i> or <i>clone_assigned_seq.tsv</i> files, since they are adjusted to the number of hyphens and dots inserted in the aligned sequences. However, they match in the <i>jalview.gff</i> file, in accordance with requirement of this visualization tool.
+                <br><br>Warning: coordinates provided for the aa sequences can be approximated if the coordinates of the nuc sequences in the .tsv files are not multiple of 3. Each problem is indicated by TRUE in the <i>alignments/aa/all/gff_aa_approx_coord_all.tsv</i> and <i>lignments/aa/clone/gff_aa_approx_coord_clone.tsv</i>. The column names of these files are those in the <i>wanted_seq.tsv</i> and <i>clone_assigned_seq.tsv</i> files, respectively. Coordinates can even be aberrant if the nucleotide sequence is not in codon phase from the 5' part beginning (due to X aa present in the sequence, as well as aa sequence unproperly aligned to the others, for instance). If you observe such phenomenon, please see the <i>GffAa.log</i> in the <i>report</i> folder.
+                <br><br>VDJC and CDR/FWR coordinates are returned in the .gff files, except if the <code>align_seq</code> parameter of the <i>nextflow.config</i> file is <code>fwr1|fwr2|fwr3|fwr4|cdr1|cdr2|cdr3|junction</code> (<i>vdjc_*.gff</i> and <i>fwr_cdr_*.gff</i> files are empty).
+                <br><br>Warning: coordinates might not be correct in the masked region when the <code>clone_germline_kind</code> parameter of the <i>nextflow.config</i> file is set to "dmask".
                 </ul><br>
             Alignments are perfomed using <a href="http://cao.labshare.cn/abalign/">Abalign</a> (see the <code>align_abalign_options</code> parameter in the <i>nextflow.config</i> file), or <a href="https://mafft.cbrc.jp/alignment/server/index.html">Mafft</a> (see the <code>align_mafft_all_options</code> and <code>align_mafft_clonal_options</code> parameters in the <i>nextflow.config</i> file) depending on the <code>align_soft</code> parameter of the <i>nextflow.config</i> file, but systematically by Mafft if the <code>align_seq</code> parameter of the <i>nextflow.config</i> file is <code>query</code>, <code>igblast_full</code>, <code>trimmed</code>, <code>c_sequence_alignment</code> or <code>c_germline_alignment</code>.<br><br>
             Warning: html, fasta and gff files can be absent for clonal groups if none have at least the number of sequences indicated in the <code>align_clone_nb</code> parameter in the <i>nextflow.config</i> file.<br><br>
@@ -395,10 +395,10 @@ If the text is cut in the table, reload the page or change the width of the wind
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color:darkgrey;">
             pdf
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color:darkgrey;">
             Folder containing all the  <b>pdf files</b> described below : 
         </td>
     </tr>
@@ -431,10 +431,10 @@ If the text is cut in the table, reload the page or change the width of the wind
         </td>
     </tr>
     <tr>
-        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color:darkgrey;">
             tsv
         </th>
-        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color:darkgrey;">
             Folder containing all the  <b>tsv files</b> described below : 
         </td>
     </tr>
@@ -757,6 +757,14 @@ If the text is cut in the table, reload the page or change the width of the wind
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             stats associated to the <i>donuts.pdf</i> file. 
+        </td>
+    </tr>
+    <tr>
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            - clonal_germl_translation_pb.tsv
+        </th>
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            Indicate that the nuc sequence in the <i>clonal_germline_sequence_no_gaps</i> column of the <i>clone_assigned_seq.tsv</i> file has not a length multiple of 3, and so that the translation of this sequence in the <i>clonal_germline_sequence_aa</i> column could be wrong. See the <code>Biostrings::translate</code> warning in the <i>translateGermline.log</i> file present in the <i>report</i> folder to know how the problem has been overcome ("last base was ignored" for instance).
         </td>
     </tr>
 </table>

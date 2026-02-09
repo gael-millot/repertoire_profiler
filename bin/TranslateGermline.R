@@ -314,7 +314,7 @@ fun_report(data = paste0("\n\n##################################################
 fun_report(data = paste0("\n\n################################ RUNNING DATE AND STARTING TIME"), output = log, path = "./", overwrite = FALSE)
 fun_report(data = paste0(ini.date, "\n\n"), output = log, path = "./", overwrite = FALSE)
 fun_report(data = paste0("\n\n################################ RUNNING"), output = log, path = "./", overwrite = FALSE)
-fun_report(data = paste0("\n\n#########\n\n", tsv_path, "\n\n#########\n\n"), output = log, path = "./", overwrite = FALSE)
+
 
 ################ End ignition
 
@@ -343,6 +343,8 @@ file_name <- basename(tsv_path)
 
 
 clone_id <- df$clone_id[1]
+fun_report(data = paste0("\n\n#########\n\nClone ID ", clone_id, "\n\n#########\n\n"), output = log, path = "./", overwrite = FALSE)
+fun_report(data = paste0("\n\ntsv path: ", tsv_path, "\n\n"), output = log, path = "./", overwrite = FALSE)
 germ_nuc <- df$clonal_germline_sequence_no_gaps
 # Make sure all germline sequences are the same (which they are supposed to be since this is a single clonal group)
 if(any(germ_nuc != germ_nuc[1])){
@@ -367,18 +369,18 @@ withCallingHandlers(
     }
 )
 if( ! all(approx == "", na.rm = TRUE)){
-    tempo_warn <- paste0("\nWARNING:\nIN THE TranslateGermline PROCESS, THE PROCESS HAS DETECTED SOME SEQUENCES IN THE clonal_germline_sequence_no_gaps COLUMN THAT CONTAINS N NUCLEOTIDES NOT A MULTIPLE OF 3 WHEN GAPS ARE REMOVED. SEE THE .tsv FILE IN /tsv FOLDER.")
-    warn <- base::paste0(base::ifelse(test = warn == "", yes = tempo_warn, no = base::paste0(warn, "\n\n", tempo_warn, collapse = NULL, recycle0 = FALSE)), collapse = NULL, recycle0 = FALSE)
+    tempo_warn <- paste0("\nWARNING:\nIN THE TranslateGermline PROCESS, THE PROCESS HAS DETECTED SOME SEQUENCES IN THE clonal_germline_sequence_no_gaps COLUMN THAT CONTAINS N NUCLEOTIDES NOT A MULTIPLE OF 3 WHEN GAPS ARE REMOVED. SEE THE clonal_germl_translation_pb.tsv FILE IN THE [tsv](./tsv) FOLDER.\n\n")
+    warn <- base::paste0(base::ifelse(test = base::is.null(x = warn), yes = tempo_warn, no = base::paste0(warn, "\n\n", tempo_warn, collapse = NULL, recycle0 = FALSE)), collapse = NULL, recycle0 = FALSE)
     cat(tempo_warn, file = "translateGermline.log", append = TRUE)
 }else{
     approx <- approx[-nrow(approx), ]
 }
 if(file.exists("tempo_warnings.txt")){
-    tempo_warn <- readLines("tempo_warnings.txt")
-    warn <- base::paste0(base::ifelse(test = warn == "", yes = tempo_warn, no = base::paste0(warn, "\n\n", tempo_warn, collapse = NULL, recycle0 = FALSE)), collapse = NULL, recycle0 = FALSE)
+    tempo_warn <- base::paste0(readLines("tempo_warnings.txt"), collapse = "\n")
+    warn <- base::paste0(base::ifelse(test = base::is.null(x = warn), yes = tempo_warn, no = base::paste0(warn, "\n\n", tempo_warn, collapse = NULL, recycle0 = FALSE)), collapse = NULL, recycle0 = FALSE)
     cat(tempo_warn, file = "translateGermline.log", append = TRUE)
 }
-write.table(approx, file = paste0("./clonal_germline_sequence_no_gaps_problems.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
+write.table(approx, file = paste0("./clonal_germl_translation_pb.tsv.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
 tempo_name <- "clonal_germline_sequence_aa"
 df[[tempo_name]] <- toString(germ_aa)
 file_base <- tools::file_path_sans_ext(basename(file_name))
@@ -386,7 +388,6 @@ new_file_name <- paste0(file_base, "-trans_germ-pass.tsv")
 # add controls
 df <- data.frame(df, clonal_germline_identical = df$clonal_germline_sequence_no_gaps == df$clonal_germline_alignment_igblast_airr, clonal_germline_aa_identical = df$clonal_germline_sequence_aa == df$clonal_germline_alignment_aa_igblast_airr)
 # end add controls
-writeLines(warn, con = "warnings.txt")
 write.table(df, file = paste0("./", new_file_name), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\t")
 write.table(approx, file = paste0("./caca.tsv"), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\t")
 
