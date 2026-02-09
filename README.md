@@ -761,7 +761,7 @@ If the text is cut in the table, reload the page or change the width of the wind
     </tr>
     <tr>
         <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            - clonal_germl_translation_pb.tsv
+            - clonal_germl&#8203;_translation&#8203;_pb.tsv
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             Indicate that the nuc sequence in the <i>clonal_germline_sequence_no_gaps</i> column of the <i>clone_assigned_seq.tsv</i> file has not a length multiple of 3, and so that the translation of this sequence in the <i>clonal_germline_sequence_aa</i> column could be wrong. See the <code>Biostrings::translate</code> warning in the <i>translateGermline.log</i> file present in the <i>report</i> folder to know how the problem has been overcome ("last base was ignored" for instance).
