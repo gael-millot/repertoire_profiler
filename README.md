@@ -432,7 +432,7 @@ If the text is cut in the table, reload the page or change the width of the wind
     </tr>
     <tr>
         <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color:darkgrey;">
-            <span style="background-color:darkgrey; display:block; padding:2px;">tsv</span>
+            <span style="background-color:dark; display:block; padding:2px;">tsv</span>
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere; background-color:darkgrey;">
             Folder containing all the  <b>tsv files</b> described below : 
