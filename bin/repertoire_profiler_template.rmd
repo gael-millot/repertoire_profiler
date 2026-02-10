@@ -94,15 +94,15 @@ read_tsv_with_dummy <- function(file_path){
     }else if(file.info(file_path)$size == 0){
         stop(paste0("\n\n================\n\nINTERNAL ERROR IN Print_report PROCESS.\nfile_path FILE IS EMPTY BUT SHOULD NOT BE READ HERE. PATH IS: ", file_path, "\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"), call. = FALSE)
     }else{
-        df <- readr::read_tsv(file_path, show_col_types = FALSE)
+        df <- read.table(file_path, header = TRUE, sep = "\t", fill = TRUE, quote = "", comment.char = "", stringsAsFactors = FALSE)
         truncated <- FALSE
         # If the file is empty but has column names, add an empty line to make the column names readable
         if (nrow(df) == 0){
             dummy_row <- as.data.frame(matrix("", nrow = 1, ncol = ncol(df)))
             colnames(dummy_row) <- colnames(df)
-            df <- rbind(df, dummy_row)
-        }else if(nrow(df) > 10){
-            df <- df[1:10, ]
+            df <- df[ -(1:nrow(df)), ]
+        }else if(nrow(df) > 3){
+            df <- df[1:3, ]
             truncated <- TRUE
         }
         return(list(df = df, truncated = truncated))
@@ -250,9 +250,15 @@ Number of productive sequences: ', nb_productive
             cat(paste0('
 \n**(Note: Table truncated to 10 rows. Full file available in the unproductive_seq.tsv file.)**\n\n
             '))
-            cat(knitr::kable(df, format = "markdown", row.names = FALSE))
+            cat(knitr::kable(df, format = "html", row.names = FALSE))
+            cat('
+<br>
+            ')
         }else{
             cat(knitr::kable(df, format = "html", row.names = FALSE))
+            cat('
+<br>
+            ')
         }
         cat(paste0('
 </details>
@@ -275,8 +281,14 @@ Number of unproductive sequences: ', nb_unproductive
 \n**(Note: Table truncated to 10 rows. Full file available in the unproductive_seq.tsv file.)**\n\n
             '))
             cat(knitr::kable(df, format = "markdown", row.names = FALSE))
+            cat('
+<br>
+            ')
         }else{
             cat(knitr::kable(df, format = "html", row.names = FALSE))
+            cat('
+<br>
+            ')
         }
         cat(paste0('
 </details>
@@ -299,8 +311,14 @@ Number of wanted sequences: ', nb_wanted
 \n**(Note: Table truncated to 10 rows. Full file available in the wanted_seq.tsv file.)**\n\n
             '))
             cat(knitr::kable(df, format = "markdown", row.names = FALSE))
+            cat('
+<br>
+            ')
         }else{
             cat(knitr::kable(df, format = "html", row.names = FALSE))
+            cat('
+<br>
+            ')
         }
         cat(paste0('
 </details>
@@ -323,8 +341,14 @@ Number of unwanted sequences: ', nb_unwanted
 \n**(Note: Table truncated to 10 rows. Full file available in the unwanted_seq.tsv file.)**\n\n
             '))
             cat(knitr::kable(df, format = "markdown", row.names = FALSE))
+            cat('
+<br>
+            ')
         }else{
             cat(knitr::kable(df, format = "html", row.names = FALSE))
+            cat('
+<br>
+            ')
         }
         cat(paste0('
 </details>
@@ -449,8 +473,14 @@ Number of clone-assigned sequences: ', nb_clone_tot
 \n**(Note: Table truncated to 10 rows. Full file available in the clone_assigned_seq.tsv file.)**\n\n
             '))
             cat(knitr::kable(df, format = "markdown", row.names = FALSE))
+            cat('
+<br>
+            ')
         }else{
             cat(knitr::kable(df, format = "html", row.names = FALSE))
+            cat('
+<br>
+            ')
         }
         cat(paste0('
 </details>
@@ -473,8 +503,14 @@ Number of sequences with failed clonal assignement: ', nb_clone_unassignment
 \n**(Note: Table truncated to 10 rows. Full file available in the failed_clone_assigned_seq.tsv file.)**\n\n
             '))
             cat(knitr::kable(df, format = "markdown", row.names = FALSE))
+            cat('
+<br>
+            ')
         }else{
             cat(knitr::kable(df, format = "html", row.names = FALSE))
+            cat('
+<br>
+            ')
         }
         cat(paste0('
 </details>
@@ -497,8 +533,14 @@ Number of clone assigned sequences with failed germline sequence computation: ',
 \n**(Note: Table truncated to 10 rows. Full file available in the failed_clonal_germline_seq.tsv file.)**\n\n
             '))
             cat(knitr::kable(df, format = "markdown", row.names = FALSE))
+            cat('
+<br>
+            ')
         }else{
             cat(knitr::kable(df, format = "html", row.names = FALSE))
+            cat('
+<br>
+            ')
         }
         cat(paste0('
 </details>
@@ -526,8 +568,14 @@ Number of sequences per clone ID: &nbsp; <details class="inline"><summary style=
 \n**(Note: Table truncated to 10 rows. Full file available in the clone_id_count.tsv file.)**\n\n
             '))
             cat(knitr::kable(df, format = "markdown", row.names = FALSE))
+            cat('
+<br>
+            ')
         }else{
             cat(knitr::kable(df, format = "html", row.names = FALSE))
+            cat('
+<br>
+            ')
         }
         cat(paste0('
 </details>
@@ -616,8 +664,14 @@ Number of failed alignments: <code class="r-output">', nrow(df), '</code>&nbsp; 
 \n**(Note: Table truncated to 10 rows. Full file available in the [tsv](.) folder.)**\n\n
             '))
             cat(knitr::kable(df, format = "markdown", row.names = FALSE))
+            cat('
+<br>
+            ')
         }else{
             cat(knitr::kable(df, format = "html", row.names = FALSE))
+            cat('
+<br>
+            ')
         }
         cat(paste0('
 </details>
@@ -680,13 +734,17 @@ if(length(warning_collect) == 1 && all(warning_collect == "")){
     cat(paste0('No warning message reported.'))
 }else{
      # remove strings
-    
     warning_collect <- warning_collect[warning_collect != ""]
+    warning_collect[duplicated(warning_collect) & ! grepl(x = warning_collect, pattern = "^WARNING:.*")] <- "" # remove duplicated messages
+    # remove the 2 consec strings "WARNING" and ""
+    to_remove <- which(grepl(x = warning_collect, pattern = "^WARNING:.*") & c(warning_collect[-1], NA) == "")
+    warning_collect <- warning_collect[-sort(c(to_remove, to_remove + 1))]
+    # end remove the 2 consec strings "WARNING" and ""
     warning_collect <- gsub(x = warning_collect, pattern = "\n", replacement = "<br>")
     warning_collect <- gsub(x = warning_collect, pattern = "^WARNING:.*", replacement = "\n")
     warning_collect <- paste0(warning_collect, collapse = "<br>") # single string
     warning_collect <- gsub(x = warning_collect, pattern = "\n", replacement = "")
-    warning_collect <-  unique(warning_collect) #vector of string
+
     # warning_collect <- warning_collect[ ! grepl(x = warning_collect, pattern = "^ *WARNING: *")]
     # end remove strings
     cat(warning_collect)
