@@ -247,22 +247,15 @@ Number of productive sequences: ', nb_productive
         df <- tempo_read$df
         truncated_log <- tempo_read$truncated
         if(is.data.frame(df) && truncated_log){
-            cat(paste0('
-\n**(Note: Table truncated to 10 rows. Full file available in the unproductive_seq.tsv file.)**\n\n
-            '))
-            cat(knitr::kable(df, format = "html", row.names = FALSE))
             cat('
-<br>
-            ')
-        }else{
-            cat(knitr::kable(df, format = "html", row.names = FALSE))
-            cat('
-<br>
+(Note: Table truncated to 3 rows. Full file available in the productive_seq.tsv file.)<br><br>
             ')
         }
-        cat(paste0('
+        cat(knitr::kable(df, format = "html", row.names = FALSE))
+        cat('
+<br>
 </details>
-        '))
+        ')
     }
     cat(paste0('
 <br>
@@ -277,22 +270,15 @@ Number of unproductive sequences: ', nb_unproductive
         df <- tempo_read$df
         truncated_log <- tempo_read$truncated
         if(is.data.frame(df) && truncated_log){
-            cat(paste0('
-\n**(Note: Table truncated to 10 rows. Full file available in the unproductive_seq.tsv file.)**\n\n
-            '))
-            cat(knitr::kable(df, format = "markdown", row.names = FALSE))
             cat('
-<br>
-            ')
-        }else{
-            cat(knitr::kable(df, format = "html", row.names = FALSE))
-            cat('
-<br>
+(Note: Table truncated to 3 rows. Full file available in the unproductive_seq.tsv file.)<br><br>
             ')
         }
-        cat(paste0('
+        cat(knitr::kable(df, format = "html", row.names = FALSE))
+        cat('
+<br>
 </details>
-        '))
+        ')
     }
     cat(paste0('
 <br>
@@ -307,22 +293,15 @@ Number of wanted sequences: ', nb_wanted
         df <- tempo_read$df
         truncated_log <- tempo_read$truncated
         if(is.data.frame(df) && truncated_log){
-            cat(paste0('
-\n**(Note: Table truncated to 10 rows. Full file available in the wanted_seq.tsv file.)**\n\n
-            '))
-            cat(knitr::kable(df, format = "markdown", row.names = FALSE))
             cat('
-<br>
-            ')
-        }else{
-            cat(knitr::kable(df, format = "html", row.names = FALSE))
-            cat('
-<br>
+(Note: Table truncated to 3 rows. Full file available in the wanted_seq.tsv file.)<br><br>
             ')
         }
-        cat(paste0('
+        cat(knitr::kable(df, format = "html", row.names = FALSE))
+        cat('
+<br>
 </details>
-        '))
+        ')
     }
     cat(paste0('
 <br>
@@ -337,22 +316,15 @@ Number of unwanted sequences: ', nb_unwanted
         df <- tempo_read$df
         truncated_log <- tempo_read$truncated
         if(is.data.frame(df) && truncated_log){
-            cat(paste0('
-\n**(Note: Table truncated to 10 rows. Full file available in the unwanted_seq.tsv file.)**\n\n
-            '))
-            cat(knitr::kable(df, format = "markdown", row.names = FALSE))
             cat('
-<br>
-            ')
-        }else{
-            cat(knitr::kable(df, format = "html", row.names = FALSE))
-            cat('
-<br>
+(Note: Table truncated to 3 rows. Full file available in the unwanted_seq.tsv file.)<br><br>
             ')
         }
-        cat(paste0('
+        cat(knitr::kable(df, format = "html", row.names = FALSE))
+        cat('
+<br>
 </details>
-        '))
+        ')
     }
     cat(paste0('
 <br>
@@ -470,21 +442,14 @@ Number of clone-assigned sequences: ', nb_clone_tot
         truncated_log <- tempo_read$truncated
         if(is.data.frame(df) && truncated_log){
             cat(paste0('
-\n**(Note: Table truncated to 10 rows. Full file available in the clone_assigned_seq.tsv file.)**\n\n
-            '))
-            cat(knitr::kable(df, format = "markdown", row.names = FALSE))
-            cat('
-<br>
-            ')
-        }else{
-            cat(knitr::kable(df, format = "html", row.names = FALSE))
-            cat('
-<br>
+(Note: Table truncated to 3 rows. Full file available in the clone_assigned_seq.tsv file.)<br><br>
             ')
         }
-        cat(paste0('
+        cat(knitr::kable(df, format = "html", row.names = FALSE))
+        cat('
+<br>
 </details>
-        '))
+        ')
     }
     cat(paste0('
 <br>
@@ -499,22 +464,15 @@ Number of sequences with failed clonal assignement: ', nb_clone_unassignment
         df <- tempo_read$df
         truncated_log <- tempo_read$truncated
         if(is.data.frame(df) && truncated_log){
-            cat(paste0('
-\n**(Note: Table truncated to 10 rows. Full file available in the failed_clone_assigned_seq.tsv file.)**\n\n
-            '))
-            cat(knitr::kable(df, format = "markdown", row.names = FALSE))
             cat('
-<br>
-            ')
-        }else{
-            cat(knitr::kable(df, format = "html", row.names = FALSE))
-            cat('
-<br>
+(Note: Table truncated to 3 rows. Full file available in the failed_clone_assigned_seq.tsv file.)<br><br>
             ')
         }
-        cat(paste0('
+        cat(knitr::kable(df, format = "html", row.names = FALSE))
+        cat('
+<br>
 </details>
-        '))
+        ')
     }
     cat(paste0('
 <br>
@@ -530,9 +488,9 @@ Number of clone assigned sequences with failed germline sequence computation: ',
         truncated_log <- tempo_read$truncated
         if(is.data.frame(df) && truncated_log){
             cat(paste0('
-\n**(Note: Table truncated to 10 rows. Full file available in the failed_clonal_germline_seq.tsv file.)**\n\n
+\n(Note: Table truncated to 3 rows. Full file available in the failed_clonal_germline_seq.tsv file.)\n\n
             '))
-            cat(knitr::kable(df, format = "markdown", row.names = FALSE))
+            cat(knitr::kable(df, format = "html", row.names = FALSE))
             cat('
 <br>
             ')
@@ -565,9 +523,9 @@ Number of sequences per clone ID: &nbsp; <details class="inline"><summary style=
         truncated_log <- tempo_read$truncated
         if(is.data.frame(df) && truncated_log){
             cat(paste0('
-\n**(Note: Table truncated to 10 rows. Full file available in the clone_id_count.tsv file.)**\n\n
+\n(Note: Table truncated to 3 rows. Full file available in the clone_id_count.tsv file.)\n\n
             '))
-            cat(knitr::kable(df, format = "markdown", row.names = FALSE))
+            cat(knitr::kable(df, format = "html", row.names = FALSE))
             cat('
 <br>
             ')
@@ -661,9 +619,9 @@ Number of failed alignments: <code class="r-output">', nrow(df), '</code>&nbsp; 
         '))
         if(is.data.frame(df) && truncated_log){
             cat(paste0('
-\n**(Note: Table truncated to 10 rows. Full file available in the [tsv](.) folder.)**\n\n
+\n(Note: Table truncated to 3 rows. Full file available in the [tsv](.) folder.)\n\n
             '))
-            cat(knitr::kable(df, format = "markdown", row.names = FALSE))
+            cat(knitr::kable(df, format = "html", row.names = FALSE))
             cat('
 <br>
             ')
