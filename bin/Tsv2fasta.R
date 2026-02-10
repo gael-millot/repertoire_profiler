@@ -660,7 +660,7 @@ if( ! is.null(warn)){
     tempo.cat <- paste0("IN Tsv2fasta.R OF THE NEXFLOW EXECUTION:\n\n", warn)
     fun_report(data = tempo.cat, output = log, path = "./", overwrite = FALSE)
     cat(tempo.cat)
-    writeLines(tempo.cat, con = "warnings.txt")
+    writeLines(warn, con = "warnings.txt")
 }else{
     fun_report(data = paste0("\n\nNO WARNING MESSAGE TO REPORT"), output = log, path = "./", overwrite = FALSE)
     writeLines("", con = "warnings.txt")

@@ -182,6 +182,7 @@ include {Abalign_align_nuc} from './modules/Abalign_align_nuc.nf'
 include {Tree} from './modules/Tree.nf'
 include {Meta2Itol} from './modules/Meta2Itol.nf'
 include {Itol} from './modules/Itol.nf'
+include {Print_warnings} from './modules/Print_warnings.nf'
 include {Print_report} from './modules/Print_report.nf'
 include {Backup} from './modules/Backup.nf'
 
@@ -480,7 +481,7 @@ workflow {
                     throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nPRODUCTIVE FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE ParseDb_filtering PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
                 }
                 if(n == 0){
-                    warn = "\n\nWARNING:\n0 PRODUCTIVE SEQUENCE FOLLOWING THE ParseDb_filtering PROCESS. WORFLOW ENDED. SEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
+                    warn = "\n\nWARNING:\n0 PRODUCTIVE SEQUENCE FOLLOWING THE ParseDb_filtering PROCESS\nWORFLOW ENDED.\nWAIT FOR THE END OF THE Print_report PROCESS AND SEE THE PARTIAL RESULTS IN:\n${out_path}.\n\n"
                     print(warn)
                     return warn // accumulate
                 }
@@ -533,7 +534,7 @@ workflow {
                         throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nWANTED FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Igblast_chain_check PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
                     }
                     if(n == 0){
-                        warn = "\n\nWARNING:\n0 WANTED SEQUENCE FOLLOWING THE Igblast_chain_check PROCESS. CHECK THAT THE igblast_organism, igblast_loci, igblast_B_heavy_chain, igblast_B_lambda_chain, igblast_B_kappa_chain, igblast_T_alpha_chain, igblast_T_beta_chain, igblast_T_gamma_chain AND igblast_T_delta_chain ARE CORRECTLY SET IN THE nextflow.config FILE. WORFLOW ENDED. SEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
+                        warn = "\n\nWARNING:\n0 WANTED SEQUENCE FOLLOWING THE Igblast_chain_check PROCESS.\nCHECK THAT THE\nigblast_organism\nigblast_loci\nigblast_B_heavy_chain\nigblast_B_lambda_chain\nigblast_B_kappa_chain\nigblast_T_alpha_chain\nigblast_T_beta_chain\nigblast_T_gamma_chain\nigblast_T_delta_chain ARE CORRECTLY SET IN THE nextflow.config FILE\nWORFLOW ENDED.\nWAIT FOR THE END OF THE Print_report PROCESS AND SEE THE PARTIAL RESULTS IN:\n${out_path}.\n\n"
                         print(warn)
                         return warn // accumulate
                     }
@@ -673,7 +674,7 @@ workflow {
                             throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nASSIGNMENT FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Clone_assignment PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
                         }
                         if(n == 0){
-                            warn = "\n\nWARNING:\n0 ASSIGNED SEQUENCE FOLLOWING THE Clone_assignment PROCESS. GERMLINE SEQUENCE & TREE PARTS OF THE WORFLOW ENDED. SEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
+                            warn = "\n\nWARNING:\n0 ASSIGNED SEQUENCE FOLLOWING THE Clone_assignment PROCESS.\nGERMLINE SEQUENCE & TREE PARTS OF THE WORFLOW ENDED.\nWAIT FOR THE END OF THE Print_report PROCESS AND SEE THE PARTIAL RESULTS IN:\n${out_path}.\n\n"
                             print(warn)
                             return warn // accumulate
                         }
@@ -730,7 +731,7 @@ workflow {
                                 throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nCLOSEST GERMLINE FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Closest_germline PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
                             }
                             if(n == 0){
-                                warn = "\n\nWARNING: 0 CLOSEST GERMLINE SEQUENCE FOLLOWING THE Closest_germline PROCESS. GERMLINE SEQUENCE & TREE PARTS OF THE WORFLOW ENDED. SEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
+                                warn = "\n\nWARNING: 0 CLOSEST GERMLINE SEQUENCE FOLLOWING THE Closest_germline PROCESS.\nGERMLINE SEQUENCE & TREE PARTS OF THE WORFLOW ENDED.\nWAIT FOR THE END OF THE Print_report PROCESS AND SEE THE PARTIAL RESULTS IN:\n${out_path}.\n\n"
                                 print(warn)
                                 return warn // accumulate
                             }
@@ -807,7 +808,7 @@ workflow {
                                     throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nclone_assigned_seq.tsv FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Mutation_load_germ_genes PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
                                 }
                                 if(n == 0){
-                                    warn = "\n\nWARNING:\n0 CLONAL SEQUENCE FOLLOWING THE Mutation_load_germ_genes PROCESS. GERMLINE SEQUENCE & TREE PARTS OF THE WORFLOW ENDED. SEE THE PARTIAL RESULTS IN: ${out_path}.\n\n"
+                                    warn = "\n\nWARNING:\n0 CLONAL SEQUENCE FOLLOWING THE Mutation_load_germ_genes PROCESS.\nGERMLINE SEQUENCE & TREE PARTS OF THE WORFLOW ENDED.\nWAIT FOR THE END OF THE Print_report PROCESS AND SEE THE PARTIAL RESULTS IN:\n${out_path}.\n\n"
                                     print(warn)
                                     return warn // accumulate
                                 }
@@ -1157,7 +1158,11 @@ workflow {
         // end when: nb_productive > 0
 
     // end when: nb_igblast > 0
-    warning_ch.ifEmpty{''}.collectFile(name: "warnings.txt").subscribe{it -> it.copyTo("${out_path}/reports")}
+
+    Print_warnings(
+        warning_ch.ifEmpty{''}.collectFile(name: "warnings_collect.txt")
+    )
+
 
     Print_report(
         config_file, // from parameter
@@ -1192,8 +1197,8 @@ workflow {
         repertoire_vj_ch.ifEmpty{'EMPTY'}, 
         clone_distance, // parameter
         align_soft, // parameter
-        phylo_tree_itol_subscription // parameter
-        //final_warning_ch // just so that print_report wait for all warnings // warning_ch.collect().map{it.join('\n\n')}.ifEmpty{'EMPTY'} // concatenate all warnings into a single string // finally, the gathered string is very loong. I prefer to use a file added in /reports/
+        phylo_tree_itol_subscription, // parameter
+        Print_warnings.out.final_warning_ch // just so that print_report wait for all warnings // warning_ch.collect().map{it.join('\n\n')}.ifEmpty{'EMPTY'} // concatenate all warnings into a single string // finally, the gathered string is very loong. I prefer to use a file added in /reports/
     )
 
 

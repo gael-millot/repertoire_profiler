@@ -357,16 +357,16 @@ if(nb_wanted > 0){
     cat(paste0('
 
 Compilation of the [wanted_seq.tsv](./tsv) file.
+<br>
+Click on a figure to enlarge. Reclick to go back to the report.
+<br>
+Only genes are displayed here. See the pdf files in the [pdf](./pdf) folder for the complete results, including the alleles (different copies of a same gene) counts.
+<br>
+Warning: only the first annotation is considered if several are presents in the v_call, j_call or c_call column of the wanted_seq.tsv file.
 
 <br>
 
 #### Heatmaps
-<br>
-Click on a figure to enlarge. Reclick to go back to the report.
-<br>
-Only genes are displayed here. See the [gene_repertoire.pdf](./pdf/gene_repertoire.pdf) and [allele_repertoire.pdf](./pdf/allele_repertoire.pdf) files in the [pdf](./pdf) folder for the complete results, including the alleles (different copies of a same gene) counts.
-<br>
-Warning: only the first annotation is considered if several are presents in the v_call, j_call or c_call column of the wanted_seq.tsv file.
 
 <br>
 
@@ -385,14 +385,9 @@ Warning: only the first annotation is considered if several are presents in the 
     cat(paste0('
 
 #### Donut plots
-<br>
-Click on a figure to enlarge. Reclick to go back to the report.
-<br>
-Only genes are displayed here. See the [donuts.pdf](./pdf/donuts.pdf) file in the [pdf](./pdf) folder for the complete results, including the alleles (different copies of a same gene) proportions.
-<br>
-Warning: only the first annotation is considered if several are presents in the v_call, j_call or c_call column of the wanted_seq.tsv file.
 
 <br>
+
 '))
     cat('<div class="image-container">')
     if(file.exists("vj_gene_all_donutchart.png")){
@@ -685,11 +680,16 @@ if(length(warning_collect) == 1 && all(warning_collect == "")){
     cat(paste0('No warning message reported.'))
 }else{
      # remove strings
-    warning_collect <-  unique(warning_collect)
+    
     warning_collect <- warning_collect[warning_collect != ""]
-    warning_collect <- warning_collect[ ! grepl(x = warning_collect, pattern = "^ *WARNING: *")]
+    warning_collect <- gsub(x = warning_collect, pattern = "\n", replacement = "<br>")
+    warning_collect <- gsub(x = warning_collect, pattern = "^WARNING:.*", replacement = "\n")
+    warning_collect <- paste0(warning_collect, collapse = "<br>") # single string
+    warning_collect <- gsub(x = warning_collect, pattern = "\n", replacement = "")
+    warning_collect <-  unique(warning_collect) #vector of string
+    # warning_collect <- warning_collect[ ! grepl(x = warning_collect, pattern = "^ *WARNING: *")]
     # end remove strings
-    cat(paste0(warning_collect, collapse = "\n\n"))
+    cat(warning_collect)
 }
 ```
 

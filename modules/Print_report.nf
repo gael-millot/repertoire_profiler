@@ -56,6 +56,7 @@ process Print_report{
     val clone_distance
     val align_soft
     val itol_subscription
+    path final_warning_ch
     //path final_warning_ch // just so that print_report wait for all warnings
     //val warning_collect
 
@@ -125,8 +126,7 @@ process Print_report{
         nb_unclone_tot <- "${nb_unclone_tot}"
         nb_clone_unassignment <- "${nb_clone_unassignment}"
         nb_clone_ungermline <- "${nb_clone_ungermline}"
-        # warning_collect <- "{warning_collect}"
-        warning_collect <- readLines("./reports/warnings.txt", warn = FALSE) # one string per line
+        warning_collect <- readLines("${final_warning_ch}", warn = FALSE) # one string per line
         if(nb_productive == "EMPTY"){
             nb_productive <- -1
         }else{
@@ -172,11 +172,6 @@ process Print_report{
         }else{
             nb_clone_ungermline <- ${nb_clone_ungermline}
         }
-        # if(warning_collect == "EMPTY"){
-            # warning_collect <- ""
-        # }else{
-            # warning_collect <- "{warning_collect}"
-        # }
         # empty "EMPTY" channel
 
         rmarkdown::render(
