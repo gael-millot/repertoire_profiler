@@ -735,7 +735,7 @@ if(sum(!tempo_log, na.rm = TRUE) >= align_clone_nb){
     }
     if(nuc_or_aa == "aa"){
         if(any(approx[,-(1:2)] == TRUE)){
-            tempo.warn <- paste0("WARNING:\nIN THE \"", tag, "\" tag OF THE GffAa PROCESS, APPROXIMATE AA COORDINATES DETECTED SINCE NUC COORDINATES ARE NOT MULTIPLE OF 3. SEE THE .tsv FILE IN THE [/alignments/aa/", ifelse(test = tag == "CLONE", yes = "clonal", no = "all"), "](./alignments/aa/", ifelse(test = tag == "CLONE", yes = "clonal", no = "all"), ") FOLDER.")
+            tempo.warn <- paste0("\nWARNING:\nIN THE \"", tag, "\" tag OF THE GffAa PROCESS, APPROXIMATE AA COORDINATES DETECTED SINCE NUC COORDINATES ARE NOT MULTIPLE OF 3. SEE THE .tsv FILE IN THE [/alignments/aa/", ifelse(test = tag == "CLONE", yes = "clonal", no = "all"), "](./alignments/aa/", ifelse(test = tag == "CLONE", yes = "clonal", no = "all"), ") FOLDER.")
             cat(paste0("\n", tempo.warn, "\n\n"))
             fun_report(data = paste0("\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
             warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))

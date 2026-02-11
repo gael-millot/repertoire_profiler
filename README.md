@@ -842,7 +842,8 @@ Special acknowledgement to:
 
 #### v24.0
 
-- workflow now always returns a html report.
+- Workflow now always returns a html report, whatever the sequencing problems and the workflow ending.
+- Html greatly improved.
 - Bug fixed.
 - Warnings collected and reported in the html report.
 

@@ -88,7 +88,7 @@ params:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
-read_tsv_with_dummy <- function(file_path){
+read_tsv_with_dummy <- function(file_path, nb){
     if( ! file.exists(file_path)){
         stop(paste0("\n\n================\n\nINTERNAL ERROR IN Print_report PROCESS.\nfile_path DOES NOT EXISTS: ", file_path, "\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n"), call. = FALSE)
     }else if(file.info(file_path)$size == 0){
@@ -101,11 +101,11 @@ read_tsv_with_dummy <- function(file_path){
             dummy_row <- as.data.frame(matrix("", nrow = 1, ncol = ncol(df)))
             colnames(dummy_row) <- colnames(df)
             df <- df[ -(1:nrow(df)), ]
-        }else if(nrow(df) > 3){
-            df <- df[1:3, ]
+        }else if(nrow(df) > nb){
+            df <- df[1:nb, ]
             truncated <- TRUE
         }
-        return(list(df = df, truncated = truncated))
+        return(list(df = df, truncated = truncated, nb = nb))
     }
 }
 ```
@@ -210,7 +210,7 @@ Number of sequences failing annotation: ```r nb_unigblast```
 <br>
 Total: ```r nb_igblast + nb_unigblast```
 
-Success ratio: ```r base::round(nb_igblast / (nb_igblast + nb_unigblast), 2)```
+Proportion of success: ```r base::round(nb_igblast / (nb_igblast + nb_unigblast), 2)```
 
 See the igblast_seq.tsv and the failed_igblast_seq.tsv files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output). 
 
@@ -241,15 +241,15 @@ Number of productive sequences: ', nb_productive
     if(nb_productive > 0){
         cat(paste0('
 &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-<span style="color:green">*productive_seq.tsv file in the [tsv](./tsv) folder*</span>
+<span style="color:green">productive_seq.tsv file in the [tsv](./tsv) folder</span>
         '))
-        tempo_read <- read_tsv_with_dummy("tsv/productive_seq.tsv")
+        tempo_read <- read_tsv_with_dummy("tsv/productive_seq.tsv", 3)
         df <- tempo_read$df
         truncated_log <- tempo_read$truncated
         if(is.data.frame(df) && truncated_log){
-            cat('
-(Note: Table truncated to 3 rows. Full file available in the productive_seq.tsv file.)<br><br>
-            ')
+            cat(paste0('<span style="color:green;font-style:italic;">(table truncated to ', tempo_read$nb, ' rows in the display):</span><br><br>'))
+        }else{
+            cat('<span style="color:green;font-style:italic;">:</span><br><br>')
         }
         cat(knitr::kable(df, format = "html", row.names = FALSE))
         cat('
@@ -264,15 +264,16 @@ Number of unproductive sequences: ', nb_unproductive
     if(nb_unproductive > 0){
         cat(paste0('
 &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-<span style="color:green">*unproductive_seq.tsv file in the [tsv](./tsv) folder*</span>
+<span style="color:green">unproductive_seq.tsv file in the [tsv](./tsv) folder</span>
         '))
-        tempo_read <- read_tsv_with_dummy("tsv/unproductive_seq.tsv")
+        tempo_read <- read_tsv_with_dummy("tsv/unproductive_seq.tsv", 3)
         df <- tempo_read$df
         truncated_log <- tempo_read$truncated
         if(is.data.frame(df) && truncated_log){
-            cat('
-(Note: Table truncated to 3 rows. Full file available in the unproductive_seq.tsv file.)<br><br>
-            ')
+            cat(paste0('<span style="color:green;font-style:italic;">(table truncated to ', tempo_read$nb, ' rows in the display):</span><br><br>'))
+
+        }else{
+            cat('<span style="color:green;font-style:italic;">:</span><br><br>')
         }
         cat(knitr::kable(df, format = "html", row.names = FALSE))
         cat('
@@ -287,15 +288,16 @@ Number of wanted sequences: ', nb_wanted
     if(nb_wanted > 0){
         cat(paste0('
 &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-<span style="color:green">*wanted_seq.tsv file in the [tsv](./tsv) folder*</span>
+<span style="color:green">wanted_seq.tsv file in the [tsv](./tsv) folder</span>
         '))
-        tempo_read <- read_tsv_with_dummy("tsv/wanted_seq.tsv")
+        tempo_read <- read_tsv_with_dummy("tsv/wanted_seq.tsv", 3)
         df <- tempo_read$df
         truncated_log <- tempo_read$truncated
         if(is.data.frame(df) && truncated_log){
-            cat('
-(Note: Table truncated to 3 rows. Full file available in the wanted_seq.tsv file.)<br><br>
-            ')
+            cat(paste0('<span style="color:green;font-style:italic;">(table truncated to ', tempo_read$nb, ' rows in the display):</span><br><br>'))
+
+        }else{
+            cat('<span style="color:green;font-style:italic;">:</span><br><br>')
         }
         cat(knitr::kable(df, format = "html", row.names = FALSE))
         cat('
@@ -310,15 +312,16 @@ Number of unwanted sequences: ', nb_unwanted
     if(nb_unwanted > 0){
         cat(paste0('
 &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-<span style="color:green">*unwanted_seq.tsv file in the [tsv](./tsv) folder*</span>
+<span style="color:green">unwanted_seq.tsv file in the [tsv](./tsv) folder</span>
         '))
-        tempo_read <- read_tsv_with_dummy("tsv/unwanted_seq.tsv")
+        tempo_read <- read_tsv_with_dummy("tsv/unwanted_seq.tsv", 3)
         df <- tempo_read$df
         truncated_log <- tempo_read$truncated
         if(is.data.frame(df) && truncated_log){
-            cat('
-(Note: Table truncated to 3 rows. Full file available in the unwanted_seq.tsv file.)<br><br>
-            ')
+            cat(paste0('<span style="color:green;font-style:italic;">(table truncated to ', tempo_read$nb, ' rows in the display):</span><br><br>'))
+
+        }else{
+            cat('<span style="color:green;font-style:italic;">:</span><br><br>')
         }
         cat(knitr::kable(df, format = "html", row.names = FALSE))
         cat('
@@ -435,15 +438,16 @@ Number of clone-assigned sequences: ', nb_clone_tot
     if(nb_clone_tot > 0){
         cat(paste0('
 &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-<span style="color:green">*clone_assigned_seq.tsv file in the [tsv](./tsv) folder*</span>
+<span style="color:green">clone_assigned_seq.tsv file in the [tsv](./tsv) folder</span>
         '))
-        tempo_read <- read_tsv_with_dummy("tsv/clone_assigned_seq.tsv")
+        tempo_read <- read_tsv_with_dummy("tsv/clone_assigned_seq.tsv", 3)
         df <- tempo_read$df
         truncated_log <- tempo_read$truncated
         if(is.data.frame(df) && truncated_log){
-            cat('
-(Note: Table truncated to 3 rows. Full file available in the clone_assigned_seq.tsv file.)<br><br>
-            ')
+            cat(paste0('<span style="color:green;font-style:italic;">(table truncated to ', tempo_read$nb, ' rows in the display):</span><br><br>'))
+
+        }else{
+            cat('<span style="color:green;font-style:italic;">:</span><br><br>')
         }
         cat(knitr::kable(df, format = "html", row.names = FALSE))
         cat('
@@ -458,15 +462,16 @@ Number of sequences with failed clonal assignement: ', nb_clone_unassignment
     if(nb_clone_unassignment > 0){
         cat(paste0('
 &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-<span style="color:green">*failed_clone_assigned_seq.tsv file in the [tsv](./tsv) folder*</span>
+<span style="color:green">failed_clone_assigned_seq.tsv file in the [tsv](./tsv) folder</span>
         '))
-        tempo_read <- read_tsv_with_dummy("tsv/failed_clone_assigned_seq.tsv")
+        tempo_read <- read_tsv_with_dummy("tsv/failed_clone_assigned_seq.tsv", 3)
         df <- tempo_read$df
         truncated_log <- tempo_read$truncated
         if(is.data.frame(df) && truncated_log){
-            cat('
-(Note: Table truncated to 3 rows. Full file available in the failed_clone_assigned_seq.tsv file.)<br><br>
-            ')
+            cat(paste0('<span style="color:green;font-style:italic;">(table truncated to ', tempo_read$nb, ' rows in the display):</span><br><br>'))
+
+        }else{
+            cat('<span style="color:green;font-style:italic;">:</span><br><br>')
         }
         cat(knitr::kable(df, format = "html", row.names = FALSE))
         cat('
@@ -481,34 +486,28 @@ Number of clone assigned sequences with failed germline sequence computation: ',
     if(nb_clone_ungermline > 0){
         cat(paste0('
 &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-<span style="color:green">*failed_clonal_germline_seq.tsv file in the [tsv](./tsv) folder*</span>
+<span style="color:green">failed_clonal_germline_seq.tsv file in the [tsv](./tsv) folder</span>
         '))
-        tempo_read <- read_tsv_with_dummy("tsv/failed_clonal_germline_seq.tsv")
+        tempo_read <- read_tsv_with_dummy("tsv/failed_clonal_germline_seq.tsv", 3)
         df <- tempo_read$df
         truncated_log <- tempo_read$truncated
         if(is.data.frame(df) && truncated_log){
-            cat(paste0('
-\n(Note: Table truncated to 3 rows. Full file available in the failed_clonal_germline_seq.tsv file.)\n\n
-            '))
-            cat(knitr::kable(df, format = "html", row.names = FALSE))
-            cat('
-<br>
-            ')
+            cat(paste0('<span style="color:green;font-style:italic;">(table truncated to ', tempo_read$nb, ' rows in the display):</span><br><br>'))
+
         }else{
-            cat(knitr::kable(df, format = "html", row.names = FALSE))
-            cat('
-<br>
-            ')
+            cat('<span style="color:green;font-style:italic;">:</span><br><br>')
         }
-        cat(paste0('
+        cat(knitr::kable(df, format = "html", row.names = FALSE))
+        cat('
+<br>
 </details>
-        '))
+        ')
     }
     cat(paste0('
 <br>
 Total (clone-assigned + failed_clone_assignment + failed_clonal_germline): ', nb_clone_tot + nb_clone_unassignment + nb_clone_ungermline, '
 
-Clone assigned ratio: ', base::round(nb_clone_tot / (nb_clone_tot + nb_clone_unassignment + nb_clone_ungermline), 2), '
+Proportion of assigned clones: ', base::round(nb_clone_tot / (nb_clone_tot + nb_clone_unassignment + nb_clone_ungermline), 2), '
 
 See the clone_assigned_seq.tsv, as well as both the failed_clone_assigned_seq.tsv and the failed_clonal_germline_seq.tsv (sequences from the wanted file that fail to be clone-assigned by `DefineClones.py` and `CreateGermlines.py`) files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output).
     '))
@@ -516,26 +515,20 @@ See the clone_assigned_seq.tsv, as well as both the failed_clone_assigned_seq.ts
         cat(paste0('
 <br>
 Number of sequences per clone ID: &nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-<span style="color:green">*clone_id_count.tsv file in the [tsv](./tsv) folder*</span>
+<span style="color:green">clone_id_count.tsv file in the [tsv](./tsv) folder</span>
         '))
-        tempo_read <- read_tsv_with_dummy("tsv/clone_id_count.tsv")
+        tempo_read <- read_tsv_with_dummy("tsv/clone_id_count.tsv", 15)
         df <- tempo_read$df
         truncated_log <- tempo_read$truncated
         if(is.data.frame(df) && truncated_log){
-            cat(paste0('
-\n(Note: Table truncated to 3 rows. Full file available in the clone_id_count.tsv file.)\n\n
-            '))
-            cat(knitr::kable(df, format = "html", row.names = FALSE))
-            cat('
-<br>
-            ')
+            cat(paste0('<span style="color:green;font-style:italic;">(table truncated to ', tempo_read$nb, ' rows in the display):</span><br><br>'))
+
         }else{
-            cat(knitr::kable(df, format = "html", row.names = FALSE))
-            cat('
-<br>
-            ')
+            cat('<span style="color:green;font-style:italic;">:</span><br><br>')
         }
-        cat(paste0('
+        cat(knitr::kable(df, format = "html", row.names = FALSE))
+        cat('
+<br>
 </details>
 <br>
 
@@ -550,7 +543,7 @@ Only genes are displayed here. See the [donuts.pdf](./pdf/donuts.pdf) file in th
 Warning: only the first annotation is considered if several are presents in the v_call, j_call or c_call column of the wanted_seq.tsv file.
 
 <br>
-'))
+')
         cat('<div class="image-container">')
         if(file.exists("vj_gene_clone_donutchart.png")){
             cat('<img src="vj_gene_clone_donutchart.png" onclick="toggleFullscreen(this)" style="border: 1px solid black"/>')
@@ -576,11 +569,36 @@ If no bimodal distribution is observed, it means that the number of sequences an
 
 Of note: 
 
-Number of sequences used in the distance matrix (from wanted_seq.tsv): ', nb_wanted, '
+Number of sequences submitted for the distance matrix computation (from wanted_seq.tsv): ', nb_wanted, '
 <br>
-Number of sequences that could not be used in the distance matrix: ', nb_dist_ignored, '
+Number of sequences used during the computation: ', (nb_wanted - nb_dist_ignored), '
+<br>
+Number of sequences that could not be used in the distance matrix: ', nb_dist_ignored
+        ))
+        if(nb_dist_ignored > 0){
+            cat(paste0('
+&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
+<span style="color:green">dist_ignored.tsv file in the [tsv](./tsv) folder</span>
+            '))
+            tempo_read <- read_tsv_with_dummy("tsv/dist_ignored.tsv", 3)
+            df <- tempo_read$df
+            truncated_log <- tempo_read$truncated
+            if(is.data.frame(df) && truncated_log){
+                cat(paste0('<span style="color:green;font-style:italic;">(table truncated to ', tempo_read$nb, ' rows in the display):</span><br><br>'))
 
-Sequence ratio: ', base::round((nb_wanted - nb_dist_ignored)/ nb_wanted, 2), '
+            }else{
+                cat('<span style="color:green;font-style:italic;">:</span><br><br>')
+            }
+            cat(knitr::kable(df, format = "html", row.names = FALSE))
+            cat('
+<br>
+</details>
+            ')
+        }
+        cat(paste0('
+<br>
+
+Proportion of sequences used: ', base::round((nb_wanted - nb_dist_ignored)/ nb_wanted, 2), '
 
 <br>
 
@@ -608,33 +626,26 @@ if(nb_wanted > 0){
 Sequence Alignments are available in the [alignments/nuc](./alignments/nuc) folder for nucleotide alignments and in the [alignments/aa](./alignments/aa) folder for amino acids alignments. Click on the desired html files to see the alignments.<br><br>See [here](reports/alignments_viz.html) the ways to deal with alignment visualization and saving.
     '))
     if(align_soft == "abalign"){
-        tempo_read <- read_tsv_with_dummy("tsv/failed_abalign_align.tsv")
+        tempo_read <- read_tsv_with_dummy("tsv/failed_abalign_align.tsv", 3)
         df <- tempo_read$df
         truncated_log <- tempo_read$truncated
         cat(paste0('
 Such alignments were obtained using [Abalign](https://academic.oup.com/nar/article/51/W1/W17/7173809) (alignments guided by IMGT antibody numbering schemes).<br><br>Warning: some sequences may not be aligned, because they are too short or out of the VDJ region.
 <br><br>
 Number of failed alignments: <code class="r-output">', nrow(df), '</code>&nbsp; <details class="inline"><summary style="color: #1a73e8; font-family: Arial, sans-serif; font-size: 1em; font-weight: bold;">view</summary>
-<span style="color:green">*failed_abalign_align.tsv file in the [tsv](.) folder*</span>
+<span style="color:green">failed_abalign_align.tsv file in the [tsv](.) folder</span>
         '))
         if(is.data.frame(df) && truncated_log){
-            cat(paste0('
-\n(Note: Table truncated to 3 rows. Full file available in the [tsv](.) folder.)\n\n
-            '))
-            cat(knitr::kable(df, format = "html", row.names = FALSE))
-            cat('
-<br>
-            ')
+            cat(paste0('<span style="color:green;font-style:italic;">(table truncated to ', tempo_read$nb, ' rows in the display):</span><br><br>'))
+
         }else{
-            cat(knitr::kable(df, format = "html", row.names = FALSE))
-            cat('
-<br>
-            ')
+            cat('<span style="color:green;font-style:italic;">:</span><br><br>')
         }
-        cat(paste0('
+        cat(knitr::kable(df, format = "html", row.names = FALSE))
+        cat('
+<br>
 </details>
-<br><br>
-        '))
+        ')
     }else if(align_soft == "mafft"){
         cat(paste0('
 Such alignments were obtain using [Mafft](https://mafft.cbrc.jp/alignment/server/index.html).
@@ -692,12 +703,14 @@ if(length(warning_collect) == 1 && all(warning_collect == "")){
     cat(paste0('No warning message reported.'))
 }else{
      # remove strings
-    warning_collect <- warning_collect[warning_collect != ""]
     warning_collect[duplicated(warning_collect) & ! grepl(x = warning_collect, pattern = "^WARNING:.*")] <- "" # remove duplicated messages
     # remove the 2 consec strings "WARNING" and ""
     to_remove <- which(grepl(x = warning_collect, pattern = "^WARNING:.*") & c(warning_collect[-1], NA) == "")
-    warning_collect <- warning_collect[-sort(c(to_remove, to_remove + 1))]
+    if(length(to_remove) > 0){
+        warning_collect <- warning_collect[-sort(c(to_remove, to_remove + 1))]
+    }
     # end remove the 2 consec strings "WARNING" and ""
+    warning_collect <- warning_collect[warning_collect != ""]
     warning_collect <- gsub(x = warning_collect, pattern = "\n", replacement = "<br>")
     warning_collect <- gsub(x = warning_collect, pattern = "^WARNING:.*", replacement = "\n")
     warning_collect <- paste0(warning_collect, collapse = "<br>") # single string

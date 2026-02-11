@@ -440,7 +440,7 @@ workflow {
                 throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nIGBLAST FILE IS EMPTY, WHILE IT SHOULD HAVE AT LEAST A HEADER, FOLLOWING THE Igblast_query PROCESS.\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")
             }
             if(n == 0){
-                throw new IllegalStateException("\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE Igblast_query PROCESS.\n\nCHECK THAT THE\nigblast_organism\nigblast_loci\nigblast_B_heavy_chain\nigblast_B_lambda_chain\nigblast_B_kappa_chain\nigblast_T_alpha_chain\nigblast_T_beta_chain\nigblast_T_gamma_chain\nigblast_T_delta_chain\nARE CORRECTLY SET IN THE nextflow.config FILE.\n\n========\n\n")
+                throw new IllegalStateException("\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\n0 ANNOTATION SUCCEEDED BY THE Igblast_query PROCESS.\n\nCHECK THAT THE\nigblast_organism\nigblast_loci\nigblast_B_heavy_chain\nigblast_B_lambda_chain\nigblast_B_kappa_chain\nigblast_T_alpha_chain\nigblast_T_beta_chain\nigblast_T_gamma_chain\nigblast_T_delta_chain\nARE CORRECTLY SET IN THE nextflow.config FILE\nAND CHECK THE SUBMITTED SEQUENCES (VERY BAD QUALITY).\n\n========\n\n")
             }
         }
         if(unx != 'NO_FILE'){
@@ -1158,7 +1158,6 @@ workflow {
         // end when: nb_productive > 0
 
     // end when: nb_igblast > 0
-
     Print_warnings(
         warning_ch.ifEmpty{''}.collectFile(name: "warnings_collect.txt")
     )

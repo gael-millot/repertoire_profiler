@@ -21,7 +21,7 @@ process Metadata_check { // cannot be in germ_tree_vizu because I have to use th
     if [[ "${meta_file}" != "NULL" ]] ; then
         Rscript -e '
             options(warning.length = 8170)
-            warn <- ""
+            warn <- NULL
             df <- read.table("${data_assembly_ch}", header = TRUE, sep = "\\t")
             meta <- read.table("./${meta_file}", sep = "\\t", header = TRUE)
             meta_seq_names <- "${meta_seq_names}" # conversion here because if NULL, block the code
@@ -44,8 +44,8 @@ process Metadata_check { // cannot be in germ_tree_vizu because I have to use th
                     stop(paste0("\\n\\n============\\n\\nINTERNAL ERROR IN THE Metadata_check PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\" AND IF THE meta_name_replacement PARAMETER IS NOT \\"NULL\\", THEN THE TABLE GENERATED USING THE sample_path PARAMETER MUST CONTAIN initial_sequence_id AS FIRST COLUMN NAME.\\n\\n============\\n\\n"), call. = FALSE)
                 }
                 if( ! any(meta[ , meta_name_replacement] %in% df[ , 1])){
-                   tempo_warn <- paste0("\\n\\n\\n\\nWARNING IN THE Metadata_check PROCESS OF NEXTFLOW\\nTHE meta_file AND meta_name_replacement PARAMETERS OF THE nextflow.config FILE ARE NOT NULL BUT NO NAME REPLACEMENT PERFORMED\\nPROBABLY THAT THE ${meta_seq_names} COLUMN OF THE FILE INDICATED IN THE meta_path PARAMETER IS NOT MADE OF NAMES OF FASTA FILES INDICATED IN THE sample_path PARAMETER\\nFIRST ELEMENTS OF THE ${meta_seq_names} COLUMN (meta_seq_names PARAMETER) OF THE META DATA FILE ARE:\\n", paste(head(meta[ , meta_seq_names], 20), collapse = "\\n"), "\\nFIRST FASTA FILES NAMES ARE:\\n", paste(head(df[ , 1], 20), collapse = "\\n"), "\\n\\n\\n\\n")
-                    warn <- base::paste0(base::ifelse(test = warn == "", yes = tempo_warn, no = base::paste0(warn, "\n\n", tempo_warn, collapse = NULL, recycle0 = FALSE)), collapse = NULL, recycle0 = FALSE)
+                   tempo_warn <- paste0("\nWARNING:\\nIN THE Metadata_check PROCESS, THE meta_file AND meta_name_replacement PARAMETERS OF THE nextflow.config FILE ARE NOT NULL BUT NO NAME REPLACEMENT PERFORMED\\nPROBABLY THAT THE ${meta_seq_names} COLUMN OF THE FILE INDICATED IN THE meta_path PARAMETER IS NOT MADE OF NAMES OF FASTA FILES INDICATED IN THE sample_path PARAMETER\\nFIRST ELEMENTS OF THE ${meta_seq_names} COLUMN (meta_seq_names PARAMETER) OF THE META DATA FILE ARE:\\n", paste(head(meta[ , meta_seq_names], 20), collapse = "\\n"), "\\nFIRST FASTA FILES NAMES ARE:\\n", paste(head(df[ , 1], 20), collapse = "\\n"))
+                    warn <- paste0(ifelse(is.null(warn), tempo_warn, paste0(warn, "\n\n", tempo_warn)))
                     print(tempo_warn)
                 }
             }
@@ -57,7 +57,11 @@ process Metadata_check { // cannot be in germ_tree_vizu because I have to use th
                     stop(paste0("\\n\\n============\\n\\nINTERNAL ERROR IN THE Metadata_check PROCESS OF NEXTFLOW\\nIF THE meta_path PARAMETER IS NOT \\"NULL\\" AND IF THE meta_legend PARAMETER IS NOT \\"NULL\\", THEN meta_legend MUST BE A COLUMN NAME OF clone_assigned_seq.tsv.\\n\\n============\\n\\n"), call. = FALSE)
                 }
             }
-            writeLines(warn, con = "warnings.txt")
+            if( ! is.null(warn)){
+                writeLines(warn, con = "warnings.txt")
+            }else{
+                writeLines("", con = "warnings.txt")
+            }
         ' |& tee -a metadata_check.log
     else
         echo "" > metadata_check.log

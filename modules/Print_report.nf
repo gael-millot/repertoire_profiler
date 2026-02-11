@@ -57,8 +57,6 @@ process Print_report{
     val align_soft
     val itol_subscription
     path final_warning_ch
-    //path final_warning_ch // just so that print_report wait for all warnings
-    //val warning_collect
 
     output:
     file "nextflow.config.html"
