@@ -338,9 +338,9 @@ See the productive_seq.tsv, unproductive_seq.tsv, wanted_seq.tsv and unwanted_se
 
     '))
 }else{
-    cat(paste0('
+    cat('
 No productive sequence detected.
-    '))
+    ')
 }
 ```
 
@@ -441,7 +441,7 @@ Number of clone-assigned sequences: ', nb_clone_tot
         df <- tempo_read$df
         truncated_log <- tempo_read$truncated
         if(is.data.frame(df) && truncated_log){
-            cat(paste0('
+            cat('
 (Note: Table truncated to 3 rows. Full file available in the clone_assigned_seq.tsv file.)<br><br>
             ')
         }
