@@ -36,6 +36,20 @@ process Print_report{
     val igblast_T_beta_chain
     val igblast_T_gamma_chain
     val igblast_T_delta_chain
+    val clone_strategy
+    val clone_model
+    val clone_normalize
+    val clone_distance
+    val clone_germline_kind
+    val clone_mut_obs_seq
+    val clone_mut_germ_seq
+    val clone_mut_regionDefinition
+    val align_clone_nb
+    val align_soft
+    val align_seq
+    val align_abalign_options
+    val align_mafft_all_options
+    val align_mafft_clonal_options
     val nb_input
     val nb_igblast
     val nb_unigblast
@@ -186,6 +200,20 @@ process Print_report{
             igblast_T_beta_chain = ${igblast_T_beta_chain},
             igblast_T_gamma_chain = ${igblast_T_gamma_chain},
             igblast_T_delta_chain = ${igblast_T_delta_chain},
+            clone_strategy = "${clone_strategy}",
+            clone_model = "${clone_model}",
+            clone_normalize = "${clone_normalize}",
+            clone_distance = "${clone_distance}",
+            clone_germline_kind = "${clone_germline_kind}",
+            clone_mut_obs_seq = "${clone_mut_obs_seq}",
+            clone_mut_germ_seq = "${clone_mut_germ_seq}",
+            clone_mut_regionDefinition = "${clone_mut_regionDefinition}",
+            align_clone_nb = "${align_clone_nb}",
+            align_soft = "${align_soft}",
+            align_seq = "${align_seq}",
+            align_abalign_options = "${align_abalign_options}",
+            align_mafft_all_options = "${align_mafft_all_options}",
+            align_mafft_clonal_options = "${align_mafft_clonal_options}",
             nb_input = ${nb_input},
             nb_igblast = ${nb_igblast}, 
             nb_unigblast = ${nb_unigblast},

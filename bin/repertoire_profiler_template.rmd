@@ -15,6 +15,20 @@ params:
     igblast_T_beta_chain: "TRUE"
     igblast_T_gamma_chain: "TRUE"
     igblast_T_delta_chain: "TRUE"
+    clone_strategy: ""
+    clone_model: ""
+    clone_normalize: ""
+    clone_distance: ""
+    clone_germline_kind: ""
+    clone_mut_obs_seq: ""
+    clone_mut_germ_seq: ""
+    clone_mut_regionDefinition: ""
+    align_clone_nb: ""
+    align_soft: ""
+    align_seq: ""
+    align_abalign_options: ""
+    align_mafft_all_options: ""
+    align_mafft_clonal_options: ""
     nb_input: -1
     nb_igblast: -1
     nb_unigblast: -1
@@ -152,6 +166,20 @@ writeLines(out, "nextflow.config.html")
     igblast_T_beta_chain <- params$igblast_T_beta_chain
     igblast_T_gamma_chain <- params$igblast_T_gamma_chain
     igblast_T_delta_chain <- params$igblast_T_delta_chain
+    clone_strategy <- params$clone_strategy
+    clone_model <- params$clone_model
+    clone_normalize <- params$clone_normalize
+    clone_distance <- params$clone_distance
+    clone_germline_kind <- params$clone_germline_kind
+    clone_mut_obs_seq <- params$clone_mut_obs_seq
+    clone_mut_germ_seq <- params$clone_mut_germ_seq
+    clone_mut_regionDefinition <- params$clone_mut_regionDefinition
+    align_clone_nb <- params$align_clone_nb
+    align_soft <- params$align_soft
+    align_seq <- params$align_seq
+    align_abalign_options <- params$align_abalign_options
+    align_mafft_all_options <- params$align_mafft_all_options
+    align_mafft_clonal_options <- params$align_mafft_clonal_options
     nb_input <- params$nb_input
     nb_igblast <- params$nb_igblast
     nb_unigblast <- params$nb_unigblast
@@ -204,6 +232,14 @@ Number of initial input sequences: ```r nb_input```
 ### Sequence annotation using Igblast
 
 
+#### Definition
+
+
+#### Parameter settings
+
+
+#### Results
+
 Number of annotated sequences: ```r nb_igblast```
 <br>
 Number of sequences failing annotation: ```r nb_unigblast```
@@ -218,13 +254,22 @@ See the igblast_seq.tsv and the failed_igblast_seq.tsv files in the [tsv](./tsv)
 
 ### Wanted sequences
 
+#### Definition
 
 **Productive sequences** are igblast annotated sequences with the following properties in their VDJ region:<br><ul><li>an open reading frame (start and stop codon).<br></li><li>no defect in the start codon, splicing sites or regulatory elements.<br></li><li>no internal stop codons.<br></li><li>in-frame junction between regions.<br></ul>
 Unproductive sequences could deserve a visual inspection of the sequence profile to exclude any problem of automatic profile translation.
-<br><br>
-
-**Wanted sequences** are productive sequences selected according to the parameters of the <i>nextflow.config</i> file:<br><ul><li><code>igblast_organism</code>:&nbsp;&nbsp;&nbsp;`r igblast_organism`<br></li><li><code>igblast_loci</code>:&nbsp;&nbsp;&nbsp;`r igblast_loci`<br></li><li><code>igblast_B_heavy_chain</code>:&nbsp;&nbsp;&nbsp;`r igblast_B_heavy_chain`<br></li><li><code>igblast_B_lambda_chain</code>:&nbsp;&nbsp;&nbsp;`r igblast_B_lambda_chain`<br></li><li><code>igblast_B_kappa_chain</code>:&nbsp;&nbsp;&nbsp;`r igblast_B_kappa_chain`<br></li><li><code>igblast_T_alpha_chain</code>:&nbsp;&nbsp;&nbsp;`r igblast_T_alpha_chain`<br></li><li><code>igblast_T_beta_chain</code>:&nbsp;&nbsp;&nbsp;`r igblast_T_beta_chain`<br></li><li><code>igblast_T_gamma_chain</code>:&nbsp;&nbsp;&nbsp;`r igblast_T_gamma_chain`<br></li><li><code>igblast_T_delta_chain</code>:&nbsp;&nbsp;&nbsp;`r igblast_T_delta_chain`<br></ul>
 <br>
+
+**Wanted sequences** are productive sequences selected according to the parameters of the <i>nextflow.config</i> file.
+<br>
+
+#### Parameter settings
+
+<ul><li><code>igblast_organism</code>:&nbsp;&nbsp;&nbsp;`r igblast_organism`<br></li><li><code>igblast_loci</code>:&nbsp;&nbsp;&nbsp;`r igblast_loci`<br></li><li><code>igblast_B_heavy_chain</code>:&nbsp;&nbsp;&nbsp;`r igblast_B_heavy_chain`<br></li><li><code>igblast_B_lambda_chain</code>:&nbsp;&nbsp;&nbsp;`r igblast_B_lambda_chain`<br></li><li><code>igblast_B_kappa_chain</code>:&nbsp;&nbsp;&nbsp;`r igblast_B_kappa_chain`<br></li><li><code>igblast_T_alpha_chain</code>:&nbsp;&nbsp;&nbsp;`r igblast_T_alpha_chain`<br></li><li><code>igblast_T_beta_chain</code>:&nbsp;&nbsp;&nbsp;`r igblast_T_beta_chain`<br></li><li><code>igblast_T_gamma_chain</code>:&nbsp;&nbsp;&nbsp;`r igblast_T_gamma_chain`<br></li><li><code>igblast_T_delta_chain</code>:&nbsp;&nbsp;&nbsp;`r igblast_T_delta_chain`<br></ul>
+<br>
+
+#### Results
+
 
 ```{r, echo=FALSE, results='asis'}
 if(nb_productive != -1){
@@ -428,6 +473,9 @@ if(nb_wanted > 0){
 Clonal prediction aims to gather all the sequences that putatively come from a same germline cell. See <a href="https://changeo.readthedocs.io/en/stable/examples/cloning.html#assigning-clones">here</a>, <a href="https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette/">here</a> and <a href="https://genomemedicine.biomedcentral.com/articles/10.1186/s13073-015-0243-2">this article</a> for details. In summary, it follows these steps:<br><ul><li>grouping the sequences according to "same V, J and junction length" (to facilitate the distance computation).<br></li><li>for each group, 2x2 distance computation using by default (<code>clone_model</code> and <code>clone_normalize</code> parameters of the <i>nextflow.config</i> file) the <a href="https://biology.stackexchange.com/questions/23523/hamming-distance-between-two-dna-strings">Hamming distance</a>.<br></li><li>cutoff definition.<br></li><li>using the cutoff (<code>clone_distance</code> parameter of the <i>nextflow.config</i> file) to define clonal groups inside each "same V, J and junction length" group.<br></ul><br>
 
 #### Parameter settings
+<br><br>
+
+<ul><li><code>clone_strategy</code>:&nbsp;&nbsp;&nbsp;', clone_strategy, '<br></li><li><code>clone_model</code>:&nbsp;&nbsp;&nbsp;', clone_model, '<br></li><li><code>clone_normalize</code>:&nbsp;&nbsp;&nbsp;', clone_normalize, '<br></li><li><code>clone_distance</code>:&nbsp;&nbsp;&nbsp;', clone_distance, '<br></li><li><code>clone_germline_kind</code>:&nbsp;&nbsp;&nbsp;', clone_germline_kind, '<br></li><li><code>clone_mut_obs_seq</code>:&nbsp;&nbsp;&nbsp;', clone_mut_obs_seq, '<br></li><li><code>clone_mut_germ_seq</code>:&nbsp;&nbsp;&nbsp;', clone_mut_germ_seq, '<br></li><li><code>clone_mut_regionDefinition</code>:&nbsp;&nbsp;&nbsp;', clone_mut_regionDefinition, '<br></ul>
 
 
 #### Results
@@ -623,6 +671,15 @@ No clonal assignment obtained.
 ```{r, echo=FALSE, results='asis'}
 if(nb_wanted > 0){
     cat(paste0('
+
+#### Parameter settings
+<br><br>
+
+<ul><li><code>align_clone_nb</code>:&nbsp;&nbsp;&nbsp;', align_clone_nb, '<br></li><li><code>align_soft</code>:&nbsp;&nbsp;&nbsp;', align_soft, '<br></li><li><code>align_seq</code>:&nbsp;&nbsp;&nbsp;', align_seq, '<br></li><li><code>align_abalign_options</code>:&nbsp;&nbsp;&nbsp;', align_abalign_options, '<br></li><li><code>align_mafft_all_options</code>:&nbsp;&nbsp;&nbsp;', align_mafft_all_options, '<br></li><li><code>align_mafft_clonal_options</code>:&nbsp;&nbsp;&nbsp;', align_mafft_clonal_options, '<br></ul>
+
+
+#### Results
+
 Sequence Alignments are available in the [alignments/nuc](./alignments/nuc) folder for nucleotide alignments and in the [alignments/aa](./alignments/aa) folder for amino acids alignments. Click on the desired html files to see the alignments.<br><br>See [here](reports/alignments_viz.html) the ways to deal with alignment visualization and saving.
     '))
     if(align_soft == "abalign"){

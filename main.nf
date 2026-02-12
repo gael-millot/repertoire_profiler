@@ -1177,6 +1177,20 @@ workflow {
         igblast_T_beta_chain, // parameter
         igblast_T_gamma_chain, // parameter
         igblast_T_delta_chain, // parameter
+        clone_strategy, // parameter
+        clone_model, // parameter
+        clone_normalize, // parameter
+        clone_distance, // parameter
+        clone_germline_kind, // parameter
+        clone_mut_obs_seq, // parameter
+        clone_mut_germ_seq, // parameter
+        clone_mut_regionDefinition, // parameter
+        align_clone_nb, // parameter
+        align_soft, // parameter
+        align_seq, // parameter
+        align_abalign_options, // parameter
+        align_mafft_all_options, // parameter
+        align_mafft_clonal_options, // parameter
         nb_input, // mandatory
         nb_igblast, // mandatory
         nb_unigblast, // mandatory
