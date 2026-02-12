@@ -67,6 +67,15 @@ script <- "Tsv2fasta"
 ### Arguments : 
 
 
+# setwd("C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/db/4470328bf3dad4b1bc76b66bdb1291")
+# path <- "wanted_seq.tsv"
+# Name <- "sequence_id"
+# align_seq <- "trimmed"
+# clone_germline_kind <- "dmask"
+# align_clone_nb <- "2"
+# cute <- "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/bin/cute_little_R_functions_v12.8.R"
+# seq_kind <- "IMGT"
+# log <- "Tsv2fasta.log"
 
 ################################# End test
 
@@ -421,38 +430,50 @@ if(align_seq == "c_germline_alignment"){align_seq2 <- c("c_germline_alignment", 
 
 # print the sequence_alignment_with_gaps sequences as aligned fasta
 if(seq_kind == "IMGT" & align_seq %in% c("query", "igblast_full", "trimmed", "sequence_alignment")){
-    tempo_name <- "sequence_alignment_with_gaps"
-    tempo_name_aa <- "sequence_alignment_with_gaps_aa"
-    if( ! tempo_name %in% names(obs)){
-        stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nsequence_alignment_with_gaps MUST BE COLUMN A COLUMN NAME OF THE IMPORTED FILE:\n", path, "\n\nCOLUMN NAMES:\n", paste(names(obs), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
-    }
-    if( ! tempo_name_aa %in% names(obs)){
-        stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\nsequence_alignment_with_gaps_aa MUST BE COLUMN A COLUMN NAME OF THE IMPORTED FILE:\n", path, "\n\nCOLUMN NAMES:\n", paste(names(obs), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
-    }
-    # 1. Find the maximum sequence length
-    # obs[[tempo_name]] <- sapply(X = obs[[tempo_name]], FUN = function(x){gsub(x = x, pattern = "-", replacement = "")}) # do not remove the hyphens already here because alignments are not good anymore
-    max_len <- max(nchar(obs[[tempo_name]]))
-    max_len_aa <- max(nchar(obs[[tempo_name_aa]]))
-    # 2. Pad each sequence with hyphens at the end
-    obs[[tempo_name]] <- sapply(X = obs[[tempo_name]], FUN = function(x){
-        if(is.na(max_len)){
-            NA
+    imgt_name <- "sequence_alignment_with_gaps"
+    imgt_name_nuc <- ""
+    imgt_name_aa <- "_aa"
+    for(i1 in c(imgt_name_nuc, imgt_name_aa)){
+        tempo_name <- paste0(imgt_name, i1)
+        tempo.log <- is.na(obs[ , tempo_name]) | obs[ , tempo_name] == ""
+        if(sum( ! tempo.log, na.rm = TRUE) >= align_clone_nb){
+            # Only create fasta  files with at least <align_clone_nb> sequences (Minimun number of non-identical sequences per clonal group for tree plotting)
+            # NB : align_clone_nb is defined in nextflow.config
+            # Create the fasta files :
+            if(any(tempo.log)){
+                tempo.warn <- paste0("WARNING:\nIN THE Tsv2fasta PROCESS, IMPORTED FILE:\n", path, "\nHAS ", sum(tempo.log, na.rm = TRUE), " AMONG ", nrow(obs), " EMPTY SEQUENCES (NA OR \"\") IN THE ", tempo_name, " COLUMN IN LINES:\n", paste(which(tempo.log), collapse = "\n"))
+                cat(paste0("\n", tempo.warn, "\n\n"))
+                fun_report(data = paste0("\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+                warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
+            }else{
+                tempo.cat <- paste0("\nIMPORTED FILE:\n", path, "\nHAS NO EMPTY SEQUENCES (NA OR \"\") AMONG ", nrow(obs), " IN THE ", tempo_name, " COLUMN\n")
+                fun_report(data = tempo.cat, output = log, path = "./", overwrite = FALSE)
+            }
+            df <- obs[ ! tempo.log, ] # .tsv file with lines removed whem empty align_seq2
+            if( ! tempo_name %in% names(df)){
+                stop(paste0("\n\n============\n\nERROR IN ", script, ".R\n\n", tempo_name, " MUST BE COLUMN A COLUMN NAME OF THE IMPORTED FILE:\n", path, "\n\nCOLUMN NAMES:\n", paste(names(df), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
+            }
+            # 1. Find the maximum sequence length
+            # df[[tempo_name]] <- sapply(X = df[[tempo_name]], FUN = function(x){gsub(x = x, pattern = "-", replacement = "")}) # do not remove the hyphens already here because alignments are not good anymore
+            max_len <- max(nchar(df[[tempo_name]]), na.rm = TRUE) # but no more NA
+            # 2. Pad each sequence with hyphens at the end
+            df[[tempo_name]] <- sapply(X = df[[tempo_name]], FUN = function(x){
+                if(is.na(x)){
+                    "" # to have an empty cell. If I use NA, this will be used as nucleotide sequence NA in the fasta file. But normally, NA removed
+                }else{
+                    paste0(x, paste(x = rep("-", times = max_len - nchar(x)), collapse = ""))
+                }
+            })
+            for(i3 in 1:nrow(df)){
+                tempo_cat <- paste0(">", df[i3, Name], "\n", df[i3, tempo_name], "\n")
+                cat(tempo_cat, file = file.path(paste0(imgt_name, "_imgt_", ifelse(test = i1 == "", yes = "nuc", no = "aa"), ".fasta")), append = TRUE)
+            }
         }else{
-            paste0(x, paste(x = rep("-", times = max_len - nchar(x)), collapse = ""))
+            tempo.warn <- paste0("WARNING:\nIN THE Tsv2fasta PROCESS, NO FASTA AND GFF FILES CREATED BECAUSE THE IMPORTED FILE:\n", path, "\nHAS LESS THAN ", align_clone_nb, " SEQUENCES (TOO MUCH NA OR \"\") IN THE ", i1, " COLUMN.")
+            cat(paste0("\n", tempo.warn, "\n\n"))
+            fun_report(data = paste0("\n", tempo.warn), output = log, path = "./", overwrite = FALSE)
+            warn <- paste0(ifelse(is.null(warn), tempo.warn, paste0(warn, "\n\n", tempo.warn)))
         }
-    })
-    obs[[tempo_name_aa]] <- sapply(X = obs[[tempo_name_aa]], FUN = function(x){
-        if(is.na(max_len_aa)){
-            NA
-        }else{
-            paste0(x, paste(x = rep("-", times = max_len_aa - nchar(x)), collapse = ""))
-        }
-    })
-    for(i1 in 1:nrow(obs)){
-        tempo_cat <- paste0(">", obs[i1, Name], "\n", obs[i1, tempo_name], "\n")
-        cat(tempo_cat, file = file.path(paste0(tempo_name, "_imgt_nuc.fasta")), append = TRUE)
-        tempo_cat <- paste0(">", obs[i1, Name], "\n", obs[i1, tempo_name_aa], "\n")
-        cat(tempo_cat, file = file.path(paste0(tempo_name, "_imgt_aa.fasta")), append = TRUE) # tempo_name because name of nuc kept
     }
 }else if(seq_kind == "IMGT"){
     tempo.warn <- paste0("WARNING:\nIN THE Tsv2fasta PROCESS, NO SEQUENCE WITH IMGT GAPS PROVIDED AS ALIGNMENTS WITH align_seq PARAMETER OF THE nextflow.config FILE SET AS:\n", align_seq)
@@ -675,12 +696,12 @@ on.exit(exp = options(warning.length = ini.warning.length), add = TRUE)
 
 
 fun_report(data = paste0("\n\n################################ INITIAL SETTINGS OF PARAMETERS"), output = log, path = "./", overwrite = FALSE, sep = 1)
-fun_report(data = param.ini.settings, output = log, path = "./", overwrite = FALSE, , vector.cat = TRUE)
+fun_report(data = param.ini.settings, output = log, path = "./", overwrite = FALSE, vector.cat = TRUE)
 fun_report(data = paste0("\n\n################################ R SYSTEM AND PACKAGES"), output = log, path = "./", overwrite = FALSE)
 tempo <- sessionInfo()
 # tempo$otherPkgs <- tempo$otherPkgs[order(names(tempo$otherPkgs))] # sort the packages
 tempo$loadedOnly <- tempo$loadedOnly[order(names(tempo$loadedOnly))] # sort the packages
-fun_report(data = tempo, output = log, path = "./", overwrite = FALSE, , vector.cat = TRUE)
+fun_report(data = tempo, output = log, path = "./", overwrite = FALSE, vector.cat = TRUE)
 end.date <- Sys.time()
 end.time <- as.numeric(end.date)
 total.lapse <- round(lubridate::seconds_to_period(end.time - ini.time))

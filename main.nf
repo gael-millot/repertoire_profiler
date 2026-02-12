@@ -519,9 +519,9 @@ workflow {
                 igblast_constant_ref_files, 
                 cute_file
             )
-            check_ch1 = Igblast_chain_check.out.checked_tsv_ch.collectFile(name: "wanted_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
+            check_ch1 = Igblast_chain_check.out.checked_tsv_ch.collectFile(name: "wanted_seq.tsv", skip: 1, keepHeader: true) // not printed here. Later // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
             uncheck_ch1 = Igblast_chain_check.out.not_checked_tsv_ch.collectFile(name: "unwanted_seq.tsv", skip: 1, keepHeader: true) // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
-            check_ch1.subscribe{it -> it.copyTo("${out_path}/tsv")} // nothing if no file
+            // check_ch1.subscribe{it -> it.copyTo("${out_path}/tsv")} // nothing if no file // not now
             uncheck_ch1.subscribe{it -> it.copyTo("${out_path}/tsv")}
             nb_wanted = nb_wanted.mix(check_ch1.countLines() - 1) // -1 for the header
             nb_unwanted = nb_unwanted.mix(uncheck_ch1.countLines() - 1) // -1 for the header
