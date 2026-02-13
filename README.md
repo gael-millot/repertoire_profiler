@@ -845,7 +845,8 @@ Special acknowledgement to:
 - Workflow now always returns a html report, whatever the sequencing problems and the workflow ending.
 - Html greatly improved.
 - Bug fixed.
-- Warnings collected and reported in the html report.
+- All warnings collected and reported in the html report.
+- New .tsv files provided.
 
 #### v23.1
 

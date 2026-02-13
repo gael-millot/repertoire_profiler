@@ -67,8 +67,6 @@ process Print_report{
     path repertoire_png // to have the folder in the work dir
     val repertoire_constant_ch
     val repertoire_vj_ch
-    val clone_distance
-    val align_soft
     val itol_subscription
     path final_warning_ch
 
@@ -224,9 +222,8 @@ process Print_report{
             nb_dist_ignored = nb_dist_ignored, 
             nb_clone_tot = nb_clone_tot, 
             nb_unclone_tot = nb_unclone_tot, 
-            nb_clone_unassignment = nb_clone_unassignment,  
-            nb_clone_ungermline = nb_clone_ungermline,  
-            clone_distance = ${clone_distance},
+            nb_clone_unassignment = nb_clone_unassignment, 
+            nb_clone_ungermline = nb_clone_ungermline, 
             constant_rep = constant_rep,
             vj_rep = vj_rep,
             align_soft = "${align_soft}",

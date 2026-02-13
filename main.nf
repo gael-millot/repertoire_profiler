@@ -1208,8 +1208,6 @@ workflow {
         Repertoire.out.repertoire_png_ch.collect().ifEmpty{ [empty_repertoire_png] }, 
         repertoire_constant_ch.ifEmpty{'EMPTY'}, 
         repertoire_vj_ch.ifEmpty{'EMPTY'}, 
-        clone_distance, // parameter
-        align_soft, // parameter
         phylo_tree_itol_subscription, // parameter
         Print_warnings.out.final_warning_ch // just so that print_report wait for all warnings // warning_ch.collect().map{it.join('\n\n')}.ifEmpty{'EMPTY'} // concatenate all warnings into a single string // finally, the gathered string is very loong. I prefer to use a file added in /reports/
     )
