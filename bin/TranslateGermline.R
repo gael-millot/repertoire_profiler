@@ -350,7 +350,7 @@ germ_nuc <- df$clonal_germline_sequence_no_gaps
 if(any(germ_nuc != germ_nuc[1])){
     stop(paste0("\n\n================\n\nERROR IN TranslateGermline PROCESS.\nTHE VALUES INSIDE THE Germline COLUMN SHOULD ALL BE THE SAME, BUT THEY ARE NOT.\nHERE THEY ARE:\n", paste0(germ_nuc, collapse = "\n"),"\n\n================\n\n"), call. = FALSE)
 }
-approx <- data.frame(clone_id = "", germline_cds_length = "")
+approx <- data.frame(clone_id = "", germline_cds_length = "", Biostrings_warning = "")
 length_no_gaps <- nchar(germ_nuc[1])
 if(length_no_gaps %% 3 != 0){
     approx$clone_id <- clone_id
@@ -363,7 +363,8 @@ withCallingHandlers(
         germ_aa <- Biostrings::translate(germ_dna, if.fuzzy.codon="X")
     },
     warning = function(w){
-        tempo_warn <- paste0("\nWARNING:\nBiostrings::translate FUNCTION IN THE TranslateGermline PROCESS: ", conditionMessage(w))
+        # tempo_warn <- paste0("\nWARNING:\nFOR TRANSLATION OF THE NUCLEOTIDE GERMLINE SEQ OF CLONE ID ", clone_id, ", THE Biostrings::translate FUNCTION IN THE TranslateGermline PROCESS RETURNS: ", conditionMessage(w))
+        tempo_warn <- conditionMessage(w)
         writeLines(tempo_warn, con = "tempo_warnings.txt")
         invokeRestart("muffleWarning")
     }
@@ -376,8 +377,10 @@ if( ! all(approx == "", na.rm = TRUE)){
     approx <- approx[-nrow(approx), ]
 }
 if(file.exists("tempo_warnings.txt")){
-    tempo_warn <- base::paste0(readLines("tempo_warnings.txt"), collapse = "\n")
-    warn <- base::paste0(base::ifelse(test = base::is.null(x = warn), yes = tempo_warn, no = base::paste0(warn, "\n\n", tempo_warn, collapse = NULL, recycle0 = FALSE)), collapse = NULL, recycle0 = FALSE)
+    tempo_warn_ini <- base::paste0(readLines("tempo_warnings.txt"), collapse = "\n")
+    tempo_warn <- paste0("\nWARNING:\nFOR TRANSLATION OF THE NUCLEOTIDE GERMLINE SEQ OF CLONE ID ", clone_id, ", THE Biostrings::translate FUNCTION IN THE TranslateGermline PROCESS RETURNS: ", tempo_warn_ini)
+    # warn <- base::paste0(base::ifelse(test = base::is.null(x = warn), yes = tempo_warn, no = base::paste0(warn, "\n\n", tempo_warn, collapse = NULL, recycle0 = FALSE)), collapse = NULL, recycle0 = FALSE)
+    approx$Biostrings_warning <- tempo_warn_ini
     cat(tempo_warn, file = "translateGermline.log", append = TRUE)
 }
 write.table(approx, file = paste0("./clonal_germline_translation_pb.tsv"), row.names = FALSE, col.names = TRUE, sep = "\t", quote = FALSE)
@@ -389,7 +392,7 @@ new_file_name <- paste0(file_base, "-trans_germ-pass.tsv")
 df <- data.frame(df, clonal_germline_identical = df$clonal_germline_sequence_no_gaps == df$clonal_germline_alignment_igblast_airr, clonal_germline_aa_identical = df$clonal_germline_sequence_aa == df$clonal_germline_alignment_aa_igblast_airr)
 # end add controls
 write.table(df, file = paste0("./", new_file_name), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\t")
-write.table(approx, file = paste0("./caca.tsv"), row.names = FALSE, col.names = TRUE, quote = FALSE, sep = "\t")
+
 
 
 

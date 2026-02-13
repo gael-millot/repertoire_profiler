@@ -66,7 +66,7 @@
 
 <br>
 
-The dataset used in the *nextflow.config* file, as an example, is available at https://zenodo.org/records/18294088/files/human_IGH.zip.
+The dataset used in the *nextflow.config* file, as an example, is available at https://zenodo.org/records/18631337/files/human_IGH.zip.
 
 <br>
 
@@ -264,6 +264,10 @@ INFO:    underlay of /etc/localtime required more than 50 (83) bind mounts
 
 Register at Itol as explained in the [Prerequisite](#1-prerequisite) section above, or set the `phylo_tree_itol_subscription` parameter of the *nextflow.config* file to `FALSE` and rerun.
 
+#### Error using -resume
+
+Do not hesitate to rerun once the same command to reobtain the same error message. Indeed, sometimes nextflow has difficulties to reassemble all the cached files and reruning solves the problem.
+
 
 
 
@@ -272,7 +276,7 @@ Register at Itol as explained in the [Prerequisite](#1-prerequisite) section abo
 
 By default, all the results are returned in a *result* folder where the *main.nf* executed file is located (created if does not exist). This can be changed using the `out_path_ini` parameter of the *nextflow.config* file. By default, each execution produces a new folder named *repertoire_profiler_\<ID\>*, created inside the *result* folder and containing all the outputs of the execution. The name of the folder can be changed using the `result_folder_name` parameter of the *nextflow.config* file. The new name file will be followed by an \<ID\> in all cases.
 <br><br>
-An example of results obtained with the dataset is present at this address: https://zenodo.org/records/18294411/files/example_of_results.zip.
+An example of results obtained with the dataset is present at this address: https://zenodo.org/records/18633133/files/repertoire_profiler_1770995657.zip.
 <br><br>
 If the text is cut in the table, reload the page or change the width of the window.
 <br><br>
@@ -764,7 +768,10 @@ If the text is cut in the table, reload the page or change the width of the wind
             - clonal_germline&#8203;_translation&#8203;_pb.tsv
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
-            Indicate that the nuc sequence in the <i>clonal_germline_sequence_no_gaps</i> column of the <i>clone_assigned_seq.tsv</i> file has not a length multiple of 3, and so that the translation of this sequence in the <i>clonal_germline_sequence_aa</i> column could be wrong. See the <code>Biostrings::translate</code> warning in the <i>translateGermline.log</i> file present in the <i>report</i> folder to know how the problem has been overcome to provide the translation ("last base was ignored" for instance).
+            Indicate that the nuc sequence in the <i>clonal_germline_sequence_no_gaps</i> column of the <i>clone_assigned_seq.tsv</i> file has not a length multiple of 3, and so that the translation of this sequence in the <i>clonal_germline_sequence_aa</i> column could be wrong. Column description:<br><ul style="padding-left:1.2em; margin:0;"><li><b>clone_id</b>: clone ID.
+            <br></li><li><b>germline_cds_length</b>: length of the nucleotide germline sequence.
+            <br></li><li><b>Biostrings_warning</b>: warning message returned by the R translating function <code>Biostrings::translate</code>.</li>
+            </ul>
         </td>
     </tr>
 </table>

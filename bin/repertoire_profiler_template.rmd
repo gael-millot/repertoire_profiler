@@ -805,6 +805,7 @@ if(length(warning_collect) == 1 && all(warning_collect == "")){
     collapsed_warnings_vector <- unique(collapsed_warnings_vector)
     collapsed_warnings_vector <- gsub(x = collapsed_warnings_vector, pattern = "\n*$", replacement = "")
     collapsed_warnings_vector <- gsub(x = collapsed_warnings_vector, pattern = "^\n*", replacement = "")
+    collapsed_warnings_vector <- gsub(x = collapsed_warnings_vector, pattern = "^WARNING: *", replacement = "")
     collapsed_warnings_vector <- paste0(collapsed_warnings_vector, collapse = "<br><br>") # single string
     # warning_collect <- warning_collect[ ! grepl(x = warning_collect, pattern = "^ *WARNING: *")]
     # end remove strings
