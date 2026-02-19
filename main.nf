@@ -644,11 +644,11 @@ workflow {
                 )
                 repertoire_png_ch = repertoire_png_ch.mix(Repertoire.out.repertoire_png_ch.collect())
                 repertoire_constant_ch = repertoire_constant_ch.mix(Repertoire.out.repertoire_png_ch.flatten().filter {file -> 
-                        file.name =~ /^.*IG.C_.*gene_non-zero\.png$/
-                    })
+                    file.name =~ /^.*(IG|TR).C_.*gene_non-zero\.png$/
+                })
                 repertoire_vj_ch =repertoire_vj_ch.mix( Repertoire.out.repertoire_png_ch.flatten().filter {file ->
-                        file.name =~ /.*\/?(rep_gene_IG.V_.*non-zero\.png)$/
-                    })
+                    file.name =~ /.*\/?(rep_gene_(IG|TR).V_.*non-zero\.png)$/
+                })
 
 
                 Clone_assignment(
@@ -991,7 +991,6 @@ workflow {
                     align_nuc_ch = Mafft_align.out.aligned_all_ch.map{nuc, aa, tag -> [nuc, aa, tag] }
                     aligned_all_ch2 = Mafft_align.out.aligned_all_ch.map{nuc, aa, tag -> [nuc, aa] }
                     copyLogFile('mafft_align.log', Mafft_align.out.mafft_align_log_ch, out_path)
-                    warning_ch = warning_ch.mix(Mafft_align.out.mafft_align_warn_ch.filter{file(it).exists()}.map{file -> file.text}) //  file.text = contenu du fichier
 
 
                 }else if(align_soft == "abalign"){
