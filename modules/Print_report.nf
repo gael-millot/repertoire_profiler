@@ -116,8 +116,8 @@ process Print_report{
             constant_names <- basename(constant_paths)
             vj_names <- basename(vj_paths)
             # Verification that the resulting file names are as expected
-            constant_rep <- constant_names[grepl("^IG.C_.*gene_non-zero\\\\.png\$", constant_names)]
-            vj_rep <- vj_names[grepl("^rep_gene_IG.V_.*non-zero\\\\.png\$", vj_names)]
+            constant_rep <- constant_names[grepl("^(IG|TR).C_.*gene_non-zero\\\\.png\$", constant_names)]
+            vj_rep <- vj_names[grepl("^rep_gene_(IG|TR).V_.*non-zero\\\\.png\$", vj_names)]
             if(length(constant_rep) == 0 || length(vj_rep) == 0){
                 stop(paste0("\\n\\n========\\n\\nERROR IN print_report PROCESS\\n\\nTHE REPERTOIRE PNG FILES TO BE DISPLAYED WERE NOT FOUND\\n\\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\\n\\n========\\n\\n"), call. = FALSE)
             }
