@@ -576,6 +576,9 @@ if(seq_kind == "IMGT" & align_seq %in% c("query", "igblast_full", "trimmed", "se
             # Replace the "," characters by "-" to have appropriate file names
             v_gene_clean <- paste(sort(v_genes_all), collapse = "-") 
             j_gene_clean <- paste(sort(j_genes_all), collapse = "-")
+            # replace potential /
+            v_gene_clean <- gsub(x = v_gene_clean, pattern = "/", replacement = "_")
+            j_gene_clean <- gsub(x = j_gene_clean, pattern = "/", replacement = "_") 
 
             if(seq_kind == "CLONE"){
                 seq_name <- paste0(i0, "_clone_id_", df[1, "clone_id"], "_", v_gene_clean, "_", j_gene_clean) # Create the name of the file

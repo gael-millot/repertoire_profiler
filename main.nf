@@ -977,6 +977,10 @@ workflow {
                 }
                 if(align_soft == "mafft"){
 
+                    // fasta_align_ch2 = Tsv2fasta.out.fasta_align_ch.map{nuc, aa, tag -> 
+                    //     n = nuc.text.readLines().size()
+                    //    return tuple(nuc, aa, tag, n) // accumulate
+                    // }
 
                     Mafft_align(
                         Tsv2fasta.out.fasta_align_ch,
@@ -987,7 +991,7 @@ workflow {
                     align_nuc_ch = Mafft_align.out.aligned_all_ch.map{nuc, aa, tag -> [nuc, aa, tag] }
                     aligned_all_ch2 = Mafft_align.out.aligned_all_ch.map{nuc, aa, tag -> [nuc, aa] }
                     copyLogFile('mafft_align.log', Mafft_align.out.mafft_align_log_ch, out_path)
-
+                    warning_ch = warning_ch.mix(Mafft_align.out.mafft_align_warn_ch.filter{file(it).exists()}.map{file -> file.text}) //  file.text = contenu du fichier
 
 
                 }else if(align_soft == "abalign"){
