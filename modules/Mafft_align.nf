@@ -2,7 +2,7 @@
 process  Mafft_align {
     label 'mafft'
 
-    cache 'false'
+    cache 'true'
     //publishDir path: "${out_path}/alignments/aa", mode: 'copy', pattern: "{*_aligned_aa.fasta}", overwrite: false
     //publishDir path: "${out_path}/alignments/nuc", mode: 'copy', pattern: "{*_aligned_nuc.fasta}", overwrite: false
 
