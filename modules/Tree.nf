@@ -22,6 +22,7 @@ process Tree {
     #!/bin/bash -ue
     set -o pipefail
     if (( \$(wc -l < ${fasta_aa_alignments}) / 2 >= 3 )) ; then
+        # see https://iqtree.github.io/doc/Command-Reference
         iqtree -nt AUTO -s ${fasta_aa_alignments} -m ${phylo_tree_model_file}+I+R6 --seed 123456789 |& tee -a tree.log
     else
         echo -e "\\n\\nNUMBER OF AA ALIGNED SEQUENCES < 3: NO TREE RETURNED.\\n\\n" |& tee -a tree.log
