@@ -22,23 +22,31 @@ process Unzip {
         echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nTHE FILE EXTENSION MUST BE \\".zip\\" AND NOT \${FILENAME_INI}\\n\\n========\\n\\n"
         exit 1
     else
+        SINGLE_FILE_NAME=\$(unzip -Z1 "${zip}")
         unzip ${zip}
     fi
-    rm \$FILENAME_INI
-    for file in "\$FILENAME"/*.* ; do
-        # Check if the file is a regular file and not a directory
-        if [ -f "\$file" ] ; then
-            # Check if the file does not match the extensions .fasta or .fa
-            if [[ ! "\$file" =~ \\.(fasta|fa|fas|fna|txt|seq)\$ ]] ; then
-                echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nALL THE UNZIPPED FILE EXTENSION MUST BE fasta, fa, fna, txt, seq OR faa.\\nHERE A FILE IS:\\n\$file.\\n\\n========\\n\\n"
+    rm \$FILENAME_INI # remove the zipped file 
+    if [ -d "\$FILENAME" ]; then # if the unzipped file is a directory
+        for file in "\$FILENAME"/*.* ; do
+            # Check if the file is a regular file and not a directory
+            if [ -f "\$file" ] ; then
+                # Check if the file does not match the extensions .fasta or .fa
+                if [[ ! "\$file" =~ \\.(fasta|fa|fas|fna|txt|seq|faa)\$ ]] ; then
+                    echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nALL THE UNZIPPED FILE EXTENSIONS MUST BE fasta, fa, fas, fna, txt, seq OR faa.\\nHERE A FILE IS:\\n\$file.\\n\\n========\\n\\n"
+                    exit 1
+                fi
+            else
+                echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nALL THE UNZIPPED FILE EXTENSIONS MUST BE fasta, fa, fas, fna, txt, seq OR faa.\\nHERE A FILE IS:\\n\$file.\\n\\n========\\n\\n"
                 exit 1
             fi
-        else
-            echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nTHE UNZIPPED FOLDER MUST CONTAIN ONLY FILES WITH THE FOLLOWING EXTENSION: fasta, fa, fna, txt, seq OR faa\\n\\n========\\n\\n"
+        done
+        cp "\$FILENAME"/*.* .
+        rm -r \$FILENAME
+    else
+        if [[ ! "\${SINGLE_FILE_NAME}" =~ \\.(fasta|fa|fas|fna|txt|seq|faa)\$ ]] ; then
+            echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nALL THE UNZIPPED FILE EXTENSIONS MUST BE fasta, fa, fas, fna, txt, seq OR faa.\\nHERE A FILE IS:\\n\${SINGLE_FILE_NAME}.\\n\\n========\\n\\n"
             exit 1
         fi
-    done
-    cp "\$FILENAME"/*.* .
-    rm -r \$FILENAME
+    fi
     """
 }

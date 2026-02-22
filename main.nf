@@ -148,6 +148,7 @@ process germ_tree_vizu {
 include {CheckVariables} from './conf/CheckVariables.nf'
 include {reportEmptyProcess; copyLogFile} from './modules/Functions.nf'
 include {Unzip} from './modules/Unzip.nf'
+include {Split_fasta} from './modules/Split_fasta.nf'
 include {WorkflowParam} from './modules/WorkflowParam.nf'
 include {Igblast_data_check} from './modules/Igblast_data_check.nf'
 include {Igblast_query} from './modules/Igblast_query.nf'
@@ -397,12 +398,35 @@ workflow {
             Channel.fromPath(sample_path),
             sample_path
         ) 
-        fs_ch = Unzip.out.unzip_ch.flatten()
+        dir_ch = Unzip.out.unzip_ch.flatten()
     }else{
-        fs_ch = Channel.fromPath("${sample_path}/*.*", checkIfExists: false) // in channel because many files 
+        dir_ch = Channel.fromPath("${sample_path}", checkIfExists: false) // in channel because many files 
     }
-    
-    nb_input = fs_ch.count()
+
+
+    // is the path a dir or a single file ?
+    dir_ch.branch {
+            dir: it.isDirectory()
+            file: true
+        }.set { branched }
+    // Handle directories: list contents
+    fs_ch_from_dir = branched.dir.flatMap { it.listFiles() } // is it is a dir, then recover all the files
+    // Handle files: pass through
+    fs_ch_from_file = branched.file
+    // Merge back
+    fs_ch = fs_ch_from_dir.mix(fs_ch_from_file)
+    // end is the path a dir or a single file ?
+
+    fs_ch.toList().branch {
+            single: it.size() == 1
+                return it[0]
+            multiple: true
+                return it
+        }.set { branched }
+    Split_fasta(branched.single)
+    fs_ch2 = Split_fasta.out.split_fasta_ch.mix(branched.multiple.flatten()).flatten()
+
+    nb_input = fs_ch2.count()
 
     WorkflowParam(
         modules
@@ -420,7 +444,7 @@ workflow {
     )
 
     Igblast_query( // module igblast_query.nf
-        fs_ch, 
+        fs_ch2, 
         igblast_variable_ref_files, 
         igblast_organism, 
         igblast_loci
@@ -450,7 +474,7 @@ workflow {
             }
         }
     }
-    fs_ch.count().combine(nb_igblast).combine(nb_unigblast).subscribe{n,n1,n2 -> 
+    fs_ch2.count().combine(nb_igblast).combine(nb_unigblast).subscribe{n,n1,n2 -> 
         if(n != -1 && n1 != -1 && n2 != -1){
             if(n != n1 + n2){
                 throw new IllegalStateException("\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nTHE NUMBER OF LINES IN THE igblast_aligned_seq.tsv (${n1}) AND igblast_unaligned_seq.tsv (${n2}) IS NOT EQUAL TO THE NUMBER OF SUBMITTED FASTA FILES (${n})\n\nPLEASE, REPORT AN ISSUE HERE https://gitlab.pasteur.fr/gmillot/repertoire_profiler/-/issues OR AT gael.millot<AT>pasteur.fr.\n\n========\n\n")

@@ -61,7 +61,7 @@
 
 | Required files |
 | :--- |
-| A folder (zipped or not) containing nucleotide fasta files, each containing a single sequence.<br>Use table2fasta.R ([https://github.com/gael-millot/table2fasta](https://github.com/gael-millot/table2fasta)) if sequences are in a .table file.<br>In each fasta file, the sequence can be split into several lines (\n and or \r separated). In addition, spaces and tabs can be present in the header (they will be replaced by an underscore). |
+| A single file (zipped or not) containing multiple nucleotide fasta sequences. Allowed extensions for this file are: fasta, fa, fas, fna, txt, seq or faa.<br>It can also be a folder (zipped or not) containing nucleotide fasta files, each containing a single sequence. Allowed extensions are the same.<br>Use table2fasta.R ([https://github.com/gael-millot/table2fasta](https://github.com/gael-millot/table2fasta)) if sequences are in a .table file.<br>In fasta files, the sequence can be split into several lines (\n and or \r separated). In addition, spaces and tabs can be present in the header (they will be replaced by an underscore).<br>Sequences do not have to be Immunonoglobulin, BCR or TCR sequences: filtering is performed by the pipeline. |
 | A metadata file (optional) for adding informations in the results. |
 
 <br>
@@ -77,14 +77,6 @@ The metadata file used in the *nextflow.config* file, as an example, is availabl
 Other dataset can be fould here:<br>
 [OAS](https://opig.stats.ox.ac.uk/webapps/oas/)<br>
 [OTS](https://opig.stats.ox.ac.uk/webapps/ots/)
-<br><br>
-
-Use this code to split a multi sequence fasta file into fasta files made of a single sequence:
-
-```
-FASTA_FILE="./test.fasta" # add path and name of the fasta file here
-awk -v slice_size=1 -v prefix="cut" '$1 ~ /^>/{nbSeq++; currSlice=int((nbSeq-1)/slice_size)+1; myOutFile=prefix"_"currSlice".fasta"}{print $0 > myOutFile}' ${FASTA_FILE}
-```
 
 <br><br>
 ## HOW TO RUN
