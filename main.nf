@@ -180,7 +180,8 @@ include {Mafft_align} from './modules/Mafft_align.nf'
 include {Abalign_align_aa} from './modules/Abalign_align_aa.nf'
 include {Abalign_rename} from './modules/Abalign_rename.nf'
 include {Abalign_align_nuc} from './modules/Abalign_align_nuc.nf'
-include {Tree} from './modules/Tree.nf'
+include {Tree_nuc} from './modules/Tree_nuc.nf'
+include {Tree_aa} from './modules/Tree_aa.nf'
 include {Meta2Itol} from './modules/Meta2Itol.nf'
 include {Itol} from './modules/Itol.nf'
 include {Print_warnings} from './modules/Print_warnings.nf'
@@ -1144,9 +1145,18 @@ workflow {
 
                 }
 
+                (aligned_all_nuc_ch, aligned_all_aa_ch) = aligned_all_ch2.multiMap { nuc, aa ->
+                    nuc: nuc
+                    aa: aa
+                }
 
-                Tree(
-                    aligned_all_ch2,
+                Tree_nuc(
+                    aligned_all_nuc_ch,
+                    phylo_tree_model_file
+                )
+
+                Tree_aa(
+                    aligned_all_aa_ch,
                     phylo_tree_model_file
                 )
 
