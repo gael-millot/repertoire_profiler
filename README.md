@@ -839,6 +839,14 @@ Special acknowledgement to:
 <br><br>
 ## WHAT'S NEW IN
 
+#### v25.0
+
+- Adapted to thousands of sequences.
+- Single fasta file with multiple sequences or folder with fasta files of single sequences.
+- Filtering of non Immunoglobulin or BCR or TCR sequences, according to the user settings.
+- Bug fixed.
+
+
 #### v24.0
 
 - Workflow now always returns a html report, whatever the sequencing problems and the workflow ending.
