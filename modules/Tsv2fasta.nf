@@ -3,10 +3,12 @@
 process Tsv2fasta {
     label 'r_ig_clustering'
     cache 'true'
-    // publishDir{if(seq_kind != 'IMGT'){return [ path: "${out_path}/fasta", mode: 'copy', pattern: "{*_nuc/*.fasta}", overwrite: false ]}}
-    // publishDir{if(seq_kind != 'IMGT'){return [ path: "${out_path}/fasta", mode: 'copy', pattern: "{*_aa/*.fasta}", overwrite: false ]}}
-    // publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{for_alignment_nuc/*.fasta}", overwrite: false
-    // publishDir path: "${out_path}/fasta", mode: 'copy', pattern: "{for_alignment_aa/*.fasta}", overwrite: false
+    // pushished files are dealt after the process but these work:
+    // publishDir path: "${out_path}/fasta/for_alignment_nuc", mode: 'copy', pattern: "for_alignment_nuc/*.fasta", overwrite: false
+    // publishDir path: "${out_path}/fasta/for_alignment_aa", mode: 'copy', pattern: "for_alignment_aa/*.fasta", overwrite: false
+    // publishDir path: "${out_path}/alignments/nuc/imgt", mode: 'copy', pattern: "sequence_alignment_with_gaps_imgt_nuc.fasta", overwrite: false
+    // publishDir path: "${out_path}/alignments/aa/imgt", mode: 'copy', pattern: "sequence_alignment_with_gaps_imgt_aa.fasta", overwrite: false
+    
 
     input:
     tuple path(all_files_ch), val(seq_kind) // parallelization expected (by clonal groups over align_clone_nb sequences)
