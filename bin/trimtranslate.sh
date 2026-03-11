@@ -146,9 +146,11 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
         # -w 0 → disables line wrapping so the sequence is on one line.
         # -r ${START_POS}:-1 → specifies the range: from position ${START_POS} up to the last base (-1 means the end).
         REMOVED_SEQ=$(sed -n '2p' ./wanted_nuc/removed/"${NAME}"_removed.fasta) # prints only the second line of the file.
-        if [[ -z ${REMOVED_SEQ} ]] ; then
-            REMOVED_SEQ="NA"
-        fi
+        # do not do that below: because NA can be a nucleotide sequence
+        # if [[ -z ${REMOVED_SEQ} ]] ; then
+        #     REMOVED_SEQ="NA"
+        # fi
+        # end do not do that below: because NA can be a nucleotide sequence
     # end triming the initial nucleotide sequence (corresponding to the leader peptide before the FWR1 region)
     # translation into aa (for a potential second round of analysis) since analysis is performed at the nuc level
     # translate fasta files

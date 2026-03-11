@@ -464,13 +464,13 @@ tempo_log <- df$fwr1_start != 1 & df$is_sequence_trimmed == FALSE
 if(any(tempo_log, na.rm = TRUE)){ # NA not considered
     stop(paste0("\n\n============\n\nERROR IN ", script, ".R\nIMPORTED FILE:\n", tsv_path, "\nHAS fwr1_start COLUMN OF VALUE NOT 1, WHILE is_sequence_trimmed COLUMN IS TRUE, IN LINES:\n", paste(which(tempo_log), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
 }
-tempo_log <- df$fwr1_start == 1 & ! is.na(df$removed_sequence)
+tempo_log <- df$fwr1_start == 1 & df$removed_sequence != ""
 if(any(tempo_log, na.rm = TRUE)){ # NA not considered
-    stop(paste0("\n\n============\n\nERROR IN ", script, ".R\nIMPORTED FILE:\n", tsv_path, "\nHAS fwr1_start COLUMN OF VALUE 1, WHILE removed_sequence COLUMN IS NOT NA, IN LINES:\n", paste(which(tempo_log), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
+    stop(paste0("\n\n============\n\nERROR IN ", script, ".R\nIMPORTED FILE:\n", tsv_path, "\nHAS fwr1_start COLUMN OF VALUE 1, WHILE removed_sequence COLUMN IS NOT EMPTY, IN LINES:\n", paste(which(tempo_log), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
 }
-tempo_log <- df$fwr1_start == 1 & ! is.na(df$removed_sequence)
+tempo_log <- df$fwr1_start != 1 & df$removed_sequence == ""
 if(any(tempo_log, na.rm = TRUE)){ # NA not considered
-    stop(paste0("\n\n============\n\nERROR IN ", script, ".R\nIMPORTED FILE:\n", tsv_path, "\nHAS fwr1_start COLUMN OF VALUE 1, WHILE removed_sequence COLUMN IS NOT NA, IN LINES:\n", paste(which(tempo_log), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
+    stop(paste0("\n\n============\n\nERROR IN ", script, ".R\nIMPORTED FILE:\n", tsv_path, "\nHAS fwr1_start COLUMN OF VALUE DIFFERENT FROM 1, WHILE removed_sequence COLUMN EMPTY, IN LINES:\n", paste(which(tempo_log), collapse = "\n"), "\n\n============\n\n"), call. = FALSE)
 }
 # end test that all non trimmed sequences start at 1 for fwr1_start, or NA
 
