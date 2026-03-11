@@ -146,6 +146,9 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
         # -w 0 → disables line wrapping so the sequence is on one line.
         # -r ${START_POS}:-1 → specifies the range: from position ${START_POS} up to the last base (-1 means the end).
         REMOVED_SEQ=$(sed -n '2p' ./wanted_nuc/removed/"${NAME}"_removed.fasta) # prints only the second line of the file.
+        if [[ -z ${REMOVED_SEQ} ]] ; then
+            REMOVED_SEQ="NA"
+        fi
     # end triming the initial nucleotide sequence (corresponding to the leader peptide before the FWR1 region)
     # translation into aa (for a potential second round of analysis) since analysis is performed at the nuc level
     # translate fasta files
@@ -388,6 +391,7 @@ if (( $(cat ${select_ch} | wc -l ) > 1 )) ; then
                 if($cdr3_end_NB!="NA"){cdr3_end2=$cdr3_end_NB-REMOVED_SEQ_LENGTH}else{cdr3_end2="NA"}
                 if($fwr4_start_NB!="NA"){fwr4_start2=$fwr4_start_NB-REMOVED_SEQ_LENGTH}else{fwr4_start2="NA"}
                 if($fwr4_end_NB!="NA"){fwr4_end2=$fwr4_end_NB-REMOVED_SEQ_LENGTH}else{fwr4_end2="NA"}
+
                 print $0"\t"var2"\t"var3"\t"var4"\t"REMOVED_SEQ_LENGTH"\t"var5"\t"var6"\t"IDENT_SEQ_ALIGN"\t"IDENTICAL"\t"SEQ_AA_STOP"\t"SEQ_ALIGN_AA_STOP"\t"GERM_ALIGN_AA_STOP"\t"TRIM_AA_SEQ_STOP"\t"INI_AA_SEQ_STOP"\t"fwr1_start2"\t"fwr1_end2"\t"cdr1_start2"\t"cdr1_end2"\t"fwr2_start2"\t"fwr2_end2"\t"cdr2_start2"\t"cdr2_end2"\t"fwr3_start2"\t"fwr3_end2"\t"cdr3_start2"\t"cdr3_end2"\t"fwr4_start2"\t"fwr4_end2"\n" > "trimtranslate.tsv"
             }
         }

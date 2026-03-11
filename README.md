@@ -169,12 +169,12 @@ module load ${NEXTFLOW_CONF}
 
 #### 3.2. *main.nf* file in a cluster folder
 
-Modify the second line of the code below, and run from where the *main.nf* and *nextflow.config* files are (which has been set thanks to the EXEC_PATH variable above):
+Run from where the *main.nf* and *nextflow.config* files are (which has been set thanks to the EXEC_PATH variable above):
 
 <pre>
 HOME_INI=$HOME
 HOME="${HELIXHOME}/repertoire_profiler/" # $HOME changed to allow the creation of .nextflow into /$HELIXHOME/repertoire_profiler/, for instance. See NFX_HOME in the nextflow software script
-nextflow run main.nf -c nextflow.config # or nextflow run main.nf -c nextflow.config --modules ${MODULES} in order to have all the used module versions recorded into the report file 
+nextflow run main.nf -c nextflow.config -resume --modules ${MODULES} # --modules ${MODULES} in order to have all the used module versions recorded into the report file, -resume to continue a potential job that has already been submitted
 HOME=$HOME_INI
 </pre>
 
@@ -182,7 +182,7 @@ HOME=$HOME_INI
 
 #### 3.3. *main.nf* file in the public gitlab repository
 
-Modify the first and third lines of the code below, and run (results will be where the EXEC_PATH variable has been set above):
+Modify the first line of the code below, in order to call the desired version of repertoire_profiler indicated [here](https://github.com/gael-millot/repertoire_profiler/tags), and run (results will be where the EXEC_PATH variable has been set above):
 
 <pre>
 VERSION="v1.0"
