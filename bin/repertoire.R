@@ -97,7 +97,7 @@ rm(tempo.cat)
 ################################ Test
 
 
-# setwd("C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/work/2a/5fedee748c186ca83d623bee2ae0eb")
+# setwd("Z:/19463_thomas_derenne/repertoire_profiler-8012d3826e/work/b9/5f258d81a33b8c1a7825430c2cbdc4")
 # wanted_seq <- "wanted_seq.tsv"
 # repertoire_names_ch <- "imgt_human_IGHC.tsv imgt_human_IGHD.tsv imgt_human_IGHJ.tsv imgt_human_IGHV.tsv"
 # cute = "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/bin/cute_little_R_functions_v12.8.R"
@@ -224,7 +224,6 @@ fun_gg_heatmap2 <- function(
     # function name
     tempo.gg.name <- "gg.indiv.plot."
     tempo.gg.count <- 0
-    
     if(class(data1) == "data.frame" & (is.null(x) | is.null(y)) & ncol(data1) != 2){
         stop(paste0("\n\n================\n\nERROR IN fun_gg_heatmap2:\ndata1 ARGUMENT MUST BE A TWO COLUMN DATA FRAME IF data1 ARGUMENT IS A DATA FRAME AND IF x OR y ARGUMENT IS NULL\n\n================\n\n"), call. = FALSE)
     }
@@ -298,7 +297,6 @@ fun_gg_heatmap2 <- function(
     pdf(NULL)
     output <- suppressMessages(suppressWarnings(gridExtra::arrangeGrob(grobs = list(eval(parse(text = paste(paste0(tempo.gg.name, 1:tempo.gg.count), collapse = " + "))), legend.final), ncol=2, widths=c(1, 0.5), top = title.grob, left = " ", right = " "))) # , left = " ", right = " " : trick to add margins in the plot. padding =  unit(0.5, "inch") is for top margin above the title
     suppressMessages(dev.off())
-    print(output)
     return(output)
 }
 
@@ -913,32 +911,32 @@ for(i0 in type){
     # for each C
     if( ! all(is.na(gene_obs_trunk[[3]]), na.rm = FALSE)){
         isotype_subclass_obs <- sort(unique(gene_obs_trunk[[3]]))
-        for(i1 in isotype_subclass_obs){
+        for(i2 in isotype_subclass_obs){
             tempo_df_const <- lapply(
                 X = get(paste0(i0 , "_obs_trunk"))[get(paste0("var_", i0, "_obs"))], 
                 FUN = function(x){
                     c_values <- get(paste0(i0, "_obs_trunk"))[[get(paste0("const_", i0, "_obs"))]]
                     c_genes <- lapply(strsplit(c_values, "\\*"), function(x) x[[1]])
-                    x[c_genes == i1]
+                    x[c_genes == i2]
                 }
             )
             tempo_df_const[[1]] <- factor(tempo_df_const[[1]], levels = unique(get(paste0(i0, "_trunk"))[[1]]))
             tempo_df_const[[2]] <- factor(tempo_df_const[[2]], levels = unique(get(paste0(i0, "_trunk"))[[2]]))
             # plot
-            for(i2 in kind){
+            for(i3 in kind){
                 # here the work is using data frames because it keeps the structure even if one cell
                 tempo_primary_na <- is.na(tempo_df_const[[1]])
                 tempo_secondary_na <- is.na(tempo_df_const[[2]])
                 nb_na_log <- tempo_primary_na | tempo_secondary_na
                 nb_na <- sum(nb_na_log)
                 nb_total <- length(tempo_df_const[[1]])
-                if(i2 == "non-zero"){
+                if(i3 == "non-zero"){
                     tempo.table2 <- as.data.frame.matrix(table(tempo_df_const))
                     tempo.log <- apply(tempo.table2, 1, sum, na.rm = TRUE) > 0
                     tempo.table3 <- tempo.table2[tempo.log, ]
                     tempo.log <- apply(tempo.table3, 2, sum, na.rm = TRUE) > 0
                     tempo.table3 <- tempo.table3[tempo.log]
-                }else if(i2 == "annotated"){
+                }else if(i3 == "annotated"){
                     tempo.labels <- df[ , 1]
                     tempo.labels[annotation.log] <- NA
                     clone.name <- paste0(tempo_df_const[[1]], "_", tempo_df_const[[2]])
@@ -953,12 +951,12 @@ for(i0 in type){
                     tempo.table3 <- tempo.table3[tempo.log]
                 }else{
                     tempo.table2 <- as.data.frame.matrix(table(tempo_df_const))
-                    write.table(tempo.table2, file = paste0("./rep_", i0, "_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], ".tsv"), row.names = TRUE, col.names = NA, sep = "\t", quote = FALSE) # separate repertoires
+                    write.table(tempo.table2, file = paste0("./rep_", i0, "_", i2, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], ".tsv"), row.names = TRUE, col.names = NA, sep = "\t", quote = FALSE) # separate repertoires
                     tempo.table3 <- tempo.table2
                 }
                 # end here the work is using data frames because it keeps the structure even if one cell
                 if(sum(tempo.table3, na.rm = TRUE) > 0){
-                    if(nrow(tempo.table3) > 1 & ncol(tempo.table3) > 1){
+                    if(nrow(tempo.table3) > 0 & ncol(tempo.table3) > 1){
                         tempo.table.gg <- as.data.frame(as.table(as.matrix(tempo.table3)))
                         label.size <- (25 - nrow(tempo.table3) * 0.3) / max(1, 0.5 * ncol(tempo.table3))
                     }else{
@@ -968,8 +966,8 @@ for(i0 in type){
                     names(tempo.table.gg) <- c(names(check_concordance_imgt)[1], names(check_concordance_imgt)[2], "Count")
                     tempo.table.gg$Count[tempo.table.gg$Count == 0] <- NA
                     tempo.title <- paste0(
-                        "Locus: ", names(check_concordance_imgt)[1], "x", names(check_concordance_imgt)[2], " for ", i1, "\n",
-                        "Kind: ", i2, "\n",
+                        "Locus: ", names(check_concordance_imgt)[1], "x", names(check_concordance_imgt)[2], " for ", i2, "\n",
+                        "Kind: ", i3, "\n",
                         "Type: ", i0, "\n",
                         "Chain: ", paste(chain, collapse = " "), "\n", 
                         "Nb of sequences selected (depending on \"all\"/\"non-zero\" or \"annotated\"): ", nb_total, "\n", 
@@ -994,19 +992,19 @@ for(i0 in type){
                 }else{
                     # no need to use pdf(NULL) with fun_gg_empty_graph()
                     tempo.title <- paste0(
-                        "Locus: ", names(check_concordance_imgt)[1], "x", names(check_concordance_imgt)[2], " for ", i1, "\n",
-                        "Kind: ", i2, "\n",
+                        "Locus: ", names(check_concordance_imgt)[1], "x", names(check_concordance_imgt)[2], " for ", i2, "\n",
+                        "Kind: ", i3, "\n",
                         "Type: ", i0, "\n",
                         "Chain: ", paste(chain, collapse = " "), "\n", 
                         "Nb of sequences selected (depending on \"all\"/\"non-zero\" or \"annotated\"): ", nb_total, "\n", 
                         "Nb of NA removed among the selected number of sequences: ", nb_na, "\n", 
                         "Total count: 0"
                     )
-                    final.plot <- fun_gg_empty_graph(title = tempo.title, title.size = 7, text = paste0("NO GRAPH PLOTTED FOR VxJ for ", i1, "\nNO ALLELE/GENE DETECTED"), text.size = 3)
+                    final.plot <- fun_gg_empty_graph(title = tempo.title, title.size = 7, text = paste0("NO GRAPH PLOTTED FOR VxJ for ", i2, "\nNO ALLELE/GENE DETECTED"), text.size = 3)
                 }
-                ggplot2::ggsave(filename = paste0("./rep_", i0, "_for_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white") # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
-                ggplot2::ggsave(filename = paste0("./rep_", i0, "_for_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white")
-                ggplot2::ggsave(filename = paste0("./rep_", i0, "_for_", i1, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white")
+                ggplot2::ggsave(filename = paste0("./rep_", i0, "_for_", i2, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i3, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white") # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
+                ggplot2::ggsave(filename = paste0("./rep_", i0, "_for_", i2, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i3, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white")
+                ggplot2::ggsave(filename = paste0("./rep_", i0, "_for_", i2, "_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i3, ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white")
             }
         }
     }else{
@@ -1017,9 +1015,9 @@ for(i0 in type){
             "Total count: 0"
         )
         final.plot <- fun_gg_empty_graph(title = tempo.title, title.size = 7, text = paste0("NO GRAPH PLOTTED FOR VxJ for ", i1, "\nNO C ALLELE/GENE DETECTED"), text.size = 3)
-        ggplot2::ggsave(filename = paste0("./rep_", i0, "_no_C_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white") # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
-        ggplot2::ggsave(filename = paste0("./rep_", i0, "_no_C_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white")
-        ggplot2::ggsave(filename = paste0("./rep_", i0, "_no_C_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_",  i2, ".pdf"), plot = final.plot, device = "pdf", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white")
+        ggplot2::ggsave(filename = paste0("./rep_", i0, "_no_C_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_NA_isotype.png"), plot = final.plot, device = "png", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white") # do not modify width and height. Otherwise impair axis.text.y, axis.ticks.y, panel.border sizes
+        ggplot2::ggsave(filename = paste0("./rep_", i0, "_no_C_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_NA_isotype.svg"), plot = final.plot, device = "svg", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white")
+        ggplot2::ggsave(filename = paste0("./rep_", i0, "_no_C_", names(get(paste0(i0, "_trunk")))[1], "_", names(get(paste0(i0, "_trunk")))[2], "_NA_isotype.pdf"), plot = final.plot, device = "pdf", path = ".", width = 4, height = 10, units = "in", dpi = 300, bg = "white")
     }
     # end plot
     # end for each C

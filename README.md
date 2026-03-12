@@ -839,13 +839,16 @@ Special acknowledgement to:
 <br><br>
 ## WHAT'S NEW IN
 
+#### v25.1
+
+- Bugs fixed.
+
 #### v25.0
 
 - Adapted to thousands of sequences.
 - Single fasta file with multiple sequences or folder with fasta files of single sequences.
 - Filtering of non Immunoglobulin or BCR or TCR sequences, according to the user settings.
 - Bug fixed.
-
 
 #### v24.0
 

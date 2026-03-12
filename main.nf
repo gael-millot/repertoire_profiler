@@ -1133,14 +1133,14 @@ workflow {
                     PrintAlignmentIMGTnuc( // module print_alignment.nf
                         Tsv2fasta.out.fasta_align_imgt_ch
                     )
-                    PrintAlignmentIMGTnuc.out.alignment_html.subscribe{html, tag -> html.copyTo("${out_path}/alignments/nuc/imgt")}
+                    // PrintAlignmentIMGTnuc.out.alignment_html.subscribe{html, tag -> html.copyTo("${out_path}/alignments/nuc/imgt")} // dealt inside the process with publishdir because of error with -resume
 
 
 
                     PrintAlignmentIMGTaa( // module print_alignment.nf
                         fasta_align_imgt_aa_ch
                     )
-                    PrintAlignmentIMGTaa.out.alignment_html.subscribe{html, tag -> html.copyTo("${out_path}/alignments/aa/imgt")}
+                    // PrintAlignmentIMGTaa.out.alignment_html.subscribe{html, tag -> html.copyTo("${out_path}/alignments/aa/imgt")} // dealt inside the process with publishdir because of error with -resume
 
 
                 }
