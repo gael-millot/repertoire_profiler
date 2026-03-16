@@ -984,7 +984,8 @@ workflow {
                 // fasta_align_imgt_ch = Tsv2fasta.out.fasta_align_ch.ifEmpty{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nEMPTY OUTPUT FOLLOWING THE Tsv2fasta PROCESS\n\n========\n\n"}.filter {nuc, aa, kind -> nuc.name.endsWith("_imgt_nuc.fasta")}
                 Tsv2fasta.out.fasta_align_ch.filter{nuc, aa, kind -> nuc.exists() && aa.exists() }.subscribe{nuc, aa, kind -> nuc.copyTo("${out_path}/fasta/for_alignment_nuc/${nuc.getName()}") ; aa.copyTo("${out_path}/fasta/for_alignment_aa/${aa.getName()}")} // copy the folder and content for_alignment_nuc/* into {out_path}/fasta
                 Tsv2fasta.out.fasta_align_imgt_ch.filter{nuc, aa, kind -> nuc.exists() && aa.exists() }.subscribe{nuc, aa, kind -> nuc.copyTo("${out_path}/alignments/nuc/imgt/${nuc.getName()}") ; aa.copyTo("${out_path}/alignments/aa/imgt/${aa.getName()}")}
-                fasta_align_imgt_aa_ch = Tsv2fasta.out.fasta_align_imgt_ch.map{nuc, aa, kind  -> [aa, nuc, kind] } // for aa printing into html
+                fasta_align_imgt_nuc_ch = Tsv2fasta.out.fasta_align_imgt_ch.map{nuc, aa, kind  -> [nuc, kind] } // for aa printing into html
+                fasta_align_imgt_aa_ch = Tsv2fasta.out.fasta_align_imgt_ch.map{nuc, aa, kind  -> [aa, kind] } // for aa printing into html
                 // Tsv2fasta.out.fasta_align_imgt_ch.filter{nuc, aa, kind -> nuc.exists() }.subscribe{nuc, aa, kind -> nuc.copyTo("${out_path}/alignments/nuc/imgt/${nuc.getName()}")} // aa.copyTo("${out_path}/alignments/aa/${aa.getName()}") not used because no gaps in this aa sequences
                 // fasta_align_ch2 = Tsv2fasta.out.fasta_align_ch.filter {nuc, aa, kind -> !nuc.name.endsWith("_imgt_nuc.fasta")}
                 copyLogFile('Tsv2fasta.log', Tsv2fasta.out.tsv2fasta_log_ch, out_path)
@@ -1012,8 +1013,8 @@ workflow {
                         align_mafft_all_options,
                         align_mafft_clonal_options
                     )
-                    align_aa_ch = Mafft_align.out.aligned_all_ch.map{nuc, aa, tag -> [aa, nuc, tag] }
-                    align_nuc_ch = Mafft_align.out.aligned_all_ch.map{nuc, aa, tag -> [nuc, aa, tag] }
+                    align_nuc_ch = Mafft_align.out.aligned_all_ch.map{nuc, aa, tag -> [nuc, tag] }
+                    align_aa_ch = Mafft_align.out.aligned_all_ch.map{nuc, aa, tag -> [aa, tag] }
                     aligned_all_ch2 = Mafft_align.out.aligned_all_ch.map{nuc, aa, tag -> [nuc, aa] }
                     copyLogFile('mafft_align.log', Mafft_align.out.mafft_align_log_ch, out_path)
 
@@ -1043,8 +1044,8 @@ workflow {
                     Abalign_align_nuc(
                         Abalign_rename.out.renamed_aligned_aa_ch
                     )
-                    align_nuc_ch = Abalign_align_nuc.out.aligned_all_ch.map{nuc, aa, tag -> [nuc, aa, tag] }
-                    align_aa_ch = Abalign_align_nuc.out.aligned_all_ch.map{nuc, aa, tag -> [aa, nuc, tag] }
+                    align_nuc_ch = Abalign_align_nuc.out.aligned_all_ch.map{nuc, aa, tag -> [nuc, tag] }
+                    align_aa_ch = Abalign_align_nuc.out.aligned_all_ch.map{nuc, aa, tag -> [aa, tag] }
                     aligned_all_ch2 = Abalign_align_nuc.out.aligned_all_ch.map{nuc, aa, tag -> [nuc, aa] }
                     copyLogFile('abalign_align_nuc.log', Abalign_align_nuc.out.abalign_align_nuc_log_ch, out_path)
 
@@ -1053,8 +1054,8 @@ workflow {
                 }else{
                     error "\n\n========\n\nINTERNAL ERROR IN NEXTFLOW EXECUTION\n\nINVALID align_soft PARAMETER IN nextflow.config FILE:\n${align_soft}\n\n========\n\n"
                 }
-                align_nuc_ch.subscribe{nuc, aa, tag -> if(tag == "CLONE"){nuc.copyTo("${out_path}/alignments/nuc/clonal/${nuc.getName()}")}else if(tag == "ALL"){nuc.copyTo("${out_path}/alignments/nuc/all/${nuc.getName()}")}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
-                align_aa_ch.subscribe{aa, nuc, tag -> if(tag == "CLONE"){aa.copyTo("${out_path}/alignments/aa/clonal/${aa.getName()}")}else if(tag == "ALL"){aa.copyTo("${out_path}/alignments/aa/all/${aa.getName()}")}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
+                align_nuc_ch.subscribe{nuc, tag -> if(tag == "CLONE"){nuc.copyTo("${out_path}/alignments/nuc/clonal/${nuc.getName()}")}else if(tag == "ALL"){nuc.copyTo("${out_path}/alignments/nuc/all/${nuc.getName()}")}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
+                align_aa_ch.subscribe{aa, tag -> if(tag == "CLONE"){aa.copyTo("${out_path}/alignments/aa/clonal/${aa.getName()}")}else if(tag == "ALL"){aa.copyTo("${out_path}/alignments/aa/all/${aa.getName()}")}else{error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\ntag CANNOT BE OTHER THAN ALL OR CLONE HERE.\n\n========\n\n"}}
 
 
                 //Abalign_align_nuc.out.aligned_all_ch.map{nuc, aa, tag -> [y, z] }.view()
@@ -1131,7 +1132,7 @@ workflow {
 
 
                     PrintAlignmentIMGTnuc( // module print_alignment.nf
-                        Tsv2fasta.out.fasta_align_imgt_ch
+                        fasta_align_imgt_nuc_ch
                     )
                     // PrintAlignmentIMGTnuc.out.alignment_html.subscribe{html, tag -> html.copyTo("${out_path}/alignments/nuc/imgt")} // dealt inside the process with publishdir because of error with -resume
 

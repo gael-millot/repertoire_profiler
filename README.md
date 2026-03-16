@@ -839,6 +839,10 @@ Special acknowledgement to:
 <br><br>
 ## WHAT'S NEW IN
 
+#### v25.2
+
+- Bugs fixed.
+
 #### v25.1
 
 - Bugs fixed.
