@@ -1204,49 +1204,7 @@ workflow {
     Print_report(
         config_file, // from parameter
         template_rmd, // from parameter
-        alignments_viz_rmd, // from parameter
-        alignments_viz_html, // from parameter
-        igblast_organism, // parameter
-        igblast_loci, // parameter
-        igblast_B_heavy_chain, // parameter
-        igblast_B_lambda_chain, // parameter
-        igblast_B_kappa_chain, // parameter
-        igblast_T_alpha_chain, // parameter
-        igblast_T_beta_chain, // parameter
-        igblast_T_gamma_chain, // parameter
-        igblast_T_delta_chain, // parameter
-        clone_strategy, // parameter
-        clone_model, // parameter
-        clone_normalize, // parameter
-        clone_distance, // parameter
-        clone_germline_kind, // parameter
-        clone_mut_obs_seq, // parameter
-        clone_mut_germ_seq, // parameter
-        clone_mut_regionDefinition, // parameter
-        align_clone_nb, // parameter
-        align_soft, // parameter
-        align_seq, // parameter
-        align_abalign_options, // parameter
-        align_mafft_all_options, // parameter
-        align_mafft_clonal_options, // parameter
-        nb_input, // mandatory
-        nb_igblast, // mandatory
-        nb_unigblast, // mandatory
-        nb_productive.ifEmpty{'EMPTY'}, 
-        nb_unproductive.ifEmpty{'EMPTY'}, 
-        nb_wanted.ifEmpty{'EMPTY'}, 
-        nb_unwanted.ifEmpty{'EMPTY'}, 
-        nb_dist_ignored.ifEmpty{'EMPTY'}, 
-        nb_clone_tot.ifEmpty{'EMPTY'}, 
-        nb_unclone_tot.ifEmpty{'EMPTY'}, 
-        nb_clone_unassignment.ifEmpty{'EMPTY'}, 
-        nb_clone_ungermline.ifEmpty{'EMPTY'}, 
-        distance_hist_ch.ifEmpty{[empty_distance_hist]}, 
-        Donut.out.donuts_png_ch.collect().ifEmpty{ [empty_donuts_png] }, 
-        Repertoire.out.repertoire_png_ch.collect().ifEmpty{ [empty_repertoire_png] }, 
-        repertoire_constant_ch.ifEmpty{'EMPTY'}, 
-        repertoire_vj_ch.ifEmpty{'EMPTY'}, 
-        phylo_tree_itol_subscription, // parameter
+
         Print_warnings.out.final_warning_ch // just so that print_report wait for all warnings // warning_ch.collect().map{it.join('\n\n')}.ifEmpty{'EMPTY'} // concatenate all warnings into a single string // finally, the gathered string is very loong. I prefer to use a file added in /reports/
     )
 
