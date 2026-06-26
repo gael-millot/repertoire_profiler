@@ -14,7 +14,7 @@
 //      "report.html": finalized html report for a specific run
 //      "print_report.log": will contain any error or warning messages produced by rmardown::render
 process Print_report{
-    label 'r_ig_clustering'
+    label 'r_ext2'
 
     publishDir path: "${out_path}/reports", mode: 'copy', pattern: "{nextflow.config.html}", overwrite: false
     publishDir path: "${out_path}", mode: 'copy', pattern: "{report.html}", overwrite: false
@@ -184,64 +184,62 @@ process Print_report{
         }
         # empty "EMPTY" channel
 
-        rmarkdown::render(
-        input = "report_file.rmd",
-        output_file = "report.html",
-        # list of the variables waiting to be replaced in the rmd file:
-        params = list(
-            igblast_organism = "${igblast_organism}",
-            igblast_loci = "${igblast_loci}",
-            igblast_B_heavy_chain = ${igblast_B_heavy_chain},
-            igblast_B_lambda_chain = ${igblast_B_lambda_chain},
-            igblast_B_kappa_chain = ${igblast_B_kappa_chain},
-            igblast_T_alpha_chain = ${igblast_T_alpha_chain},
-            igblast_T_beta_chain = ${igblast_T_beta_chain},
-            igblast_T_gamma_chain = ${igblast_T_gamma_chain},
-            igblast_T_delta_chain = ${igblast_T_delta_chain},
-            clone_strategy = "${clone_strategy}",
-            clone_model = "${clone_model}",
-            clone_normalize = "${clone_normalize}",
-            clone_distance = "${clone_distance}",
-            clone_germline_kind = "${clone_germline_kind}",
-            clone_mut_obs_seq = "${clone_mut_obs_seq}",
-            clone_mut_germ_seq = "${clone_mut_germ_seq}",
-            clone_mut_regionDefinition = "${clone_mut_regionDefinition}",
-            align_clone_nb = "${align_clone_nb}",
-            align_soft = "${align_soft}",
-            align_seq = "${align_seq}",
-            align_abalign_options = "${align_abalign_options}",
-            align_mafft_all_options = "${align_mafft_all_options}",
-            align_mafft_clonal_options = "${align_mafft_clonal_options}",
-            nb_input = ${nb_input},
-            nb_igblast = ${nb_igblast}, 
-            nb_unigblast = ${nb_unigblast},
-            nb_productive = nb_productive, 
-            nb_unproductive = nb_unproductive, 
-            nb_wanted =  nb_wanted, 
-            nb_unwanted =  nb_unwanted, 
-            nb_dist_ignored = nb_dist_ignored, 
-            nb_clone_tot = nb_clone_tot, 
-            nb_unclone_tot = nb_unclone_tot, 
-            nb_clone_unassignment = nb_clone_unassignment, 
-            nb_clone_ungermline = nb_clone_ungermline, 
-            constant_rep = constant_rep,
-            vj_rep = vj_rep,
-            align_soft = "${align_soft}",
-            itol_subscription = ${itol_subscription},
-            warning_collect = warning_collect
-        ),
-        # output_dir = ".",
-        # intermediates_dir = "./",
-        # knit_root_dir = "./",
-        run_pandoc = TRUE,
-        quiet = TRUE,
-        clean = TRUE
+        quarto::quarto_render(
+            input = "report_file.rmd",
+            output_file = "report.html",
+            # list of the variables waiting to be replaced in the rmd file:
+            execute_params = list(
+                igblast_organism = "${igblast_organism}",
+                igblast_loci = "${igblast_loci}",
+                igblast_B_heavy_chain = ${igblast_B_heavy_chain},
+                igblast_B_lambda_chain = ${igblast_B_lambda_chain},
+                igblast_B_kappa_chain = ${igblast_B_kappa_chain},
+                igblast_T_alpha_chain = ${igblast_T_alpha_chain},
+                igblast_T_beta_chain = ${igblast_T_beta_chain},
+                igblast_T_gamma_chain = ${igblast_T_gamma_chain},
+                igblast_T_delta_chain = ${igblast_T_delta_chain},
+                clone_strategy = "${clone_strategy}",
+                clone_model = "${clone_model}",
+                clone_normalize = "${clone_normalize}",
+                clone_distance = "${clone_distance}",
+                clone_germline_kind = "${clone_germline_kind}",
+                clone_mut_obs_seq = "${clone_mut_obs_seq}",
+                clone_mut_germ_seq = "${clone_mut_germ_seq}",
+                clone_mut_regionDefinition = "${clone_mut_regionDefinition}",
+                align_clone_nb = "${align_clone_nb}",
+                align_soft = "${align_soft}",
+                align_seq = "${align_seq}",
+                align_abalign_options = "${align_abalign_options}",
+                align_mafft_all_options = "${align_mafft_all_options}",
+                align_mafft_clonal_options = "${align_mafft_clonal_options}",
+                nb_input = ${nb_input},
+                nb_igblast = ${nb_igblast}, 
+                nb_unigblast = ${nb_unigblast},
+                nb_productive = nb_productive, 
+                nb_unproductive = nb_unproductive, 
+                nb_wanted =  nb_wanted, 
+                nb_unwanted =  nb_unwanted, 
+                nb_dist_ignored = nb_dist_ignored, 
+                nb_clone_tot = nb_clone_tot, 
+                nb_unclone_tot = nb_unclone_tot, 
+                nb_clone_unassignment = nb_clone_unassignment, 
+                nb_clone_ungermline = nb_clone_ungermline, 
+                constant_rep = constant_rep,
+                vj_rep = vj_rep,
+                align_soft = "${align_soft}",
+                itol_subscription = ${itol_subscription},
+                warning_collect = warning_collect
+            ),
+            # output_dir = ".",
+            # intermediates_dir = "./",
+            # knit_root_dir = "./",
+            quiet = TRUE
         )
 
         html_here_ok <- TRUE # set to FALSE to rerun the creation of the alignments_viz_html file
         if(html_here_ok == FALSE){
             # dir.create("reports", showWarnings = FALSE, recursive = TRUE)
-            rmarkdown::render(input = "alignments_vizu.rmd", output_file = "alignments_viz.html", run_pandoc = TRUE, quiet = TRUE, clean = TRUE)
+            quarto::quarto_render(input = "alignments_vizu.rmd", output_file = "alignments_viz.html", quiet = TRUE)
         }
     ' |& tee -a print_report.log
     """

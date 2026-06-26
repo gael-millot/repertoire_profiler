@@ -1,10 +1,14 @@
 ---
 title: 'Repertoire Profiler Report'
 date: ''
+toc: true
+toc-location: left
+self-contained: true
+theme: cosmo
 output:
-  html_document:
-    toc: TRUE
-    toc_float: TRUE
+  bookdown::gitbook:
+    config:
+      search: yes
 params:
     igblast_organism: ""
     igblast_loci: ""
@@ -47,7 +51,7 @@ params:
     warning_collect: ""
 ---
 
-\n\n<br><br>\n\n
+<br><br>
 
 
 
