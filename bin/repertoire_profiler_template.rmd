@@ -1,6 +1,6 @@
 ---
 title: 'Repertoire Profiler Report'
-date: ''
+date: "`r format(Sys.time(), '%Y-%m-%d %H:%M')`"
 toc: true
 toc-location: left
 self-contained: true
