@@ -27,7 +27,7 @@
 <br><br>
 ## AIM
 
-- IgBlast annotation of mRNA sequencing of the Immunoglobuline Heavy or Light variable region.
+- IgBlast annotation of BCR, TCR or Immunoglobulin chains.
 - Now accepts and filters fasta sequences from whole RNA sequencing.
 - Incorporation of sequence metadata.
 - Repertoire heatmaps, donuts and summary statistics.
