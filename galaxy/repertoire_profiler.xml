@@ -15,6 +15,7 @@
         - job environment variables:
             RP_APPTAINER_CACHE    (required) shared folder of the apptainer images, readable by the job nodes
             RP_APPTAINER_OPTIONS  (optional) apptainer run options, default: "no-home and bind /pasteur"
+                                  (the wrapper always adds env XDG_CACHE_HOME=/tmp: with no-home, quarto cannot create its cache in $HOME)
         - destination with at least 10 cores and 16 GB (the immcantation_10cpu label of nextflow.config)
     -->
     <requirements>
@@ -25,6 +26,8 @@
     <version_command>nextflow -version | grep version</version_command>
     <command detect_errors="exit_code"><![CDATA[
 #set $repo = $__tool_directory__ + '/..'
+## nextflow.config uses ./bin/... paths (relative to the launch folder, which is the job folder here)
+ln -s '$repo/bin' bin &&
 ln -s '$fasta_zip' sample.zip &&
 #if $metadata:
     ln -s '$metadata' metadata.tsv &&
@@ -44,7 +47,7 @@ python3 '$repo/galaxy/fill_config.py'
     #end if
     --set system_exec=local
     --set "apptainer_local_images=\${RP_APPTAINER_CACHE:?RP_APPTAINER_CACHE must be set by the Galaxy admins}"
-    --set "cluster_runOptions=\${RP_APPTAINER_OPTIONS:---no-home --bind /pasteur}"
+    --set "cluster_runOptions=\${RP_APPTAINER_OPTIONS:---no-home --bind /pasteur} --env XDG_CACHE_HOME=/tmp"
     --set "phylo_tree_model_path=$repo/bin/AB_model"
     --set phylo_tree_itol_subscription=FALSE
     --set "out_path_ini=\$PWD/results"
