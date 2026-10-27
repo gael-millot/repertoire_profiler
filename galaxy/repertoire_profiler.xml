@@ -1,0 +1,104 @@
+<tool id="repertoire_profiler" name="repertoire_profiler" version="@TOOL_VERSION@+galaxy0" profile="22.05">
+    <description>Ig/TR repertoire annotation, clonal groups, alignments and trees</description>
+    <macros>
+        <token name="@TOOL_VERSION@">9.9</token>
+        <token name="@NEXTFLOW_VERSION@">24.10.4</token>
+    </macros>
+    <!--
+    The whole Nextflow pipeline runs inside this single Galaxy job, with the nextflow local executor.
+    Galaxy (and its job runner, e.g. Slurm on Maestro) decides where the job runs and with how many cores/memory.
+
+    Installation (Galaxy admins):
+        - clone https://github.com/gael-millot/repertoire_profiler at the tag @TOOL_VERSION@ and point tool_conf.xml
+          to galaxy/repertoire_profiler.xml (the tool uses ../main.nf, ../nextflow.config and ../bin of that clone)
+        - apptainer must be available on the job nodes (e.g. module load apptainer)
+        - job environment variables:
+            RP_APPTAINER_CACHE    (required) shared folder of the apptainer images, readable by the job nodes
+            RP_APPTAINER_OPTIONS  (optional) apptainer run options, default: "no-home and bind /pasteur"
+        - destination with at least 10 cores and 16 GB (the immcantation_10cpu label of nextflow.config)
+    -->
+    <requirements>
+        <requirement type="package" version="@NEXTFLOW_VERSION@">nextflow</requirement>
+        <requirement type="package" version="3.12">python</requirement>
+        <requirement type="package" version="3.0">zip</requirement>
+    </requirements>
+    <version_command>nextflow -version | grep version</version_command>
+    <command detect_errors="exit_code"><![CDATA[
+#set $repo = $__tool_directory__ + '/..'
+ln -s '$fasta_zip' sample.zip &&
+#if $metadata:
+    ln -s '$metadata' metadata.tsv &&
+#end if
+
+python3 '$repo/galaxy/fill_config.py'
+    --template '$repo/nextflow.config'
+    --locked '$repo/galaxy/locked_params.txt'
+    #if $params:
+        --values '$params'
+    #end if
+    --set "sample_path=\$PWD/sample.zip"
+    #if $metadata:
+        --set "meta_path=\$PWD/metadata.tsv"
+    #else:
+        --set meta_path=NULL
+    #end if
+    --set system_exec=local
+    --set "apptainer_local_images=\${RP_APPTAINER_CACHE:?RP_APPTAINER_CACHE must be set by the Galaxy admins}"
+    --set "cluster_runOptions=\${RP_APPTAINER_OPTIONS:---no-home --bind /pasteur}"
+    --set "phylo_tree_model_path=$repo/bin/AB_model"
+    --set phylo_tree_itol_subscription=FALSE
+    --set "out_path_ini=\$PWD/results"
+    --set result_folder_name=repertoire_profiler
+    -o job.config &&
+printf '\nprocess.resourceLimits = [cpus: %s, memory: "%s MB"]\n' "\${GALAXY_SLOTS:-1}" "\${GALAXY_MEMORY_MB:-16000}" >> job.config &&
+
+export NXF_HOME="\$PWD/.nextflow_home" &&
+export NXF_OFFLINE=true &&
+nextflow -C job.config run '$repo/main.nf' -work-dir work -ansi-log false &&
+
+cd results/repertoire_profiler_* &&
+zip -q -r '$results' . &&
+cp report.html '$report'
+    ]]></command>
+    <inputs>
+        <param name="fasta_zip" type="data" format="zip" label="Zip of the fasta files" help="sample_path parameter: a .zip file that contains only fasta files (one or several sequences per file)."/>
+        <param name="metadata" type="data" format="tabular" optional="true" label="Metadata file (optional)" help="meta_path parameter: .tsv file with a column of sequence names (see meta_seq_names)."/>
+        <param name="params" type="data" format="json" optional="true" label="Parameters (optional)" help="JSON object {parameter: value} of the nextflow.config parameters to change, as written by the repertoire_profiler web page. Parameters not given keep their nextflow.config default."/>
+    </inputs>
+    <outputs>
+        <data name="results" format="zip" label="${tool.name} on ${on_string}: results"/>
+        <data name="report" format="html" label="${tool.name} on ${on_string}: report"/>
+    </outputs>
+    <tests>
+        <test expect_num_outputs="2">
+            <param name="fasta_zip" value="human_IGH.zip" ftype="zip"/>
+            <param name="metadata" value="human_IGH_metadata.tsv" ftype="tabular"/>
+            <param name="params" value="params.json" ftype="json"/>
+            <output name="report" ftype="html">
+                <assert_contents>
+                    <has_text text="repertoire"/>
+                </assert_contents>
+            </output>
+        </test>
+    </tests>
+    <help><![CDATA[
+**What it does**
+
+Runs the repertoire_profiler Nextflow pipeline (https://github.com/gael-millot/repertoire_profiler) on Ig or TR sequences:
+V(D)J annotation with IgBlast, productive sequence selection, clonal groups, mutation load, repertoires, alignments, phylogenetic trees and an HTML report.
+
+**Inputs**
+
+- a .zip of fasta files (the sample_path parameter of nextflow.config)
+- an optional metadata .tsv file (meta_path)
+- an optional JSON file of parameters. All the parameters of the "Parameters that must be set by the user" section of nextflow.config can be set, except the execution ones listed in galaxy/locked_params.txt.
+
+**Outputs**
+
+- a .zip of the whole result folder (see the Output section of the README)
+- the HTML report
+    ]]></help>
+    <citations>
+        <citation type="bibtex">@misc{repertoire_profiler, author = {Millot, Gael A. and Taurel, Chloe}, title = {repertoire_profiler}, publisher = {GitHub}, url = {https://github.com/gael-millot/repertoire_profiler}}</citation>
+    </citations>
+</tool>

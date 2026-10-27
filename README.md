@@ -54,6 +54,8 @@
 | **bin folder** | Contains files required by the *main.nf* file. |
 | **modules folder** | Contains files required by the *main.nf* file. |
 | **conf folder** | Contains files required by the *main.nf* file. |
+| **galaxy folder** | Galaxy tool running the whole pipeline in a single Galaxy job (see [Web page and Galaxy Pasteur](#34-web-page-and-galaxy-pasteur)). |
+| **web folder** | Web page (Shiny form generated from *nextflow.config*) and submission daemon to Galaxy, with its Dockerfile. |
 | **Licence.txt** | Licence of the release. |
 
 
@@ -192,6 +194,31 @@ HOME="${HELIXHOME}/repertoire_profiler/" # $HOME changed to allow the creation o
 nextflow run -hub pasteur gmillot/repertoire_profiler -r $VERSION -c $HOME/nextflow.config
 HOME=$HOME_INI
 </pre>
+
+<br><br>
+#### 3.4. Web page and Galaxy Pasteur
+
+The pipeline can also be run from a public web page, without any account. The design is the same as [SHAMAN](https://github.com/aghozlane/shaman):
+
+<pre>
+browser -> web page (web/app/app.R, Shiny)  -- writes -->  todo/KEY.json + jobs/KEY/{sample.zip, metadata.tsv, params.json}
+                                                                  |
+           web/daemon/rp_bioblend.py (same container, Galaxy service account, BioBlend)
+                                                                  |
+           galaxy.pasteur.fr: repertoire_profiler tool (galaxy/repertoire_profiler.xml)  -- Slurm -->  Maestro
+</pre>
+
+- *galaxy/repertoire_profiler.xml*: Galaxy tool that runs the whole pipeline inside one Galaxy job (nextflow local executor). Its inputs are the zip of the fasta files, the optional metadata file and an optional JSON file of parameters. Its outputs are the zip of the result folder and the HTML report. See the comment at the top of the file for the installation by the Galaxy admins.
+- *galaxy/fill_config.py*: writes the *nextflow.config* of a job (parameters are in env {} blocks and cannot be changed with --param on the command line). User values are strictly checked (no quote, backslash or $), so that no Groovy code can be injected into the config.
+- *galaxy/locked_params.txt*: parameters that users cannot set (execution, paths, keys).
+- *web/app/app.R*: the web page. The form is built from *nextflow.config* at start-up, one field per parameter, with the comment of the parameter as help. Users get a key to follow the job and download the results ("Check my job" tab, or link in the e-mail).
+- *web/daemon/rp_bioblend.py*: sends each job to Galaxy, waits, downloads the results, sends an e-mail and removes old jobs. Settings are environment variables (see the top of the file). The Galaxy API key must never be written in the code.
+- *web/Dockerfile*: image of the web page and the daemon:
+
+```
+docker build -f web/Dockerfile -t repertoire_profiler_web .
+docker run -p 3838:3838 -e GALAXY_API_KEY=... -e RP_PUBLIC_URL=https://... -v rp_work:/srv/rp_work repertoire_profiler_web
+```
 
 <br><br>
 ### 4. Error messages and solutions

@@ -1,0 +1,27 @@
+# Parameters of nextflow.config that users of the web page and of the Galaxy tool cannot set.
+# They are set by the Galaxy wrapper (repertoire_profiler.xml) or keep their nextflow.config value.
+# Read by galaxy/fill_config.py (--locked) and by the web form (web/app/app.R), which hides them.
+
+# input files: replaced by upload fields
+sample_path
+meta_path
+
+# execution: decided by the Galaxy wrapper and the Galaxy server
+apptainer_local_images
+apptainer_cluster_images
+system_exec
+cluster_runOptions
+simult_jobs
+slurm_queue
+slurm_queue_long
+slurm_qos
+add_options
+
+# server side files and keys
+phylo_tree_model_path
+phylo_tree_itolkey
+phylo_tree_itol_subscription
+
+# output location
+out_path_ini
+result_folder_name
