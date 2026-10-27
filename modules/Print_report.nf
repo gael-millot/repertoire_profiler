@@ -104,6 +104,10 @@ process Print_report{
     cp -r "${out_path}/reports" .
     # end remove symlink and import folder
 
+    # quarto writes its cache in \$HOME/.cache, which does not exist in the container when apptainer runs with --no-home (local runOptions)
+    mkdir -p .cache
+    export XDG_CACHE_HOME="\$(pwd)/.cache"
+
     Rscript -e '
         if(as.integer("${nb_wanted}") > 0){
             # Find the constant and vj repertoires to be displayed in the html file (file names differ depending on light/heavy chain)
