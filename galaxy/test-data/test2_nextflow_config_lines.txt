@@ -1,0 +1,11 @@
+clone_distance = "0.2"
+germ_tree_kind = "circular"
+germ_tree_duplicate_seq = "FALSE"
+donut_border_color = "#000000"
+donut_legend_limit = "0.1"
+germ_tree_label_size = "2.5"
+meta_path = "NULL"
+igblast_B_heavy_chain = "TRUE"
+igblast_B_kappa_chain = "FALSE"
+system_exec = 'local'
+process.resourceLimits = [cpus:

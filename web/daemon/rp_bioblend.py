@@ -10,8 +10,11 @@ The web page (web/app/app.R) writes, for each submission with key KEY:
 
 This daemon polls todo/, moves each task to doing/, and in a thread:
     1) creates a Galaxy history and uploads the files,
-    2) runs the repertoire_profiler Galaxy tool (galaxy/repertoire_profiler.xml),
-    3) waits for the job, downloads the results into jobs/KEY/ and moves the task to done/ (or error/),
+    2) runs the repertoire_profiler Galaxy tool (galaxy/repertoire_profiler.xml): the zip is its sequence input,
+       metadata.tsv its metadata table and params.json its parameter file (whose values replace those of the
+       tool form, whose defaults are those of nextflow.config),
+    3) waits for the job, downloads the results into jobs/KEY/ (results.zip, the result folder, and report.html,
+       extracted from it) and moves the task to done/ (or error/),
     4) sends an e-mail if an address was given.
 The task file always holds the current "state" and "message", read by the web page for the "Check my job" tab.
 Jobs older than RP_RETENTION_DAYS are removed, locally and in Galaxy.
@@ -41,6 +44,7 @@ import smtplib
 import sys
 import threading
 import time
+import zipfile
 from email.message import EmailMessage
 
 import requests
@@ -147,16 +151,25 @@ class Job(threading.Thread):
             self.task["history_id"] = history["id"]
             self.update("uploading", "Uploading the files to Galaxy.")
         hid = self.task["history_id"]
-        inputs = {}
-        uploads = [("fasta_zip", "sample.zip", "zip"), ("metadata", "metadata.tsv", "tabular"), ("params", "params.json", "json")]
+        datasets = {}
+        uploads = [("fasta_zip", "sample.zip", "zip"), ("meta_file", "metadata.tsv", "tabular"), ("params", "params.json", "json")]
         for name, file_name, file_type in uploads:
             path = os.path.join(self.job_dir, file_name)
             if os.path.isfile(path):
                 out = gi.tools.upload_file(path, hid, file_type=file_type, file_name=file_name)
-                inputs[name] = {"src": "hda", "id": out["outputs"][0]["id"]}
-        for value in inputs.values():
+                datasets[name] = {"src": "hda", "id": out["outputs"][0]["id"]}
+        for value in datasets.values():
             gi.datasets.wait_for_dataset(value["id"], maxwait=3600)
-        run = gi.tools.run_tool(hid, self.cfg.tool_id, inputs)
+        # inputs of the tool form (sections and conditionals of galaxy/repertoire_profiler.xml); the other fields keep
+        # their default (that of nextflow.config) and the parameter file replaces them with the values of the web page
+        inputs = {
+            "input": {"input_type": "zip", "fasta_zip": datasets["fasta_zip"]},
+            "metadata": {"add_metadata": "yes", "meta_file": datasets["meta_file"]} if "meta_file" in datasets else {"add_metadata": "no"},
+            "output_options": {"zip": True, "tables": False},
+        }
+        if "params" in datasets:
+            inputs["advanced"] = {"params": datasets["params"]}
+        run = gi.tools.run_tool(hid, self.cfg.tool_id, inputs, input_format="21.01")
         self.task["job_id"] = run["jobs"][0]["id"]
         self.task["outputs"] = {o["output_name"]: o["id"] for o in run["outputs"]}
         self.update("running", "The analysis is running on the Institut Pasteur cluster.")
@@ -178,11 +191,14 @@ class Job(threading.Thread):
                 self.update("running", "The analysis is running on the Institut Pasteur cluster.")
             time.sleep(JOB_POLL_SECONDS)
         self.update("downloading", "Downloading the results.")
-        file_names = {"results": "results.zip", "report": "report.html"}
-        for name, dataset_id in self.task["outputs"].items():
-            if name in file_names:
-                gi.datasets.download_dataset(dataset_id, file_path=os.path.join(self.job_dir, file_names[name]),
-                                             use_default_filename=False)
+        zip_path = os.path.join(self.job_dir, "results.zip")
+        gi.datasets.download_dataset(self.task["outputs"]["results_zip"], file_path=zip_path, use_default_filename=False)
+        # the zip holds the result folder repertoire_profiler_<time>/, with report.html at its root
+        with zipfile.ZipFile(zip_path) as z:
+            reports = [n for n in z.namelist() if re.fullmatch(r"[^/]+/report\.html", n)]
+            if reports:
+                with z.open(reports[0]) as src, open(os.path.join(self.job_dir, "report.html"), "wb") as dest:
+                    shutil.copyfileobj(src, dest)
         self.finish("done", "done", "The analysis is finished.")
 
     def send_mail(self, state, message):

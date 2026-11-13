@@ -1,107 +1,477 @@
-<tool id="repertoire_profiler" name="repertoire_profiler" version="@TOOL_VERSION@+galaxy0" profile="22.05">
-    <description>Ig/TR repertoire annotation, clonal groups, alignments and trees</description>
+<tool id="repertoire_profiler" name="repertoire_profiler" version="@TOOL_VERSION@+galaxy@VERSION_SUFFIX@" profile="22.05">
+    <description>Ig/TR repertoire: V(D)J annotation, clonal groups, mutation load, alignments and trees</description>
     <macros>
-        <token name="@TOOL_VERSION@">9.9</token>
+        <token name="@TOOL_VERSION@">25.3</token>
+        <token name="@VERSION_SUFFIX@">0</token>
         <token name="@NEXTFLOW_VERSION@">24.10.4</token>
+        <token name="@APPTAINER_VERSION@">1.4.5</token>
+        <token name="@GRAPHVIZ_VERSION@">14.1.2</token>
+        <xml name="color_sanitizer">
+            <sanitizer invalid_char="">
+                <valid initial="string.ascii_letters,string.digits">
+                    <add value="#"/>
+                </valid>
+            </sanitizer>
+        </xml>
     </macros>
     <!--
-    The whole Nextflow pipeline runs inside this single Galaxy job, with the nextflow local executor.
-    Galaxy (and its job runner, e.g. Slurm on Maestro) decides where the job runs and with how many cores/memory.
+    The form below recapitulates the "Parameters that must be set by the user" part of ../nextflow.config:
+    same sections, one field per parameter, named as the parameter (the name is also written in the label).
+    The whole Nextflow pipeline runs inside this single Galaxy job (nextflow local executor, processes in apptainer containers).
+    Galaxy (and its job runner, e.g. Slurm on Maestro) decides where the job runs and with how many cores/memory (GALAXY_SLOTS, GALAXY_MEMORY_MB).
 
-    Installation (Galaxy admins):
-        - clone https://github.com/gael-millot/repertoire_profiler at the tag @TOOL_VERSION@ and point tool_conf.xml
-          to galaxy/repertoire_profiler.xml (the tool uses ../main.nf, ../nextflow.config and ../bin of that clone)
-        - apptainer must be available on the job nodes (e.g. module load apptainer)
+    The pipeline files (main.nf, nextflow.config, bin/, modules/, conf/) are in the parent folder of this tool folder,
+    in the git repository as in the Tool Shed repository (see ../.shed.yml).
+
+    Galaxy administrators:
         - job environment variables:
-            RP_APPTAINER_CACHE    (required) shared folder of the apptainer images, readable by the job nodes
-            RP_APPTAINER_OPTIONS  (optional) apptainer run options, default: "no-home and bind /pasteur"
-                                  (the wrapper always adds env XDG_CACHE_HOME=/tmp: with no-home, quarto cannot create its cache in $HOME)
-        - destination with at least 10 cores and 16 GB (the immcantation_10cpu label of nextflow.config)
+            RP_APPTAINER_CACHE    (required) folder of the apptainer images, shared by the jobs. The images are pulled there by the first job,
+                                  or beforehand with pull_images.sh of this folder if the computing nodes have no internet access
+            RP_APPTAINER_OPTIONS  (optional) apptainer run options, default: "no-home and bind /pasteur" (two dashes before each option).
+                                  The wrapper always adds env XDG_CACHE_HOME=/tmp: with no-home, quarto cannot create its cache in $HOME
+            APPTAINER_TMPDIR      (optional) temporary folder used to build the images, default: the job working folder
+        - destination with at least 10 cores and 16 GB for full speed
+          (immcantation_10cpu label of nextflow.config; lower values are applied by process.resourceLimits)
+        - allow the HTML report to be displayed without sanitization (Admin > Allowlist), otherwise its scripts and styles are removed
+
+    Galaxy-only fields of the form (not parameters of nextflow.config) are listed in the galaxy-ignore option of fill_config.py below,
+    and the IgBlast chains (multiple select) in its galaxy-flags option.
     -->
     <requirements>
         <requirement type="package" version="@NEXTFLOW_VERSION@">nextflow</requirement>
-        <requirement type="package" version="3.12">python</requirement>
-        <requirement type="package" version="3.0">zip</requirement>
+        <requirement type="package" version="@APPTAINER_VERSION@">apptainer</requirement>
+        <requirement type="package" version="3.12.16">python</requirement>
+        <!-- dot command: nextflow renders reports/nf_dag.png with it -->
+        <requirement type="package" version="@GRAPHVIZ_VERSION@">graphviz</requirement>
     </requirements>
-    <version_command>nextflow -version | grep version</version_command>
+    <version_command>echo 'repertoire_profiler @TOOL_VERSION@'</version_command>
     <command detect_errors="exit_code"><![CDATA[
-#set $repo = $__tool_directory__ + '/..'
-## nextflow.config uses ./bin/... paths (relative to the launch folder, which is the job folder here)
-ln -s '$repo/bin' bin &&
-ln -s '$fasta_zip' sample.zip &&
-#if $metadata:
-    ln -s '$metadata' metadata.tsv &&
+#set $pipeline = $__tool_directory__ + '/..'
+set -o pipefail &&
+
+## apptainer runs the processes of the pipeline (requirement of the tool, or module loaded by the job configuration of the server)
+command -v apptainer > /dev/null || { echo 'ERROR: apptainer not found in the PATH of the Galaxy job' >&2; exit 1; } &&
+
+## nextflow.config uses ./bin/... paths, relative to the launch folder (the job working folder)
+ln -s '$pipeline/bin' bin &&
+
+## sequences (sample_path) and metadata (meta_path): copied in the job folder, which is mounted in the containers
+#if $input.input_type == 'zip':
+    cp '$input.fasta_zip' sample.zip &&
+    #set $sample = 'sample.zip'
+#else:
+    ## one or several fasta files, with one or several sequences each: merged into a single file, split by the Split_fasta process
+    awk 'NF' #for $fasta in $input.fasta# '$fasta'#end for# > sample.fasta &&
+    #set $sample = 'sample.fasta'
+#end if
+#if $metadata.add_metadata == 'yes':
+    cp '$metadata.meta_file' metadata.tsv &&
 #end if
 
-python3 '$repo/galaxy/fill_config.py'
-    --template '$repo/nextflow.config'
-    --locked '$repo/galaxy/locked_params.txt'
-    #if $params:
-        --values '$params'
+## nextflow.config of the job (copied by the pipeline into the reports folder): values of the form, then of the optional parameter file, then those of the server
+python3 '$__tool_directory__/fill_config.py'
+    --template '$pipeline/nextflow.config'
+    --locked '$__tool_directory__/locked_params.txt'
+    --galaxy-inputs '$form_values'
+    --galaxy-ignore input_type,add_metadata,tables,zip
+    ## IgBlast chains: one TRUE/FALSE parameter per chain in nextflow.config, a multiple select in the form
+    --galaxy-flags chains=igblast_B_heavy_chain,igblast_B_lambda_chain,igblast_B_kappa_chain,igblast_T_alpha_chain,igblast_T_beta_chain,igblast_T_gamma_chain,igblast_T_delta_chain
+    #if $advanced.params:
+        --values '$advanced.params'
     #end if
-    --set "sample_path=\$PWD/sample.zip"
-    #if $metadata:
+    --set "sample_path=\$PWD/$sample"
+    #if $metadata.add_metadata == 'yes':
         --set "meta_path=\$PWD/metadata.tsv"
     #else:
         --set meta_path=NULL
     #end if
     --set system_exec=local
-    --set "apptainer_local_images=\${RP_APPTAINER_CACHE:?RP_APPTAINER_CACHE must be set by the Galaxy admins}"
+    --set "apptainer_local_images=\${RP_APPTAINER_CACHE:?the RP_APPTAINER_CACHE variable must be set by the Galaxy administrators (folder of the apptainer images)}"
     --set "cluster_runOptions=\${RP_APPTAINER_OPTIONS:---no-home --bind /pasteur} --env XDG_CACHE_HOME=/tmp"
-    --set "phylo_tree_model_path=$repo/bin/AB_model"
+    --set "phylo_tree_model_path=$pipeline/bin/AB_model"
     --set phylo_tree_itol_subscription=FALSE
     --set "out_path_ini=\$PWD/results"
     --set result_folder_name=repertoire_profiler
-    -o job.config &&
-printf '\nprocess.resourceLimits = [cpus: %s, memory: "%s MB"]\n' "\${GALAXY_SLOTS:-1}" "\${GALAXY_MEMORY_MB:-16000}" >> job.config &&
+    --cpus "\${GALAXY_SLOTS:-1}"
+    --memory-mb "\${GALAXY_MEMORY_MB:-}"
+    -o nextflow.config &&
 
 export NXF_HOME="\$PWD/.nextflow_home" &&
 export NXF_OFFLINE=true &&
-nextflow -C job.config run '$repo/main.nf' -work-dir work -ansi-log false &&
+export APPTAINER_TMPDIR="\${APPTAINER_TMPDIR:-\$PWD/apptainer_tmp}" &&
+mkdir -p "\$APPTAINER_TMPDIR" &&
+nextflow -C nextflow.config run '$pipeline/main.nf' -work-dir work -ansi-log false &&
 
-cd results/repertoire_profiler_* &&
-zip -q -r '$results' . &&
-cp report.html '$report'
+## outputs: the HTML report carries the whole result folder (its links work in Galaxy, its download is a zip of the folder)
+results_dir=\$(ls -d results/repertoire_profiler_*) &&
+cp "\$results_dir/report.html" '$report' &&
+mkdir -p '$report.extra_files_path' &&
+cp -r "\$results_dir"/. '$report.extra_files_path' &&
+#if $output_options.zip:
+    (cd results && python3 -m zipfile -c '$results_zip' "\$(basename "\$results_dir")") &&
+#end if
+#if $output_options.tables:
+    mkdir tables &&
+    cp "\$results_dir"/tsv/*.tsv tables/ &&
+#end if
+echo "result folder: \$results_dir"
     ]]></command>
+    <configfiles>
+        <inputs name="form_values"/>
+    </configfiles>
     <inputs>
-        <param name="fasta_zip" type="data" format="zip" label="Zip of the fasta files" help="sample_path parameter: a .zip file that contains only fasta files (one or several sequences per file)."/>
-        <param name="metadata" type="data" format="tabular" optional="true" label="Metadata file (optional)" help="meta_path parameter: .tsv file with a column of sequence names (see meta_seq_names)."/>
-        <param name="params" type="data" format="json" optional="true" label="Parameters (optional)" help="JSON object {parameter: value} of the nextflow.config parameters to change, as written by the repertoire_profiler web page. Parameters not given keep their nextflow.config default."/>
+        <!-- Data section of nextflow.config -->
+        <conditional name="input">
+            <param name="input_type" type="select" label="Sequences (sample_path)" help="Nucleotide sequences to analyze. They do not have to be Ig or TR sequences: the pipeline filters them.">
+                <option value="fasta" selected="true">Fasta file(s)</option>
+                <option value="zip">Zip archive of fasta files</option>
+            </param>
+            <when value="fasta">
+                <param name="fasta" type="data" format="fasta" multiple="true" label="Fasta file(s)" help="One or several fasta files (or a collection), each with one or several sequences. They are merged into a single fasta file. Only the first 100 characters of the headers are used as sequence names, and the non alphanumeric characters are replaced by underscores."/>
+            </when>
+            <when value="zip">
+                <param name="fasta_zip" type="data" format="zip" label="Zip archive" help="Zip of a single fasta file with several sequences, or of fasta files with one sequence each (extensions fasta, fa, fas, fna, txt, seq or faa)."/>
+            </when>
+        </conditional>
+        <conditional name="metadata">
+            <param name="add_metadata" type="select" label="Metadata (meta_path)" help="Optional table adding information to the results: replacement of the sequence names, shape of the tree leaves.">
+                <option value="no" selected="true">No metadata</option>
+                <option value="yes">Add a metadata table</option>
+            </param>
+            <when value="no"/>
+            <when value="yes">
+                <param name="meta_file" type="data" format="tabular" label="Metadata table" help="Tab-separated table with a header line, including a column of sequence names. At least one sequence of the fasta files must be in this table, but not all of them."/>
+                <param name="meta_seq_names" type="text" value="Seq_ID" label="Column of the sequence names (meta_seq_names)" help="Column of the metadata table with the sequence names, i.e., the headers of the fasta sequences without the starting &gt;. Only the first 100 characters of the headers are used and the non alphanumeric characters are replaced by underscores.">
+                    <validator type="regex" message="A column name of the metadata table is expected">^[^\t]*[^\t ][^\t]*$</validator>
+                </param>
+                <param name="meta_name_replacement" type="text" value="Name" label="Column of the replacement names (meta_name_replacement)" help="Column of the metadata table with names replacing the sequence names in the returned tables and figures (the initial name stays in the initial_sequence_id column), also used to tag the donut slices. Empty values and NA are not considered. NULL if not required (meta_name_replacement and meta_legend cannot be both NULL).">
+                    <validator type="regex" message="A column name of the metadata table or NULL is expected">^[^\t]*[^\t ][^\t]*$</validator>
+                </param>
+                <param name="meta_legend" type="text" value="Affinity" label="Column for the tree leaves (meta_legend)" help="Graphics section of nextflow.config. Column of the metadata table used to shape the tree leaves (trees only), e.g., KD or names: leaf size if numeric (germ_tree_leaf_size is then ignored), leaf color by class otherwise (germ_tree_leaf_shape is then ignored). Empty values and NA are not considered. NULL if not required.">
+                    <validator type="regex" message="A column name of the metadata table or NULL is expected">^[^\t]*[^\t ][^\t]*$</validator>
+                </param>
+            </when>
+        </conditional>
+        <section name="annotation" title="Ig annotation" expanded="true" help="Most probable V, D, J and C alleles of each sequence, with AssignGenes.py igblast of Change-O.">
+            <param name="igblast_organism" type="select" label="Organism (igblast_organism)" help="Option --organism of AssignGenes.py igblast. The pipeline currently supports human and mouse only.">
+                <option value="human" selected="true">human</option>
+                <option value="mouse">mouse</option>
+            </param>
+            <conditional name="loci">
+                <param name="igblast_loci" type="select" label="Receptor (igblast_loci)" help="Option --loci of AssignGenes.py igblast.">
+                    <option value="ig" selected="true">ig: immunoglobulins</option>
+                    <option value="tr">tr: T cell receptors</option>
+                </param>
+                <when value="ig">
+                    <param name="chains" type="select" multiple="true" optional="false" label="IMGT databases searched by IgBlast" help="Warning: select several chains only if the clonal groups do not matter for you, since the clonal distance might not be adapted to a mix of chains.">
+                        <option value="igblast_B_heavy_chain" selected="true">Heavy chain, IGH (igblast_B_heavy_chain)</option>
+                        <option value="igblast_B_lambda_chain">Light chain, lambda locus, IGL (igblast_B_lambda_chain)</option>
+                        <option value="igblast_B_kappa_chain">Light chain, kappa locus, IGK (igblast_B_kappa_chain)</option>
+                    </param>
+                </when>
+                <when value="tr">
+                    <param name="chains" type="select" multiple="true" optional="false" label="IMGT databases searched by IgBlast" help="Warning: select several chains only if the clonal groups do not matter for you, since the clonal distance might not be adapted to a mix of chains.">
+                        <option value="igblast_T_alpha_chain">Alpha locus, TRA (igblast_T_alpha_chain)</option>
+                        <option value="igblast_T_beta_chain" selected="true">Beta locus, TRB (igblast_T_beta_chain)</option>
+                        <option value="igblast_T_gamma_chain">Gamma locus, TRG (igblast_T_gamma_chain)</option>
+                        <option value="igblast_T_delta_chain">Delta locus, TRD (igblast_T_delta_chain)</option>
+                    </param>
+                </when>
+            </conditional>
+        </section>
+        <section name="clones" title="Clonal groups (clustering) and mutation load" expanded="false" help="Clonal groups: shazam::distToNearest() and DefineClones.py of Change-O (clone_id column of clone_assigned_seq.tsv). Germline sequence of each clonal group: CreateGermlines.py of Change-O. Mutation load: shazam::observedMutations().">
+            <param name="clone_strategy" type="select" label="Ambiguous gene assignments (clone_strategy)" help="Option --act of DefineClones.py. first: only the first gene is used when a sequence is assigned to several genes (e.g., IGHV4-30-4*09 for IGHV4-30-4*09,IGHV4-31*03), to restrict the clonal groups to the most confident assignment. set: clonal groups made of the sequences sharing at least one gene, directly or indirectly, for a broader grouping.">
+                <option value="first" selected="true">first</option>
+                <option value="set">set</option>
+            </param>
+            <param name="clone_model" type="select" label="Distance model (clone_model)" help="Option --model of DefineClones.py: distance between sequences used to cluster them. ham: nucleotide Hamming distance, aa: amino acid Hamming distance. See https://shazam.readthedocs.io/en/stable/topics/distToNearest/#details">
+                <option value="ham" selected="true">ham</option>
+                <option value="aa">aa</option>
+                <option value="hh_s1f">hh_s1f</option>
+                <option value="hh_s5f">hh_s5f</option>
+                <option value="mk_rs1nf">mk_rs1nf</option>
+                <option value="mk_rs5nf">mk_rs5nf</option>
+                <option value="m1n_compat">m1n_compat</option>
+                <option value="hs1f_compat">hs1f_compat</option>
+            </param>
+            <param name="clone_normalize" type="select" label="Distance normalization (clone_normalize)" help="Option --norm of DefineClones.py.">
+                <option value="len" selected="true">len: normalized by the length</option>
+                <option value="none">none: not normalized</option>
+            </param>
+            <param name="clone_distance" type="float" value="0.15" min="0" max="1" label="Distance threshold (clone_distance)" help="Option --dist of DefineClones.py: distance (proportion) below which two sequences belong to the same clonal group. See https://shazam.readthedocs.io/en/stable/vignettes/DistToNearest-Vignette/"/>
+            <param name="clone_germline_kind" type="select" label="Germline sequence of the clonal groups (clone_germline_kind)" help="Option -g of CreateGermlines.py. With full, the initial germline_alignment column is kept and the germline_alignment_full column is created.">
+                <option value="dmask" selected="true">dmask: germline with the D segment masked</option>
+                <option value="full">full: full germline</option>
+                <option value="vonly">vonly: germline of the V segment only</option>
+            </param>
+            <param name="clone_mut_obs_seq" type="text" value="sequence_alignment" label="Observed sequences (clone_mut_obs_seq)" help="Column of clone_assigned_seq.tsv compared to the germline sequences (argument sequenceColumn of shazam::observedMutations()). Sequences with IMGT gaps (dots) are required.">
+                <validator type="regex" message="A column name of clone_assigned_seq.tsv is expected">^[A-Za-z0-9_.]+$</validator>
+            </param>
+            <param name="clone_mut_germ_seq" type="text" value="germline_alignment_d_mask" label="Germline sequences (clone_mut_germ_seq)" help="Column of clone_assigned_seq.tsv used as germline sequences (argument germlineColumn of shazam::observedMutations()), depending on the germline sequence above: germline_alignment_d_mask for dmask, germline_alignment_v_region for vonly and germline_alignment_full for full. Sequences with IMGT gaps (dots) are required.">
+                <validator type="regex" message="A column name of clone_assigned_seq.tsv is expected">^[A-Za-z0-9_.]+$</validator>
+            </param>
+            <param name="clone_mut_regionDefinition" type="select" label="Regions of the mutation counts (clone_mut_regionDefinition)" help="Regions and boundaries of the mutation counts and frequencies (argument regionDefinition of shazam::observedMutations()). NULL: the entire sequence. The region definitions require sequences aligned following the IMGT schema. See https://search.r-project.org/CRAN/refmans/shazam/html/IMGT_SCHEMES.html">
+                <option value="NULL">NULL</option>
+                <option value="IMGT_V">IMGT_V</option>
+                <option value="IMGT_V_BY_CODONS">IMGT_V_BY_CODONS</option>
+                <option value="IMGT_V_BY_REGIONS">IMGT_V_BY_REGIONS</option>
+                <option value="IMGT_V_BY_SEGMENTS">IMGT_V_BY_SEGMENTS</option>
+                <option value="IMGT_VDJ">IMGT_VDJ</option>
+                <option value="IMGT_VDJ_BY_REGIONS" selected="true">IMGT_VDJ_BY_REGIONS</option>
+            </param>
+        </section>
+        <section name="alignments" title="Alignments" expanded="false" help="Nucleotide and amino acid alignments with Mafft or Abalign. Abalign aligns the variable region only, with the FWR and CDR regions as constraints.">
+            <param name="align_clone_nb" type="integer" value="2" min="2" label="Minimum number of sequences per clonal group (align_clone_nb)" help="Minimum number of non-identical sequences of a clonal group to align it."/>
+            <param name="align_soft" type="select" label="Aligner (align_soft)" help="Mafft is always used for the query, igblast_full, trimmed, c_sequence_alignment and c_germline_alignment sequences below. Mafft by default, as more alignment parameters can be set.">
+                <option value="mafft" selected="true">mafft</option>
+                <option value="abalign">abalign</option>
+            </param>
+            <param name="align_seq" type="select" label="Aligned sequences (align_seq)" help="Columns of productive_seq.tsv aligned, nucleotides and amino acids. Use sequence_alignment if you do not know what to use. See the definition of the columns at https://github.com/gael-millot/repertoire_profiler#output">
+                <option value="query">query: sequence and query_sequence_aa (complete translation of the query, can have stop codons)</option>
+                <option value="igblast_full">igblast_full: sequence and sequence_aa (translation after trimming, starting with the V region)</option>
+                <option value="trimmed" selected="true">trimmed: trimmed_sequence and trimmed_sequence_aa</option>
+                <option value="fwr1">fwr1: fwr1 and fwr1_aa</option>
+                <option value="fwr2">fwr2: fwr2 and fwr2_aa</option>
+                <option value="fwr3">fwr3: fwr3 and fwr3_aa</option>
+                <option value="fwr4">fwr4: fwr4 and fwr4_aa</option>
+                <option value="cdr1">cdr1: cdr1 and cdr1_aa</option>
+                <option value="cdr2">cdr2: cdr2 and cdr2_aa</option>
+                <option value="cdr3">cdr3: cdr3 and cdr3_aa</option>
+                <option value="junction">junction: junction and junction_aa</option>
+                <option value="sequence_alignment">sequence_alignment: sequence_alignment and sequence_alignment_aa</option>
+                <option value="v_sequence_alignment">v_sequence_alignment: v_sequence_alignment and v_sequence_alignment_aa</option>
+                <option value="d_sequence_alignment">d_sequence_alignment: d_sequence_alignment and d_sequence_alignment_aa</option>
+                <option value="j_sequence_alignment">j_sequence_alignment: j_sequence_alignment and j_sequence_alignment_aa</option>
+                <option value="c_sequence_alignment">c_sequence_alignment: c_sequence_alignment and c_sequence_alignment_aa</option>
+                <option value="germline_alignment">germline_alignment: germline_alignment and germline_alignment_aa</option>
+                <option value="v_germline_alignment">v_germline_alignment: v_germline_alignment and v_germline_alignment_aa</option>
+                <option value="d_germline_alignment">d_germline_alignment: d_germline_alignment and d_germline_alignment_aa</option>
+                <option value="j_germline_alignment">j_germline_alignment: j_germline_alignment and j_germline_alignment_aa</option>
+                <option value="c_germline_alignment">c_germline_alignment: c_germline_alignment and c_germline_alignment_aa</option>
+            </param>
+            <param name="align_abalign_options" type="text" value="-z 0 -g" label="Abalign options (align_abalign_options)" help="See https://github.com/gael-millot/repertoire_profiler/blob/master/bin/abalign_CLI_help.txt. The -ah/-al and -sp options are already set by the pipeline."/>
+            <param name="align_mafft_all_options" type="text" value="--localpair --maxiterate 1000 --op 10 --leavegappyregion --thread -1" label="Mafft options, alignment of all the sequences (align_mafft_all_options)" help="See https://mafft.cbrc.jp/alignment/software/manual/manual.html, notably the Speed-oriented methods section for thousands of sequences. Keep --thread -1 to use the available resources."/>
+            <param name="align_mafft_clonal_options" type="text" value="--localpair --maxiterate 1000 --op 10 --leavegappyregion --thread -1" label="Mafft options, alignments of the clonal groups (align_mafft_clonal_options)" help="See https://mafft.cbrc.jp/alignment/software/manual/manual.html. Keep --thread -1 to use the available resources."/>
+        </section>
+        <section name="graphics" title="Graphics" expanded="false" help="Trees of the clonal groups and donuts of the clonal group frequencies. The meta_legend parameter of this section of nextflow.config is with the metadata table above.">
+            <param name="germ_tree_kind" type="select" label="Tree layout (germ_tree_kind)" help="See https://yulab-smu.top/treedata-book/chapter4.html#tree-layouts">
+                <option value="rectangular" selected="true">rectangular</option>
+                <option value="roundrect">roundrect</option>
+                <option value="slanted">slanted</option>
+                <option value="ellipse">ellipse</option>
+                <option value="circular">circular</option>
+                <option value="fan">fan</option>
+                <option value="equal_angle">equal_angle</option>
+                <option value="daylight">daylight</option>
+            </param>
+            <param name="germ_tree_duplicate_seq" type="boolean" checked="true" label="Keep the identical sequences in the trees (germ_tree_duplicate_seq)" help="No: identical sequences (from different cells or sequence names) are removed from the trees, which is useful when many identical sequences overload the trees. The removed sequences are indicated in the title of the tree plots."/>
+            <param name="germ_tree_leaf_color" type="text" value="NULL" label="Leaf color (germ_tree_leaf_color)" help="R color name or hexadecimal code (e.g., #FF0000), NULL for the default. Ignored if meta_legend is a non numeric column of the metadata table.">
+                <expand macro="color_sanitizer"/>
+                <validator type="regex" message="NULL, an R color name or a hexadecimal color code is expected">^(NULL|[A-Za-z]+[0-9]*|#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?)$</validator>
+            </param>
+            <param name="germ_tree_leaf_shape" type="integer" value="21" min="0" max="25" label="Leaf shape (germ_tree_leaf_shape)" help="R point shape (pch). See https://stat.ethz.ch/R-manual/R-devel/library/graphics/html/points.html"/>
+            <param name="germ_tree_leaf_size" type="float" value="3" min="0" label="Leaf size in mm (germ_tree_leaf_size)" help="The plot is 120 x 120 mm. Ignored if meta_legend is a numeric column of the metadata table."/>
+            <param name="germ_tree_label_size" type="float" value="2" min="0" label="Leaf label size in mm (germ_tree_label_size)" help="The plot is 120 x 120 mm."/>
+            <param name="germ_tree_label_hjust" type="float" value="-0.3" label="Leaf label adjustment (germ_tree_label_hjust)" help="Decreasing negative values move the labels away from the leaves."/>
+            <param name="germ_tree_label_rigth" type="boolean" checked="false" label="Labels on the right (germ_tree_label_rigth)" help="Only for the rectangular layout."/>
+            <param name="germ_tree_label_outside" type="boolean" checked="true" label="Labels outside of the plot region (germ_tree_label_outside)" help="Useful if the labels are truncated."/>
+            <param name="germ_tree_right_margin" type="float" value="1.5" min="0" label="Right margin in inches (germ_tree_right_margin)" help="For a graphic device of 5 inches width."/>
+            <param name="germ_tree_legend" type="boolean" checked="true" label="Tree legend (germ_tree_legend)"/>
+            <param name="donut_palette" type="select" label="Donut palette (donut_palette)" help="ColorBrewer palette of the donuts. See https://ggplot2.tidyverse.org/reference/scale_brewer.html#palettes">
+                <option value="NULL">NULL: default colors</option>
+                <option value="Accent" selected="true">Accent</option>
+                <option value="Dark2">Dark2</option>
+                <option value="Paired">Paired</option>
+                <option value="Pastel1">Pastel1</option>
+                <option value="Pastel2">Pastel2</option>
+                <option value="Set1">Set1</option>
+                <option value="Set2">Set2</option>
+                <option value="Set3">Set3</option>
+                <option value="Blues">Blues</option>
+                <option value="BuGn">BuGn</option>
+                <option value="BuPu">BuPu</option>
+                <option value="GnBu">GnBu</option>
+                <option value="Greens">Greens</option>
+                <option value="Greys">Greys</option>
+                <option value="Oranges">Oranges</option>
+                <option value="OrRd">OrRd</option>
+                <option value="PuBu">PuBu</option>
+                <option value="PuBuGn">PuBuGn</option>
+                <option value="PuRd">PuRd</option>
+                <option value="Purples">Purples</option>
+                <option value="RdPu">RdPu</option>
+                <option value="Reds">Reds</option>
+                <option value="YlGn">YlGn</option>
+                <option value="YlGnBu">YlGnBu</option>
+                <option value="YlOrBr">YlOrBr</option>
+                <option value="YlOrRd">YlOrRd</option>
+                <option value="BrBG">BrBG</option>
+                <option value="PiYG">PiYG</option>
+                <option value="PRGn">PRGn</option>
+                <option value="PuOr">PuOr</option>
+                <option value="RdBu">RdBu</option>
+                <option value="RdGy">RdGy</option>
+                <option value="RdYlBu">RdYlBu</option>
+                <option value="RdYlGn">RdYlGn</option>
+                <option value="Spectral">Spectral</option>
+            </param>
+            <param name="donut_hole_size" type="float" value="0.5" min="0" max="1" label="Donut hole size (donut_hole_size)" help="Proportion: 0 for a pie chart, 1 for a donut of null thickness."/>
+            <param name="donut_hole_text" type="boolean" checked="true" label="Sum of the frequencies in the hole (donut_hole_text)"/>
+            <param name="donut_hole_text_size" type="float" value="8" min="0" label="Font size of the hole text in mm (donut_hole_text_size)" help="Ignored if the sum of the frequencies is not displayed."/>
+            <param name="donut_border_color" type="text" value="gray50" label="Border color (donut_border_color)" help="R color name (e.g., black, white, gray50) or hexadecimal code.">
+                <expand macro="color_sanitizer"/>
+                <validator type="regex" message="An R color name or a hexadecimal color code is expected">^([A-Za-z]+[0-9]*|#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?)$</validator>
+            </param>
+            <param name="donut_border_size" type="float" value="0.2" min="0" label="Border size in mm (donut_border_size)" help="The plot is 120 x 120 mm."/>
+            <param name="donut_annotation_distance" type="float" value="0.8" min="0" label="Distance of the annotations (donut_annotation_distance)" help="Distance from the center of the slice: 0 at the center, 0.5 at the edge. Above 0.5, the donut is reduced to make room for the annotations. Ignored without metadata."/>
+            <param name="donut_annotation_size" type="float" value="3" min="0" label="Annotation font size in mm (donut_annotation_size)" help="Ignored without metadata."/>
+            <param name="donut_annotation_force" type="float" value="50" min="0" label="Repulsion between overlapping annotations (donut_annotation_force)" help="See ggrepel::geom_text_repel(). Ignored without metadata."/>
+            <param name="donut_annotation_force_pull" type="float" value="1" min="0" label="Attraction between an annotation and its slice (donut_annotation_force_pull)" help="See ggrepel::geom_text_repel(). Ignored without metadata."/>
+            <param name="donut_legend_width" type="float" value="0.55" min="0" max="1" label="Relative width of the legend (donut_legend_width)" help="Width of the legend sector, on the right of the plot, relative to the plot width: 1 splits the device in two halves, 0 leaves no room for the legend, which overlays the plot."/>
+            <param name="donut_legend_text_size" type="float" value="6" min="0" label="Legend font size in mm (donut_legend_text_size)"/>
+            <param name="donut_legend_box_size" type="float" value="3" min="0" label="Legend square size in mm (donut_legend_box_size)"/>
+            <param name="donut_legend_box_space" type="float" value="2" min="0" label="Space between the legend squares in mm (donut_legend_box_space)"/>
+            <param name="donut_legend_limit" type="text" value="NULL" label="Classes in the legend (donut_legend_limit)" help="NULL: the ten biggest sectors. all: all the sectors. A proportion, e.g., 0.4: only the sectors above 40% of the donut (the ten biggest, with a warning, if none).">
+                <validator type="regex" message="NULL, all or a proportion between 0 and 1 is expected">^(NULL|all|1|0|0\.[0-9]+)$</validator>
+            </param>
+        </section>
+        <section name="output_options" title="Outputs" expanded="true" help="The report dataset always contains the whole result folder: its links work in Galaxy and its download button gives a zip of the folder.">
+            <param name="tables" type="boolean" checked="false" label="Result tables as a collection" help="The .tsv files of the tsv folder of the results (productive_seq.tsv, clone_assigned_seq.tsv...) as a list collection, to analyze them with other Galaxy tools."/>
+            <param name="zip" type="boolean" checked="false" label="Result folder as a separate zip dataset" help="Same content as the download of the report."/>
+        </section>
+        <section name="advanced" title="Parameter file" expanded="false">
+            <param name="params" type="data" format="json" optional="true" label="Parameter file (optional)" help="JSON object {&quot;parameter&quot;: &quot;value&quot;} of nextflow.config parameters, e.g., {&quot;clone_distance&quot;: &quot;0.2&quot;}. Its values replace those of the form, to reuse a set of parameters. The input and output paths, the execution parameters (Local / Cluster execution section of nextflow.config) and the iTOL parameters cannot be set."/>
+        </section>
     </inputs>
     <outputs>
-        <data name="results" format="zip" label="${tool.name} on ${on_string}: results"/>
-        <data name="report" format="html" label="${tool.name} on ${on_string}: report"/>
+        <data name="report" format="html" label="${tool.name} on ${on_string}: report and result folder"/>
+        <data name="results_zip" format="zip" label="${tool.name} on ${on_string}: result folder (zip)">
+            <filter>output_options['zip']</filter>
+        </data>
+        <collection name="tables" type="list" label="${tool.name} on ${on_string}: tables">
+            <discover_datasets pattern="(?P&lt;designation&gt;.+)\.tsv" directory="tables" format="tabular"/>
+            <filter>output_options['tables']</filter>
+        </collection>
     </outputs>
     <tests>
-        <test expect_num_outputs="2">
-            <param name="fasta_zip" value="human_IGH.zip" ftype="zip"/>
-            <param name="metadata" value="human_IGH_metadata.tsv" ftype="tabular"/>
-            <param name="params" value="params.json" ftype="json"/>
+        <!-- zip of one-sequence fasta files with metadata (as the default dataset of nextflow.config), all the outputs -->
+        <test expect_num_outputs="3">
+            <conditional name="input">
+                <param name="input_type" value="zip"/>
+                <param name="fasta_zip" value="human_IGH.zip" ftype="zip"/>
+            </conditional>
+            <conditional name="metadata">
+                <param name="add_metadata" value="yes"/>
+                <param name="meta_file" value="human_IGH_metadata.tsv" ftype="tabular"/>
+            </conditional>
+            <section name="output_options">
+                <param name="tables" value="true"/>
+                <param name="zip" value="true"/>
+            </section>
             <output name="report" ftype="html">
                 <assert_contents>
-                    <has_text text="repertoire"/>
+                    <has_text text="Repertoire Profiler Report"/>
                 </assert_contents>
+                <extra_files type="file" name="tsv/productive_seq.tsv" value="productive_seq_columns.txt" compare="contains"/>
+            </output>
+            <output name="results_zip" ftype="zip">
+                <assert_contents>
+                    <has_archive_member path="repertoire_profiler_[0-9]+/report\.html"/>
+                    <has_archive_member path="repertoire_profiler_[0-9]+/tsv/productive_seq\.tsv"/>
+                    <has_archive_member path="repertoire_profiler_[0-9]+/reports/nf_dag\.png"/>
+                    <has_archive_member path="repertoire_profiler_[0-9]+/reports/nextflow\.config">
+                        <has_text text="meta_name_replacement = &quot;Name&quot;"/>
+                        <has_text text="executor.cpus"/>
+                    </has_archive_member>
+                </assert_contents>
+            </output>
+            <!-- elements in the order of the collection (alphabetical order of the .tsv files) -->
+            <output_collection name="tables" type="list">
+                <element name="clone_assigned_seq" ftype="tabular">
+                    <assert_contents>
+                        <has_text text="clone_id"/>
+                    </assert_contents>
+                </element>
+                <element name="productive_seq" ftype="tabular">
+                    <assert_contents>
+                        <has_text text="sequence_id"/>
+                    </assert_contents>
+                </element>
+            </output_collection>
+        </test>
+        <!-- several multi-sequence fasta files, no metadata, parameters of the form and of a parameter file -->
+        <test expect_num_outputs="1">
+            <conditional name="input">
+                <param name="input_type" value="fasta"/>
+                <param name="fasta" value="human_IGH_part1.fasta,human_IGH_part2.fasta" ftype="fasta"/>
+            </conditional>
+            <section name="clones">
+                <param name="clone_distance" value="0.2"/>
+            </section>
+            <section name="graphics">
+                <param name="germ_tree_kind" value="circular"/>
+                <param name="germ_tree_duplicate_seq" value="false"/>
+                <param name="donut_border_color" value="#000000"/>
+            </section>
+            <section name="advanced">
+                <param name="params" value="params.json" ftype="json"/>
+            </section>
+            <output name="report" ftype="html">
+                <assert_contents>
+                    <has_text text="Repertoire Profiler Report"/>
+                </assert_contents>
+                <extra_files type="file" name="reports/nextflow.config" value="test2_nextflow_config_lines.txt" compare="contains"/>
             </output>
         </test>
     </tests>
     <help><![CDATA[
 **What it does**
 
-Runs the repertoire_profiler Nextflow pipeline (https://github.com/gael-millot/repertoire_profiler) on Ig or TR sequences:
-V(D)J annotation with IgBlast, productive sequence selection, clonal groups, mutation load, repertoires, alignments, phylogenetic trees and an HTML report.
+Runs the repertoire_profiler_ Nextflow pipeline on nucleotide sequences of immunoglobulins (Ig, BCR) or T cell receptors (TR):
+V(D)J annotation with IgBlast, selection of the productive sequences, clonal groups, mutation load, gene and allele repertoires,
+alignments, phylogenetic trees of the clonal groups, donuts, and an HTML report.
+
+The form recapitulates the nextflow.config file of the pipeline: same sections, one field per parameter, with the name of the
+parameter in parentheses, so that the documentation of the pipeline (README and nextflow.config) applies. The execution
+parameters (Local / Cluster execution section) are set by Galaxy, and the iTOL upload of the trees is disabled.
+
+.. _repertoire_profiler: https://github.com/gael-millot/repertoire_profiler
+
+-----
 
 **Inputs**
 
-- a .zip of fasta files (the sample_path parameter of nextflow.config)
-- an optional metadata .tsv file (meta_path)
-- an optional JSON file of parameters. All the parameters of the "Parameters that must be set by the user" section of nextflow.config can be set, except the execution ones listed in galaxy/locked_params.txt.
+- Sequences (sample_path): one or several fasta files, or a zip archive of fasta files.
+- Metadata (meta_path, optional): a tab-separated table with a column of sequence names (meta_seq_names), used to rename the
+  sequences (meta_name_replacement) and to shape the tree leaves (meta_legend).
+- Parameter file (optional): a JSON object {"parameter": "value"} of nextflow.config parameters, which replaces the values of the form.
+
+-----
 
 **Outputs**
 
-- a .zip of the whole result folder (see the Output section of the README)
-- the HTML report
+- *report and result folder*: the HTML report of the run. This dataset also contains the whole result folder of the pipeline
+  (tsv, pdf, figures, alignments, phylo, repertoires and reports folders, see the Output section of the README), so that the links of
+  the report work in Galaxy. **To save the result folder, click on the download button of this dataset: you get a zip of the folder.**
+- *tables* (optional): the .tsv files of the tsv folder, as a list collection, for further analyses in Galaxy.
+- *result folder (zip)* (optional): the result folder as a separate zip dataset.
+
+The results stay in the history: they can also be exported to a storage configured in the Galaxy server (Export datasets).
+
+-----
+
+**Duration**
+
+The whole pipeline runs inside a single Galaxy job. A run of a few dozens of sequences takes about 15 minutes, longer the first
+time on a server, which pulls the container images of the pipeline.
     ]]></help>
     <citations>
-        <citation type="bibtex">@misc{repertoire_profiler, author = {Millot, Gael A. and Taurel, Chloe}, title = {repertoire_profiler}, publisher = {GitHub}, url = {https://github.com/gael-millot/repertoire_profiler}}</citation>
+        <citation type="doi">10.1126/scitranslmed.ado4463</citation>
+        <citation type="bibtex">@misc{repertoire_profiler,
+  author = {Millot, Gael A. and Taurel, Chloe},
+  title = {repertoire_profiler},
+  publisher = {GitHub},
+  url = {https://github.com/gael-millot/repertoire_profiler}
+}</citation>
     </citations>
 </tool>

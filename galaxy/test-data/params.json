@@ -1,6 +1,4 @@
 {
- "igblast_organism": "human",
- "clone_distance": "0.15",
- "align_soft": "mafft",
- "meta_legend": "Affinity"
+ "donut_legend_limit": "0.1",
+ "germ_tree_label_size": "2.5"
 }

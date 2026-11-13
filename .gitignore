@@ -10,3 +10,5 @@ singularity/
 .mailmap
 commit*
 __pycache__/
+tool_test_output.*
+shed_upload*.tar.gz
