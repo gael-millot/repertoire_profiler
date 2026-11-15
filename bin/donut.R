@@ -312,9 +312,9 @@ tempo.arg <-c(
     "donut_annotation_force",
     "donut_annotation_force_pull",
     "donut_legend_width",
-    "donut_legend_width",
     "donut_legend_text_size", 
     "donut_legend_box_size", 
+    "donut_legend_box_space", 
     # "donut_legend_limit", # can be NULL
     "cute",
     "repertoire_names_ch",
@@ -377,7 +377,7 @@ donut_legend_box_space <- as.numeric(donut_legend_box_space) # numeric string al
 if(donut_legend_limit == "NULL"){
     donut_legend_limit <- NULL
 }else if(donut_legend_limit == "all"){
-    donut_legend_limit <- "all" # numeric string already checked by nextflow
+    donut_legend_limit <- "all" # kept as a character string: gg_donut() then puts all the sectors in the legend
 }else{
     donut_legend_limit <- as.numeric(donut_legend_limit) # numeric string already checked by nextflow
 }
@@ -635,7 +635,7 @@ if(nrow(obs) > 0){
         nb_na,
         "."
     )
-    if( ! is.null(donut_legend_limit)){
+    if(is.numeric(donut_legend_limit)){ # only for a proportion: not for NULL (ten biggest sectors) or "all" (all the sectors in the legend)
         if(sum(obs2$Prop >= donut_legend_limit) < length(obs2$Prop)){
             tempo.title <- paste0(tempo.title, "\nSome classes have been removed from the legend (donut_legend_limit = ", round(donut_legend_limit, 2), "). See the donut_stats.tsv file")
         }

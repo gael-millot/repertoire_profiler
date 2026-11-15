@@ -345,10 +345,8 @@ if( ! (donut_legend_box_space in String) ){
 }
 if( ! (donut_legend_limit in String) ){
     error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_limit PARAMETER IN nextflow.config FILE:\n${donut_legend_limit}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
-}else if( ! (donut_legend_width ==  "NULL") ){
-    if( ! (donut_legend_width =~  /^((1)|(0)|(0\.[0-9]*))$/) ){
-    error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_limit PARAMETER IN nextflow.config FILE:\n${donut_legend_limit}\nMUST BE A POSITIVE PROPORTION VALUE IF NOT \"NULL\"\n\n========\n\n"
-    }
+}else if( ! (donut_legend_limit == "NULL" || donut_legend_limit == "all" || donut_legend_limit =~  /^((1)|(0)|(0\.[0-9]*))$/) ){
+    error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID donut_legend_limit PARAMETER IN nextflow.config FILE:\n${donut_legend_limit}\nMUST BE \"NULL\", \"all\" OR A POSITIVE PROPORTION VALUE\n\n========\n\n"
 }
 if( ! (phylo_tree_model_path in String || phylo_tree_model_path in GString) ){
     error "\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID phylo_tree_model_path PARAMETER IN nextflow.config FILE:\n${phylo_tree_model_path}\nMUST BE A SINGLE CHARACTER STRING\n\n========\n\n"
