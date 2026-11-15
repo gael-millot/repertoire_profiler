@@ -1,0 +1,11 @@
+# Line endings of the files written by git in the working folder: LF, whatever the core.autocrlf setting.
+# With core.autocrlf=true (a Windows setting, sometimes copied to Linux or WSL), git writes CRLF line endings,
+# which break the bash and python scripts ($'\r': command not found).
+
+# scripts run by bash or python (Galaxy tool, local planemo scripts, pipeline scripts run in the containers, web page)
+*.sh text eol=lf
+*.py text eol=lf
+
+# Galaxy tool, its test data and the web page (binary files, e.g. zip, are detected and kept as they are)
+galaxy/** text=auto eol=lf
+web/** text=auto eol=lf
