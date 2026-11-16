@@ -54,9 +54,9 @@
 | **bin folder** | Contains files required by the *main.nf* file. |
 | **modules folder** | Contains files required by the *main.nf* file. |
 | **conf folder** | Contains files required by the *main.nf* file. |
-| **galaxy folder** | Galaxy tool running the whole pipeline in a single Galaxy job, whose form recapitulates *nextflow.config*, and planemo scripts to run it in a local Galaxy (see [Galaxy tool](#34-galaxy-tool-local-galaxy-with-planemo-galaxypasteurfr)). |
+| **galaxy folder** | Galaxy tool running the whole pipeline in a single Galaxy job, whose form recapitulates *nextflow.config*, and planemo scripts to run it in a local Galaxy (see [galaxy/README.md](galaxy/README.md)). |
 | **.shed.yml** | Description of the Tool Shed repository of the Galaxy tool. |
-| **web folder** | Public web page (Shiny form generated from *nextflow.config*) and submission daemon to Galaxy, with its Dockerfile (see [Public web page](#35-public-web-page)). |
+| **web folder** | Public web page (Shiny form generated from *nextflow.config*) and submission daemon to Galaxy, with its Dockerfile (see [web/README.md](web/README.md)). |
 | **Licence.txt** | Licence of the release. |
 
 
@@ -85,241 +85,40 @@ Other dataset can be fould here:<br>
 <br><br>
 ## HOW TO RUN
 
-### 1. Prerequisite
+### 1. Connection
 
-Installation of:<br>
-[nextflow DSL2](file:///C:/Users/gmillot/Documents/Git_projects/protocols/docs/Protocol%20152-rev0%20DSL2.htm#_Toc208504071). Please, use the version indicated above.<br>
-[Graphviz](https://www.graphviz.org/download/), `sudo apt install graphviz` for Linux ubuntu.<br>
-[Apptainer](https://gael-millot.github.io/protocols/docs/Protocol%20135-rev0%20APPTAINER.html#_Toc160091693).<br>
-<br>
-
-Optional installation (to avoid reccurent message) of:<br>
-[Gocryptfs](https://github.com/rfjakob/gocryptfs), `sudo apt install gocryptfs` for Linux ubuntu.<br> 
-
-Itol key:<br>
-If you need sequence phylogenic trees in the output, you can freely register at https://itol.embl.de/itol_account.cgi to get your own itol key. Once registered, go to https://itol.embl.de/userInfo.cgi and click on the Toggle API access button. Then, add the key in the `phylo_tree_itolkey` parameter of the *nextflow.config* file, and set the `phylo_tree_itol_subscription` parameter to `TRUE`. If you experience problem with registration, set the `phylo_tree_itol_subscription` parameter to `FALSE`. The html output file explains how to see the trees without ITOL key.
-
-<br>
-
-### 2. Local running (personal computer)
-
-#### 2.1. *main.nf* file in the personal computer
-
-- Mount a server if required:
-
-<pre>
-DRIVE="Z" # change the letter to fit the correct drive
-sudo mkdir /mnt/share
-sudo mount -t drvfs $DRIVE: /mnt/share
-</pre>
-
-Warning: if no mounting, it is possible that nextflow does nothing, or displays a message like:
-<pre>
-Launching `main.nf` [loving_morse] - revision: d5aabe528b
-/mnt/share/Users
-</pre>
-
-- Run the following command from where the *main.nf* and *nextflow.config* files are (example: \\wsl$\Ubuntu-20.04\home\gael):
-
-<pre>
-nextflow run main.nf -c nextflow.config # or nextflow run main.nf
-</pre>
-
-with -c to specify the name of the config file used.
+- Open [https://galaxy.pasteur.fr](https://galaxy.pasteur.fr) in a web browser and log in with your Institut Pasteur account.
+- Type *repertoire_profiler* in the search field of the *Tools* panel (left), then click on the tool: its form opens in the central panel.
 
 <br><br>
-#### 2.2. *main.nf* file in a public github / gitlab repository
+### 2. Parameters
 
-Run the following command from where you want the results:
-
-<pre>
-nextflow run -hub pasteur gmillot/repertoire_profiler -r v1.0.0
-</pre>
-
-<br><br>
-
-### 3. Distant running (example with the Pasteur cluster)
-
-#### 3.1. Pre-execution
-
-Go into the directory where the main.nf and nextflow.config files are.
-Copy-paste this code:
-
-<pre>
-EXEC_PATH=$(pwd) # where the bin folder of 19583_loot is located (by default, the same path as for the main.nf file)
-export CONF_BEFORE=/opt/gensoft/exe # on maestro
-
-export JAVA_CONF=java/13.0.2
-export JAVA_CONF_AFTER=bin/java # on maestro
-export APP_CONF=apptainer/1.3.5
-export APP_CONF_AFTER=bin/apptainer # on maestro
-export GIT_CONF=git/2.39.1
-export GIT_CONF_AFTER=bin/git # on maestro
-export GRAPHVIZ_CONF=graphviz/2.42.3
-export GRAPHVIZ_CONF_AFTER=bin/graphviz # on maestro
-export GRAALVM_CONF=graalvm/ce-java23-23.0.1 # required for nextflow
-export GRAALVM_CONF_AFTER=bin/graalvm # on maestro
-export NEXTFLOW_CONF=nextflow/24.10.3
-export NEXTFLOW_CONF_AFTER=bin/nextflow # on maestro
-
-MODULES="${CONF_BEFORE}/${JAVA_CONF}/${JAVA_CONF_AFTER},${CONF_BEFORE}/${APP_CONF}/${APP_CONF_AFTER},${CONF_BEFORE}/${GIT_CONF}/${GIT_CONF_AFTER},${CONF_BEFORE}/${GRAPHVIZ_CONF}/${GRAPHVIZ_CONF_AFTER},${CONF_BEFORE}/${GRAALVM_CONF}/${GRAALVM_CONF_AFTER},${CONF_BEFORE}/${NEXTFLOW_CONF}/${NEXTFLOW_CONF_AFTER}"
-cd ${EXEC_PATH}
-chmod -R 755 ${EXEC_PATH}/bin/*.* # nextflow needs x authorization for all files and subfolder files
-module load ${JAVA_CONF} ${APP_CONF} ${GIT_CONF} ${GRAPHVIZ_CONF} ${GRAALVM_CONF}
-module load ${NEXTFLOW_CONF}
-</pre>
+- Click on *Upload* (left) and add the fasta file(s), or their zip, and the optional metadata file (see [INPUT](#input)): *Choose local file*, or *Paste/Fetch data* for URLs (e.g., the example files), then *Start*. They appear in the history (right panel).
+- The form recapitulates the *nextflow.config* file: same sections, one field per parameter, with the name of the parameter in parentheses and its description below.
+- *Sequences (sample_path)*: the fasta file(s), or *Zip archive of fasta files* and the zip.
+- *Metadata (meta_path)*: optional, *Add a metadata table*, then the metadata file and its column names.
+- *Outputs*: optional additional datasets (see [Results](#4-results) below).
+- *Parameter file* (optional): JSON file `{"parameter": "value"}` whose values replace those of the form, e.g., to reuse a set of parameters.
+- The execution parameters are set by Galaxy, and the iTOL upload of the trees is disabled.
+- Optional: *Email notification* (bottom of the form, if available), to receive an e-mail at the end of the run.
+- Click on *Run Tool*.
 
 <br><br>
+### 3. Run follow-up
 
-#### 3.2. *main.nf* file in a cluster folder
-
-Run from where the *main.nf* and *nextflow.config* files are (which has been set thanks to the EXEC_PATH variable above):
-
-<pre>
-HOME_INI=$HOME
-HOME="${HELIXHOME}/repertoire_profiler/" # $HOME changed to allow the creation of .nextflow into /$HELIXHOME/repertoire_profiler/, for instance. See NFX_HOME in the nextflow software script
-nextflow run main.nf -c nextflow.config -resume --modules ${MODULES} # --modules ${MODULES} in order to have all the used module versions recorded into the report file, -resume to continue a potential job that has already been submitted
-HOME=$HOME_INI
-</pre>
+- The datasets of the run appear at the top of the history: grey (queued), yellow (running), green (finished) or red (error).
+- About 15 min for a few dozen sequences, plus the waiting time of the job on the Maestro cluster.
+- Click on a dataset, then on *Dataset Details* (i icon): parameters of the run and nextflow messages (*Tool Standard Output* and *Tool Standard Error*).
+- Red dataset: click on it to read the error message. *Error* icon (bug): report to the Galaxy administrators (or post an issue [here](https://github.com/gael-millot/repertoire_profiler/issues)). *Run Job Again* icon: form with the same parameters, to rerun.
 
 <br><br>
+### 4. Results
 
-#### 3.3. *main.nf* file in the public gitlab repository
-
-Modify the first line of the code below, in order to call the desired version of repertoire_profiler indicated [here](https://github.com/gael-millot/repertoire_profiler/tags), and run (results will be where the EXEC_PATH variable has been set above):
-
-<pre>
-VERSION="v1.0"
-HOME_INI=$HOME
-HOME="${HELIXHOME}/repertoire_profiler/" # $HOME changed to allow the creation of .nextflow into /$HELIXHOME/repertoire_profiler/, for instance. See NFX_HOME in the nextflow software script
-nextflow run -hub pasteur gmillot/repertoire_profiler -r $VERSION -c $HOME/nextflow.config
-HOME=$HOME_INI
-</pre>
-
-<br><br>
-#### 3.4. Galaxy tool (local Galaxy with planemo, galaxy.pasteur.fr)
-
-The *galaxy/repertoire_profiler.xml* Galaxy tool runs the whole pipeline inside a single Galaxy job (nextflow local executor, processes in apptainer containers). Its form, i.e., the web page of the tool in Galaxy, recapitulates the *nextflow.config* file: same sections, one field per parameter, with the name of the parameter in parentheses and its comment as help. The *Run tool* button runs the pipeline. The execution parameters (*Local / Cluster execution* section) are set by Galaxy, and the iTOL upload is disabled.
-
-**Results**: the *report and result folder* dataset of the Galaxy history is the HTML report, which also carries the whole result folder (see [OUTPUT](#output)): the eye icon shows the report, whose links to the tables, pdf and alignments work in Galaxy, and **the download icon saves the whole result folder as a zip file**, where the web browser proposes (enable "Ask where to save each file" in the browser settings to choose the folder each time). Optionally, the tool also returns the .tsv tables as a collection (for other Galaxy tools) and the result folder as a separate zip dataset. On a Galaxy server, the datasets can also be exported to a storage configured by the administrators (Export datasets).
-
-**Local Galaxy with planemo** ([planemo](https://planemo.readthedocs.io), e.g., in ~/.venv: `python3 -m venv ~/.venv && ~/.venv/bin/pip install planemo`):
-
-<pre>
-bash galaxy/local/serve.sh    # local Galaxy with the tool, at http://127.0.0.1:9090 (Ctrl+C to stop)
-bash galaxy/local/test.sh     # lint (tool and Tool Shed repository) and tests of the tool (each test runs the whole pipeline)
-</pre>
-
-Then, in the web browser: upload the fasta files (or their zip) and the optional metadata table (*Upload* button), open the *repertoire_profiler* tool, set the parameters and click on *Run tool*. The histories are kept between restarts (planemo profile). The first start installs Galaxy (release_26.1, in ~/.planemo), the first run installs nextflow, apptainer, graphviz and python with conda (~/miniforge3), then pulls the container images of the pipeline into ~/apptainer (about 10 GB, long). Settings (cores, memory, folders) are environment variables, described in *galaxy/local/settings.sh*, e.g., `RP_CPUS=8 RP_MEMORY_MB=12000 bash galaxy/local/serve.sh`.
-
-**Tool Shed and galaxy.pasteur.fr**: the *.shed.yml* file at the root of the repository describes the Tool Shed repository: the tool with its test data and the pipeline files (main.nf, nextflow.config, bin, conf and modules folders), in the same layout as this repository. After `bash galaxy/local/test.sh lint`, from the root of the repository (API key of the Tool Shed account):
-
-<pre>
-planemo shed_create --shed_target https://toolshed.pasteur.fr --shed_key API_KEY .                 # first upload
-planemo shed_update --shed_target https://toolshed.pasteur.fr --shed_key API_KEY --check_diff .    # next versions
-</pre>
-
-The Galaxy administrators then install the repository from the Tool Shed and set the RP_APPTAINER_CACHE job environment variable (folder of the apptainer images, shared by the jobs), as described at the top of *galaxy/repertoire_profiler.xml*. If the computing nodes have no internet access, the images are pulled beforehand into this folder with `bash galaxy/pull_images.sh <folder>`.
-
-- *galaxy/repertoire_profiler.xml*: the Galaxy tool. Inputs: fasta files or their zip, optional metadata table, the parameters of *nextflow.config*, and an optional JSON parameter file (whose values replace those of the form, e.g., to reuse a set of parameters).
-- *galaxy/fill_config.py*: writes the *nextflow.config* of a job from the form (parameters are in env {} blocks and cannot be changed with --param on the command line). User values are strictly checked (no quote, backslash or $), so that no Groovy code can be injected into the config.
-- *galaxy/locked_params.txt*: parameters that users cannot set (execution, paths, keys).
-- *galaxy/pull_images.sh*: pulls the container images of *nextflow.config* into a folder, with the file names used by nextflow.
-- *galaxy/local/*: planemo scripts (not in the Tool Shed repository). *check_tool.py*, run by *test.sh*, checks that the form still matches *nextflow.config*: run it after any change of the parameters of *nextflow.config*.
-
-<br><br>
-#### 3.5. Public web page
-
-The pipeline can also be run from a public web page, without any account. The design is the same as [SHAMAN](https://github.com/aghozlane/shaman):
-
-<pre>
-browser -> web page (web/app/app.R, Shiny)  -- writes -->  todo/KEY.json + jobs/KEY/{sample.zip, metadata.tsv, params.json}
-                                                                  |
-           web/daemon/rp_bioblend.py (same container, Galaxy service account, BioBlend)
-                                                                  |
-           galaxy.pasteur.fr: repertoire_profiler tool (galaxy/repertoire_profiler.xml)  -- Slurm -->  Maestro
-</pre>
-
-- The values of the web form are sent to the Galaxy tool (see above) as its JSON parameter file.
-- *web/app/app.R*: the web page. The form is built from *nextflow.config* at start-up, one field per parameter, with the comment of the parameter as help. Users get a key to follow the job and download the results ("Check my job" tab, or link in the e-mail).
-- *web/daemon/rp_bioblend.py*: sends each job to Galaxy, waits, downloads the results, sends an e-mail and removes old jobs. Settings are environment variables (see the top of the file). The Galaxy API key must never be written in the code.
-- *web/Dockerfile*: image of the web page and the daemon:
-
-```
-docker build -f web/Dockerfile -t repertoire_profiler_web .
-docker run -p 3838:3838 -e GALAXY_API_KEY=... -e RP_PUBLIC_URL=https://... -v rp_work:/srv/rp_work repertoire_profiler_web
-```
-
-<br><br>
-### 4. Error messages and solutions
-
-#### Message 1
-```
-Unknown error accessing project `gmillot/repertoire_profiler` -- Repository may be corrupted: /pasteur/sonic/homes/gmillot/.nextflow/assets/gmillot/repertoire_profiler
-```
-
-Purge using:
-<pre>
-rm -rf /pasteur/sonic/homes/gmillot/.nextflow/assets/gmillot*
-</pre>
-
-#### Message 2
-```
-WARN: Cannot read project manifest -- Cause: Remote resource not found: https://gitlab.pasteur.fr/api/v4/projects/gmillot%2Frepertoire_profiler
-```
-
-Contact Gael Millot (distant repository is not public).
-
-#### Message 3
-
-```
-permission denied
-```
-
-Use chmod to change the user rights. Example linked to files in the bin folder: 
-```
-chmod 755 bin/*.*
-```
-
-#### Message 4
-
-```
-ERROR ~ Error executing process > 'print_report (1)'
-
-Caused by:
-  Process `print_report (1)` terminated with an error exit status (1)
-
-...
-
-Command error:
-  Quitting from lines 280-301 (report_file.rmd)
-  Error in if (file.info(file_path)$size == 0) { :
-    missing value where TRUE/FALSE needed
-  Calls: <Anonymous> ... eval_with_user_handlers -> eval -> eval -> read_tsv_with_dummy
-  Execution halted
-```
-
-If obtained using `nextflow run main.nf -resume`, then rerun the same command once. Sometimes, nextflow shows difficulties to build the report.html file with `-resume`. If the problem persists, try `nextflow run main.nf`. If the problem still occurs, please send an issue [here](https://github.com/gael-millot/repertoire_profiler/issues).
-
-#### Message 5
-
-```
-ERROR ~ Error executing process > 'ITOL (2)'
-
-Caused by:
-  Process `ITOL (2)` terminated with an error exit status (1)
-  
-INFO:    underlay of /etc/localtime required more than 50 (83) bind mounts
-```
-
-Register at Itol as explained in the [Prerequisite](#1-prerequisite) section above, or set the `phylo_tree_itol_subscription` parameter of the *nextflow.config* file to `FALSE` and rerun.
-
-#### Error using -resume
-
-Do not hesitate to rerun once the same command to reobtain the same error message. Indeed, sometimes nextflow has difficulties to reassemble all the cached files and reruning solves the problem.
-
-
-
+- *report and result folder* dataset:
+    - *View* icon (eye): HTML report in the central panel, with working links to the tables, pdf and alignments.
+    - *Download* icon (floppy disk, after clicking on the dataset): zip file of the whole result folder (see [OUTPUT](#output)), saved where the web browser proposes.
+- Optional datasets (*Outputs* section of the form): *tables* (.tsv files as a collection, for other Galaxy tools) and *result folder (zip)*.
+- The datasets stay in the history: *Delete* icon (bin) when no longer needed.
 
 <br><br>
 ## OUTPUT
