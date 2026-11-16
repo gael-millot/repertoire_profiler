@@ -11,6 +11,7 @@ The *galaxy/repertoire_profiler.xml* Galaxy tool runs the whole pipeline inside 
 <pre>
 bash galaxy/local/serve.sh    # local Galaxy with the tool, at http://127.0.0.1:9090 (Ctrl+C to stop)
 bash galaxy/local/test.sh     # lint (tool and Tool Shed repository) and tests of the tool (each test runs the whole pipeline)
+python3 galaxy/local/watch.py # in a second terminal: progress of the nextflow processes of the running job (serve.sh or test.sh)
 </pre>
 
 Then, in the web browser: upload the fasta files (or their zip) and the optional metadata table (*Upload* button), open the *repertoire_profiler* tool, set the parameters and click on *Run tool*. The histories are kept between restarts (planemo profile). The first start installs Galaxy (release_26.1, in ~/.planemo), the first run installs nextflow, apptainer, graphviz and python with conda (~/miniforge3), then pulls the container images of the pipeline into ~/apptainer (about 10 GB, long). Settings (cores, memory, folders) are environment variables, described in *galaxy/local/settings.sh*, e.g., `RP_CPUS=8 RP_MEMORY_MB=12000 bash galaxy/local/serve.sh`.

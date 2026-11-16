@@ -14,6 +14,7 @@
 # 3) planemo shed_lint of the Tool Shed repository (.shed.yml at the root of the repository)
 # 4) planemo test: runs the tests of the tool in a temporary local Galaxy. Each test runs the whole pipeline
 #    (about 15 minutes each, much longer the first time, which pulls the container images).
+#    Progress of the nextflow processes of the running test, in a second terminal: python3 galaxy/local/watch.py
 #    Report: ${RP_WORK_DIR}/tool_test_output.html
 #
 # Usage, from any folder:

@@ -14,7 +14,11 @@
 #   2) upload the fasta files (or their zip) and the optional metadata table (Upload button, top left)
 #   3) open the repertoire_profiler tool: its form recapitulates nextflow.config, one field per parameter
 #   4) click on "Run tool"
-#   5) when the job is green, open the "report and result folder" dataset: the eye icon shows the report,
+#   5) while the job runs (yellow), follow the nextflow processes:
+#      - in the Galaxy page: click on the running dataset, then on its i icon (Dataset details): the Tool Standard Output
+#        shows the lines of nextflow as they come (one line per started task, refreshed every 3 seconds)
+#      - or in a second terminal, the progress table of the nextflow console: python3 galaxy/local/watch.py
+#   6) when the job is green, open the "report and result folder" dataset: the eye icon shows the report,
 #      the download icon saves the whole result folder as a zip, where the web browser proposes.
 # The histories and results are kept between restarts, in the planemo profile (RP_PROFILE variable).
 # Stop the server with Ctrl+C.

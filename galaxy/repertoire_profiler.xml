@@ -33,6 +33,9 @@
         - destination with at least 10 cores and 16 GB for full speed
           (immcantation_10cpu label of nextflow.config; lower values are applied by process.resourceLimits)
         - allow the HTML report to be displayed without sanitization (Admin > Allowlist), otherwise its scripts and styles are removed
+        - optional: live_tool_output_reporting: true in the parameters of the destination, so that the users follow the nextflow processes
+          of their running job (one line per started task) in the dataset details, Tool Standard Output. The Galaxy server reads it
+          in the job folder during the run: local runner, or cluster runner on a file system shared with the nodes (not Pulsar)
 
     Galaxy-only fields of the form (not parameters of nextflow.config) are listed in the galaxy-ignore option of fill_config.py below,
     and the IgBlast chains (multiple select) in its galaxy-flags option.
