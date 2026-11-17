@@ -411,14 +411,27 @@ workflow {
             file: true
         }.set { branched }
     // Handle directories: list contents
-    fs_ch_from_dir = branched.dir.flatMap { it.listFiles() } // is it is a dir, then recover all the files
+    fs_ch_from_dir = branched.dir.flatMap { it.listFiles().findAll{ f -> ! f.name.startsWith('.') && f.name != '__MACOSX' } }.map{ f -> // is it is a dir, then recover all the files, except the hidden ones (.DS_Store, ._* AppleDouble files of macOS, etc.) and the __MACOSX folder (added by macOS in zip files)
+        if( ! f.isFile() ){
+            throw new IllegalStateException("\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID sample_path PARAMETER IN nextflow.config FILE:\n${sample_path}\nTHE FOLDER (UNZIPPED IF .zip) MUST CONTAIN ONLY FILES, WITHOUT SUBFOLDER.\nHERE AN ELEMENT IS NOT A FILE:\n${f}\n\n========\n\n")
+        }
+        if( ! (f.extension in ['fasta', 'fa', 'fas', 'fna', 'txt', 'seq', 'faa']) ){
+            throw new IllegalStateException("\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID sample_path PARAMETER IN nextflow.config FILE:\n${sample_path}\nALL THE FILE EXTENSIONS OF THE FOLDER (UNZIPPED IF .zip) MUST BE fasta, fa, fas, fna, txt, seq OR faa.\nHERE A FILE IS:\n${f}\n\n========\n\n")
+        }
+        return f
+    }
     // Handle files: pass through
     fs_ch_from_file = branched.file
     // Merge back
     fs_ch = fs_ch_from_dir.mix(fs_ch_from_file)
     // end is the path a dir or a single file ?
 
-    fs_ch.toList().branch {
+    fs_ch.toList().map{
+        if(it.size() == 0){
+            throw new IllegalStateException("\n\n========\n\nERROR IN NEXTFLOW EXECUTION\n\nINVALID sample_path PARAMETER IN nextflow.config FILE:\n${sample_path}\nNO FILE FOUND (HIDDEN FILES AND __MACOSX FOLDER IGNORED).\n\n========\n\n")
+        }
+        return it
+    }.branch {
             single: it.size() == 1
                 return it[0]
             multiple: true
