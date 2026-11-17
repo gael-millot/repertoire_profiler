@@ -49,6 +49,7 @@
     </requirements>
     <version_command>echo 'repertoire_profiler @TOOL_VERSION@'</version_command>
     <command detect_errors="exit_code"><![CDATA[
+#import re
 #set $pipeline = $__tool_directory__ + '/..'
 set -o pipefail &&
 
@@ -62,6 +63,30 @@ ln -s '$pipeline/bin' bin &&
 #if $input.input_type == 'zip':
     cp '$input.fasta_zip' sample.zip &&
     #set $sample = 'sample.zip'
+#elif $input.input_type == 'folder':
+    ## folder of fasta files with a single sequence each (list collection or several datasets): rebuilt in the job folder,
+    ## one file per dataset, named after its collection element identifier (or its dataset name), without its fasta extension,
+    ## with only letters, digits, _ and - (the file names are not quoted in the processes of the pipeline), at most 100 characters,
+    ## made unique, plus the .fasta extension. The sequence names are the fasta headers, not the file names.
+    mkdir sample &&
+    #set $file_names = []
+    #for $fasta in $input.fasta_folder:
+        #set $name = str($fasta.element_identifier)
+        #set $parts = $name.rsplit('.', 1)
+        #if len($parts) == 2 and $parts[1].lower() in ['fasta', 'fa', 'fas', 'fna', 'txt', 'seq', 'faa']:
+            #set $name = $parts[0]
+        #end if
+        #set $name = re.sub('^-', '_', re.sub('[^A-Za-z0-9_-]', '_', $name))[:100] or 'sequence'
+        #set $file_name = $name
+        #set $i = 1
+        #while $file_name in $file_names:
+            #set $i = $i + 1
+            #set $file_name = $name + '_' + str($i)
+        #end while
+        #silent $file_names.append($file_name)
+        cp '$fasta' 'sample/${file_name}.fasta' &&
+    #end for
+    #set $sample = 'sample'
 #else:
     ## one or several fasta files, with one or several sequences each: merged into a single file, split by the Split_fasta process
     awk 'NF' #for $fasta in $input.fasta# '$fasta'#end for# > sample.fasta &&
@@ -127,10 +152,14 @@ echo "result folder: \$results_dir"
         <conditional name="input">
             <param name="input_type" type="select" label="Sequences (sample_path)" help="Nucleotide sequences to analyze. They do not have to be Ig or TR sequences: the pipeline filters them.">
                 <option value="fasta" selected="true">Fasta file(s)</option>
+                <option value="folder">Folder of fasta files</option>
                 <option value="zip">Zip archive of fasta files</option>
             </param>
             <when value="fasta">
                 <param name="fasta" type="data" format="fasta" multiple="true" label="Fasta file(s)" help="One or several fasta files (or a collection), each with one or several sequences. They are merged into a single fasta file. Only the first 100 characters of the headers are used as sequence names, and the non alphanumeric characters are replaced by underscores."/>
+            </when>
+            <when value="folder">
+                <param name="fasta_folder" type="data" format="fasta" multiple="true" label="Fasta files of the folder" help="Fasta files containing a single sequence each, given to the pipeline as a folder (sample_path): a list collection, or several fasta datasets of the history. Galaxy cannot upload a folder as such: in the Upload window, Collection tab, select all the files of the folder to get them as a list collection. Only the first 100 characters of the headers are used as sequence names, and the non alphanumeric characters are replaced by underscores."/>
             </when>
             <when value="zip">
                 <param name="fasta_zip" type="data" format="zip" label="Zip archive" help="Zip of a single fasta file with several sequences, or of fasta files with one sequence each (extensions fasta, fa, fas, fna, txt, seq or faa)."/>
@@ -426,6 +455,22 @@ echo "result folder: \$results_dir"
                 <extra_files type="file" name="reports/nextflow.config" value="test2_nextflow_config_lines.txt" compare="contains"/>
             </output>
         </test>
+        <!-- folder of one-sequence fasta files (the files of human_IGH.zip, as several datasets), default parameters.
+             sample_path is the rebuilt folder ($PWD/sample, not sample.fasta or sample.zip) and the sequence names are
+             the fasta headers (CollabPasteur_P1_BC15_GAATGAGT in P1_BC15_GAATGAGT.fasta) -->
+        <test expect_num_outputs="1">
+            <conditional name="input">
+                <param name="input_type" value="folder"/>
+                <param name="fasta_folder" value="human_IGH/CollabP2_BC44_ACGTATCC_alignNonIdent_closestfail.fasta,human_IGH/CollabP3_BC24_AAGTGGCT_aligngaps.fasta,human_IGH/O1C7_VH_PBel118_n2_untrimmed.fasta,human_IGH/P1_BC14_TTACGGGT.fasta,human_IGH/P1_BC15_GAATGAGT.fasta,human_IGH/P1_BC17_AGAGATCT.fasta,human_IGH/P1_BC18_GAGTCCTG.fasta,human_IGH/P1_BC23_ACTGTTTG.fasta,human_IGH/P1_BC33_AACGAGGT.fasta,human_IGH/P1_BC74_TCGAACCG.fasta,human_IGH/P1_BC90_CACTTATC.fasta,human_IGH/P3_BC53_TTCGCTGT.fasta,human_IGH/P3_BC55_TCTGGGCA.fasta,human_IGH/P4_BC1_CGTCTAAT.fasta,human_IGH/P4_BC1_CGTCTAAT_non_align.fasta,human_IGH/P4_BC1_CGTCTAAT_non_product.fasta,human_IGH/SortD_Clone_2G5_VLlambda.fasta,human_IGH/SortEF_Clone_3A3_VLkappa_with_gap_problem.fasta,human_IGH/SortEF_Clone_4A2_VH_dist_problem.fasta,human_IGH/X02592.1_Human_mRNA_T-cell_receptor_alpha_chain.fasta,human_IGH/igblast_fail.fasta" ftype="fasta"/>
+            </conditional>
+            <output name="report" ftype="html">
+                <assert_contents>
+                    <has_text text="Repertoire Profiler Report"/>
+                </assert_contents>
+                <extra_files type="file" name="reports/nextflow.config" value="test3_nextflow_config_lines.txt" compare="contains"/>
+                <extra_files type="file" name="tsv/productive_seq.tsv" value="test3_productive_seq_names.txt" compare="contains"/>
+            </output>
+        </test>
     </tests>
     <help><![CDATA[
 **What it does**
@@ -444,7 +489,9 @@ parameters (Local / Cluster execution section) are set by Galaxy, and the iTOL u
 
 **Inputs**
 
-- Sequences (sample_path): one or several fasta files, or a zip archive of fasta files.
+- Sequences (sample_path): one or several fasta files, a folder of fasta files, or a zip archive of fasta files.
+  Folder: Galaxy cannot upload a folder as such. Select all the files of the folder in the *Collection* tab of *Upload*
+  (then *Start*, *Build* and *Create list*): they form a list collection, given to the pipeline as a folder.
 - Metadata (meta_path, optional): a tab-separated table with a column of sequence names (meta_seq_names), used to rename the
   sequences (meta_name_replacement) and to shape the tree leaves (meta_legend).
 - Parameter file (optional): a JSON object {"parameter": "value"} of nextflow.config parameters, which replaces the values of the form.

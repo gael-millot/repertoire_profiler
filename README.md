@@ -94,8 +94,9 @@ Other dataset can be fould here:<br>
 ### 2. Parameters
 
 - Click on *Upload* (left) and add the fasta file(s), or their zip, and the optional metadata file (see [INPUT](#input)): *Choose local file*, or *Paste/Fetch data* for URLs (e.g., the example files), then *Start*. They appear in the history (right panel).
+- Folder of fasta files: Galaxy cannot upload a folder as such. *Upload*, *Collection* tab, *Choose local file*, select all the files of the folder (Ctrl+A), *Start*, then *Build*, a name and *Create list*: the files form a list collection, i.e., the folder, in the history.
 - The form recapitulates the *nextflow.config* file: same sections, one field per parameter, with the name of the parameter in parentheses and its description below.
-- *Sequences (sample_path)*: the fasta file(s), or *Zip archive of fasta files* and the zip.
+- *Sequences (sample_path)*: the fasta file(s), *Folder of fasta files* and the list collection, or *Zip archive of fasta files* and the zip.
 - *Metadata (meta_path)*: optional, *Add a metadata table*, then the metadata file and its column names.
 - *Outputs*: optional additional datasets (see [Results](#4-results) below).
 - *Parameter file* (optional): JSON file `{"parameter": "value"}` whose values replace those of the form, e.g., to reuse a set of parameters.
