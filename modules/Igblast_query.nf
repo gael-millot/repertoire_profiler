@@ -45,7 +45,8 @@ process Igblast_query {
         echo -e "\\n\\n========\\n\\nERROR IN NEXTFLOW EXECUTION\\n\\nINVALID FILE EXTENSION IN THE sample_path PARAMETER OF THE nextflow.config FILE:\\n${fs_ch}\\n\${FILENAME}\\nMUST BE fasta|fa|fas|fna|txt|seq|faa\\n\\n========\\n\\n"
         exit 1
     fi
-    sed 's/\\r\$//' ${fs_ch} > tempo_file.fasta # remove carriage returns
+    tr '\\r' '\\n' < ${fs_ch} > tempo_file.fasta # remove carriage returns: each \\r turned into \\n, to accept \\r\\n (Windows) and \\r (old Mac) line endings. The empty lines made from \\r\\n are removed by the next awk
+    rm -f "\${FILE}.fa" # if the input file is itself named \${FILE}.fa, remove its link (not the user file), otherwise the next awk writes into the user file through the link
     awk 'BEGIN{ORS=""}{if(\$0~/^>.*/){s=substr(\$0,1,1); rest=substr(\$0,2); gsub(/[^a-zA-Z0-9]/,"_",rest) ; if(NR>1){print "\\n"} ; if (length(rest) > 100){print s substr(rest,1,100)"\\n"}else{print s rest"\\n"}} else {print \$0 ; next}}END{print "\\n"}' tempo_file.fasta > \${FILE}.fa # remove \\n in the middle of the sequence # gsub(/[^a-zA-Z0-9]/,"_",rest) replace any weird chars in the first line by a single underscore# \${FILENAME}.fa is a trick to do not use ${fs_ch} and modify the initial file due to the link in the nextflow work folder
     TEMPO=\$(wc -l \${FILE}.fa | cut -f1 -d' ')
     if read -n 1 char <"\${FILE}.fa"; [[ \$char != ">" || \$TEMPO != 2 ]]; then
