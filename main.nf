@@ -163,6 +163,7 @@ include {Add_dotted_coord} from './modules/Add_dotted_coord.nf'
 include {Translate_with_IMGT_gaps} from './modules/Translate_with_imgt_gaps.nf'
 include {Seq_name_replacement} from './modules/Seq_name_replacement.nf'
 include {Data_assembly} from './modules/Data_assembly.nf'
+include {Wanted_seq_summary} from './modules/Wanted_seq_summary.nf'
 include {Metadata_check} from './modules/Metadata_check.nf'
 include {Repertoire} from './modules/Repertoire.nf'
 include {Clone_assignment} from './modules/Clone_assignment.nf'
@@ -669,6 +670,12 @@ workflow {
                     DistToNearest.out.distToNearest_ch
                 )
                 warning_ch = warning_ch.mix(Data_assembly.out.data_assembly_warn_ch.filter{file(it).exists()}.map{file -> file.text}) //  file.text = contenu du fichier) // accumulate
+
+
+                Wanted_seq_summary( // main columns of the wanted_seq.tsv file
+                    Data_assembly.out.wanted_ch,
+                    meta_legend
+                )
 
 
                 Metadata_check(
