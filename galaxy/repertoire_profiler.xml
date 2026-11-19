@@ -405,6 +405,7 @@ echo "result folder: \$results_dir"
                 <assert_contents>
                     <has_text text="Repertoire Profiler Report"/>
                     <has_text text="ambiguous_igblast_seq.tsv"/>
+                    <has_text text="wanted_seq_summary.tsv"/>
                 </assert_contents>
                 <extra_files type="file" name="tsv/productive_seq.tsv" value="productive_seq_columns.txt" compare="contains"/>
             </output>
@@ -435,6 +436,15 @@ echo "result folder: \$results_dir"
                 <element name="productive_seq" ftype="tabular">
                     <assert_contents>
                         <has_text text="sequence_id"/>
+                    </assert_contents>
+                </element>
+                <!-- 20 columns + initial_sequence_id and Affinity (meta_name_replacement and meta_legend columns of the metadata) -->
+                <element name="wanted_seq_summary" ftype="tabular">
+                    <assert_contents>
+                        <has_n_columns n="22"/>
+                        <has_text text="initial_sequence_id"/>
+                        <has_text text="Affinity"/>
+                        <has_text text="sequence_alignment_aa"/>
                     </assert_contents>
                 </element>
             </output_collection>
