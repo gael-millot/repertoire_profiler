@@ -416,6 +416,7 @@ If the text is cut in the table, reload the page or change the width of the wind
             <br></li><li><b>annotated</b>: as the "all" donut but using all the productive sequences that have been annotated using the <code>meta_name_replacement</code> parameter of the <i>nextflow.config</i> file if not "NULL".
             <br></li><li><b>trees</b>: all the sequences used for germline trees (<i>germ_tree_seq.tsv</i> output file).</li>
             </ul>
+            <br>An allele or gene has the same color in all the donuts (colors set by the <code>donut_palette</code> parameter of the <i>nextflow.config</i> file), and the sectors not in the legend (see the <code>donut_legend_limit</code> parameter) are in grey.
             <br>Warning: the script currently takes the first annotation of the imgt annotation if several are presents in the v_call, j_call or c_call columns of the <i>wanted_seq.tsv</i> and <i>germ_tree_seq.tsv</i> files.
         </td>
     </tr>

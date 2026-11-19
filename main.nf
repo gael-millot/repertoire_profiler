@@ -967,6 +967,7 @@ workflow {
                 tempo3_ch = tempo1_ch.merge(tempo2_ch) // 3 lists
                 tempo4_ch = Channel.of("vj_allele", "c_allele", "vj_gene", "c_gene")
                 tempo5_ch = tempo3_ch.combine(tempo4_ch) // 12 tuples
+                donut_color_ref_ch = Data_assembly.out.wanted_ch.mix(clone_assigned_seq_ch).collect() // wanted_seq.tsv and clone_assigned_seq.tsv (if any) given to each Donut process, so that an allele or gene has the same color in all the donuts. collect(): value channel used by the 12 processes
                 Donut(
                     tempo5_ch,
                     donut_palette,
@@ -985,7 +986,8 @@ workflow {
                     donut_legend_box_space,
                     donut_legend_limit,
                     cute_file,
-                    Igblast_data_check.out.allele_names_tsv_all_ch
+                    Igblast_data_check.out.allele_names_tsv_all_ch,
+                    donut_color_ref_ch
                 )
                 donut_tsv_ch2 = Donut.out.donut_tsv_ch.collectFile(name: "donut_stats.tsv", skip: 1, keepHeader: true).subscribe{it -> it.copyTo("${out_path}/tsv")} // warning: skip: 1, keepHeader: true means that if the first file of the list is empty, then it is taken as reference to do not remove the header -> finally no header in the returned fusioned files
                 donuts_png_ch = donuts_png_ch.mix(Donut.out.donuts_png_ch.collect())

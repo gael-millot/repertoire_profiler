@@ -14157,9 +14157,10 @@ gg_donut <- function(
         tempo <- saferDev::arg_check(data = fill.palette, class = NULL, typeof = NULL, mode = NULL, length = 1, prop = FALSE, double_as_integer_allowed = FALSE, options = base::c("BrBG", "PiYG", "PRGn", "PuOr", "RdBu", "RdGy", "RdYlBu", "RdYlGn", "Spectral", "Accent", "Dark2", "Paired", "Pastel1", "Pastel2", "Set1", "Set2", "Set3", "Blues", "BuGn", "BuPu", "GnBu", "Greens", "Greys", "Oranges", "OrRd", "PuBu", "PuBuGn", "PuRd", "Purples", "RdPu", "Reds", "YlGn", "YlGnBu", "YlOrBr", "YlOrRd"), all_options_in_data = FALSE, na_contain = TRUE, neg_values = TRUE, inf_values = TRUE, print = FALSE, data_name = NULL, data_arg = TRUE, lib_path = lib_path, safer_check = FALSE, error_text = embed_error_text) ; base::eval(expr = ee, envir = base::environment(fun = NULL), enclos = base::environment(fun = NULL))
     }
     if( ! base::is.null(fill.color)){
-        tempo1 <- saferDev::arg_check(data = fill.color, class = "vector", typeof = NULL, mode = "character", length = 1, prop = FALSE, double_as_integer_allowed = FALSE, options = NULL, all_options_in_data = FALSE, na_contain = TRUE, neg_values = TRUE, inf_values = TRUE, print = FALSE, data_name = NULL, data_arg = TRUE, lib_path = lib_path, safer_check = FALSE, error_text = embed_error_text)
-        tempo2 <- saferDev::arg_check(data = fill.color, class = "factor", typeof = NULL, mode = NULL, length = 1, prop = FALSE, double_as_integer_allowed = FALSE, options = NULL, all_options_in_data = FALSE, na_contain = TRUE, neg_values = TRUE, inf_values = TRUE, print = FALSE, data_name = NULL, data_arg = TRUE, lib_path = lib_path, safer_check = FALSE, error_text = embed_error_text)
-        tempo3 <- saferDev::arg_check(data = fill.color, class = "integer", typeof = NULL, mode = NULL, length = 1, prop = FALSE, double_as_integer_allowed = FALSE, options = NULL, all_options_in_data = FALSE, na_contain = TRUE, neg_values = TRUE, inf_values = TRUE, print = FALSE, data_name = NULL, data_arg = TRUE, lib_path = lib_path, safer_check = FALSE, error_text = embed_error_text) # not need to test inf with integers
+        # length = NULL: one color per class of categ (number checked below, after the removal of the NA rows)
+        tempo1 <- saferDev::arg_check(data = fill.color, class = "vector", typeof = NULL, mode = "character", length = NULL, prop = FALSE, double_as_integer_allowed = FALSE, options = NULL, all_options_in_data = FALSE, na_contain = TRUE, neg_values = TRUE, inf_values = TRUE, print = FALSE, data_name = NULL, data_arg = TRUE, lib_path = lib_path, safer_check = FALSE, error_text = embed_error_text)
+        tempo2 <- saferDev::arg_check(data = fill.color, class = "factor", typeof = NULL, mode = NULL, length = NULL, prop = FALSE, double_as_integer_allowed = FALSE, options = NULL, all_options_in_data = FALSE, na_contain = TRUE, neg_values = TRUE, inf_values = TRUE, print = FALSE, data_name = NULL, data_arg = TRUE, lib_path = lib_path, safer_check = FALSE, error_text = embed_error_text)
+        tempo3 <- saferDev::arg_check(data = fill.color, class = "integer", typeof = NULL, mode = NULL, length = NULL, prop = FALSE, double_as_integer_allowed = FALSE, options = NULL, all_options_in_data = FALSE, na_contain = TRUE, neg_values = TRUE, inf_values = TRUE, print = FALSE, data_name = NULL, data_arg = TRUE, lib_path = lib_path, safer_check = FALSE, error_text = embed_error_text) # not need to test inf with integers
         if(tempo1$problem == TRUE & tempo2$problem == TRUE & tempo3$problem == TRUE){
             tempo.cat <- base::paste0(
                 arg_check_error_text, 
@@ -14557,6 +14558,18 @@ gg_donut <- function(
                 fill.color <- base::as.character(fill.color) # remove class factor is any
             }
         }
+        if(base::length(fill.color) != base::nrow(data1)){
+            tempo.cat <- base::paste0(
+                error_text_start,
+                "fill.color ARGUMENT MUST HAVE ONE COLOR PER CLASS OF THE categ COLUMN OF data1, IN THE DECREASING ORDER OF THE freq COLUMN.\nNUMBER OF COLORS: ",
+                base::length(fill.color),
+                "\nNUMBER OF CLASSES: ",
+                base::nrow(data1),
+                collapse = NULL,
+                recycle0 = FALSE
+            )
+            base::stop(base::paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n", base::ifelse(base::is.null(warn), "", base::paste0("IN ADDITION\nWARNING", base::ifelse(warn_count > 1, "S", ""), ":\n\n", warn))), call. = FALSE)
+        }
     }
     if( ! base::is.numeric(border.color)){
         if( ! (border.color %in% grDevices::colors() | base::grepl(pattern = "^#", border.color))){
@@ -14691,11 +14704,7 @@ gg_donut <- function(
         ))
     }
     base::assign(base::paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::coord_polar(theta = "y", direction = -1, start = 0, clip = "on"))
-    if(base::is.null(fill.color) & ! base::is.null(fill.palette)){
-        base::assign(base::paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_fill_brewer(palette = fill.palette, name = legend.name))
-    }else if( ! base::is.null(fill.color)){
-        base::assign(base::paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_fill_manual(values = fill.color, name = legend.name, na.value = "white"))
-    }
+    # fill colors (fill.color or fill.palette): set with the legend breaks in a single fill scale, see the legend management below (a second fill scale replaces the first one)
     if(legend.name != ""){
        base::assign(base::paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::labs(fill = legend.name)) # title of the legend
     }
@@ -14773,10 +14782,29 @@ gg_donut <- function(
             legend.limit <- 0
         }
     }
-    base::assign(base::paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_fill_discrete(
-            breaks = base::as.character(data1[ , categ][data1$prop >= legend.limit])
+    tempo.breaks <- base::as.character(data1[ , categ][data1$prop >= legend.limit]) # classes in the legend
+    # single fill scale for the colors and the legend breaks
+    if( ! base::is.null(fill.color)){
+        tempo.fill <- fill.color
+        base::names(tempo.fill) <- base::levels(data1[ , categ]) # fill.color is in the decreasing order of the frequencies, like the levels of categ. Named vector required: ggplot2::scale_fill_manual() matches unnamed values with the breaks, and the classes not in the legend would get na.value
+        base::assign(base::paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_fill_manual(
+                values = tempo.fill,
+                breaks = tempo.breaks,
+                na.value = "white"
+            )
         )
-    )
+    }else if( ! base::is.null(fill.palette)){
+        base::assign(base::paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_fill_brewer(
+                palette = fill.palette,
+                breaks = tempo.breaks
+            )
+        )
+    }else{
+        base::assign(base::paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::scale_fill_discrete(
+                breaks = tempo.breaks
+            )
+        )
+    }
     # end removal of part of the legend
     if(legend.show == FALSE){ # must be here because must be before bef.final.plot
         base::assign(base::paste0(tempo.gg.name, tempo.gg.count <- tempo.gg.count + 1), ggplot2::guides(fill = "none")) # inactivate the initial legend

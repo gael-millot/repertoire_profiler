@@ -90,6 +90,7 @@ if(interactive() == FALSE){ # if(grepl(x = commandArgs(trailingOnly = FALSE), pa
         "donut_legend_limit",
         "cute", 
         "repertoire_names_ch",
+        "color_ref_files",
         "log"
     ) # objects names exactly in the same order as in the bash code and recovered in args. Here only one, because only the path of the config file to indicate after the donut.R script execution
     if(length(args) != length(tempo.arg.names)){
@@ -134,6 +135,7 @@ rm(tempo.cat)
 # donut_legend_limit = "0.1"
 # cute = "C:/Users/gmillot/Documents/Git_projects/repertoire_profiler/bin/cute_little_R_functions_v12.8.R"
 # repertoire_names_ch = "imgt_human_IGHC2.tsv imgt_human_IGHD2.tsv imgt_human_IGHJ2.tsv imgt_human_IGHV2.tsv"
+# color_ref_files = "color_ref/wanted_seq.tsv color_ref/clone_assigned_seq.tsv"
 # log = "all_donut.log"
 
 
@@ -170,6 +172,7 @@ param.list <- c(
     "donut_legend_limit",
     "cute", 
     "repertoire_names_ch",
+    "color_ref_files",
     "log"
 )
 if(any(duplicated(param.list))){
@@ -273,6 +276,216 @@ extract_chain <- function(x) {
 }
 
 
+# Class table of a donut, i.e., number of sequences per allele or gene (V and J pair for vj_allele and vj_gene)
+# Used for the plotted donut and for the donuts of the other kinds, so that a class has the same color in all the donuts
+# obs_fun: data frame of the wanted_seq.tsv file (kinds "all" and "annotated") or of the clone_assigned_seq.tsv file (kind "clone"), with at least one row
+# kind_fun: kind of donut, "all", "annotated" or "clone"
+# col_fun: classes of the donut, "vj_allele", "c_allele", "vj_gene" or "c_gene"
+# Returns a list:
+# $obs2: data frame of the classes of all the sequences (first column named col_fun, then Freq, Prop, kind, and labels if sequence names have been replaced), in decreasing order of Prop
+# $obs3: obs2 restricted to the classes with at least one replaced sequence name if kind_fun is "annotated", obs2 otherwise
+# $all.annotation.log: TRUE if no sequence name has been replaced (no annotation)
+# $nb_na: number of NA among the selected sequences
+# $nb_total: number of selected sequences
+donut_classes <- function(obs_fun, kind_fun, col_fun){
+    if(kind_fun == "clone"){
+        if (col_fun == "vj_allele") {
+            tempo.primary <- obs_fun$germline_v_call
+            tempo.secondary <- obs_fun$germline_j_call
+        } else if (col_fun == "vj_gene") {
+            tempo.primary <- obs_fun$clonal_germline_v_gene
+            tempo.secondary <- obs_fun$clonal_germline_j_gene
+        } else if (col_fun == "c_allele") {
+            tempo.primary <- obs_fun$c_call
+            tempo.secondary <- NULL
+        } else if (col_fun == "c_gene") {
+            tempo.primary <- obs_fun$c_gene
+            tempo.secondary <- NULL
+        }
+    }else{
+        if (col_fun == "vj_allele") {
+            tempo.primary <- obs_fun$v_call
+            tempo.secondary <- obs_fun$j_call
+        } else if (col_fun == "vj_gene") {
+            tempo.primary <- obs_fun$v_gene
+            tempo.secondary <- obs_fun$j_gene
+        } else if (col_fun == "c_allele") {
+            tempo.primary <- obs_fun$c_call
+            tempo.secondary <- NULL
+        } else if (col_fun == "c_gene") {
+            tempo.primary <- obs_fun$c_gene
+            tempo.secondary <- NULL
+        }
+    }
+
+    # keep only the first allele or gene if igblast hesitated between several
+    tempo.primary <- unlist(lapply(tempo.primary, function(x) {
+        if (is.na(x)) return(NA) else return(strsplit(x, ",")[[1]][1])
+    }))
+    tempo.secondary <- unlist(lapply(tempo.secondary, function(x) {
+        if (is.na(x)) return(NA) else return(strsplit(x, ",")[[1]][1])
+    }))
+
+
+    # # warning: I can use all.annotation.log because I have duplicated the first column of the dataset in the second column, in order to change the name in the first column with metadata. If all(obs_fun[ , 1] == obs_fun[ , 2]) == TRUE, it means no annotation added
+    if(grepl(x = names(obs_fun)[2], pattern = "^initial_")){ # means that fonctional annotations are present
+        annotation.log <- obs_fun[ , 1] == obs_fun[ , 2]
+        all.annotation.log <- all(annotation.log) # if one difference between obs_fun[ , 1] == obs_fun[ , 2], then all.annotation.log is FALSE
+    }else{
+        all.annotation.log <- TRUE
+    }
+    if(all.annotation.log == FALSE){
+        tempo.labels <- obs_fun[ , 1]
+        tempo.labels[annotation.log] <- NA
+    }
+
+    #inactivated because now chain can be both IGL and IGK
+    # if(length(chain) != 1){
+    # stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 4 IN donut.R for kind ", kind_fun, ": chain MUST BE A SINGLE VALUE.\nHERE IT IS: ", paste(chain, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+    # }else if(chain != unique(substr(tempo.v, 1, 3))){
+    # stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN donut.R for kind ", kind_fun, ": CHAIN OF J DIFFERENT FROM CHAIN OF V.\nCHAIN OF V: ", paste(chain, collapse = " "), "\nCHAIN OF J: ", paste(unique(substr(tempo.v, 1, 3)), collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+    # }
+
+    if (!is.null(tempo.secondary) && !all(is.na(tempo.secondary)) && !all(is.na(tempo.primary))) { # if there is a secondary column (meaning we are looking at VJ alleles/genes) check that it is the same chain
+        check1 <- substr(tempo.primary, 1, 3)
+        check2 <- substr(tempo.secondary, 1, 3)
+        if( ! all(check1 == check2)){
+            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN donut.R for kind ", kind_fun, ": CHAIN OF J DIFFERENT FROM CHAIN OF V.\nCHAIN OF V: ", paste(tempo.primary[check1 != check2], collapse = " "), "\nCHAIN OF J: ", paste(tempo.secondary[check1 != check2], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+        }
+    }
+
+    # remove "IGH" if heavy chain ; remove "IG" if light chain to keep the info about K or L locus (if all values are NA it is correctly handled)
+    third_character <- substr(tempo.primary, 3, 3)
+    third_character_non_na <- third_character[!is.na(third_character)]
+    if(length(third_character_non_na) == 0 || !all(third_character_non_na == "H")){
+        tronc <- 3
+    } else {
+        tronc <- 4
+    }
+    tempo.primary <- ifelse(is.na(tempo.primary), NA, substring(tempo.primary, tronc))
+    if (!is.null(tempo.secondary)) {
+        tempo.secondary <- ifelse(is.na(tempo.secondary), NA, substring(tempo.secondary, tronc))
+        clone.name <- paste0(tempo.primary, "_", tempo.secondary)
+    } else {
+        clone.name <- tempo.primary
+    }
+
+    # nb of na
+    tempo_primary_na <- is.na(tempo.primary)
+    if(is.null(tempo.secondary)){
+        nb_na_log <- tempo_primary_na
+    }else{
+        tempo_secondary_na <- is.na(tempo.secondary)
+        nb_na_log <- tempo_primary_na | tempo_secondary_na
+    }
+    if(kind_fun == "annotated" & all.annotation.log != TRUE){
+        tempo_log <- clone.name %in% clone.name[ ! is.na(tempo.labels)]
+        nb_na <- sum(nb_na_log[tempo_log])
+        nb_total <- sum(tempo_log, na.rm = TRUE)
+    }else{
+        nb_na <- sum(nb_na_log)
+        nb_total <- length(tempo.primary)
+    }
+    # end nb of na
+
+    obs2 <- data.frame(table(clone.name))
+    if (nrow(obs2) > 0) {
+        names(obs2)[1] <- col_fun
+        obs2 <- data.frame(obs2, Prop = obs2$Freq / sum(obs2$Freq), kind = kind_fun)
+        obs2[[col_fun]] <- factor(obs2[[col_fun]], levels = obs2[[col_fun]][order(obs2$Prop, decreasing = TRUE)]) # reorder so that the donut is according to decreasing proportion starting at the top in a clockwise direction
+        obs2 <- obs2[order(as.numeric(obs2[[col_fun]]), decreasing = FALSE), ] # obs2 with rows in decreasing order, according to Prop
+
+        if(all.annotation.log == FALSE){
+            tempo.data1 <- aggregate(tempo.labels ~ clone.name, FUN = function(x){paste(x, collapse = ",")})
+            obs2 <- data.frame(obs2, labels = tempo.data1$tempo.labels[match(obs2[[col_fun]], tempo.data1$clone.name)])
+        }
+
+        if(kind_fun == "annotated" & all.annotation.log != TRUE){
+            obs3 <- obs2[ ! is.na(obs2$labels) ,]
+        }else{
+            obs3 <- obs2
+        }
+
+    } else { # Handle the situation in which all values are NA in the original column
+        # structure vide avec les bonnes colonnes pour éviter les erreurs en aval
+        obs2 <- data.frame(
+            temp_col = character(0),
+            Freq = integer(0),
+            Prop = numeric(0),
+            kind = character(0)
+        )
+        names(obs2)[1] <- col_fun
+        obs2[[col_fun]] <- factor(obs2[[col_fun]], levels = character(0))  # nécessaire pour éviter erreur au reorder
+        obs3 <- obs2
+    }
+    return(list(obs2 = obs2, obs3 = obs3, all.annotation.log = all.annotation.log, nb_na = nb_na, nb_total = nb_total))
+}
+
+
+# Classes of a donut displayed in the legend: same selection as the legend.limit argument of gg_donut() (cute_little_R_functions file)
+# freq_fun: frequencies of the classes (Freq column of obs3)
+# class_fun: names of the classes (first column of obs3)
+# limit_fun: donut_legend_limit, i.e., NULL (ten biggest classes), "all" (all the classes) or a proportion (classes with a proportion above it, or the ten biggest classes if none)
+# Returns the names of the classes in the legend
+legend_classes <- function(freq_fun, class_fun, limit_fun){
+    tempo.prop <- freq_fun / sum(freq_fun)
+    if(is.character(limit_fun)){ # "all"
+        limit_fun <- 0
+    }else if(is.numeric(limit_fun)){
+        if(sum(tempo.prop >= limit_fun) == 0){ # limit higher than the biggest proportion
+            limit_fun <- NULL
+        }
+    }
+    if(is.null(limit_fun)){
+        if(length(tempo.prop) >= 10){
+            limit_fun <- sort(tempo.prop, decreasing = TRUE)[10] # ten biggest classes, and those with the same proportion as the tenth
+        }else{
+            limit_fun <- 0
+        }
+    }
+    return(as.character(class_fun[tempo.prop >= limit_fun]))
+}
+
+
+# Colors of the classes that are in the legend of at least one donut
+# n_fun: number of classes
+# palette_fun: donut_palette, i.e., NULL (default ggplot2 colors) or the name of a ColorBrewer palette
+# Returns n_fun colors, the first ones being for the biggest classes. No grey, used for the classes not in the legend
+class_colors <- function(n_fun, palette_fun){
+    if(n_fun == 0){
+        return(character(0))
+    }
+    if(is.null(palette_fun)){
+        tempo.colors <- scales::hue_pal()(n_fun) # default ggplot2 colors
+    }else if(RColorBrewer::brewer.pal.info[palette_fun, "category"] == "qual"){
+        tempo.colors <- RColorBrewer::brewer.pal(n = RColorBrewer::brewer.pal.info[palette_fun, "maxcolors"], name = palette_fun)
+        tempo.rgb <- grDevices::col2rgb(tempo.colors)
+        tempo.colors <- tempo.colors[apply(tempo.rgb, 2, max) > apply(tempo.rgb, 2, min)] # grey of the palette removed
+        if(n_fun <= length(tempo.colors)){
+            return(tempo.colors[1:n_fun]) # colors already made to be distinct, in this order
+        }
+        # more classes than colors: colors interpolated between the successive colors of the palette in the HCL space, along the shortest way around the hue circle (grDevices::colorRampPalette() gives greyish mixes of opposite colors, which look like the grey of the classes not in the legend)
+        tempo.hcl <- farver::decode_colour(tempo.colors, to = "hcl") # columns h, c and l
+        tempo.pos <- seq(1, nrow(tempo.hcl), length.out = n_fun) # position of each color among the colors of the palette
+        tempo.i <- pmin(floor(tempo.pos), nrow(tempo.hcl) - 1) # previous color of the palette
+        tempo.f <- tempo.pos - tempo.i # fraction of the way to the next color of the palette
+        tempo.dh <- ((tempo.hcl[tempo.i + 1, "h"] - tempo.hcl[tempo.i, "h"] + 180) %% 360) - 180 # shortest hue difference
+        tempo.colors <- farver::encode_colour(cbind(
+            h = (tempo.hcl[tempo.i, "h"] + tempo.f * tempo.dh) %% 360,
+            c = tempo.hcl[tempo.i, "c"] + tempo.f * (tempo.hcl[tempo.i + 1, "c"] - tempo.hcl[tempo.i, "c"]),
+            l = tempo.hcl[tempo.i, "l"] + tempo.f * (tempo.hcl[tempo.i + 1, "l"] - tempo.hcl[tempo.i, "l"])
+        ), from = "hcl")
+    }else if(n_fun <= RColorBrewer::brewer.pal.info[palette_fun, "maxcolors"]){ # sequential or diverging palette
+        tempo.colors <- scales::brewer_pal(palette = palette_fun)(n_fun) # as ggplot2::scale_fill_brewer()
+    }else{
+        tempo.colors <- grDevices::colorRampPalette(RColorBrewer::brewer.pal(n = RColorBrewer::brewer.pal.info[palette_fun, "maxcolors"], name = palette_fun))(n_fun)
+    }
+    # colors taken along the scale by steps of the golden ratio: two classes of successive sizes get distant colors, whatever the number of classes
+    tempo.order <- rank((0:(n_fun - 1) * (sqrt(5) - 1) / 2) %% 1, ties.method = "first")
+    return(tempo.colors[tempo.order])
+}
+
+
 ################################ End Functions
 
 
@@ -318,6 +531,7 @@ tempo.arg <-c(
     # "donut_legend_limit", # can be NULL
     "cute",
     "repertoire_names_ch",
+    "color_ref_files",
     "log"
 )
 tempo.log <- sapply(lapply(tempo.arg, FUN = get, env = sys.nframe(), inherit = FALSE), FUN = function(x){x == "NULL"}) # WARNING: only for donut.R
@@ -352,6 +566,9 @@ if(tempo$problem == TRUE){
 # following parameter are those of the gg_donut() function and are checked by this one
 if(donut_palette == "NULL"){
     donut_palette <- NULL
+}else if( ! donut_palette %in% rownames(RColorBrewer::brewer.pal.info)){ # also checked by gg_donut(), but used before by class_colors()
+    tempo.cat <- paste0("ERROR IN donut.R:\nTHE donut_palette PARAMETER MUST BE \"NULL\" OR THE NAME OF A COLORBREWER PALETTE (SEE https://ggplot2.tidyverse.org/reference/scale_brewer.html#palettes)\nHERE IT IS: \n", paste0(donut_palette, collapse = " "))
+    stop(paste0("\n\n================\n\n", tempo.cat, "\n\n================\n\n"), call. = FALSE)
 }
 donut_hole_size <- as.numeric(donut_hole_size) # numeric string already checked by nextflow
 if( ! (length(donut_hole_text) == 1 & any(donut_hole_text %in% c("TRUE", "FALSE")))){ # positive numeric
@@ -474,149 +691,54 @@ loci <- sapply(repertoire_names_ch, extract_chain)
 chain <- unique(loci[!is.na(loci)]) # extract the IGH or IGK name (ignoring NA values)
 
 if(nrow(obs) > 0){
-    if(kind == "clone"){
-        if (col == "vj_allele") {
-            tempo.primary <- obs$germline_v_call
-            tempo.secondary <- obs$germline_j_call
-        } else if (col == "vj_gene") {
-            tempo.primary <- obs$clonal_germline_v_gene
-            tempo.secondary <- obs$clonal_germline_j_gene
-        } else if (col == "c_allele") {
-            tempo.primary <- obs$c_call
-            tempo.secondary <- NULL
-        } else if (col == "c_gene") {
-            tempo.primary <- obs$c_gene
-            tempo.secondary <- NULL
-        }
+    tempo.classes <- donut_classes(obs_fun = obs, kind_fun = kind, col_fun = col) # same function as for the color reference below
+    obs2 <- tempo.classes$obs2 # classes of all the sequences
+    obs3 <- tempo.classes$obs3 # classes of the donut
+    all.annotation.log <- tempo.classes$all.annotation.log
+    nb_na <- tempo.classes$nb_na
+    nb_total <- tempo.classes$nb_total
+
+    # classes in the legend of the donut (the other sectors are in grey). NULL if no donut plotted
+    if(nrow(obs3) > 0 & ! (kind == "annotated" & all.annotation.log == TRUE)){
+        legend.class <- legend_classes(freq_fun = obs3$Freq, class_fun = obs3[[col]], limit_fun = donut_legend_limit)
     }else{
-        if (col == "vj_allele") {
-            tempo.primary <- obs$v_call
-            tempo.secondary <- obs$j_call
-        } else if (col == "vj_gene") {
-            tempo.primary <- obs$v_gene
-            tempo.secondary <- obs$j_gene
-        } else if (col == "c_allele") {
-            tempo.primary <- obs$c_call
-            tempo.secondary <- NULL
-        } else if (col == "c_gene") {
-            tempo.primary <- obs$c_gene
-            tempo.secondary <- NULL
-        }
-    }
-    
-    # keep only the first allele or gene if igblast hesitated between several
-    tempo.primary <- unlist(lapply(tempo.primary, function(x) {
-        if (is.na(x)) return(NA) else return(strsplit(x, ",")[[1]][1])
-    }))
-    tempo.secondary <- unlist(lapply(tempo.secondary, function(x) {
-        if (is.na(x)) return(NA) else return(strsplit(x, ",")[[1]][1])
-    }))
-
-
-    # # warning: I can use all.annotation.log because I have duplicated the first column of the dataset in the second column, in order to change the name in the first column with metadata. If all(obs[ , 1] == obs[ , 2]) == TRUE, it means no annotation added
-    if(grepl(x = names(obs)[2], pattern = "^initial_")){ # means that fonctional annotations are present
-        annotation.log <- obs[ , 1] == obs[ , 2]
-        all.annotation.log <- all(annotation.log) # if one difference between obs[ , 1] == obs[ , 2], then all.annotation.log is FALSE
-    }else{
-        all.annotation.log <- TRUE
-    }
-    if(all.annotation.log == FALSE){
-        tempo.labels <- obs[ , 1]
-        tempo.labels[annotation.log] <- NA
+        legend.class <- NULL
     }
 
-
-
-
-
-    
-    #inactivated because now chain can be both IGL and IGK
-    # if(length(chain) != 1){
-    # stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 4 IN donut.R for kind ", kind, ": chain MUST BE A SINGLE VALUE.\nHERE IT IS: ", paste(chain, collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) 
-    # }else if(chain != unique(substr(tempo.v, 1, 3))){
-    # stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN donut.R for kind ", kind, ": CHAIN OF J DIFFERENT FROM CHAIN OF V.\nCHAIN OF V: ", paste(chain, collapse = " "), "\nCHAIN OF J: ", paste(unique(substr(tempo.v, 1, 3)), collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) 
-    # }
-    
-    if (!is.null(tempo.secondary) && !all(is.na(tempo.secondary)) && !all(is.na(tempo.primary))) { # if there is a secondary column (meaning we are looking at VJ alleles/genes) check that it is the same chain
-        check1 <- substr(tempo.primary, 1, 3)
-        check2 <- substr(tempo.secondary, 1, 3)
-        if( ! all(check1 == check2)){
-            stop(paste0("\n\n============\n\nINTERNAL CODE ERROR 5 IN donut.R for kind ", kind, ": CHAIN OF J DIFFERENT FROM CHAIN OF V.\nCHAIN OF V: ", paste(tempo.v[check1 != check2], collapse = " "), "\nCHAIN OF J: ", paste(tempo.j[check1 != check2], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE) 
-        }
-    }
-    
-    # remove "IGH" if heavy chain ; remove "IG" if light chain to keep the info about K or L locus (if all values are NA it is correctly handled)
-    third_character <- substr(tempo.primary, 3, 3)
-    third_character_non_na <- third_character[!is.na(third_character)]
-    if(length(third_character_non_na) == 0 || !all(third_character_non_na == "H")){
-        tronc <- 3
-    } else {
-        tronc <- 4
-    }
-    tempo.primary <- ifelse(is.na(tempo.primary), NA, substring(tempo.primary, tronc))
-    if (!is.null(tempo.secondary)) {
-        tempo.secondary <- ifelse(is.na(tempo.secondary), NA, substring(tempo.secondary, tronc))
-        clone.name <- paste0(tempo.primary, "_", tempo.secondary)
-    } else {
-        clone.name <- tempo.primary
-    }
-
-    # nb of na
-    tempo_primary_na <- is.na(tempo.primary)
-    if(is.null(tempo.secondary)){
-        nb_na_log <- tempo_primary_na
-    }else{
-        tempo_secondary_na <- is.na(tempo.secondary)
-        nb_na_log <- tempo_primary_na | tempo_secondary_na
-    }
-    if(kind == "annotated" & all.annotation.log != TRUE){
-        tempo_log <- clone.name %in% clone.name[ ! is.na(tempo.labels)]
-        nb_na <- sum(nb_na_log[tempo_log])
-        nb_total <- sum(tempo_log, na.rm = TRUE)
-    }else{
-        nb_na <- sum(nb_na_log)
-        nb_total <- length(tempo.primary)
-    }
-    # end nb of na
-
-
-
-
-
-    obs2 <- data.frame(table(clone.name))
-    if (nrow(obs2) > 0) {
-        names(obs2)[1] <- col
-        obs2 <- data.frame(obs2, Prop = obs2$Freq / sum(obs2$Freq), kind = kind)
-        obs2[[col]] <- factor(obs2[[col]], levels = obs2[[col]][order(obs2$Prop, decreasing = TRUE)]) # reorder so that the donut is according to decreasing proportion starting at the top in a clockwise direction
-        obs2 <- obs2[order(as.numeric(obs2[[col]]), decreasing = FALSE), ] # obs2 with rows in decreasing order, according to Prop
-
-        if(all.annotation.log == FALSE){
-            tempo.data1 <- aggregate(tempo.labels ~ clone.name, FUN = function(x){paste(x, collapse = ",")})
-            obs2 <- data.frame(obs2, labels = tempo.data1$tempo.labels[match(obs2[[col]], tempo.data1$clone.name)])
-        }
-        
-        if(kind == "annotated" & all.annotation.log != TRUE){
-            obs3 <- obs2[ ! is.na(obs2$labels) ,]
+    # colors of the classes, the same in all the donuts of the same col (kinds "all", "annotated" and "clone"): an allele or gene keeps its color from one donut to the other
+    # each class in the legend of at least one of these donuts gets a color, in the order of the legends of the "all", then "annotated", then "clone" donuts
+    # the legends of all the kinds are computed from the color_ref_files files (wanted_seq.tsv for "all" and "annotated", clone_assigned_seq.tsv for "clone" if present), with the code used for the plotted donut
+    legend.classes <- list(all = NULL, annotated = NULL, clone = NULL) # classes in the legend of each kind of donut
+    for(i1 in strsplit(color_ref_files, split = " ")[[1]]){
+        if(basename(i1) == "wanted_seq.tsv"){
+            tempo.kinds <- c("all", "annotated")
+        }else if(basename(i1) == "clone_assigned_seq.tsv"){
+            tempo.kinds <- "clone"
         }else{
-            obs3 <- obs2
+            stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 6 IN donut.R: THE color_ref_files PARAMETER CAN ONLY CONTAIN wanted_seq.tsv AND clone_assigned_seq.tsv FILES.\nHERE IT IS: ", color_ref_files, "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
         }
-
-    } else { # Handle the situation in which all values are NA in the original column
-        # structure vide avec les bonnes colonnes pour éviter les erreurs en aval
-        obs2 <- data.frame(
-            temp_col = character(0),
-            Freq = integer(0),
-            Prop = numeric(0),
-            kind = character(0)
-        )
-        names(obs2)[1] <- col
-        obs2[[col]] <- factor(obs2[[col]], levels = character(0))  # nécessaire pour éviter erreur au reorder
-        obs3 <- obs2
+        tempo.ref <- read.table(i1, sep = "\t", header = TRUE, comment.char = "")
+        if(nrow(tempo.ref) > 0){
+            for(i2 in tempo.kinds){
+                tempo.ref.classes <- donut_classes(obs_fun = tempo.ref, kind_fun = i2, col_fun = col)
+                if(nrow(tempo.ref.classes$obs3) > 0 & ! (i2 == "annotated" & tempo.ref.classes$all.annotation.log == TRUE)){ # donut plotted
+                    legend.classes[[i2]] <- legend_classes(freq_fun = tempo.ref.classes$obs3$Freq, class_fun = tempo.ref.classes$obs3[[col]], limit_fun = donut_legend_limit)
+                }
+            }
+        }
     }
-
-
-
-
+    color.classes <- unique(c(legend.classes$all, legend.classes$annotated, legend.classes$clone))
+    class.colors <- class_colors(n_fun = length(color.classes), palette_fun = donut_palette)
+    names(class.colors) <- color.classes
+    if( ! all(legend.class %in% color.classes)){
+        stop(paste0("\n\n================\n\nINTERNAL CODE ERROR 7 IN donut.R for kind ", kind, ": CLASSES OF THE LEGEND WITHOUT COLOR (ABSENT FROM THE color_ref_files FILES):\n", paste(legend.class[ ! legend.class %in% color.classes], collapse = " "), "\nPLEASE, SEND AN ISSUE AT https://gitlab.pasteur.fr/gmillot/repertoire_profiler OR REPORT AT gael.millot@pasteur.fr\n\n================\n\n"), call. = FALSE)
+    }
+    # colors of the sectors of the donut, in the order of the rows of obs3 (decreasing frequencies), as required by the fill.color argument of gg_donut()
+    sector.colors <- rep("grey80", nrow(obs3)) # grey: classes not in the legend
+    tempo.log <- as.character(obs3[[col]]) %in% legend.class
+    sector.colors[tempo.log] <- class.colors[as.character(obs3[[col]])[tempo.log]]
+    tempo.cat <- paste0("\n\nCOLORS OF THE CLASSES IN THE LEGEND OF AT LEAST ONE ", col, " DONUT (SAME COLOR IN ALL THESE DONUTS):\n", paste0(color.classes, ": ", class.colors, collapse = "\n"), "\n\n")
+    fun_report(data = tempo.cat, output = log, path = "./", overwrite = FALSE)
 
 
     ################ End data modification
@@ -635,9 +757,16 @@ if(nrow(obs) > 0){
         nb_na,
         "."
     )
-    if(is.numeric(donut_legend_limit)){ # only for a proportion: not for NULL (ten biggest sectors) or "all" (all the sectors in the legend)
-        if(sum(obs2$Prop >= donut_legend_limit) < length(obs2$Prop)){
-            tempo.title <- paste0(tempo.title, "\nSome classes have been removed from the legend (donut_legend_limit = ", round(donut_legend_limit, 2), "). See the donut_stats.tsv file")
+    if( ! is.null(legend.class)){ # donut plotted
+        if(length(legend.class) < nrow(obs3)){ # some classes not in the legend (never with donut_legend_limit "all")
+            if(is.null(donut_legend_limit)){
+                tempo.limit <- "NULL: ten biggest classes"
+            }else if(any(obs3$Freq / sum(obs3$Freq) >= donut_legend_limit)){
+                tempo.limit <- round(donut_legend_limit, 2)
+            }else{
+                tempo.limit <- paste0(round(donut_legend_limit, 2), ", above all the proportions: ten biggest classes")
+            }
+            tempo.title <- paste0(tempo.title, "\nClasses not in the legend are in grey (donut_legend_limit = ", tempo.limit, ").")
         }
     }
     
@@ -648,8 +777,8 @@ if(nrow(obs) > 0){
                 data1 = obs3, # select only the classes with annotations if kind == "annotated" & all.annotation.log != TRUE
                 freq = "Freq", 
                 categ = col, 
-                fill.palette = donut_palette,
-                fill.color = NULL, 
+                fill.palette = donut_palette, # not used: overridden by fill.color
+                fill.color = sector.colors, # same color for a class in all the donuts, grey for the classes not in the legend
                 hole.size = donut_hole_size, 
                 hole.text = donut_hole_text, 
                 hole.text.size = donut_hole_text_size, 
