@@ -150,7 +150,8 @@ echo "result folder: \$results_dir"
     <inputs>
         <!-- Data section of nextflow.config -->
         <conditional name="input">
-            <param name="input_type" type="select" label="Sequences (sample_path)" help="Nucleotide sequences to analyze. They do not have to be Ig or TR sequences: the pipeline filters them.">
+            <!-- usage notice at the top of the form: Galaxy has no place above the first field, so it starts the help of this field (HTML rendered by Galaxy) -->
+            <param name="input_type" type="select" label="Sequences (sample_path)" help="&lt;b&gt;Usage notice:&lt;/b&gt; &lt;a href=&quot;https://github.com/gael-millot/repertoire_profiler/tree/web&quot;&gt;https://github.com/gael-millot/repertoire_profiler/tree/web&lt;/a&gt;&lt;br/&gt;Nucleotide sequences to analyze. They do not have to be Ig or TR sequences: the pipeline filters them.">
                 <option value="fasta" selected="true">Fasta file(s)</option>
                 <option value="folder">Folder of fasta files</option>
                 <option value="zip">Zip archive of fasta files</option>
@@ -473,6 +474,10 @@ echo "result folder: \$results_dir"
         </test>
     </tests>
     <help><![CDATA[
+**Usage notice**: https://github.com/gael-millot/repertoire_profiler/tree/web
+
+-----
+
 **What it does**
 
 Runs the repertoire_profiler_ Nextflow pipeline on nucleotide sequences of immunoglobulins (Ig, BCR) or T cell receptors (TR):
