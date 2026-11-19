@@ -28,7 +28,11 @@
             RP_APPTAINER_CACHE    (required) folder of the apptainer images, shared by the jobs. The images are pulled there by the first job,
                                   or beforehand with pull_images.sh of this folder if the computing nodes have no internet access
             RP_APPTAINER_OPTIONS  (optional) apptainer run options, default: "no-home and bind /pasteur" (two dashes before each option).
-                                  The wrapper always adds env XDG_CACHE_HOME=/tmp: with no-home, quarto cannot create its cache in $HOME
+                                  The wrapper always adds:
+                                  - bind of TMPDIR, the temporary folder of the job (tmp folder of the job folder with tmp_dir: true in the
+                                    job configuration), where the processes write their temporary files (e.g., mafft). Nextflow passes TMPDIR
+                                    to the containers but only mounts the common parent folder of the task files and of the bin folder
+                                  - env XDG_CACHE_HOME=/tmp: with no-home, quarto cannot create its cache in $HOME
             APPTAINER_TMPDIR      (optional) temporary folder used to build the images, default: the job working folder
         - destination with at least 10 cores and 16 GB for full speed
           (immcantation_10cpu label of nextflow.config; lower values are applied by process.resourceLimits)
@@ -115,7 +119,9 @@ python3 '$__tool_directory__/fill_config.py'
     #end if
     --set system_exec=local
     --set "apptainer_local_images=\${RP_APPTAINER_CACHE:?the RP_APPTAINER_CACHE variable must be set by the Galaxy administrators (folder of the apptainer images)}"
-    --set "cluster_runOptions=\${RP_APPTAINER_OPTIONS:---no-home --bind /pasteur} --env XDG_CACHE_HOME=/tmp"
+    ## TMPDIR (temporary folder of the job, passed to the processes by nextflow) mounted in the containers: nextflow only mounts
+    ## the common parent folder of the task files and of bin/, which contains TMPDIR only when the tool and the job folders are close
+    --set "cluster_runOptions=\${RP_APPTAINER_OPTIONS:---no-home --bind /pasteur}\${TMPDIR:+ --bind \$TMPDIR} --env XDG_CACHE_HOME=/tmp"
     --set "phylo_tree_model_path=$pipeline/bin/AB_model"
     --set phylo_tree_itol_subscription=FALSE
     --set "out_path_ini=\$PWD/results"

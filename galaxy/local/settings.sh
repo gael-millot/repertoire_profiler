@@ -17,7 +17,8 @@
 #   RP_CONDA_PREFIX       conda used by Galaxy to install the requirements of the tool: nextflow, apptainer, graphviz and python
 #                         (default: ~/miniforge3, installed at the first use)
 #   RP_APPTAINER_CACHE    folder of the apptainer images of the pipeline (default: ~/apptainer). The first run pulls them (long)
-#   RP_APPTAINER_OPTIONS  apptainer run options of the pipeline processes (default: --no-home)
+#   RP_APPTAINER_OPTIONS  apptainer run options of the pipeline processes (default: --no-home). The tool adds the bind of
+#                         the temporary folder of the job (TMPDIR)
 #   RP_CPUS               cores of a repertoire_profiler job (default: all the cores of the computer)
 #   RP_MEMORY_MB          memory of a repertoire_profiler job in MB (default: 80% of the memory of the computer)
 #   RP_WORK_DIR           folder of the generated job configuration and of the test reports (default: ~/.planemo/repertoire_profiler)
@@ -71,6 +72,8 @@ fi
 
 # Galaxy job configuration: other tools run with 1 core, the repertoire_profiler tool runs with RP_CPUS cores
 # (GALAXY_SLOTS) and RP_MEMORY_MB MB (GALAXY_MEMORY_MB), with the apptainer settings read by the tool command.
+# tmp_dir: the temporary folder of a job (TMPDIR, TMP and TEMP) is the tmp folder of its job folder, on disk, mounted in the
+# containers by the tool command.
 # live_tool_output_reporting: the Galaxy page shows the standard output of the running job (one line per nextflow task),
 # in the dataset details (i icon of the running dataset), Tool Standard Output. Progress table in a terminal: watch.py
 RP_JOB_CONF="${RP_WORK_DIR}/job_conf.yml"
