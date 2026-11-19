@@ -310,7 +310,7 @@ echo "result folder: \$results_dir"
             <param name="germ_tree_label_outside" type="boolean" checked="true" label="Labels outside of the plot region (germ_tree_label_outside)" help="Useful if the labels are truncated."/>
             <param name="germ_tree_right_margin" type="float" value="1.5" min="0" label="Right margin in inches (germ_tree_right_margin)" help="For a graphic device of 5 inches width."/>
             <param name="germ_tree_legend" type="boolean" checked="true" label="Tree legend (germ_tree_legend)"/>
-            <param name="donut_palette" type="select" label="Donut palette (donut_palette)" help="ColorBrewer palette of the donuts. See https://ggplot2.tidyverse.org/reference/scale_brewer.html#palettes">
+            <param name="donut_palette" type="select" label="Donut palette (donut_palette)" help="ColorBrewer palette of the donuts. See https://ggplot2.tidyverse.org/reference/scale_brewer.html#palettes. Whatever the palette, an allele or gene has the same color in all the donuts, and the sectors not in the legend are in grey.">
                 <option value="NULL">NULL: default colors</option>
                 <option value="Accent" selected="true">Accent</option>
                 <option value="Dark2">Dark2</option>
@@ -364,7 +364,7 @@ echo "result folder: \$results_dir"
             <param name="donut_legend_text_size" type="float" value="6" min="0" label="Legend font size in mm (donut_legend_text_size)"/>
             <param name="donut_legend_box_size" type="float" value="3" min="0" label="Legend square size in mm (donut_legend_box_size)"/>
             <param name="donut_legend_box_space" type="float" value="2" min="0" label="Space between the legend squares in mm (donut_legend_box_space)"/>
-            <param name="donut_legend_limit" type="text" value="NULL" label="Classes in the legend (donut_legend_limit)" help="NULL: the ten biggest sectors. all: all the sectors. A proportion, e.g., 0.4: only the sectors above 40% of the donut (the ten biggest, with a warning, if none).">
+            <param name="donut_legend_limit" type="text" value="NULL" label="Classes in the legend (donut_legend_limit)" help="NULL: the ten biggest sectors. all: all the sectors. A proportion, e.g., 0.4: only the sectors above 40% of the donut (the ten biggest, with a warning, if none). The sectors not in the legend are in grey.">
                 <validator type="regex" message="NULL, all or a proportion between 0 and 1 is expected">^(NULL|all|1|0|0\.[0-9]+)$</validator>
             </param>
         </section>
