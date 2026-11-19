@@ -4,6 +4,7 @@
 //      nb_input: number of fasta sequences in initial input
 //      nb_igblast: number of sequences that igblast could analyse
 //      nb_unigblast: number of sequences that igblast could not alayse
+//      nb_ambiguous: number of sequences of igblast_seq.tsv with more than one value in the v_call, d_call, j_call or c_call column (lines of ambiguous_igblast_seq.tsv)
 //      donuts_png: provide links to the donut images needed in the rmd inside the work folder
 //      repertoire_png: provide links to the repertoire images needed in the rmd inside the work folder
 //      repertoire_constant_ch: names of the constant gene repertoire files to be displayed
@@ -53,6 +54,7 @@ process Print_report{
     val nb_input
     val nb_igblast
     val nb_unigblast
+    val nb_ambiguous
     val nb_productive
     val nb_unproductive
     val nb_wanted
@@ -219,6 +221,7 @@ process Print_report{
                 nb_input = ${nb_input},
                 nb_igblast = ${nb_igblast}, 
                 nb_unigblast = ${nb_unigblast},
+                nb_ambiguous = ${nb_ambiguous},
                 nb_productive = nb_productive, 
                 nb_unproductive = nb_unproductive, 
                 nb_wanted =  nb_wanted, 

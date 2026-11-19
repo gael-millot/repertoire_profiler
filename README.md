@@ -453,6 +453,16 @@ If the text is cut in the table, reload the page or change the width of the wind
     </tr>
     <tr>
         <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            - ambiguous_igblast_seq.tsv
+        </th>
+        <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
+            Sequences of the <i>igblast_seq.tsv</i> file with more than one value (comma separated, e.g., IGKV1-39*01,IGKV1D-39*01) in the <i>v_call</i>, <i>d_call</i>, <i>j_call</i> or <i>c_call</i> column, i.e., several genes or alleles assigned by igblast to the same sequence. Empty (header only) if no such sequence. Column description:<br><ul style="padding-left:1.2em; margin:0;"><li><b>igblast_seq.tsv_line_nb</b>: number of the line of the sequence in the <i>igblast_seq.tsv</i> file, header excluded (1 is the line just below the header).
+            <br></li><li><b>sequence_id</b>, <b>v_call</b>, <b>d_call</b>, <b>j_call</b> and <b>c_call</b>: same columns as in the <i>igblast_seq.tsv</i> file (see <i>wanted_seq.tsv</i> below for their description, <i>sequence_id</i> being the name of the sequence before any replacement by the <code>meta_name_replacement</code> parameter of the <i>nextflow.config</i> file).</li>
+            </ul>
+        </td>
+    </tr>
+    <tr>
+        <th style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
             - productive_seq.tsv
         </th>
         <td style="white-space:normal; text-align:left; word-break:break-all; overflow-wrap:anywhere;">
