@@ -6,6 +6,7 @@
 //      - donut_*: parameters for the display of the donut. These are entered in the nextflow.config file
 //      - cute_file: file containing R functions used in the donut.R script
 //      - igblast_variable_ref_files & igblast_constant_ref_files: only used to be certain that all studied loci are displayed in the donut's title (if we included IGL and IGK in the study but only one was found, both loci still need to be in the title)
+//      - donut_color_ref: wanted_seq.tsv and clone_assigned_seq.tsv (if any), the data of all the kinds of donut, used to give the same color to an allele or gene in all the donuts
 process Donut {
     label 'r_ext'
     //publishDir path: "${out_path}", mode: 'copy', pattern: "{*.tsv}", overwrite: false
@@ -34,6 +35,7 @@ process Donut {
     val donut_legend_limit
     path cute_file
     path allele_names_tsv_all_ch
+    path donut_color_ref, stageAs: 'color_ref/*' // in a subfolder: wanted_seq.tsv or clone_assigned_seq.tsv is also the data file of the tuple above
 
     output:
     path "*.tsv", emit: donut_tsv_ch, optional: true
@@ -70,6 +72,7 @@ process Donut {
 "${donut_legend_limit}" \
 "${cute_file}" \
 "${allele_names_tsv_all_ch}" \
+"${donut_color_ref}" \
 "${kind}_donut.log"
     """
 }
