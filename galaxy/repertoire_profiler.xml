@@ -404,6 +404,7 @@ echo "result folder: \$results_dir"
             <output name="report" ftype="html">
                 <assert_contents>
                     <has_text text="Repertoire Profiler Report"/>
+                    <has_text text="ambiguous_igblast_seq.tsv"/>
                 </assert_contents>
                 <extra_files type="file" name="tsv/productive_seq.tsv" value="productive_seq_columns.txt" compare="contains"/>
             </output>
@@ -420,6 +421,12 @@ echo "result folder: \$results_dir"
             </output>
             <!-- elements in the order of the collection (alphabetical order of the .tsv files) -->
             <output_collection name="tables" type="list">
+                <element name="ambiguous_igblast_seq" ftype="tabular">
+                    <assert_contents>
+                        <has_text text="igblast_seq.tsv_line_nb"/>
+                        <has_text text="IGKV1-39*01,IGKV1D-39*01"/>
+                    </assert_contents>
+                </element>
                 <element name="clone_assigned_seq" ftype="tabular">
                     <assert_contents>
                         <has_text text="clone_id"/>
