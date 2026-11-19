@@ -36,6 +36,7 @@ params:
     nb_input: -1
     nb_igblast: -1
     nb_unigblast: -1
+    nb_ambiguous: -1
     nb_productive: -1
     nb_unproductive: -1
     nb_wanted: -1
@@ -185,6 +186,7 @@ writeLines(out, "nextflow.config.html")
     nb_input <- params$nb_input
     nb_igblast <- params$nb_igblast
     nb_unigblast <- params$nb_unigblast
+    nb_ambiguous <- params$nb_ambiguous
     nb_productive <- params$nb_productive
     nb_unproductive <- params$nb_unproductive
     nb_wanted <- params$nb_wanted
@@ -253,6 +255,14 @@ Total: ```r nb_igblast + nb_unigblast```
 Proportion of success: ```r base::round(nb_igblast / (nb_igblast + nb_unigblast), 2)```
 
 See the igblast_seq.tsv and the failed_igblast_seq.tsv files in the [tsv](./tsv) folder, as well as their [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output). 
+
+<br>
+
+#### Warning
+
+Number of sequences with more than one value in the v_call, d_call, j_call or c_call column of the igblast_seq.tsv file: ```r nb_ambiguous```
+
+See the [ambiguous_igblast_seq.tsv](./tsv/ambiguous_igblast_seq.tsv) file in the [tsv](./tsv) folder, as well as its [column description](https://github.com/gael-millot/repertoire_profiler?tab=readme-ov-file#output).
 
 <br><br>
 

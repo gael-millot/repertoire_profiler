@@ -152,6 +152,7 @@ include {Split_fasta} from './modules/Split_fasta.nf'
 include {WorkflowParam} from './modules/WorkflowParam.nf'
 include {Igblast_data_check} from './modules/Igblast_data_check.nf'
 include {Igblast_query} from './modules/Igblast_query.nf'
+include {Igblast_ambiguous} from './modules/Igblast_ambiguous.nf'
 include {ParseDb_filtering} from './modules/ParseDb_filtering.nf'
 include {Igblast_chain_check} from './modules/Igblast_chain_check.nf'
 include {TrimTranslate} from './modules/TrimTranslate.nf'
@@ -496,6 +497,11 @@ workflow {
         }
     }
     copyLogFile('igblast_query.log', Igblast_query.out.log_ch, out_path)
+
+    Igblast_ambiguous( // sequences of igblast_seq.tsv with more than one value in the v_call, d_call, j_call or c_call column
+        igblast_ch1
+    )
+    nb_ambiguous = Igblast_ambiguous.out.ambiguous_ch.countLines() - 1 // -1 for the header
 
 
     // when: nb_igblast > 0
@@ -1245,6 +1251,7 @@ workflow {
         nb_input, // mandatory
         nb_igblast, // mandatory
         nb_unigblast, // mandatory
+        nb_ambiguous, // mandatory
         nb_productive.ifEmpty{'EMPTY'}, 
         nb_unproductive.ifEmpty{'EMPTY'}, 
         nb_wanted.ifEmpty{'EMPTY'}, 
