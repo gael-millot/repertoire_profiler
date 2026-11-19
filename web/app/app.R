@@ -36,6 +36,7 @@ locked_file <- file.path(repo_dir, "galaxy", "locked_params.txt")
 key_regex <- "^[A-Za-z0-9_-]{16,64}$"
 mail_regex <- "^[^@[:space:]]+@[^@[:space:]]+\\.[^@[:space:]]+$"
 fasta_regex <- "(\\.(fasta|fa|fas|fna|fsa|seq)|/)$" # files of the zip (or folders)
+notice_url <- "https://github.com/gael-millot/repertoire_profiler/tree/web" # usage notice (README of the web branch), linked at the top of the page
 
 for(i0 in c("todo", "doing", "done", "error", "jobs")){
     dir.create(file.path(work_dir, i0), recursive = TRUE, showWarnings = FALSE)
@@ -118,12 +119,18 @@ find_task <- function(key){
 ui <- shiny::navbarPage(
     title = "repertoire_profiler",
     id = "tabs",
-    header = shiny::tags$style(shiny::HTML("
-        .rp-section {border: 1px solid #ddd; border-radius: 4px; padding: 8px 12px; margin-bottom: 10px;}
-        .rp-param {margin-bottom: 6px;}
-        .rp-help {white-space: pre-wrap; font-size: 12px; max-height: 250px; overflow-y: auto;}
-        details > summary {cursor: pointer;}
-    ")),
+    header = shiny::tagList( # above the content of every tab
+        shiny::tags$style(shiny::HTML("
+            .rp-section {border: 1px solid #ddd; border-radius: 4px; padding: 8px 12px; margin-bottom: 10px;}
+            .rp-param {margin-bottom: 6px;}
+            .rp-help {white-space: pre-wrap; font-size: 12px; max-height: 250px; overflow-y: auto;}
+            details > summary {cursor: pointer;}
+        ")),
+        shiny::column(
+            width = 10, offset = 1,
+            shiny::p(shiny::icon("book"), " ", shiny::strong("Usage notice:"), " ", shiny::a(notice_url, href = notice_url, target = "_blank"))
+        )
+    ),
     shiny::tabPanel(
         "Submit",
         value = "submit",
