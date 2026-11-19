@@ -967,7 +967,7 @@ workflow {
                 tempo3_ch = tempo1_ch.merge(tempo2_ch) // 3 lists
                 tempo4_ch = Channel.of("vj_allele", "c_allele", "vj_gene", "c_gene")
                 tempo5_ch = tempo3_ch.combine(tempo4_ch) // 12 tuples
-                donut_color_ref_ch = Data_assembly.out.wanted_ch.mix(clone_assigned_seq_ch).collect() // wanted_seq.tsv and clone_assigned_seq.tsv (if any) given to each Donut process, so that an allele or gene has the same color in all the donuts. collect(): value channel used by the 12 processes
+                donut_color_ref_ch = Data_assembly.out.wanted_ch.mix(clone_assigned_seq_ch).collect() // see donut_color_ref in modules/Donut.nf
                 Donut(
                     tempo5_ch,
                     donut_palette,
