@@ -85,9 +85,11 @@ Other dataset can be fould here:<br>
 ### 1. Prerequisite
 
 Installation of:<br>
+[Java](https://www.nextflow.io/docs/latest/install.html#requirements), version 17 to 22 for nextflow v24.10.4 (more recent versions are refused by this nextflow version). If a more recent java is the default one, indicate a compatible one with `export NXF_JAVA_HOME=<path of the java 17-22 folder>` before running nextflow.<br>
 [nextflow DSL2](file:///C:/Users/gmillot/Documents/Git_projects/protocols/docs/Protocol%20152-rev0%20DSL2.htm#_Toc208504071). Please, use the version indicated above.<br>
 [Graphviz](https://www.graphviz.org/download/), `sudo apt install graphviz` for Linux ubuntu.<br>
 [Apptainer](https://gael-millot.github.io/protocols/docs/Protocol%20135-rev0%20APPTAINER.html#_Toc160091693).<br>
+[Squashfuse and fuse2fs](https://apptainer.org/docs/admin/latest/installation.html), `sudo apt install squashfuse fuse2fs` for Linux ubuntu. Required by apptainer to mount the images without extracting them. Otherwise, each process extracts its image (several GB) into the /tmp folder, which can fill /tmp (see [Message 6](#message-6) below).<br>
 <br>
 
 Optional installation (to avoid reccurent message) of:<br>
@@ -256,6 +258,25 @@ INFO:    underlay of /etc/localtime required more than 50 (83) bind mounts
 ```
 
 Register at Itol as explained in the [Prerequisite](#1-prerequisite) section above, or set the `phylo_tree_itol_subscription` parameter of the *nextflow.config* file to `FALSE` and rerun.
+
+#### Message 6
+
+```
+ERROR ~ Error executing process > 'Igblast_query (12)'
+
+Caused by:
+  Process `Igblast_query (12)` terminated with an error exit status (255)
+
+...
+
+Command error:
+  INFO:    squashfuse not found, will not be able to mount SIF or other squashfs files
+  INFO:    fuse2fs not found, will not be able to mount EXT3 filesystems
+  INFO:    Converting SIF file to temporary sandbox...
+  FATAL:   while extracting ...img: root filesystem extraction failed: ... no space left on device
+```
+
+Install squashfuse and fuse2fs as explained in the [Prerequisite](#1-prerequisite) section above (`sudo apt install squashfuse fuse2fs` for Linux ubuntu) and rerun. If the problem persists, make apptainer use a folder with enough disk space instead of /tmp (on WSL, /tmp is in RAM), for instance `mkdir -p ~/apptainer_tmp && export APPTAINER_TMPDIR=~/apptainer_tmp`, then rerun.
 
 #### Error using -resume
 
