@@ -4,8 +4,9 @@
 | Usage | Requirement |
 | :--- | :--- |
 | [![Nextflow](https://img.shields.io/badge/code-Nextflow-blue?style=plastic)](https://www.nextflow.io/) | [![Dependencies: Nextflow Version](https://img.shields.io/badge/Nextflow-v24.10.4-blue?style=plastic)](https://github.com/nextflow-io/nextflow) |
-| [![License: GPL-3.0](https://img.shields.io/badge/licence-GPL%20(%3E%3D3)-green?style=plastic)](https://www.gnu.org/licenses) | [![Dependencies: Apptainer Version](https://img.shields.io/badge/Apptainer-v1.3.5-blue?style=plastic)](https://github.com/apptainer/apptainer) |
-| | [![Dependencies: Graphviz Version](https://img.shields.io/badge/Graphviz-v2.42.3-blue?style=plastic)](https://www.graphviz.org/download/) |
+| [![License: GPL-3.0](https://img.shields.io/badge/licence-GPL%20(%3E%3D3)-green?style=plastic)](https://www.gnu.org/licenses) | [![Dependencies: Java Version](https://img.shields.io/badge/Java-v21.0.13-blue?style=plastic)](https://adoptium.net/) |
+| | [![Dependencies: Apptainer Version](https://img.shields.io/badge/Apptainer-v1.4.5-blue?style=plastic)](https://github.com/apptainer/apptainer) |
+| | [![Dependencies: Graphviz Version](https://img.shields.io/badge/Graphviz-v14.1.2-blue?style=plastic)](https://www.graphviz.org/download/) |
 
 <br><br>
 ## TABLE OF CONTENTS
@@ -84,11 +85,11 @@ Other dataset can be fould here:<br>
 
 ### 1. Prerequisite
 
-Installation of:<br>
-[Java](https://www.nextflow.io/docs/latest/install.html#requirements), version 17 to 22 for nextflow v24.10.4 (more recent versions are refused by this nextflow version). If a more recent java is the default one, indicate a compatible one with `export NXF_JAVA_HOME=<path of the java 17-22 folder>` before running nextflow.<br>
-[nextflow DSL2](file:///C:/Users/gmillot/Documents/Git_projects/protocols/docs/Protocol%20152-rev0%20DSL2.htm#_Toc208504071). Please, use the version indicated above.<br>
+Linux (ubuntu 26.04 recommended) installation of:<br>
+[Java](https://gael-millot.github.io/protocols/docs/165-java.html#linux-and-wsl2), version 11 to 23 for nextflow v24.10.4 (see the [nextflow v24.10.4 requirements](https://github.com/nextflow-io/nextflow/blob/v24.10.4/docs/install.md#requirements)). Java 24 and more recent versions are refused by this nextflow version: if one of them is the default java, install a compatible one and indicate it with `export NXF_JAVA_HOME=<path of the java 11-23 folder>` before running nextflow (or once in the *~/.bashrc* file).<br>
+[nextflow DSL2](https://gael-millot.github.io/protocols/docs/152-dsl2.html#local-linux-kernel). Please, use the version indicated above.<br>
 [Graphviz](https://www.graphviz.org/download/), `sudo apt install graphviz` for Linux ubuntu.<br>
-[Apptainer](https://gael-millot.github.io/protocols/docs/Protocol%20135-rev0%20APPTAINER.html#_Toc160091693).<br>
+[Apptainer](https://gael-millot.github.io/protocols/docs/135-apptainer.html#on-linux), `sudo apt install apptainer` for Linux ubuntu 26.04 (see the link for other systems).<br>
 [Squashfuse and fuse2fs](https://apptainer.org/docs/admin/latest/installation.html), `sudo apt install squashfuse fuse2fs` for Linux ubuntu. Required by apptainer to mount the images without extracting them. Otherwise, each process extracts its image (several GB) into the /tmp folder, which can fill /tmp (see [Message 6](#message-6) below).<br>
 <br>
 
@@ -118,7 +119,7 @@ Launching `main.nf` [loving_morse] - revision: d5aabe528b
 /mnt/share/Users
 </pre>
 
-- Run the following command from where the *main.nf* and *nextflow.config* files are (example: \\wsl$\Ubuntu-20.04\home\gael):
+- Run the following command from where the *main.nf* and *nextflow.config* files are (example: \\wsl$\Ubuntu-26.04\home\gael):
 
 <pre>
 nextflow run main.nf -c nextflow.config # or nextflow run main.nf
