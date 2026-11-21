@@ -4,7 +4,7 @@
 | Usage | Requirement |
 | :--- | :--- |
 | [![Nextflow](https://img.shields.io/badge/code-Nextflow-blue?style=plastic)](https://www.nextflow.io/) | [![Dependencies: Nextflow Version](https://img.shields.io/badge/Nextflow-v24.10.4-blue?style=plastic)](https://github.com/nextflow-io/nextflow) |
-| [![License: GPL-3.0](https://img.shields.io/badge/licence-GPL%20(%3E%3D3)-green?style=plastic)](https://www.gnu.org/licenses) | [![Dependencies: Apptainer Version](https://img.shields.io/badge/Apptainer-v1.3.5-blue?style=plastic)](https://github.com/apptainer/apptainer) |
+| [![License: GPL-3.0](https://img.shields.io/badge/licence-GPL%20(%3E%3D3)-green?style=plastic)](https://www.gnu.org/licenses) | [![Dependencies: Apptainer Version](https://img.shields.io/badge/Apptainer-v1.4.5-blue?style=plastic)](https://github.com/apptainer/apptainer) |
 | | [![Dependencies: Graphviz Version](https://img.shields.io/badge/Graphviz-v2.42.3-blue?style=plastic)](https://www.graphviz.org/download/) |
 
 <br><br>
@@ -84,9 +84,9 @@ Other dataset can be fould here:<br>
 
 ### 1. Prerequisite
 
-Installation of:<br>
+Linux (ubuntu 26.04 recommended) installation of:<br>
 [Java](https://www.nextflow.io/docs/latest/install.html#requirements), version 17 to 22 for nextflow v24.10.4 (more recent versions are refused by this nextflow version). If a more recent java is the default one, indicate a compatible one with `export NXF_JAVA_HOME=<path of the java 17-22 folder>` before running nextflow.<br>
-[nextflow DSL2](file:///C:/Users/gmillot/Documents/Git_projects/protocols/docs/Protocol%20152-rev0%20DSL2.htm#_Toc208504071). Please, use the version indicated above.<br>
+[nextflow DSL2](https://gael-millot.github.io/protocols/docs/152-dsl2.html#local-linux-kernel). Please, use the version indicated above.<br>
 [Graphviz](https://www.graphviz.org/download/), `sudo apt install graphviz` for Linux ubuntu.<br>
 [Apptainer](https://gael-millot.github.io/protocols/docs/Protocol%20135-rev0%20APPTAINER.html#_Toc160091693).<br>
 [Squashfuse and fuse2fs](https://apptainer.org/docs/admin/latest/installation.html), `sudo apt install squashfuse fuse2fs` for Linux ubuntu. Required by apptainer to mount the images without extracting them. Otherwise, each process extracts its image (several GB) into the /tmp folder, which can fill /tmp (see [Message 6](#message-6) below).<br>
